@@ -8,6 +8,7 @@
     "paths": {
       "@docfuse/markdown": ["../markdown/src/index.ts"],
       "@docfuse/markdown/server": ["../markdown/src/server.ts"],
+      "@docfuse/markdown/*": ["../markdown/src/*"],
       "docfuse": ["../docfuse/src/index.ts"]
     }
   }
