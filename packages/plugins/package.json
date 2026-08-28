@@ -93,7 +93,7 @@
     "unist-util-visit": "^5.1.0"
   },
   "peerDependencies": {
-    "mermaid": "^11.12.0",
+    "mermaid": "^11.17.2",
     "pagefind": "^1.5.2"
   },
   "peerDependenciesMeta": {
@@ -105,18 +105,18 @@
     }
   },
   "devDependencies": {
-    "@types/hast": "^3.0.4",
+    "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
-    "@types/node": "^22.10.0",
+    "@types/node": "^26.3.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "docfuse": "workspace:*",
     "esbuild": "^0.28.1",
-    "mermaid": "^11.12.0",
+    "mermaid": "^11.17.2",
     "pagefind": "^1.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tsup": "^8.3.5",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   }
 }
