@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible Docfuse defect
+title: '[Bug]: '
+labels: [bug]
+body:
+  - type: checkboxes
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and removed secrets/private content from this report.
+          required: true
+  - type: input
+    attributes:
+      label: Versions
+      description: Docfuse, Node.js, package manager, and operating-system versions.
+      placeholder: docfuse 0.1.0; Node 22.x; pnpm 11.9; macOS 15
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Minimal reproduction
+      description: Link a minimal repository or provide the smallest sanitized files and commands.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual behavior and logs
+      description: Include the complete relevant error, without credentials or private documents.
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Area
+      options:
+        - CLI / configuration
+        - Markdown / MDX
+        - Build / cache
+        - Search
+        - Browser interaction
+        - Extensions
+        - AI output
+        - Documentation
+    validations:
+      required: true

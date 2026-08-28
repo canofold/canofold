@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a user problem and a focused solution
+title: '[Feature]: '
+labels: [enhancement]
+body:
+  - type: textarea
+    attributes:
+      label: User problem
+      description: Who is blocked, and what outcome can they not achieve today?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed behavior
+      description: Describe observable behavior, not only an implementation choice.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Alternatives and compatibility
+      description: Explain workarounds, public API impact, migration, performance, and security considerations.
+    validations:
+      required: true

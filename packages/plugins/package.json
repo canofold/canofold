@@ -1,0 +1,122 @@
+{
+  "name": "@docfuse/plugins",
+  "version": "0.1.0",
+  "description": "Official plugins and providers for Docfuse and @docfuse/markdown.",
+  "license": "MIT",
+  "author": "Docfuse Contributors",
+  "homepage": "https://docfuse.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jiangxinlei/docfuse.git",
+    "directory": "packages/plugins"
+  },
+  "bugs": {
+    "url": "https://github.com/jiangxinlei/docfuse/issues"
+  },
+  "keywords": [
+    "docfuse",
+    "markdown",
+    "plugin",
+    "remark",
+    "rehype",
+    "mermaid",
+    "plantuml"
+  ],
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./external-links": {
+      "types": "./dist/external-links.d.ts",
+      "import": "./dist/external-links.js"
+    },
+    "./reading-time": {
+      "types": "./dist/reading-time.d.ts",
+      "import": "./dist/reading-time.js"
+    },
+    "./link-card": {
+      "types": "./dist/link-card.d.ts",
+      "import": "./dist/link-card.js"
+    },
+    "./kroki": {
+      "types": "./dist/kroki.d.ts",
+      "import": "./dist/kroki.js"
+    },
+    "./mermaid": {
+      "types": "./dist/mermaid.d.ts",
+      "import": "./dist/mermaid.js"
+    },
+    "./plantuml": {
+      "types": "./dist/plantuml.d.ts",
+      "import": "./dist/plantuml.js"
+    },
+    "./math": {
+      "types": "./dist/math.d.ts",
+      "import": "./dist/math.js"
+    },
+    "./pagefind": {
+      "types": "./dist/pagefind.d.ts",
+      "import": "./dist/pagefind.js"
+    },
+    "./client/kroki": "./dist/client/kroki.js",
+    "./client/mermaid": "./dist/client/mermaid.js",
+    "./client/plantuml": "./dist/client/plantuml.js",
+    "./diagram.css": "./dist/diagram.css",
+    "./math.css": "./dist/math.css"
+  },
+  "files": [
+    "dist",
+    "README.zh-CN.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup && node scripts/verify-client-assets.mjs && node scripts/build-math-css.mjs",
+    "test:browser": "node scripts/test-browser-build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --root ../.. packages/plugins"
+  },
+  "dependencies": {
+    "@docfuse/markdown": "workspace:*",
+    "fflate": "^0.8.3",
+    "katex": "^0.17.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "unist-util-visit": "^5.1.0"
+  },
+  "peerDependencies": {
+    "mermaid": "^11.12.0",
+    "pagefind": "^1.5.2"
+  },
+  "peerDependenciesMeta": {
+    "mermaid": {
+      "optional": true
+    },
+    "pagefind": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/hast": "^3.0.4",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "docfuse": "workspace:*",
+    "esbuild": "^0.28.1",
+    "mermaid": "^11.12.0",
+    "pagefind": "^1.5.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "^6.0.3"
+  }
+}

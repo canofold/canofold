@@ -1,0 +1,57 @@
+---
+title: What is Docfuse?
+description: Learn what Docfuse is for, what it provides, and which package to use
+group: Guide
+subgroup: Introduction
+order: 1
+---
+
+# What is Docfuse?
+
+Docfuse is a static documentation site generator for code repositories. It reads repository Markdown, MDX, and configuration in place, then builds the website, local search, and AI-readable data together.
+
+It fits teams that maintain documentation beside code. Adoption does not require changes to application source or a separate documentation frontend. One CLI handles development, checks, builds, and previews.
+
+## Add docs with minimal intrusion
+
+Docs, configuration, and commands stay in the existing repository. `docfuse init` adds only missing files; existing Markdown and MDX remain in place and are not overwritten.
+
+The build output is static. Production does not require a Docfuse service, a Node.js server, or a database.
+
+## Produce multiple outputs from one source
+
+The same Markdown and MDX produce the complete static site, local search indexes, Markdown mirrors, `llms.txt`, and bounded content shards. The website, search, and AI tools use one content source instead of separately maintained copies.
+
+Navigation, sidebars, locale routes, and version routes are generated from the content structure and configuration as well.
+
+## Main capabilities
+
+| Task | What Docfuse provides |
+|---|---|
+| Write content | Markdown, MDX, local React components, code, tables, file trees, media, math, and diagrams |
+| Organize the site | Routes, navigation, sidebars, page outlines, search, SEO, locales, and versions |
+| Check content | Configuration, frontmatter, links, static assets, and missing translations |
+| Build and publish | Complete static HTML, redirects, search indexes, and deployable output |
+| Serve AI tools | Markdown mirrors, `llms.txt`, page indexes, and chunked data |
+
+See [Markdown](/en/markdown/) for content syntax, [Quick start](/en/guide/introduction/getting-started/) for the site workflow, and [Reference](/en/reference/) for configuration fields.
+
+## Choose a package
+
+| Package | Responsibility |
+|---|---|
+| `docfuse` | Build a complete documentation site |
+| `@docfuse/markdown` | Render Markdown and MDX in an existing React, SSR, or static generation project |
+| `@docfuse/plugins` | Provide math, diagrams, link handling, reading time, and Pagefind plugins |
+
+Building a site only requires `docfuse`. The other packages render content independently or add optional plugins.
+
+## Scope
+
+Docfuse fits SDK, API, CLI, component-library, open-source project, and engineering knowledge-base documentation, especially when the project needs locales, version management, or AI-readable output.
+
+Docfuse is not an online CMS or a hosted service. It does not provide collaborative editing, accounts, permissions, review comments, or a dynamic content API. Protect the complete output directory at the hosting layer for private documentation.
+
+MDX, local components, and build extensions execute code and should only process trusted content. See [Security boundaries](/en/reference/output/security/) for details.
+
+When you are ready, [install Docfuse](/en/guide/introduction/installation/). To inspect the rendered content first, open the [Markdown Playground](/en/markdown/playground/).

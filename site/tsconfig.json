@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.base.json",
+  "include": ["docfuse.config.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "docfuse": ["../packages/docfuse/src/index.ts"],
+      "@docfuse/plugins": ["../packages/plugins/src/index.ts"],
+      "@docfuse/markdown": ["../packages/markdown/src/index.ts"],
+      "@docfuse/markdown/client": ["../packages/markdown/src/client.ts"],
+      "@docfuse/markdown/server": ["../packages/markdown/src/server.ts"],
+      "@docfuse/markdown/server/analyze": ["../packages/markdown/src/server/analyze.ts"],
+      "@docfuse/markdown/theme": ["../packages/markdown/src/theme.ts"]
+    }
+  }
+}

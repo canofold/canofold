@@ -1,0 +1,30 @@
+import type { MarkdownLabels } from './types'
+
+export const DEFAULT_MARKDOWN_LABELS = {
+  copyCode: 'Copy code',
+  copyFailed: 'Copy failed',
+  copySnippet: 'Copy snippet',
+  copyTerminal: 'Copy terminal output',
+  terminalTitle: 'Terminal',
+  tabsTitle: 'Tabs',
+  tabItem: 'Tab {index}',
+  codeGroupTitle: 'Code group',
+  codeGroupItem: 'Code {index}',
+  taskCompleted: 'Completed task',
+  taskIncomplete: 'Incomplete task',
+  copySectionLink: 'Copy section link',
+  tableTitle: 'table',
+  copyTableCsv: 'Copy table as CSV',
+  downloadTableCsv: 'Download table as CSV',
+  zoomTable: 'Zoom table',
+  closeTablePreview: 'Close table preview',
+  sortTableColumn: 'Sort table by column {column}',
+  zoomImage: 'Zoom image',
+  closeImagePreview: 'Close image preview',
+  imageGallery: 'Image gallery',
+  closeImageGallery: 'Close gallery',
+  previousGalleryImage: 'Previous image',
+  nextGalleryImage: 'Next image',
+  galleryThumbnails: 'Gallery thumbnails',
+  galleryImage: 'image'
+} satisfies MarkdownLabels

@@ -1,0 +1,1 @@
+export const ACTION_FEEDBACK_DURATION_MS = 1_500

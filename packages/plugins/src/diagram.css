@@ -1,0 +1,195 @@
+.df-diagram-window {
+  width: 100%;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--df-radius-md, 0.625rem);
+  color: var(--df-diagram-foreground);
+  background: var(--df-diagram-surface);
+  box-shadow: var(--df-block-shell-shadow, 0 0.5rem 1.5rem rgb(0 0 0 / 8%));
+}
+
+.df-diagram-window > .df-diagram-toolbar {
+  display: flex;
+  min-height: 3rem;
+  margin: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  background: color-mix(in srgb, var(--df-diagram-surface) 82%, var(--df-diagram-foreground) 6%);
+}
+
+.df-diagram-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--df-diagram-muted);
+  font: 600 0.875rem/1.25 var(--df-font-mono, ui-monospace, monospace);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.df-diagram-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+}
+
+.df-diagram-actions button,
+.df-diagram-zoom-controls button,
+.df-diagram-dialog-close {
+  display: inline-grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--df-radius-sm, 0.375rem);
+  color: var(--df-diagram-muted);
+  background: transparent;
+  cursor: pointer;
+  place-items: center;
+}
+
+.df-diagram-actions button:hover {
+  color: var(--df-diagram-foreground);
+  background: color-mix(in srgb, var(--df-diagram-foreground) 7%, transparent);
+}
+
+.df-diagram-zoom-controls button:hover:not(:disabled) {
+  color: var(--df-diagram-foreground);
+  background: color-mix(in srgb, var(--df-diagram-foreground) 7%, transparent);
+}
+
+.df-diagram-zoom-controls button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.df-diagram-actions button[data-copied='true'] {
+  color: var(--df-green, #248a3d);
+}
+
+.df-diagram-actions svg,
+.df-diagram-zoom-controls svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+.df-diagram-actions button:focus-visible,
+.df-diagram-zoom-controls button:focus-visible,
+.df-diagram-dialog-close:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--df-diagram-accent) 32%, transparent);
+}
+
+.df-diagram-stage,
+.df-diagram-preview {
+  display: grid;
+  min-width: 0;
+  place-items: center;
+}
+
+.df-diagram-stage {
+  position: relative;
+  padding: 1rem;
+  overflow: hidden;
+  background: var(--df-diagram-surface);
+}
+
+.df-diagram-preview {
+  width: 100%;
+  overflow: auto;
+}
+
+.df-diagram-preview[hidden],
+.df-diagram-source[hidden] {
+  display: none !important;
+}
+
+.df-diagram-preview svg,
+.df-diagram-img {
+  display: block;
+  width: var(--df-diagram-zoom-width, min(100%, 56.25rem));
+  height: auto;
+  max-width: var(--df-diagram-zoom-max-width, 56.25rem);
+  max-height: none;
+  object-fit: contain;
+  transition: width 160ms ease;
+}
+
+.df-diagram-placeholder {
+  padding: 2rem 1rem;
+  color: var(--df-diagram-muted);
+  text-align: center;
+}
+
+.df-diagram-source {
+  width: 100%;
+  max-height: min(62dvh, 35rem);
+  margin: 0;
+  overflow: auto;
+  color: var(--df-diagram-foreground);
+  font: 0.875rem/1.55 var(--df-font-mono, ui-monospace, monospace);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.df-diagram-source > code {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+}
+
+.df-diagram-zoom-controls {
+  display: flex;
+  justify-self: start;
+  gap: 0.125rem;
+  margin-block-start: 0.75rem;
+  padding: 0.1875rem;
+  border-radius: var(--df-radius-sm, 0.375rem);
+  background: color-mix(in srgb, var(--df-diagram-surface) 92%, transparent);
+  box-shadow: 0 0.25rem 0.875rem rgb(0 0 0 / 10%);
+}
+
+.df-diagram-zoom-controls[hidden] {
+  display: none !important;
+}
+
+.df-diagram-dialog {
+  width: min(68rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 2.5rem 1rem 1rem;
+  overflow: auto;
+  border: 0;
+  border-radius: var(--df-radius-md, 0.625rem);
+  color: var(--df-diagram-foreground);
+  background: color-mix(in srgb, var(--df-diagram-surface) 94%, transparent);
+  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 24%);
+  backdrop-filter: blur(1.25rem) saturate(130%);
+}
+
+.df-diagram-dialog::backdrop {
+  background: rgb(0 0 0 / 52%);
+}
+
+.df-diagram-dialog-close {
+  position: absolute;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  font-size: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .df-diagram-window *,
+  .df-diagram-dialog * {
+    scroll-behavior: auto !important;
+  }
+}

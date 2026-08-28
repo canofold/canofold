@@ -1,0 +1,73 @@
+{
+  "name": "docfuse",
+  "version": "0.1.0",
+  "description": "A static documentation CLI for Markdown, MDX, React components, search, and AI-readable output.",
+  "license": "MIT",
+  "author": "Docfuse Contributors",
+  "homepage": "https://docfuse.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jiangxinlei/docfuse.git",
+    "directory": "packages/docfuse"
+  },
+  "bugs": {
+    "url": "https://github.com/jiangxinlei/docfuse/issues"
+  },
+  "keywords": [
+    "docs",
+    "documentation",
+    "static-site",
+    "cli",
+    "mdx",
+    "markdown",
+    "ai",
+    "multilingual"
+  ],
+  "type": "module",
+  "bin": {
+    "docfuse": "./dist/cli.js"
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.css",
+    "README.zh-CN.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup && node -e \"require('node:fs').copyFileSync('src/render/styles.input.css','dist/styles.input.css')\"",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm --dir ../.. build && vitest run --root ../.."
+  },
+  "dependencies": {
+    "@docfuse/markdown": "workspace:*",
+    "chokidar": "^4.0.3",
+    "esbuild": "^0.28.1",
+    "gray-matter": "^4.0.3",
+    "lucide-react": "^1.31.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "semver": "^7.8.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/semver": "^7.7.1",
+    "tsup": "^8.3.5",
+    "typescript": "^6.0.3"
+  }
+}

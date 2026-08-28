@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": false,
+    "emitDeclarationOnly": true,
+    "stripInternal": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"]
+  },
+  "include": [
+    "src/index.ts",
+    "src/client.ts",
+    "src/theme.ts",
+    "src/server.ts",
+    "src/server/analyze.ts",
+    "src/server/createMarkdownRenderer.tsx",
+    "src/compiler/prepareMarkdown.ts"
+  ],
+  "exclude": ["src/**/*.test.ts"]
+}
