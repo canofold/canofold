@@ -1,5 +1,21 @@
-export function packageManagerCommandFor(platform = process.platform) {
-  return platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
+import { execFileSync } from 'node:child_process'
+
+export function packageManagerInvocationFor(
+  args,
+  platform = process.platform,
+  commandShell = process.env.ComSpec
+) {
+  if (platform === 'win32') {
+    return {
+      command: commandShell || 'cmd.exe',
+      args: ['/d', '/s', '/c', 'pnpm.cmd', ...args]
+    }
+  }
+
+  return { command: 'pnpm', args }
 }
 
-export const pnpmCommand = packageManagerCommandFor()
+export function execPnpmSync(args, options) {
+  const invocation = packageManagerInvocationFor(args)
+  return execFileSync(invocation.command, invocation.args, options)
+}

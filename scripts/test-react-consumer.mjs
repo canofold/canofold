@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { pnpmCommand } from './lib/packageManager.mjs'
+import { execPnpmSync } from './lib/packageManager.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const packageRoot = join(workspace, 'packages/markdown')
@@ -14,8 +14,12 @@ function run(command, args, cwd) {
   execFileSync(command, args, { cwd, stdio: 'inherit', env: { ...process.env, CI: 'true' } })
 }
 
+function runPnpm(args, cwd) {
+  execPnpmSync(args, { cwd, stdio: 'inherit', env: { ...process.env, CI: 'true' } })
+}
+
 try {
-  run(pnpmCommand, ['pack', '--pack-destination', temporaryRoot], packageRoot)
+  runPnpm(['pack', '--pack-destination', temporaryRoot], packageRoot)
   const tarballName = (await readdir(temporaryRoot)).find((name) => name.endsWith('.tgz'))
   if (!tarballName) throw new Error('Markdown package tarball was not created')
   const tarball = join(temporaryRoot, tarballName)
@@ -83,7 +87,7 @@ console.log('React ' + React.version + ' consumer passed')
 `
     )
 
-    run(pnpmCommand, ['install', '--ignore-scripts', '--no-frozen-lockfile'], consumerRoot)
+    runPnpm(['install', '--ignore-scripts', '--no-frozen-lockfile'], consumerRoot)
     run('node', ['test.mjs'], consumerRoot)
   }
 } finally {

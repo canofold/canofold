@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { pnpmCommand } from './lib/packageManager.mjs'
+import { execPnpmSync } from './lib/packageManager.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const packages = [
@@ -39,7 +39,7 @@ try {
     const manifest = JSON.parse(await readFile(join(packageConfig.root, 'package.json'), 'utf8'))
     const destination = join(temporaryRoot, packageConfig.name.replaceAll('/', '-'))
     await mkdir(destination)
-    execFileSync(pnpmCommand, ['pack', '--pack-destination', destination], {
+    execPnpmSync(['pack', '--pack-destination', destination], {
       cwd: packageConfig.root,
       stdio: 'pipe'
     })

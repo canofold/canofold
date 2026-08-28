@@ -4,7 +4,7 @@ import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:f
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { pnpmCommand } from './lib/packageManager.mjs'
+import { execPnpmSync } from './lib/packageManager.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'docfuse-packed-cli-'))
@@ -13,10 +13,19 @@ const consumerRoot = join(temporaryRoot, 'consumer')
 const modulesState = await readFile(join(workspace, 'node_modules/.modules.yaml'), 'utf8')
 const workspaceStore =
   modulesState.match(/^\s*["']?storeDir["']?:\s*["']([^"']+)["'],?\s*$/m)?.[1] ??
-  execFileSync(pnpmCommand, ['store', 'path'], { cwd: workspace, encoding: 'utf8' }).trim()
+  execPnpmSync(['store', 'path'], { cwd: workspace, encoding: 'utf8' }).trim()
 
 function run(command, args, options = {}) {
   return execFileSync(command, args, {
+    cwd: consumerRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    ...options
+  })
+}
+
+function runPnpm(args, options = {}) {
+  return execPnpmSync(args, {
     cwd: consumerRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -32,7 +41,7 @@ async function pack(packageRoot) {
   const packageManifest = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'))
   const destination = join(packsRoot, packageManifest.name.replaceAll('/', '-'))
   await mkdir(destination, { recursive: true })
-  execFileSync(pnpmCommand, ['pack', '--pack-destination', destination], {
+  execPnpmSync(['pack', '--pack-destination', destination], {
     cwd: packageRoot,
     stdio: 'pipe'
   })
@@ -87,8 +96,8 @@ overrides:
 `
   )
 
-  run(pnpmCommand, ['install', '--prefer-offline', '--ignore-scripts', '--store-dir', workspaceStore])
-  run(pnpmCommand, ['exec', 'docfuse', 'init', '--locale', 'en'])
+  runPnpm(['install', '--prefer-offline', '--ignore-scripts', '--store-dir', workspaceStore])
+  runPnpm(['exec', 'docfuse', 'init', '--locale', 'en'])
   await assertExists('docfuse.config.ts')
   await assertExists('docs/index.md')
 
@@ -166,8 +175,8 @@ export default defineExtension((options) => ({
   )
   await write('versions/v0/zh/index.md', `---\ntitle: 历史首页\n---\n\n# 历史首页\n\n历史版本。\n`)
 
-  run(pnpmCommand, ['exec', 'docfuse', 'check'])
-  const cleanBuild = run(pnpmCommand, ['exec', 'docfuse', 'build', '--no-cache'])
+  runPnpm(['exec', 'docfuse', 'check'])
+  const cleanBuild = runPnpm(['exec', 'docfuse', 'build', '--no-cache'])
   assert.match(cleanBuild, /Built .+\(clean: forced\)/)
 
   for (const output of [
@@ -200,7 +209,7 @@ export default defineExtension((options) => ({
   assert.equal(extensionOutput.marker, 'packed')
   assert.equal(extensionOutput.pages, 6)
 
-  const cachedBuild = run(pnpmCommand, ['exec', 'docfuse', 'build'])
+  const cachedBuild = runPnpm(['exec', 'docfuse', 'build'])
   assert.match(cachedBuild, /\(cache hit\)/)
 
   run('node', [
