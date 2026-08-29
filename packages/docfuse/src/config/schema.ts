@@ -457,27 +457,6 @@ export const configInputSchema: z.ZodType<DocfuseConfigInput> = z
       })
       .strict()
       .optional(),
-    monitoring: z
-      .object({
-        provider: z.literal('sentry'),
-        loaderUrl: z
-          .string()
-          .url()
-          .refine(
-            (value) => {
-              const url = new URL(value)
-              return url.protocol === 'https:' && url.hostname === 'js.sentry-cdn.com'
-            },
-            {
-              message: 'Sentry loaderUrl must use https://js.sentry-cdn.com'
-            }
-          ),
-        environment: z.string().min(1).optional(),
-        release: z.string().min(1).optional(),
-        tracesSampleRate: z.number().min(0).max(1).optional()
-      })
-      .strict()
-      .optional(),
     i18n: z
       .object({
         defaultLocale: z.string().optional(),

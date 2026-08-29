@@ -32,4 +32,4 @@ Docfuse does not provide SSO/RBAC. A hosting identity layer must protect HTML, M
 
 Sanitization removes scripts, event attributes, and unsafe URLs from Markdown HTML; it is not a JavaScript sandbox. MDX remains executable trusted code.
 
-`mermaid()` executes the plugin's pinned bundled runtime and does not request a remote module. An explicit `mermaid({ moduleUrl })` override executes that module in the reader's browser; treat it as a remote-code supply-chain dependency and allow its origin in CSP only when needed. PlantUML, Sentry, and embedded media likewise require explicit service trust and domain allowlists.
+`mermaid()` executes the plugin's pinned bundled runtime and does not request a remote module. An explicit `mermaid({ moduleUrl })` override executes that module in the reader's browser; treat it as a remote-code supply-chain dependency and allow its origin in CSP only when needed. PlantUML and embedded media likewise require explicit service trust and domain allowlists.

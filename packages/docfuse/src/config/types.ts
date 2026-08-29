@@ -32,15 +32,6 @@ export interface DocfuseAdvertisement {
   label?: string
 }
 
-export interface DocfuseSentryMonitoring {
-  provider: 'sentry'
-  /** Sentry's browser loader URL, for example https://js.sentry-cdn.com/{key}.min.js. */
-  loaderUrl: string
-  environment?: string
-  release?: string
-  tracesSampleRate?: number
-}
-
 export interface DocfuseSearchConfig {
   enabled: boolean
   provider: 'compact' | SearchProvider
@@ -169,7 +160,6 @@ export interface DocfuseConfigInput {
   }
   redirects?: Record<string, string>
   advertising?: DocfuseAdvertisement
-  monitoring?: DocfuseSentryMonitoring
   i18n?: {
     defaultLocale?: string
     locales?: string[]
@@ -235,7 +225,6 @@ export interface DocfuseConfig {
   }
   redirects: Record<string, string>
   advertising?: DocfuseAdvertisement
-  monitoring?: DocfuseSentryMonitoring
   i18n: {
     defaultLocale: string
     locales: string[]

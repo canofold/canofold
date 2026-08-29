@@ -83,9 +83,8 @@ See [Theme customization](/en/guide/site/customization/) and [Search](/en/guide/
 | `versions` | current version `current` | `{ current, items }`; current uses `/`, and every id and base is unique |
 | `redirects` | `{}` | Old-to-current route map; chains, cycles, and real-page collisions fail validation |
 | `advertising` | unset | `{ image, href, alt, label? }` image slot beside the page outline |
-| `monitoring` | unset | Sentry Browser Loader; `loaderUrl` must use `https://js.sentry-cdn.com` |
 
-See [navigation](/en/guide/site/navigation/), [versions](/en/guide/site/versions/), [redirects](/en/guide/site/redirects/), [extensions](/en/guide/site/extensions/), [advertising](/en/guide/delivery/advertising/), and [monitoring](/en/guide/delivery/monitoring/) for workflows.
+See [navigation](/en/guide/site/navigation/), [versions](/en/guide/site/versions/), [redirects](/en/guide/site/redirects/), [extensions](/en/guide/site/extensions/), and [advertising](/en/guide/delivery/advertising/) for workflows.
 
 ## Internationalization and AI output
 

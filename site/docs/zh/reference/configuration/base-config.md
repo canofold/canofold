@@ -83,9 +83,8 @@ export default defineConfig({
 | `versions` | 当前版本 `current` | `{ current, items }`；当前版本必须使用 `/`，每个 id 和 base 唯一 |
 | `redirects` | `{}` | 旧路由到现有站内路由的映射；链、环和覆盖真实页面都会失败 |
 | `advertising` | 未设置 | `{ image, href, alt, label? }` 右侧图片位 |
-| `monitoring` | 未设置 | Sentry Browser Loader；`loaderUrl` 必须使用 `https://js.sentry-cdn.com` |
 
-对应流程见[导航](/guide/site/navigation/)、[版本](/guide/site/versions/)、[重定向](/guide/site/redirects/)、[扩展](/guide/site/extensions/)、[广告](/guide/delivery/advertising/)和[监控](/guide/delivery/monitoring/)。
+对应流程见[导航](/guide/site/navigation/)、[版本](/guide/site/versions/)、[重定向](/guide/site/redirects/)、[扩展](/guide/site/extensions/)和[广告](/guide/delivery/advertising/)。
 
 ## 多语言与 AI 输出
 

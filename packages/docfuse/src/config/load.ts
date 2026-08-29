@@ -101,7 +101,6 @@ function mergeConfig(input: DocfuseConfigInput): DocfuseConfig {
     versions,
     redirects: { ...base.redirects, ...input.redirects },
     ...(input.advertising ? { advertising: { ...input.advertising } } : {}),
-    ...(input.monitoring ? { monitoring: { ...input.monitoring } } : {}),
     i18n: {
       ...base.i18n,
       ...input.i18n,
