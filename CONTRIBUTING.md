@@ -57,6 +57,15 @@ Docfuse is in stabilization mode. A new top-level configuration field, public ex
 
 For a release-impacting change, run `pnpm test:release`, update `CHANGELOG.md`, inspect the packed packages, and verify the generated site in current desktop and mobile browsers. The [public API policy](https://docfuse.dev/en/reference/api/public-api/) defines the supported surface. A new dependency needs a trust, license, and size justification; executable configuration or extension changes need an explicit security-boundary review.
 
+## Release process
+
+1. Set the same version in all three package manifests and add the matching section to `CHANGELOG.md`.
+2. Merge the release change into `main` only after `pnpm test:release` and the pull-request checks pass.
+3. Create and push a `v<version>` tag from the resulting `main` commit.
+4. The `Release` workflow verifies metadata, rebuilds and tests the repository, publishes `@docfuse/markdown`, `docfuse`, and `@docfuse/plugins` in dependency order, then creates the GitHub release.
+
+The first npm publication uses the temporary `NPM_TOKEN` repository secret. After all packages exist on npm, configure `release.yml` as their GitHub Actions Trusted Publisher and remove the secret; subsequent releases authenticate through OIDC.
+
 ## Pull requests
 
 A pull request should explain the problem, the chosen design, compatibility impact, security implications, and the commands that passed. Do not include secrets, generated `dist/` output, screenshots from retired visual baselines, or user content that was not intended for publication.
