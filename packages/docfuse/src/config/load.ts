@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build } from 'esbuild'
 import { assertRoutePath } from '../content/routes'
 import { pathExists, portablePathKey } from '../utils/paths'
@@ -212,19 +212,26 @@ export async function loadConfig(cwd: string): Promise<DocfuseConfig> {
   const temporaryPath = join(temporaryDirectory, `${randomUUID()}.mjs`)
   let loaded: { default?: unknown }
   try {
+    let docfuseEntry: string
+    try {
+      docfuseEntry = fileURLToPath(import.meta.resolve('docfuse'))
+    } catch {
+      // Vitest's module runner does not implement import.meta.resolve. Its
+      // source execution path can be bundled directly by esbuild instead.
+      docfuseEntry = fileURLToPath(new URL('../index.ts', import.meta.url))
+    }
     const result = await build({
       entryPoints: [configPath],
       absWorkingDir: cwd,
+      alias: { docfuse: docfuseEntry },
       bundle: true,
       format: 'esm',
       platform: 'node',
       target: 'node22',
-      // Keep Docfuse's runtime packages package-relative. Plugins may resolve
-      // optional binaries or assets from import.meta.url and stop working when
-      // they are inlined into this temporary config bundle. Other config helper
-      // packages remain bundled so config reloads are not affected by Node's
-      // module cache.
-      external: ['docfuse', '@docfuse/plugins'],
+      // Keep official plugins package-relative. They may resolve optional
+      // binaries or assets from import.meta.url and stop working when inlined.
+      // Other config helpers remain bundled so reloads bypass Node's cache.
+      external: ['@docfuse/plugins'],
       write: false,
       sourcemap: 'inline'
     })
