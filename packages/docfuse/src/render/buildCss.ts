@@ -1,14 +1,10 @@
 import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 const require = createRequire(import.meta.url)
 
 function resolveFromModule(specifier: string): string {
-  if (typeof import.meta.resolve === 'function') {
-    return fileURLToPath(import.meta.resolve(specifier))
-  }
   return require.resolve(specifier)
 }
 
