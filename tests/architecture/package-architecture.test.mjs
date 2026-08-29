@@ -186,20 +186,23 @@ test('public and maintainer documentation matches the three-package contract', a
   }
 })
 
-test('release workflow publishes explicit local tarball paths', async () => {
+test('release workflow stages explicit local tarball paths and waits for approval', async () => {
   const workflow = await readFile(join(root, '.github/workflows/release.yml'), 'utf8')
-  const archives = [...workflow.matchAll(/publish_if_missing\s+"[^"]+"\s+"([^"]+\.tgz)"/g)].map(
+  const archives = [...workflow.matchAll(/stage_if_missing\s+"[^"]+"\s+"([^"]+\.tgz)"/g)].map(
     (match) => match[1]
   )
 
-  assert.equal(archives.length, 3, 'release workflow must publish all three package archives')
+  assert.equal(archives.length, 3, 'release workflow must stage all three package archives')
   for (const archive of archives) {
     assert.match(
       archive,
       /^\.\/release-packages\//,
-      `npm publish requires an explicit local path: ${archive}`
+      `npm stage publish requires an explicit local path: ${archive}`
     )
   }
+  assert.match(workflow, /npm stage publish "\$\{archive\}" --access public --provenance/)
+  assert.doesNotMatch(workflow, /\bnpm publish\b/)
+  assert.match(workflow, /Waiting for npm 2FA approval/)
 })
 
 test('Markdown plugins, search providers, and site extensions keep distinct lifecycles', async () => {
