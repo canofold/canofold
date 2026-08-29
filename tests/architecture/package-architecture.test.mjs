@@ -186,6 +186,22 @@ test('public and maintainer documentation matches the three-package contract', a
   }
 })
 
+test('release workflow publishes explicit local tarball paths', async () => {
+  const workflow = await readFile(join(root, '.github/workflows/release.yml'), 'utf8')
+  const archives = [...workflow.matchAll(/publish_if_missing\s+"[^"]+"\s+"([^"]+\.tgz)"/g)].map(
+    (match) => match[1]
+  )
+
+  assert.equal(archives.length, 3, 'release workflow must publish all three package archives')
+  for (const archive of archives) {
+    assert.match(
+      archive,
+      /^\.\/release-packages\//,
+      `npm publish requires an explicit local path: ${archive}`
+    )
+  }
+})
+
 test('Markdown plugins, search providers, and site extensions keep distinct lifecycles', async () => {
   const markdownPluginContract = await readFile(join(root, 'packages/markdown/src/compiler/types.ts'), 'utf8')
   const pagefind = await readFile(join(root, 'packages/plugins/src/pagefind/index.ts'), 'utf8')
