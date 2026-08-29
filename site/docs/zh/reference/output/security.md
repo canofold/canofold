@@ -23,7 +23,6 @@ Docfuse 在构建期执行仓库配置、扩展、MDX 和本地 TSX。构建必�
 ## 密钥
 
 - 不要把密钥写入 Markdown、MDX、`docfuse.config.ts` 浏览器字段或 `docs/public/`。
-- Sentry Loader URL 可公开，但组织令牌、上传令牌和服务端 DSN 管理仍放在 CI Secret。
 
 ## 私有托管
 

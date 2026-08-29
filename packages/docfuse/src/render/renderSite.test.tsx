@@ -425,12 +425,6 @@ describe('renderSite', () => {
           href: 'https://example.com',
           alt: 'Example sponsor'
         },
-        monitoring: {
-          provider: 'sentry',
-          loaderUrl: 'https://js.sentry-cdn.com/example.min.js',
-          environment: 'test',
-          tracesSampleRate: 0
-        },
         markdown: {
           ...defaultConfig.markdown,
           html: 'sanitize'
@@ -463,8 +457,6 @@ describe('renderSite', () => {
     expect(html).toContain('class="df-sidebar-primary-link df-sidebar-primary-link-active"')
     expect(html).toContain('href="/project/reference/"')
     expect(html).toContain('rel="sponsored noopener noreferrer"')
-    expect(html).toContain('https://js.sentry-cdn.com/example.min.js')
-    expect(html).toContain('window.sentryOnLoad')
     expect(html).toContain('aria-label="下载 CSV"')
     expect(html).toContain('df-outline-link-6')
     expect(html).not.toContain('df-outline-title')

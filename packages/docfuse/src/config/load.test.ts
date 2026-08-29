@@ -436,7 +436,7 @@ describe('loadConfig', () => {
     await expect(loadConfig(cwd)).rejects.toThrow(/kebab-case/)
   })
 
-  it('loads enterprise navigation, versions, redirects, advertising, and monitoring', async () => {
+  it('loads enterprise navigation, versions, redirects, and advertising', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'docfuse-config-'))
     await writeFile(
       join(cwd, 'docfuse.config.ts'),
@@ -450,13 +450,7 @@ describe('loadConfig', () => {
           ]
         },
         redirects: { '/old/': '/guide/' },
-        advertising: { image: '/sponsor.png', href: 'https://example.com', alt: 'Sponsor' },
-        monitoring: {
-          provider: 'sentry',
-          loaderUrl: 'https://js.sentry-cdn.com/example.min.js',
-          environment: 'production',
-          tracesSampleRate: 0.1
-        }
+        advertising: { image: '/sponsor.png', href: 'https://example.com', alt: 'Sponsor' }
       }`
     )
 
@@ -465,7 +459,6 @@ describe('loadConfig', () => {
     expect(config.versions.current).toBe('v2')
     expect(config.redirects['/old/']).toBe('/guide/')
     expect(config.advertising?.alt).toBe('Sponsor')
-    expect(config.monitoring?.provider).toBe('sentry')
     expect(config.search).toEqual({ enabled: true, provider: 'compact' })
   })
 

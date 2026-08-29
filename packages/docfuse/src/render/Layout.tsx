@@ -10,18 +10,6 @@ import { LayoutOverlays } from './layout/LayoutOverlays'
 import { DEFAULT_FAVICON } from './layoutContent'
 import { noFlashScript, outlineScript, shellScript } from './shellScripts'
 
-function sentryInitScript(config: DocfuseConfig) {
-  if (!config.monitoring) return undefined
-  const options = {
-    ...(config.monitoring.environment ? { environment: config.monitoring.environment } : {}),
-    ...(config.monitoring.release ? { release: config.monitoring.release } : {}),
-    ...(config.monitoring.tracesSampleRate !== undefined
-      ? { tracesSampleRate: config.monitoring.tracesSampleRate }
-      : {})
-  }
-  return `window.sentryOnLoad=function(){window.Sentry.init(${JSON.stringify(options).replace(/</g, '\\u003c')})}`
-}
-
 export function Layout({
   config,
   graph,
@@ -44,7 +32,6 @@ export function Layout({
   const pluginClientUrls = model.assets.pluginClients.map((asset) =>
     publicPathFor(config, `/assets/docfuse-plugins/${asset.id}.js`)
   )
-  const monitoringInit = sentryInitScript(config)
   const canonicalUrl = siteUrlFor(config, page.routePath)
   const faviconPath = publicPathFor(config, config.theme.favicon ?? DEFAULT_FAVICON)
   const documentClassName = [
@@ -107,10 +94,6 @@ export function Layout({
           />
         ))}
         {config.theme.darkMode ? <script dangerouslySetInnerHTML={{ __html: noFlashScript }} /> : null}
-        {monitoringInit ? <script dangerouslySetInnerHTML={{ __html: monitoringInit }} /> : null}
-        {config.monitoring ? (
-          <script async src={config.monitoring.loaderUrl} crossOrigin="anonymous" />
-        ) : null}
       </head>
       <body>
         <div
