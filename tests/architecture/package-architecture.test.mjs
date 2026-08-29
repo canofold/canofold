@@ -186,9 +186,9 @@ test('public and maintainer documentation matches the three-package contract', a
   }
 })
 
-test('release workflow stages explicit local tarball paths and waits for approval', async () => {
+test('release workflow bootstraps missing packages and stages later releases', async () => {
   const workflow = await readFile(join(root, '.github/workflows/release.yml'), 'utf8')
-  const archives = [...workflow.matchAll(/stage_if_missing\s+"[^"]+"\s+"([^"]+\.tgz)"/g)].map(
+  const archives = [...workflow.matchAll(/release_if_missing\s+"[^"]+"\s+"([^"]+\.tgz)"/g)].map(
     (match) => match[1]
   )
 
@@ -200,8 +200,10 @@ test('release workflow stages explicit local tarball paths and waits for approva
       `npm stage publish requires an explicit local path: ${archive}`
     )
   }
+  assert.equal([...workflow.matchAll(/\bnpm publish /g)].length, 1)
+  assert.match(workflow, /Package does not exist yet; bootstrapping/)
+  assert.match(workflow, /npm publish "\$\{archive\}" --access public --provenance/)
   assert.match(workflow, /npm stage publish "\$\{archive\}" --access public --provenance/)
-  assert.doesNotMatch(workflow, /\bnpm publish\b/)
   assert.match(workflow, /Waiting for npm 2FA approval/)
 })
 
