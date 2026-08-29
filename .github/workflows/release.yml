@@ -28,7 +28,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: pnpm
           registry-url: https://registry.npmjs.org
 
       - name: Use an OIDC-capable npm CLI
@@ -51,35 +50,21 @@ jobs:
           pnpm --filter @docfuse/plugins pack --pack-destination release-packages
 
       - name: Stage packages in dependency order
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="${GITHUB_REF_NAME#v}"
-          release_if_missing() {
+          stage_if_missing() {
             package_name="$1"
             archive="$2"
             if npm view "${package_name}@${version}" version >/dev/null 2>&1; then
               echo "${package_name}@${version} is already published; skipping."
-            elif ! npm view "${package_name}" name >/dev/null 2>&1; then
-              echo "Package does not exist yet; bootstrapping ${package_name}@${version}."
-              npm publish "${archive}" --access public --provenance
-            elif npm stage list "${package_name}" --json | node -e '
-              let input = ""
-              process.stdin.on("data", (chunk) => { input += chunk })
-              process.stdin.on("end", () => {
-                const entries = JSON.parse(input)
-                process.exit(entries.some((entry) => entry.version === process.argv[1]) ? 0 : 1)
-              })
-            ' "${version}"; then
-              echo "${package_name}@${version} is already staged; skipping."
             else
               npm stage publish "${archive}" --access public --provenance
             fi
           }
 
-          release_if_missing "@docfuse/markdown" "./release-packages/docfuse-markdown-${version}.tgz"
-          release_if_missing "docfuse" "./release-packages/docfuse-${version}.tgz"
-          release_if_missing "@docfuse/plugins" "./release-packages/docfuse-plugins-${version}.tgz"
+          stage_if_missing "@docfuse/markdown" "./release-packages/docfuse-markdown-${version}.tgz"
+          stage_if_missing "docfuse" "./release-packages/docfuse-${version}.tgz"
+          stage_if_missing "@docfuse/plugins" "./release-packages/docfuse-plugins-${version}.tgz"
 
       - name: Wait for npm 2FA approval
         run: |
@@ -119,8 +104,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+          if gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             echo "GitHub release ${GITHUB_REF_NAME} already exists; skipping."
           else
-            gh release create "${GITHUB_REF_NAME}" --verify-tag --generate-notes --title "Docfuse ${GITHUB_REF_NAME}"
+            gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --verify-tag --generate-notes --title "Docfuse ${GITHUB_REF_NAME}"
           fi
