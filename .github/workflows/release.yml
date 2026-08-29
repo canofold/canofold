@@ -55,11 +55,14 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="${GITHUB_REF_NAME#v}"
-          stage_if_missing() {
+          release_if_missing() {
             package_name="$1"
             archive="$2"
             if npm view "${package_name}@${version}" version >/dev/null 2>&1; then
               echo "${package_name}@${version} is already published; skipping."
+            elif ! npm view "${package_name}" name >/dev/null 2>&1; then
+              echo "Package does not exist yet; bootstrapping ${package_name}@${version}."
+              npm publish "${archive}" --access public --provenance
             elif npm stage list "${package_name}" --json | node -e '
               let input = ""
               process.stdin.on("data", (chunk) => { input += chunk })
@@ -74,9 +77,9 @@ jobs:
             fi
           }
 
-          stage_if_missing "@docfuse/markdown" "./release-packages/docfuse-markdown-${version}.tgz"
-          stage_if_missing "docfuse" "./release-packages/docfuse-${version}.tgz"
-          stage_if_missing "@docfuse/plugins" "./release-packages/docfuse-plugins-${version}.tgz"
+          release_if_missing "@docfuse/markdown" "./release-packages/docfuse-markdown-${version}.tgz"
+          release_if_missing "docfuse" "./release-packages/docfuse-${version}.tgz"
+          release_if_missing "@docfuse/plugins" "./release-packages/docfuse-plugins-${version}.tgz"
 
       - name: Wait for npm 2FA approval
         run: |

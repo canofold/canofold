@@ -65,7 +65,7 @@ For a release-impacting change, run `pnpm test:release`, update `CHANGELOG.md`, 
 4. The `Release` workflow verifies metadata, rebuilds and tests the repository, and stages `@docfuse/markdown`, `docfuse`, and `@docfuse/plugins` in dependency order with provenance.
 5. Review the three staged packages on npm and approve them with 2FA. The workflow creates the GitHub release only after all three versions are publicly available.
 
-The first npm publication uses the temporary `NPM_TOKEN` repository secret only to stage the packages; it cannot bypass the required 2FA approval. After all packages exist on npm, configure `release.yml` as their GitHub Actions Trusted Publisher with staged-publish permission, remove the repository secret, and revoke the token. Subsequent releases authenticate through OIDC and still require explicit npm 2FA approval before becoming public.
+Because npm cannot stage or configure Trusted Publishing for a package that does not yet exist, the first publication uses a temporary bypass-2FA `NPM_TOKEN` repository secret to create the three package records. The token must grant package read/write access, no organization access, use the shortest practical expiration, and be removed and revoked immediately after the packages are verified. Then configure `release.yml` as each package's GitHub Actions Trusted Publisher with staged-publish permission. Subsequent releases authenticate through OIDC and require explicit npm 2FA approval before becoming public.
 
 ## Pull requests
 
