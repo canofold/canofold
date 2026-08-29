@@ -23,6 +23,10 @@ Use `pnpm dev` for package/site integration work and `pnpm dev:site` for documen
 ## Changes
 
 1. Create a focused branch from `main`.
+   - Use a work-type prefix followed by a lowercase kebab-case summary.
+   - Supported prefixes are `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, and `ci/`.
+   - For example: `feature/add-search-filter`, `fix/broken-anchor`, or `refactor/remove-monitoring`.
+   - Branch names describe the change, not the contributor or tool; do not use personal or agent-specific prefixes.
 2. Read the relevant [public documentation](./site/docs/en/index.md) and inspect the affected package before changing package boundaries or exports.
 3. Add or update a focused test before changing behavior.
 4. Run the narrowest relevant checks, then the release checks for public API or build changes:
