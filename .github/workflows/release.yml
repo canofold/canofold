@@ -65,9 +65,9 @@ jobs:
             fi
           }
 
-          publish_if_missing "@docfuse/markdown" "release-packages/docfuse-markdown-${version}.tgz"
-          publish_if_missing "docfuse" "release-packages/docfuse-${version}.tgz"
-          publish_if_missing "@docfuse/plugins" "release-packages/docfuse-plugins-${version}.tgz"
+          publish_if_missing "@docfuse/markdown" "./release-packages/docfuse-markdown-${version}.tgz"
+          publish_if_missing "docfuse" "./release-packages/docfuse-${version}.tgz"
+          publish_if_missing "@docfuse/plugins" "./release-packages/docfuse-plugins-${version}.tgz"
 
   github-release:
     name: Create GitHub release
