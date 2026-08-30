@@ -6,7 +6,7 @@ order: 0
 hero:
   accent: One source for the site, search, and AI data
   tagline: Docfuse reads repository Markdown and MDX in place, leaves application source untouched, and builds the static site, local search, and AI-readable data together.
-  image: /banner.png
+  image: /banner.webp
   imageAlt: Documentation content flowing through Docfuse into a static site
   actions:
     - text: What is Docfuse
