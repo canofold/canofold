@@ -322,7 +322,7 @@ export async function createSyntaxHighlighterPlugin(
     const transform: Transformer<HastRoot, HastRoot> = async (tree, file) => {
       const hiddenLanguageClasses: Array<{
         code: Element
-        className: Array<string | number>
+        className: string[]
       }> = []
 
       visit(tree, 'element', (node) => {

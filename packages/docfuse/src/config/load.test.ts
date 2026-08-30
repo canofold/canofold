@@ -436,6 +436,29 @@ describe('loadConfig', () => {
     await expect(loadConfig(cwd)).rejects.toThrow(/kebab-case/)
   })
 
+  it('loads a structurally valid custom search provider', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'docfuse-config-'))
+    await writeFile(
+      join(cwd, 'docfuse.config.ts'),
+      `export default {
+        search: {
+          provider: {
+            id: 'custom-search',
+            client: 'pagefind',
+            write: async () => undefined
+          }
+        }
+      }`
+    )
+
+    const config = await loadConfig(cwd)
+    expect(config.search.provider).toMatchObject({ id: 'custom-search', client: 'pagefind' })
+    expect(config.search.provider).not.toBe('compact')
+    if (config.search.provider !== 'compact') {
+      expect(typeof config.search.provider.write).toBe('function')
+    }
+  })
+
   it('loads enterprise navigation, versions, redirects, and advertising', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'docfuse-config-'))
     await writeFile(

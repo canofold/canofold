@@ -48,8 +48,8 @@ function documentFile(href: unknown) {
 }
 
 function classNames(node: Element) {
-  const value = node.properties?.className
-  return Array.isArray(value) ? value : typeof value === 'string' ? value.split(/\s+/) : []
+  const value: unknown = node.properties?.className
+  return Array.isArray(value) ? value.map(String) : typeof value === 'string' ? value.split(/\s+/) : []
 }
 
 function trackTrustedComponent(
@@ -131,11 +131,7 @@ export const rehypeDocumentBlocks = (
             (child) => child.type === 'element' && (child.tagName === 'img' || child.tagName === 'figcaption')
           )
         if (isImageFigure) {
-          const existingClasses = Array.isArray(node.properties?.className)
-            ? node.properties.className
-            : typeof node.properties?.className === 'string'
-              ? node.properties.className.split(/\s+/)
-              : []
+          const existingClasses = classNames(node)
           assets.markBehavior('image')
           node.properties = {
             ...node.properties,

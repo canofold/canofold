@@ -170,7 +170,7 @@ export const remarkRichDirectives = () => {
           src: directiveAttribute(node, 'src'),
           title: label,
           loading: directiveAttribute(node, 'loading') || 'lazy',
-          sandbox: directiveAttribute(node, 'sandbox'),
+          sandbox: directiveAttribute(node, 'sandbox').split(/\s+/).filter(Boolean),
           referrerPolicy: directiveAttribute(node, 'referrerpolicy') || 'no-referrer',
           dataDfElement: 'embed',
           ...(directiveAttribute(node, 'allow') ? { allow: directiveAttribute(node, 'allow') } : {}),

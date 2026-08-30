@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 - 2026-08-30
+
+- Update the production dependency stack, including Zod 4, Shiki 4, Chokidar 5, and current React patch releases.
+- Preserve Markdown class names and iframe sandbox tokens with the stricter HAST property types used by the updated syntax-highlighting stack.
+- Migrate configuration records and custom search-provider validation to the Zod 4 schema contract.
+
 ## 0.1.1 - 2026-08-30
 
 - Add a validated `seoTitle` frontmatter field that overrides the browser and search-result title without changing the visible page heading, sidebar label, search index, or AI output.

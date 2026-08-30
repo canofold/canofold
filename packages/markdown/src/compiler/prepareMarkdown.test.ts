@@ -543,7 +543,9 @@ describe('renderPreparedHtml', () => {
         '',
         '::audio[Release notes]{src="/notes.mp3"}',
         '',
-        '::embed[Getting started]{src="/guide/" allowfullscreen}'
+        '::embed[Getting started]{src="/guide/" allowfullscreen}',
+        '',
+        '::embed[Trusted player]{src="/player/" sandbox="allow-scripts allow-same-origin"}'
       ].join('\n')
     )
 
@@ -559,6 +561,7 @@ describe('renderPreparedHtml', () => {
     expect(result.html).toContain('aria-label="Release notes"')
     expect(result.html).toContain('<iframe src="/guide/" title="Getting started" loading="lazy"')
     expect(result.html).toContain('sandbox="" referrerPolicy="no-referrer"')
+    expect(result.html).toContain('sandbox="allow-scripts allow-same-origin"')
     expect(result.html).toContain('allowFullScreen=""')
     expect(result.assets.behaviors).toContain('details')
   })
