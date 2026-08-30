@@ -18,7 +18,7 @@ export interface CompilerSanitizeBoundary {
 }
 
 function classNames(properties: Properties) {
-  const value = properties.className
+  const value: unknown = properties.className
   return Array.isArray(value) ? value.map(String) : typeof value === 'string' ? value.split(/\s+/) : []
 }
 

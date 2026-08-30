@@ -8,6 +8,7 @@ import type {
 } from '@docfuse/markdown/theme'
 import { z } from 'zod'
 import { assertRoutePath, canonicalRoutePath } from '../content/routes'
+import type { SearchProvider } from '../search/types'
 import { THEME_BASE_COLORS } from './constants'
 import { publicResourceSchema } from './publicResource'
 import {
@@ -317,7 +318,7 @@ const searchSchema = z
     provider: z
       .union([
         z.literal('compact'),
-        z.custom(
+        z.custom<SearchProvider>(
           (value) =>
             typeof value === 'object' &&
             value !== null &&
@@ -340,7 +341,7 @@ const jsonValueSchema: z.ZodType<DocfuseJsonValue> = z.lazy(() =>
     z.boolean(),
     z.null(),
     z.array(jsonValueSchema),
-    z.record(jsonValueSchema)
+    z.record(z.string(), jsonValueSchema)
   ])
 )
 
@@ -365,7 +366,7 @@ const extensionSchema = z
       .string()
       .min(1)
       .regex(/^\.[\\/]/, 'Extension resolve must be a project-relative path beginning with ./'),
-    options: z.record(jsonValueSchema).optional()
+    options: z.record(z.string(), jsonValueSchema).optional()
   })
   .strict()
 
