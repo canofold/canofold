@@ -51,7 +51,7 @@
     "@vitest/coverage-v8": "4.1.11",
     "docfuse": "workspace:*",
     "jsdom": "24.1.3",
-    "prettier": "3.9.5",
+    "prettier": "3.9.6",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"
   }
