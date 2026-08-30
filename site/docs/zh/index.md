@@ -1,5 +1,6 @@
 ---
 title: Docfuse
+seoTitle: Docfuse｜面向代码仓库的静态文档站点生成器
 description: 低侵入接入代码仓库，从一份 Markdown 和 MDX 生成网站、搜索与 AI 数据
 order: 0
 hero:

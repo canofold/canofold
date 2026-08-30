@@ -1624,7 +1624,24 @@ a {
 
 @media (max-width: 35rem) {
   .df-header-inner {
-    gap: 7px;
+    gap: 4px;
+    padding-inline: 12px;
+  }
+
+  .df-brand-logo {
+    max-width: clamp(5rem, 27vw, 7rem);
+    height: auto;
+    max-height: 2.25rem;
+  }
+
+  .df-search-trigger {
+    width: 36px;
+    margin-inline-start: 0;
+    padding: 8px;
+  }
+
+  .df-kbd {
+    display: none;
   }
 
   .df-header-right {

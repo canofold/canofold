@@ -119,6 +119,35 @@ describe('createLayoutModel', () => {
     expect(model.title).toBe('Docfuse')
   })
 
+  it('uses an explicit SEO title without changing the rendered page title', () => {
+    const homePage = {
+      ...createMockPage({
+        locale: 'zh',
+        relativePath: 'index.md',
+        routePath: '/',
+        frontmatter: { seoTitle: 'Docfuse｜面向代码仓库的静态文档站点生成器' }
+      }),
+      title: 'Docfuse'
+    }
+    const graph = createMockGraph({
+      pages: [homePage],
+      sidebar: { current: { zh: [] } },
+      nav: { current: { zh: [] } }
+    })
+
+    const model = createLayoutModel({
+      config: defaultConfig,
+      graph,
+      page: homePage,
+      home: true,
+      assets: { behaviors: [], math: false, pluginClients: [], pluginStyles: [] },
+      rawSource: 'test'
+    })
+
+    expect(model.title).toBe('Docfuse｜面向代码仓库的静态文档站点生成器')
+    expect(model.page.title).toBe('Docfuse')
+  })
+
   it('accepts both cleanup functions and dispose objects from plugin clients', () => {
     const homePage = createMockPage({ locale: 'zh', relativePath: 'index.md', routePath: '/' })
     const graph = createMockGraph({

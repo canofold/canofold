@@ -1,6 +1,6 @@
 {
   "name": "@docfuse/markdown",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An interactive, themeable Markdown renderer for technical documentation.",
   "license": "MIT",
   "author": "Docfuse Contributors",

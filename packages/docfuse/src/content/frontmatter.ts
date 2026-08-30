@@ -20,6 +20,7 @@ export type HomeIconName = (typeof homeIconNames)[number]
 
 export interface DocfuseFrontmatter {
   title?: string
+  seoTitle?: string
   description?: string
   createdAt?: string
   updatedAt?: string
@@ -101,6 +102,7 @@ const frontmatterDateSchema = z.preprocess(
 export const frontmatterSchema = z
   .object({
     title: z.string().optional(),
+    seoTitle: z.string().trim().min(1).optional(),
     description: z.string().optional(),
     createdAt: frontmatterDateSchema.optional(),
     updatedAt: frontmatterDateSchema.optional(),

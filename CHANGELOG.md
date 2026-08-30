@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 - 2026-08-30
+
+- Add a validated `seoTitle` frontmatter field that overrides the browser and search-result title without changing the visible page heading, sidebar label, search index, or AI output.
+- Keep the GitHub header action visible on narrow mobile viewports by compacting the logo and search control without removing language or theme controls.
+- Give the Docfuse home pages descriptive Chinese and English search-result titles.
+
 ## 0.1.0 - 2026-08-29
 
 First public release.

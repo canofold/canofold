@@ -116,13 +116,16 @@ export function createLayoutModel({
   const sidebarGroups = allGroups.filter(
     (group) => group.title === '' || group.segment === page.group || isActiveGroup(group)
   )
+  const seoTitle = typeof page.frontmatter.seoTitle === 'string' ? page.frontmatter.seoTitle.trim() : ''
 
   return {
     config,
     page,
     home,
     assets,
-    title: page.title && page.title !== config.title ? `${page.title} | ${config.title}` : config.title,
+    title:
+      seoTitle ||
+      (page.title && page.title !== config.title ? `${page.title} | ${config.title}` : config.title),
     description: page.description || config.description,
     ...(config.editUrl && page.version === graph.currentVersion
       ? { editHref: `${config.editUrl.replace(/\/$/, '')}/${page.relativePath}` }

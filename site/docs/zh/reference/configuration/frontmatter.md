@@ -19,6 +19,7 @@ Frontmatter 位于 Markdown 或 MDX 文件顶部。通用页面字段适用于�
 ```yaml
 ---
 title: API 鉴权
+seoTitle: API 鉴权与请求签名｜Acme Docs
 description: 配置服务端 API Token 和请求签名
 order: 20
 ---
@@ -26,7 +27,8 @@ order: 20
 
 | 字段 | 类型 | 默认值 | 作用 |
 |---|---|---|---|
-| `title` | `string` | 第一个标题或空 | 页面标题、侧栏、SEO title |
+| `title` | `string` | 第一个标题或空 | 页面标题、侧栏和默认 SEO title |
+| `seoTitle` | `string` | 由 `title` 和站点标题生成 | 仅覆盖浏览器与搜索结果标题，不改变页面标题、侧栏、搜索或 AI 数据 |
 | `description` | `string` | 空 | SEO、搜索结果和确定性摘要 |
 | `createdAt` | ISO 8601 日期 | 无 | 保存内容创建时间并写入公开页面元数据 |
 | `updatedAt` | ISO 8601 日期 | 文件修改时间 | 固定页脚“最后更新”时间并写入公开页面元数据 |
@@ -59,6 +61,7 @@ order: 20
 ```yaml
 ---
 title: Acme Docs
+seoTitle: Acme Docs｜从接口定义生成可部署的文档站
 hero:
   accent: 从接口定义生成可部署的文档站
   tagline: 在仓库中维护内容和配置，构建结果可以直接部署。
@@ -80,7 +83,8 @@ features:
 
 | 字段 | 类型 | 页面位置 | 说明 |
 |---|---|---|---|
-| `title` | `string` | Hero 主标题 | 首页唯一的主标题，也是 SEO title |
+| `title` | `string` | Hero 主标题 | 首页唯一的可见主标题 |
+| `seoTitle` | `string` | 不直接显示 | 仅覆盖浏览器与搜索结果标题；适合为简短品牌名补充产品定义 |
 | `description` | `string` | 不直接显示 | SEO description 和搜索摘要 |
 | `hero.accent` | `string` | 主标题下方 | 一句话说明首页的核心信息 |
 | `hero.tagline` | `string` | Accent 下方 | 用一到两句话补充产品定义或使用范围 |
