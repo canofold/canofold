@@ -1,6 +1,6 @@
 {
   "name": "@docfuse/plugins",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official plugins and providers for Docfuse and @docfuse/markdown.",
   "license": "MIT",
   "author": "Docfuse Contributors",

@@ -206,3 +206,21 @@ test.describe('移动端 Playground', () => {
     expectNoRuntimeErrors()
   })
 })
+
+test.describe('移动端导航', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  test('GitHub 入口保持在视口内且页面不横向溢出', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 844 })
+    await page.goto('/guide/introduction/what-is-docfuse/')
+
+    const github = page.getByRole('link', { name: 'GitHub 仓库' })
+    await expect(github).toBeVisible()
+
+    const box = await github.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.x).toBeGreaterThanOrEqual(0)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(320)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+  })
+})

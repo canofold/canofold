@@ -19,6 +19,7 @@ Most content pages need only a title, description, and ordering metadata:
 ```yaml
 ---
 title: API authentication
+seoTitle: 'API authentication and request signing | Acme Docs'
 description: Configure server-side API tokens and request signatures
 order: 20
 ---
@@ -26,7 +27,8 @@ order: 20
 
 | Field | Type | Default | Effect |
 |---|---|---|---|
-| `title` | `string` | First heading or empty | Page title, sidebar, and SEO title |
+| `title` | `string` | First heading or empty | Page title, sidebar, and default SEO title |
+| `seoTitle` | `string` | Built from `title` and the site title | Override only the browser and search-result title without changing the page title, sidebar, search, or AI data |
 | `description` | `string` | Empty | SEO, search result, and deterministic summary |
 | `createdAt` | ISO 8601 date | None | Preserve the content creation time in public page metadata |
 | `updatedAt` | ISO 8601 date | File modification time | Pin the footer's last-updated time and publish it in page metadata |
@@ -59,6 +61,7 @@ Configure each locale home page in the `index.md` at that locale's content root.
 ```yaml
 ---
 title: Acme Docs
+seoTitle: 'Acme Docs | Deployable documentation from API definitions'
 hero:
   accent: Build deployable documentation from API definitions
   tagline: Keep content and configuration in the repository, then deploy the static build.
@@ -80,7 +83,8 @@ features:
 
 | Field | Type | Page position | Description |
 |---|---|---|---|
-| `title` | `string` | Hero heading | The single page heading and SEO title |
+| `title` | `string` | Hero heading | The single visible page heading |
+| `seoTitle` | `string` | Not rendered directly | Override only the browser and search-result title; useful when a short brand name needs a product definition |
 | `description` | `string` | Not rendered directly | SEO description and search summary |
 | `hero.accent` | `string` | Below the heading | One sentence for the home page's main message |
 | `hero.tagline` | `string` | Below the accent | One or two sentences that define the product or its scope |

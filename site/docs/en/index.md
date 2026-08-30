@@ -1,5 +1,6 @@
 ---
 title: Docfuse
+seoTitle: 'Docfuse | Static documentation for code repositories'
 description: Add docs to an existing repository with minimal intrusion, then build the site, search, and AI data from one source
 order: 0
 hero:
