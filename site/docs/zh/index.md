@@ -6,7 +6,7 @@ order: 0
 hero:
   accent: 一份内容，同时交付网站、搜索与 AI 数据
   tagline: Docfuse 直接读取仓库中的 Markdown 和 MDX，不改业务源码，一次构建生成静态站点、本地搜索和 AI 可读数据。
-  image: /banner.png
+  image: /banner.webp
   imageAlt: Docfuse 构建产物示意图
   actions:
     - text: 什么是 Docfuse
