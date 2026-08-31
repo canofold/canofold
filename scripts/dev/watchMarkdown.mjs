@@ -8,7 +8,7 @@ import {
   startIncrementalBuildState
 } from './packageBuildWatcher.mjs'
 import { packageFunction } from './packageModules.mjs'
-import { pnpmCommand } from '../lib/packageManager.mjs'
+import { packageManagerInvocationFor } from '../lib/packageManager.mjs'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const packageRoot = join(repoRoot, 'packages/markdown')
@@ -104,21 +104,18 @@ function createCssScheduler(build) {
 }
 
 const cssScheduler = createCssScheduler(async () => {
-  await runCommand(
-    pnpmCommand,
-    [
-      '--dir',
-      packageRoot,
-      'exec',
-      'tailwindcss',
-      '-i',
-      './src/tailwind.css',
-      '-o',
-      './dist/base.css',
-      '--minify'
-    ],
-    { cwd: repoRoot }
-  )
+  const pnpm = packageManagerInvocationFor([
+    '--dir',
+    packageRoot,
+    'exec',
+    'tailwindcss',
+    '-i',
+    './src/tailwind.css',
+    '-o',
+    './dist/base.css',
+    '--minify'
+  ])
+  await runCommand(pnpm.command, pnpm.args, { cwd: repoRoot })
   await runCommand(process.execPath, [join(packageRoot, 'scripts/build-css.mjs')], { cwd: repoRoot })
 })
 let cssWatcher
