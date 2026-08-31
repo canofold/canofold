@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-Docfuse is a CLI that turns Markdown, MDX, and project-local React components into a static documentation site. A project keeps its content and one typed configuration file; Docfuse handles rendering, navigation, search, languages, versions, and AI-readable output.
+Docfuse is a static-first, minimally invasive, and extensible knowledge and documentation platform. It uses a unified content model to turn Markdown and MDX into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
 
 ## Packages
 
@@ -44,7 +44,7 @@ The package manager resolves bare `docfuse` inside scripts from `node_modules/.b
 
 - [Guide](https://docfuse.dev/en/guide/): installation, authoring, site configuration, build, and delivery workflows.
 - [Reference](https://docfuse.dev/en/reference/): site fields, frontmatter, CLI, React API, build output, and project resources.
-- [Markdown](https://docfuse.dev/en/markdown/): `@docfuse/markdown` boundaries, integration, and authoring syntax.
+- [Markdown SDK](https://docfuse.dev/en/markdown/): `@docfuse/markdown` boundaries, integration, and authoring syntax.
 - [Markdown Playground](https://docfuse.dev/en/markdown/playground/): compare Markdown source with standard elements and extension-component output.
 - [Security boundaries](https://docfuse.dev/en/reference/output/security/): trusted Markdown, MDX, extensions, and private sites.
 

@@ -1,11 +1,11 @@
 ---
 title: Docfuse
-seoTitle: 'Docfuse | Static documentation for code repositories'
-description: Add docs to an existing repository with minimal intrusion, then build the site, search, and AI data from one source
+seoTitle: 'Docfuse | Static-first knowledge and documentation platform'
+description: Build multilingual, versioned websites, search indexes, and AI-ready knowledge outputs from one Markdown and MDX content model
 order: 0
 hero:
-  accent: One source for the site, search, and AI data
-  tagline: Docfuse reads repository Markdown and MDX in place, leaves application source untouched, and builds the static site, local search, and AI-readable data together.
+  accent: One content model for sites, search, and AI-ready knowledge
+  tagline: Docfuse is a static-first, minimally invasive, and extensible knowledge and documentation platform. It uses a unified content model to turn Markdown and MDX into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
   image: /banner.webp
   imageAlt: Documentation content flowing through Docfuse into a static site
   actions:

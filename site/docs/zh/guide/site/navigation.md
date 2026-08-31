@@ -31,12 +31,12 @@ export default defineConfig({
     zh: [
       { text: '指南', link: '/guide/' },
       { text: '参考', link: '/reference/' },
-      { text: 'Markdown', link: '/markdown/' }
+      { text: 'Markdown SDK', link: '/markdown/' }
     ],
     en: [
       { text: 'Guide', link: '/en/guide/' },
       { text: 'Reference', link: '/en/reference/' },
-      { text: 'Markdown', link: '/en/markdown/' }
+      { text: 'Markdown SDK', link: '/en/markdown/' }
     ]
   }
 })

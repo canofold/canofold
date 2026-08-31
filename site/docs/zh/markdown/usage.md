@@ -1,7 +1,7 @@
 ---
 title: 使用 Markdown 包
 description: 在 React、SSR 和静态 HTML 中使用 @docfuse/markdown
-group: Markdown
+group: Markdown SDK
 order: 81
 ---
 

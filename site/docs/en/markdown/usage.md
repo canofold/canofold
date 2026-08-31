@@ -1,7 +1,7 @@
 ---
 title: Use the Markdown package
 description: Use @docfuse/markdown with React, SSR, and static HTML
-group: Markdown
+group: Markdown SDK
 order: 81
 ---
 

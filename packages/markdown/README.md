@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-`@docfuse/markdown` renders Markdown in React and provides build or SSR rendering for Markdown and trusted MDX. It also publishes shared theme tokens and behavior-based browser enhancement.
+`@docfuse/markdown` is a standalone Markdown SDK. It provides React rendering, build or SSR support for Markdown and trusted MDX, content analysis, shared theme tokens, and behavior-based browser enhancement.
 
 ## Install and render
 
@@ -45,6 +45,6 @@ import '@docfuse/plugins/math.css'
 <Markdown source={source} options={{ plugins: [math()] }} />
 ```
 
-See the [Markdown documentation](https://docfuse.dev/en/markdown/) for renderer options, MDX, syntax, theming, and browser enhancement.
+See the [Markdown SDK documentation](https://docfuse.dev/en/markdown/) for renderer options, MDX, syntax, theming, and browser enhancement.
 
 License: MIT

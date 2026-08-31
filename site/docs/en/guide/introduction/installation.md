@@ -3,7 +3,7 @@ title: Installation
 description: Install Docfuse in a project
 group: Guide
 subgroup: Introduction
-order: 2
+order: 3
 ---
 
 # Installation

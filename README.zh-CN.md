@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-Docfuse 是一个把 Markdown、MDX 和项目本地 React 组件构建成静态文档站点的 CLI。项目只维护内容和一个带类型提示的配置文件；Docfuse 负责渲染、导航、搜索、多语言、版本和 AI 可读产物。
+Docfuse 是一个静态优先、低侵入、可扩展的知识文档平台。它使用统一的内容模型，将 Markdown 和 MDX 构建成多语言、多版本的网站、搜索索引和 AI-ready 知识输出。
 
 ## 包与用途
 
@@ -44,7 +44,7 @@ pnpm docs:dev
 
 - [指南](https://docfuse.dev/guide/)：安装、内容创作、站点配置、构建与发布流程。
 - [参考](https://docfuse.dev/reference/)：站点字段、Frontmatter、CLI、React API、构建产物和项目资源。
-- [Markdown](https://docfuse.dev/markdown/)：`@docfuse/markdown` 的能力边界、接入方式和写作语法。
+- [Markdown SDK](https://docfuse.dev/markdown/)：`@docfuse/markdown` 的能力边界、接入方式和写作语法。
 - [Playground](https://docfuse.dev/markdown/playground/)：对照查看 Markdown 源码、标准元素和扩展组件的渲染效果。
 - [安全边界](https://docfuse.dev/reference/output/security/)：可信 Markdown、MDX、扩展和私有站点要求。
 

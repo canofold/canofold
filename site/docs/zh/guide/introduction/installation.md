@@ -3,7 +3,7 @@ title: 安装
 description: 在项目中安装 Docfuse
 group: 指南
 subgroup: 入门
-order: 2
+order: 3
 ---
 
 # 安装

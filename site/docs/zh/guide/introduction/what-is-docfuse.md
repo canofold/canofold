@@ -8,9 +8,9 @@ order: 1
 
 # 什么是 Docfuse
 
-Docfuse 是面向代码仓库的静态文档站点生成器。它直接读取仓库中的 Markdown、MDX 和配置，一次构建生成网站、本地搜索与 AI 可读数据。
+Docfuse 是一个静态优先、低侵入、可扩展的知识文档平台。它使用统一的内容模型，将 Markdown 和 MDX 构建成多语言、多版本的网站、搜索索引和 AI-ready 知识输出。
 
-它适合把文档和代码放在一起维护的团队。接入时不改业务源码，也不需要单独维护文档前端；开发、检查、构建和预览都由同一个 CLI 完成。
+它适合把知识内容与代码、配置或其他项目资产一起进行版本管理的团队。接入时不改业务源码，也不需要单独维护文档前端；开发、检查、构建和预览都由同一个 CLI 完成。
 
 ## 低侵入接入现有仓库
 
@@ -34,7 +34,7 @@ Docfuse 是面向代码仓库的静态文档站点生成器。它直接读取仓
 | 构建与发布 | 完整静态 HTML、重定向、搜索索引和可直接部署的产物 |
 | 提供 AI 内容 | Markdown 镜像、`llms.txt`、页面索引和分片数据 |
 
-具体写法见 [Markdown](/markdown/)，建站流程见[快速开始](/guide/introduction/getting-started/)，配置字段见[参考](/reference/)。
+具体写法见 [Markdown SDK](/markdown/)，建站流程见[快速开始](/guide/introduction/getting-started/)，配置字段见[参考](/reference/)。
 
 ## 三个包怎样选择
 
@@ -48,10 +48,10 @@ Docfuse 是面向代码仓库的静态文档站点生成器。它直接读取仓
 
 ## 适用范围
 
-Docfuse 适合 SDK、API、CLI、组件库、开源项目和工程知识库，尤其适合需要多语言、版本管理或 AI 文档输出的项目。
+Docfuse 适合产品文档、开发者文档、团队知识库、操作手册和开源项目，尤其适合需要多语言、版本管理或 AI-ready 知识输出的项目。
 
 Docfuse 不是在线 CMS，也不是托管服务。它不提供多人在线编辑、账户、权限、评论审批或动态内容接口；私有文档需要由托管平台保护整个静态输出目录。
 
 MDX、本地组件和构建扩展会执行代码，只应处理可信内容。具体边界见[安全边界](/reference/output/security/)。
 
-准备开始时，先[安装 Docfuse](/guide/introduction/installation/)。想查看内容效果，可以打开 [Markdown Playground](/markdown/playground/)。
+继续阅读[为什么选择 Docfuse](/guide/introduction/why-docfuse/)了解它的设计取舍。准备开始时，先[安装 Docfuse](/guide/introduction/installation/)；想查看内容效果，可以打开 [Markdown Playground](/markdown/playground/)。

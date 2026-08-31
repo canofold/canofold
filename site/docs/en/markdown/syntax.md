@@ -1,7 +1,7 @@
 ---
 title: Markdown syntax reference
 description: Look up Markdown, GFM, rich-content directives, and plugin syntax supported by Docfuse
-group: Markdown
+group: Markdown SDK
 order: 82
 ---
 

@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-Docfuse 是一个面向 Markdown、MDX 和项目本地 React 组件的静态文档 CLI。它负责生成导航、搜索、多语言路由、版本页面和 AI 可读产物，最终输出可直接部署的静态 HTML。
+`docfuse` 是 Docfuse 知识文档平台的 CLI。它读取 Markdown、MDX 和项目本地 React 组件，生成导航、搜索、多语言路由、版本页面和 AI-ready 知识输出，最终产出可直接部署的静态 HTML。
 
 ## 安装
 

@@ -1,14 +1,14 @@
 ---
-title: Markdown
-description: 使用 @docfuse/markdown 渲染 Markdown、MDX 和交互内容
-group: Markdown
+title: Markdown SDK
+description: 使用 @docfuse/markdown SDK 渲染、分析和增强 Markdown、MDX 与交互内容
+group: Markdown SDK
 order: 80
 sidebar: false
 ---
 
-# Markdown
+# Markdown SDK
 
-`@docfuse/markdown` 是可独立使用的 Markdown/MDX 渲染器。它可以接入 React、SSR 或静态生成，Docfuse CLI 也用它生成文档页面。
+`@docfuse/markdown` 是可独立使用的 Markdown SDK。它提供 React 渲染、构建与 SSR、内容分析、主题契约和浏览器增强，Docfuse CLI 也用它生成文档页面。
 
 它支持代码、表格、提示块、Tabs、Steps、文件树、媒体等文档元素；数学和图表通过官方插件启用。
 

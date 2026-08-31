@@ -1,11 +1,11 @@
 ---
 title: Docfuse
-seoTitle: Docfuse｜面向代码仓库的静态文档站点生成器
-description: 低侵入接入代码仓库，从一份 Markdown 和 MDX 生成网站、搜索与 AI 数据
+seoTitle: Docfuse｜静态优先的知识文档平台
+description: 从统一的 Markdown 和 MDX 内容模型构建多语言、多版本的网站、搜索索引和 AI-ready 知识输出
 order: 0
 hero:
-  accent: 一份内容，同时交付网站、搜索与 AI 数据
-  tagline: Docfuse 直接读取仓库中的 Markdown 和 MDX，不改业务源码，一次构建生成静态站点、本地搜索和 AI 可读数据。
+  accent: 一份内容，同时交付网站、搜索与 AI-ready 知识
+  tagline: Docfuse 是一个静态优先、低侵入、可扩展的知识文档平台。它使用统一的内容模型，将 Markdown 和 MDX 构建成多语言、多版本的网站、搜索索引和 AI-ready 知识输出。
   image: /banner.webp
   imageAlt: Docfuse 构建产物示意图
   actions:
