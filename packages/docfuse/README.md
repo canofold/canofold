@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-Docfuse is a static documentation CLI for Markdown, MDX, and project-local React components. It builds navigation, search, multilingual routes, versioned pages, and AI-readable artifacts into deployable static HTML.
+`docfuse` is the CLI for the Docfuse knowledge and documentation platform. It reads Markdown, MDX, and project-local React components, then builds navigation, search, multilingual routes, versioned pages, and AI-ready knowledge output into deployable static HTML.
 
 ## Install
 

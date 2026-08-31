@@ -1,14 +1,14 @@
 ---
-title: Markdown
-description: Render Markdown, MDX, and interactive content with @docfuse/markdown
-group: Markdown
+title: Markdown SDK
+description: Render, analyze, and enhance Markdown, MDX, and interactive content with the @docfuse/markdown SDK
+group: Markdown SDK
 order: 80
 sidebar: false
 ---
 
-# Markdown
+# Markdown SDK
 
-`@docfuse/markdown` is a standalone Markdown and MDX renderer. It works with React, SSR, or static generation, and the Docfuse CLI uses it to render documentation pages.
+`@docfuse/markdown` is a standalone Markdown SDK. It provides React rendering, build and SSR support, content analysis, theme contracts, and browser enhancement. The Docfuse CLI uses it to render documentation pages as well.
 
 It supports code, tables, callouts, tabs, steps, file trees, media, and other documentation elements. Math and diagrams are enabled through official plugins.
 

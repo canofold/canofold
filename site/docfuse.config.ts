@@ -3,7 +3,7 @@ import { defineConfig } from 'docfuse'
 
 export default defineConfig({
   title: 'Docfuse',
-  description: '用一个 CLI 构建 React、Markdown 和 MDX 静态文档站',
+  description: '静态优先、低侵入、可扩展的知识文档平台',
   siteUrl: 'https://docfuse.dev',
   github: 'https://github.com/jiangxinlei/docfuse',
   editUrl: 'https://github.com/jiangxinlei/docfuse/edit/main/site/docs',
@@ -34,19 +34,19 @@ export default defineConfig({
     zh: [
       { text: '指南', link: '/guide/' },
       { text: '参考', link: '/reference/' },
-      { text: 'Markdown', link: '/markdown/' }
+      { text: 'Markdown SDK', link: '/markdown/' }
     ],
     en: [
       { text: 'Guide', link: '/en/guide/' },
       { text: 'Reference', link: '/en/reference/' },
-      { text: 'Markdown', link: '/en/markdown/' }
+      { text: 'Markdown SDK', link: '/en/markdown/' }
     ]
   },
   i18n: {
     locales: ['zh', 'en'],
     messages: {
       en: {
-        brandTagline: 'A static documentation CLI for Markdown, MDX, and React'
+        brandTagline: 'A static-first knowledge and documentation platform'
       }
     }
   }

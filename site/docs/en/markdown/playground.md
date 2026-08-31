@@ -1,7 +1,7 @@
 ---
 title: Playground
 description: Compare Markdown source with the rendered @docfuse/markdown output
-group: Markdown
+group: Markdown SDK
 order: 83
 layout: playground
 ---

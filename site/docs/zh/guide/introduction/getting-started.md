@@ -3,7 +3,7 @@ title: 快速开始
 description: 创建并预览第一个 Docfuse 站点
 group: 指南
 subgroup: 入门
-order: 3
+order: 4
 ---
 
 # 快速开始

@@ -1,7 +1,7 @@
 ---
 title: Playground
 description: 对照查看 Markdown 源码和 @docfuse/markdown 的渲染效果
-group: Markdown
+group: Markdown SDK
 order: 83
 layout: playground
 ---

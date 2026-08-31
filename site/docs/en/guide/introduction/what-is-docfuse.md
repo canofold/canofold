@@ -8,9 +8,9 @@ order: 1
 
 # What is Docfuse?
 
-Docfuse is a static documentation site generator for code repositories. It reads repository Markdown, MDX, and configuration in place, then builds the website, local search, and AI-readable data together.
+Docfuse is a static-first, minimally invasive, and extensible knowledge and documentation platform. It uses a unified content model to turn Markdown and MDX into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
 
-It fits teams that maintain documentation beside code. Adoption does not require changes to application source or a separate documentation frontend. One CLI handles development, checks, builds, and previews.
+It fits teams that version knowledge alongside code, configuration, or other project assets. Adoption does not require changes to application source or a separate documentation frontend. One CLI handles development, checks, builds, and previews.
 
 ## Add docs with minimal intrusion
 
@@ -34,7 +34,7 @@ Navigation, sidebars, locale routes, and version routes are generated from the c
 | Build and publish | Complete static HTML, redirects, search indexes, and deployable output |
 | Serve AI tools | Markdown mirrors, `llms.txt`, page indexes, and chunked data |
 
-See [Markdown](/en/markdown/) for content syntax, [Quick start](/en/guide/introduction/getting-started/) for the site workflow, and [Reference](/en/reference/) for configuration fields.
+See the [Markdown SDK](/en/markdown/) for content syntax, [Quick start](/en/guide/introduction/getting-started/) for the site workflow, and [Reference](/en/reference/) for configuration fields.
 
 ## Choose a package
 
@@ -48,10 +48,10 @@ Building a site only requires `docfuse`. The other packages render content indep
 
 ## Scope
 
-Docfuse fits SDK, API, CLI, component-library, open-source project, and engineering knowledge-base documentation, especially when the project needs locales, version management, or AI-readable output.
+Docfuse fits product documentation, developer documentation, team knowledge bases, operating manuals, and open-source projects, especially when the project needs locales, version management, or AI-ready knowledge output.
 
 Docfuse is not an online CMS or a hosted service. It does not provide collaborative editing, accounts, permissions, review comments, or a dynamic content API. Protect the complete output directory at the hosting layer for private documentation.
 
 MDX, local components, and build extensions execute code and should only process trusted content. See [Security boundaries](/en/reference/output/security/) for details.
 
-When you are ready, [install Docfuse](/en/guide/introduction/installation/). To inspect the rendered content first, open the [Markdown Playground](/en/markdown/playground/).
+Read [Why choose Docfuse?](/en/guide/introduction/why-docfuse/) for its design tradeoffs. When you are ready, [install Docfuse](/en/guide/introduction/installation/). To inspect the rendered content first, open the [Markdown Playground](/en/markdown/playground/).

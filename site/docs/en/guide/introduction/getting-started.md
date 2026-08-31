@@ -3,7 +3,7 @@ title: Quick start
 description: Create and preview a first Docfuse site
 group: Guide
 subgroup: Introduction
-order: 3
+order: 4
 ---
 
 # Quick start

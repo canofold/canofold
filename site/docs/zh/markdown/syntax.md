@@ -1,7 +1,7 @@
 ---
 title: Markdown 语法参考
 description: 查询 Docfuse 支持的 Markdown、GFM、富内容指令和插件语法
-group: Markdown
+group: Markdown SDK
 order: 82
 ---
 
