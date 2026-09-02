@@ -57,11 +57,11 @@
     "chokidar": "^5.0.0",
     "esbuild": "^0.28.2",
     "gray-matter": "^4.0.3",
-    "lucide-react": "^1.34.0",
+    "lucide-react": "^1.37.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "semver": "^7.8.5",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
