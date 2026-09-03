@@ -148,7 +148,10 @@ describe('loadConfig', () => {
 
   it.each(['cts', 'cjs'])('loads a CommonJS %s configuration entry', async (extension) => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
-    await writeFile(join(cwd, `canofold.config.${extension}`), `module.exports = { title: 'CommonJS config' }`)
+    await writeFile(
+      join(cwd, `canofold.config.${extension}`),
+      `module.exports = { title: 'CommonJS config' }`
+    )
     await expect(loadConfig(cwd)).resolves.toMatchObject({ title: 'CommonJS config' })
   })
 
@@ -538,7 +541,10 @@ describe('loadConfig', () => {
 
   it('requires siteUrl to be an origin without a deployment path', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-origin-'))
-    await writeFile(join(cwd, 'canofold.config.ts'), `export default { siteUrl: 'https://example.com/docs/' }`)
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { siteUrl: 'https://example.com/docs/' }`
+    )
     await expect(loadConfig(cwd)).rejects.toThrow('siteUrl must be an HTTP(S) origin')
 
     await writeFile(

@@ -402,7 +402,9 @@ describe('runBuild', () => {
     })
 
     expect(removedMath.incremental).toBe(false)
-    expect(await readFile(join(cwd, '.canofold/dist/assets/canofold.css'), 'utf8')).not.toContain('KaTeX_Main')
+    expect(await readFile(join(cwd, '.canofold/dist/assets/canofold.css'), 'utf8')).not.toContain(
+      'KaTeX_Main'
+    )
     await expect(access(join(cwd, '.canofold/dist/assets/fonts'))).rejects.toMatchObject({ code: 'ENOENT' })
   })
 

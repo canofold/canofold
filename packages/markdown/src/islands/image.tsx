@@ -7,7 +7,7 @@ import type { MarkdownIslandRenderOptions } from './options'
 export function hydrate(root: HTMLElement, options?: MarkdownIslandRenderOptions) {
   const image = root.querySelector('img')
   if (!image) return
-  const serializedChildren = readSerializedChildren(root.dataset.dfIslandData, options)
+  const serializedChildren = readSerializedChildren(root.dataset.cfIslandData, options)
   return hydrateRoot(
     root,
     withIslandOptions(
@@ -30,8 +30,8 @@ export function hydrate(root: HTMLElement, options?: MarkdownIslandRenderOptions
           serializedChildren ? undefined : (root.querySelector('figcaption')?.textContent ?? undefined)
         }
         className={root.className || undefined}
-        zoomLabel={root.dataset.dfZoomLabel}
-        closeLabel={root.dataset.dfCloseLabel}
+        zoomLabel={root.dataset.cfZoomLabel}
+        closeLabel={root.dataset.cfCloseLabel}
         inner
       >
         {serializedChildren}

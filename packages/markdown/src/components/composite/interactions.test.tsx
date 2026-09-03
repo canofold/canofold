@@ -33,7 +33,7 @@ describe('React Markdown composite interactions', () => {
     await act(async () => button.click())
 
     expect(writeText).toHaveBeenCalledWith('pnpm add @canofold/markdown')
-    expect(button.dataset.dfCopied).toBe('true')
+    expect(button.dataset.cfCopied).toBe('true')
     expect(button.getAttribute('aria-label')).toContain('复制命令')
     expect(button.querySelector('[aria-live="polite"]')?.textContent).toContain('复制命令')
 
@@ -50,7 +50,7 @@ describe('React Markdown composite interactions', () => {
     const button = container.querySelector('[data-cf-action="copy-snippet"]') as HTMLButtonElement
     await act(async () => button.click())
 
-    expect(button.dataset.dfCopyError).toBe('true')
+    expect(button.dataset.cfCopyError).toBe('true')
     expect(button.getAttribute('aria-label')).toBe('Copy failed')
     expect(button.querySelector('[aria-live="polite"]')?.textContent).toBe('Copy failed')
     await act(async () => root.unmount())
@@ -389,8 +389,8 @@ describe('React Markdown composite interactions', () => {
 
     const details = container.querySelector('details') as HTMLDetailsElement
     const content = container.querySelector('.cf-details-content') as HTMLElement
-    expect(details.dataset.dfBehavior).toBe('details')
-    expect(details.dataset.dfEnhanced).toBe('true')
+    expect(details.dataset.cfBehavior).toBe('details')
+    expect(details.dataset.cfEnhanced).toBe('true')
     expect(content.hasAttribute('inert')).toBe(false)
     expect(content.querySelector('summary')).toBeNull()
 

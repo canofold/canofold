@@ -111,7 +111,12 @@ function PageFooter({ model }: { model: LayoutModel }) {
       <div className="cf-page-meta">
         <div className="cf-page-meta-actions">
           {editHref ? <a href={editHref}>{labels.edit}</a> : null}
-          <button className="cf-page-source" type="button" data-canofold-source-open="" aria-haspopup="dialog">
+          <button
+            className="cf-page-source"
+            type="button"
+            data-canofold-source-open=""
+            aria-haspopup="dialog"
+          >
             {labels.source}
           </button>
         </div>

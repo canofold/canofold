@@ -60,7 +60,7 @@ describe('Markdown React Islands', () => {
 
     await act(async () => enhance(container))
     const table = container.querySelector('[data-cf-island="table"]') as HTMLElement
-    expect(table.dataset.dfTable).toBeTruthy()
+    expect(table.dataset.cfTable).toBeTruthy()
 
     await act(async () => {
       ;(table.querySelector('[data-cf-action="sort-table"]') as HTMLButtonElement).click()
@@ -134,7 +134,7 @@ describe('Markdown React Islands', () => {
     const details = container.querySelector('details') as HTMLDetailsElement
     const summary = details.querySelector('summary') as HTMLElement
     const disclosure = details.querySelector('.cf-details-content') as HTMLElement
-    expect(details.dataset.dfEnhanced).toBe('true')
+    expect(details.dataset.cfEnhanced).toBe('true')
     expect(disclosure.hasAttribute('inert')).toBe(false)
     await act(async () => summary.click())
     expect(details.open).toBe(false)
@@ -174,7 +174,7 @@ describe('Markdown React Islands', () => {
     await act(async () => enhance(container, ['details', 'tabs']))
 
     expect(warning).not.toHaveBeenCalled()
-    expect(container.querySelector('details')?.dataset.dfEnhanced).toBe('true')
+    expect(container.querySelector('details')?.dataset.cfEnhanced).toBe('true')
     expect(container.querySelector('[role="tab"]')?.getAttribute('aria-selected')).toBe('true')
     warning.mockRestore()
   })

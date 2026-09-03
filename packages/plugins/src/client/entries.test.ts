@@ -39,10 +39,10 @@ describe('diagram client entries', () => {
     const figure = document.querySelector<HTMLElement>('figure')!
 
     const dispose = enhance(document)
-    expect(figure.dataset.dfEnhanced).toBe('true')
+    expect(figure.dataset.cfEnhanced).toBe('true')
 
     dispose()
-    expect(figure.dataset.dfEnhanced).toBeUndefined()
+    expect(figure.dataset.cfEnhanced).toBeUndefined()
   })
 
   it('renders Mermaid from its configured self-hosted module and stops observing after disposal', async () => {

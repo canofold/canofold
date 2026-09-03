@@ -26,13 +26,19 @@ function encodeKroki(source: string) {
   return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
 }
 
+function stripTrailingSlashes(value: string) {
+  let end = value.length
+  while (end > 0 && value[end - 1] === '/') end -= 1
+  return value.slice(0, end)
+}
+
 function krokiUrl(server: string, type: string, format: 'svg' | 'png', source: string) {
   return `${server}/${encodeURIComponent(type)}/${format}/${encodeKroki(source)}`
 }
 
 /** Render plugin-owned diagram fences through a Kroki-compatible server. */
 export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
-  const server = options.server?.replace(/\/+$/, '') || DEFAULT_SERVER
+  const server = (options.server ? stripTrailingSlashes(options.server) : '') || DEFAULT_SERVER
   const languages = { ...DEFAULT_LANGUAGES, ...options.languages }
   const format = options.format === 'png' ? 'png' : 'svg'
   const languageMap = Object.fromEntries(

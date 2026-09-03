@@ -80,7 +80,9 @@ test('指南侧栏在站内导航后保留位置且不整页刷新', async ({ pa
   expect(after.top).toBeCloseTo(before.top, 0)
   expect(after.width).toBeCloseTo(before.width, 0)
   await expect
-    .poll(() => page.evaluate(() => (window as Window & { __canofoldE2EMarker?: string }).__canofoldE2EMarker))
+    .poll(() =>
+      page.evaluate(() => (window as Window & { __canofoldE2EMarker?: string }).__canofoldE2EMarker)
+    )
     .toBe('preserved')
   expectNoRuntimeErrors()
 })

@@ -87,7 +87,7 @@ describe('native Markdown behaviors', () => {
 
     const details = root.querySelector('details')!
     const disclosure = details.querySelector<HTMLElement>('[data-cf-slot="content"]')!
-    expect(details.dataset.dfEnhanced).toBe('true')
+    expect(details.dataset.cfEnhanced).toBe('true')
     expect(disclosure.hasAttribute('inert')).toBe(false)
     details.open = false
     details.dispatchEvent(new Event('toggle'))
@@ -97,7 +97,7 @@ describe('native Markdown behaviors', () => {
     const children = root.querySelector<HTMLElement>('.cf-file-tree-children')!
     toggle.click()
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
-    expect(children.dataset.dfState).toBe('collapsed')
+    expect(children.dataset.cfState).toBe('collapsed')
     expect(children.getAttribute('aria-hidden')).toBe('true')
     expect(children.hasAttribute('inert')).toBe(true)
   })
@@ -119,7 +119,7 @@ describe('native Markdown behaviors', () => {
     toggle.click()
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
-    expect(children.dataset.dfState).toBe('collapsed')
+    expect(children.dataset.cfState).toBe('collapsed')
     expect(children.getAttribute('aria-hidden')).toBe('true')
     expect(children.hasAttribute('inert')).toBe(true)
   })
@@ -142,7 +142,7 @@ describe('native Markdown behaviors', () => {
     button.click()
     await vi.waitFor(() => {
       expect(writeText).toHaveBeenCalledWith('pnpm test')
-      expect(button.dataset.dfCopied).toBe('true')
+      expect(button.dataset.cfCopied).toBe('true')
     })
     expect(button.classList.contains('cf-action-success')).toBe(true)
     expect(button.getAttribute('aria-label')).toBe('Copy ✓')
@@ -178,7 +178,7 @@ describe('native Markdown behaviors', () => {
 
     const details = root.querySelector('details')!
     const disclosure = details.querySelector<HTMLElement>('[data-cf-slot="content"]')!
-    expect(details.dataset.dfEnhanced).toBeUndefined()
+    expect(details.dataset.cfEnhanced).toBeUndefined()
     expect(disclosure.hasAttribute('inert')).toBe(false)
     expect(root.querySelector('[data-cf-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
     expect(root.querySelector<HTMLElement>('[data-cf-tab-panel="one"]')?.hidden).toBe(false)
@@ -257,15 +257,15 @@ describe('native Markdown behaviors', () => {
 
     const details = root.querySelector<HTMLDetailsElement>('details')!
     const content = root.querySelector<HTMLElement>('[data-cf-slot="content"]')!
-    expect(details.dataset.dfEnhanced).toBe('true')
+    expect(details.dataset.cfEnhanced).toBe('true')
     expect(content.hasAttribute('inert')).toBe(true)
 
     detailsEnhancement.dispose()
-    expect(details.dataset.dfEnhanced).toBeUndefined()
+    expect(details.dataset.cfEnhanced).toBeUndefined()
     expect(content.hasAttribute('inert')).toBe(false)
     details.open = true
     details.dispatchEvent(new Event('toggle'))
-    expect(details.dataset.dfEnhanced).toBeUndefined()
+    expect(details.dataset.cfEnhanced).toBeUndefined()
 
     root.querySelector<HTMLButtonElement>('[data-cf-action="copy-snippet"]')!.click()
     await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('pnpm test'))
@@ -288,11 +288,11 @@ describe('native Markdown behaviors', () => {
     button.click()
     await Promise.resolve()
     await Promise.resolve()
-    expect(button.dataset.dfCopied).toBe('true')
+    expect(button.dataset.cfCopied).toBe('true')
 
     enhancement.dispose()
 
-    expect(button.dataset.dfCopied).toBeUndefined()
+    expect(button.dataset.cfCopied).toBeUndefined()
     expect(button.getAttribute('aria-label')).toBe('Copy')
     expect(button.querySelector('[aria-live]')?.textContent).toBe('')
     expect(vi.getTimerCount()).toBe(0)
@@ -325,7 +325,7 @@ describe('native Markdown behaviors', () => {
     await Promise.resolve()
     await Promise.resolve()
 
-    expect(button.dataset.dfCopied).toBeUndefined()
+    expect(button.dataset.cfCopied).toBeUndefined()
     expect(button.getAttribute('aria-label')).toBe('Copy')
     expect(vi.getTimerCount()).toBe(0)
   })

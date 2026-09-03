@@ -207,7 +207,9 @@ describe('runInit', () => {
 
     await expect(readFile(join(cwd, 'canofold.config.ts'), 'utf8')).resolves.toBe(config)
     await expect(readFile(join(cwd, 'handbook/index.md'), 'utf8')).resolves.toContain('# Welcome to Canofold')
-    await expect(readFile(join(cwd, 'handbook/zh/index.md'), 'utf8')).resolves.toContain('# 欢迎使用 Canofold')
+    await expect(readFile(join(cwd, 'handbook/zh/index.md'), 'utf8')).resolves.toContain(
+      '# 欢迎使用 Canofold'
+    )
     await expect(readFile(join(cwd, 'handbook/canofold-env.d.ts'), 'utf8')).resolves.toContain(
       "declare module 'react/jsx-runtime'"
     )

@@ -103,7 +103,9 @@ export interface CanofoldLocaleMessages {
   labels?: Partial<CanofoldLayoutLabels>
   brandTagline?: string
   quickActions?: Partial<CanofoldQuickActionMessages>
-  markdownElementGroups?: Partial<Record<CanofoldMarkdownElementGroupId, CanofoldMarkdownElementGroupMessages>>
+  markdownElementGroups?: Partial<
+    Record<CanofoldMarkdownElementGroupId, CanofoldMarkdownElementGroupMessages>
+  >
   markdown?: Partial<MarkdownLabels>
   notFound?: Partial<CanofoldNotFoundMessages>
 }

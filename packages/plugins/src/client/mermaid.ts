@@ -83,7 +83,7 @@ export async function loadMermaidModule(
 
 async function resolveMermaid(figure: HTMLElement) {
   const moduleUrl =
-    figure.dataset.dfModuleUrl?.trim() || new URL('./mermaid/mermaid.esm.min.mjs', import.meta.url).href
+    figure.dataset.cfModuleUrl?.trim() || new URL('./mermaid/mermaid.esm.min.mjs', import.meta.url).href
   return loadMermaidModule(moduleUrl)
 }
 
@@ -92,7 +92,7 @@ async function renderMermaid(figure: HTMLElement) {
   if (!preview) return
   const revision = (renderRevisions.get(figure) ?? 0) + 1
   renderRevisions.set(figure, revision)
-  const isCurrent = () => figure.dataset.dfEnhanced === 'true' && renderRevisions.get(figure) === revision
+  const isCurrent = () => figure.dataset.cfEnhanced === 'true' && renderRevisions.get(figure) === revision
   const mermaidApi = await resolveMermaid(figure)
   if (!isCurrent()) return
   const surface = resolveThemeColor(figure, '--cf-diagram-surface', '#ffffff')
@@ -130,11 +130,11 @@ async function renderMermaid(figure: HTMLElement) {
         signalTextColor: foreground
       }
     })
-    return mermaidApi.render(`cf-mermaid-${++sequence}`, figure.dataset.dfSource ?? '')
+    return mermaidApi.render(`cf-mermaid-${++sequence}`, figure.dataset.cfSource ?? '')
   })
   if (!result || !isCurrent()) return
   preview.innerHTML = result.svg
-  delete figure.dataset.dfRenderError
+  delete figure.dataset.cfRenderError
 }
 
 export function enhance(root: ParentNode = document) {
@@ -150,7 +150,7 @@ export function enhance(root: ParentNode = document) {
       const figures = root.querySelectorAll<HTMLElement>('[data-cf-plugin-diagram="mermaid"]')
       for (const figure of figures) {
         void renderMermaid(figure).catch((error: unknown) => {
-          figure.dataset.dfRenderError = 'true'
+          figure.dataset.cfRenderError = 'true'
           console.error('[canofold] Mermaid render failed:', error)
         })
       }

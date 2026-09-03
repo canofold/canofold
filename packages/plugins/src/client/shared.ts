@@ -43,7 +43,7 @@ function setupActions(figure: HTMLElement) {
   const controller = new AbortController()
   const copyTimers = new Map<HTMLButtonElement, number>()
   const dialogs = new Set<HTMLDialogElement>()
-  const source = figure.dataset.dfSource ?? ''
+  const source = figure.dataset.cfSource ?? ''
   const preview = figure.querySelector<HTMLElement>('.cf-diagram-preview')
   const sourcePanel = figure.querySelector<HTMLElement>('.cf-diagram-source')
   const zoomControls = figure.querySelector<HTMLElement>('.cf-diagram-zoom-controls')
@@ -67,9 +67,9 @@ function setupActions(figure: HTMLElement) {
     if (!preview) return
     preview.style.setProperty('--cf-diagram-zoom-width', `${scale * 100}%`)
     preview.style.setProperty('--cf-diagram-zoom-max-width', `${56.25 * scale}rem`)
-    preview.dataset.dfScale = String(scale)
+    preview.dataset.cfScale = String(scale)
     for (const button of buttons) {
-      const action = button.dataset.dfDiagramAction
+      const action = button.dataset.cfDiagramAction
       if (action === 'zoom-out') button.disabled = scale <= DIAGRAM_SCALE_MIN
       if (action === 'zoom-in') button.disabled = scale >= DIAGRAM_SCALE_MAX
       if (action === 'zoom-reset') button.disabled = scale === 1
@@ -77,7 +77,7 @@ function setupActions(figure: HTMLElement) {
   }
   if (zoomControls) updateScale()
   for (const button of buttons) {
-    const action = button.dataset.dfDiagramAction as keyof typeof ICONS
+    const action = button.dataset.cfDiagramAction as keyof typeof ICONS
     button.innerHTML = ICONS[action] ?? ''
     button.addEventListener(
       'click',
@@ -105,7 +105,7 @@ function setupActions(figure: HTMLElement) {
               'aria-label',
               showingSource
                 ? (buttonStates.find((state) => state.button === button)?.ariaLabel ?? 'Show source')
-                : (button.dataset.dfDiagramPreviewLabel ?? 'Show preview')
+                : (button.dataset.cfDiagramPreviewLabel ?? 'Show preview')
             )
           } else if (action === 'expand' && preview) {
             const dialog = document.createElement('dialog')
@@ -114,13 +114,13 @@ function setupActions(figure: HTMLElement) {
             const close = document.createElement('button')
             close.type = 'button'
             close.className = 'cf-diagram-dialog-close'
-            close.setAttribute('aria-label', button.dataset.dfDiagramCloseLabel ?? 'Close expanded diagram')
+            close.setAttribute('aria-label', button.dataset.cfDiagramCloseLabel ?? 'Close expanded diagram')
             close.textContent = '×'
             close.addEventListener('click', () => dialog.close(), { signal: controller.signal })
             const expandedPreview = preview.cloneNode(true) as HTMLElement
             expandedPreview.style.removeProperty('--cf-diagram-zoom-width')
             expandedPreview.style.removeProperty('--cf-diagram-zoom-max-width')
-            delete expandedPreview.dataset.dfScale
+            delete expandedPreview.dataset.cfScale
             dialog.append(close, expandedPreview)
             dialog.addEventListener(
               'close',
@@ -143,7 +143,7 @@ function setupActions(figure: HTMLElement) {
             updateScale()
           }
         } catch (error) {
-          button.dataset.dfActionError = 'true'
+          button.dataset.cfActionError = 'true'
           console.error('[canofold] Diagram action failed:', error)
         }
       },
@@ -188,7 +188,7 @@ export function enhanceDiagrams(
   let active = true
   let disposed = false
   const figures = Array.from(root.querySelectorAll<HTMLElement>(`[data-cf-plugin-diagram="${kind}"]`)).filter(
-    (figure) => figure.dataset.dfEnhanced !== 'true'
+    (figure) => figure.dataset.cfEnhanced !== 'true'
   )
   const renderErrorStates = figures.map(
     (figure) => [figure, figure.getAttribute('data-cf-render-error')] as const
@@ -196,13 +196,13 @@ export function enhanceDiagrams(
   const cleanups: Array<() => void> = []
   const renders: Promise<void>[] = []
   for (const figure of figures) {
-    figure.dataset.dfEnhanced = 'true'
+    figure.dataset.cfEnhanced = 'true'
     cleanups.push(setupActions(figure))
     if (render) {
       renders.push(
         render(figure).catch((error: unknown) => {
           if (!active) return
-          figure.dataset.dfRenderError = 'true'
+          figure.dataset.cfRenderError = 'true'
           console.error(`[canofold] ${kind} render failed:`, error)
         })
       )
@@ -214,7 +214,7 @@ export function enhanceDiagrams(
     active = false
     cleanups.reverse().forEach((cleanup) => cleanup())
     renderErrorStates.forEach(([figure, renderError]) => {
-      delete figure.dataset.dfEnhanced
+      delete figure.dataset.cfEnhanced
       if (renderError === null) figure.removeAttribute('data-cf-render-error')
       else figure.setAttribute('data-cf-render-error', renderError)
     })

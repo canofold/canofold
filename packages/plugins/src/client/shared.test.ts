@@ -57,7 +57,7 @@ describe('diagram client lifecycle', () => {
     expect(preview.hidden).toBe(false)
     button.click()
     expect(source.hidden).toBe(true)
-    expect(figure.dataset.dfEnhanced).toBeUndefined()
+    expect(figure.dataset.cfEnhanced).toBeUndefined()
 
     const nextDispose = enhanceDiagrams(document, 'plantuml')
     button.click()
@@ -99,7 +99,7 @@ describe('diagram client lifecycle', () => {
 
     dispose()
     expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('')
-    expect(preview.dataset.dfScale).toBeUndefined()
+    expect(preview.dataset.cfScale).toBeUndefined()
     expect(reset.disabled).toBe(false)
   })
 
@@ -113,7 +113,7 @@ describe('diagram client lifecycle', () => {
     })
     await Promise.resolve()
 
-    expect(figure.dataset.dfRenderError).toBe('true')
+    expect(figure.dataset.cfRenderError).toBe('true')
     expect(error).toHaveBeenCalledWith('[canofold] mermaid render failed:', expect.any(Error))
     dispose()
     error.mockRestore()
@@ -138,7 +138,7 @@ describe('diagram client lifecycle', () => {
     await Promise.resolve()
     await Promise.resolve()
 
-    expect(figure.dataset.dfRenderError).toBeUndefined()
+    expect(figure.dataset.cfRenderError).toBeUndefined()
     expect(error).not.toHaveBeenCalled()
     error.mockRestore()
   })
@@ -181,10 +181,10 @@ describe('diagram client lifecycle', () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
     const nextDispose = enhanceDiagrams(document, 'plantuml')
     button.click()
-    await vi.waitFor(() => expect(button.dataset.dfActionError).toBe('true'))
+    await vi.waitFor(() => expect(button.dataset.cfActionError).toBe('true'))
     expect(error).toHaveBeenCalledWith('[canofold] Diagram action failed:', expect.any(Error))
     nextDispose()
-    expect(button.dataset.dfActionError).toBeUndefined()
+    expect(button.dataset.cfActionError).toBeUndefined()
   })
 
   it('keeps the latest copy feedback visible when copy is clicked repeatedly', async () => {

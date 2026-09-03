@@ -207,7 +207,9 @@ export async function runDeploy({ cwd }: { cwd: string }) {
   const config = await loadConfig(cwd)
   const outputRoot = resolveOutputRoot(cwd, config.outputDir)
   if (!(await pathExists(join(outputRoot, 'index.html')))) {
-    throw new Error(`Build output not found at ${config.outputDir}. Run canofold build before canofold deploy.`)
+    throw new Error(
+      `Build output not found at ${config.outputDir}. Run canofold build before canofold deploy.`
+    )
   }
 
   const deployDir = join(cwd, '.canofold/deploy')

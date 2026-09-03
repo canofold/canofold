@@ -19,6 +19,12 @@ function encode6Bit(value: number) {
   return normalized === 62 ? '-' : '_'
 }
 
+function stripTrailingSlashes(value: string) {
+  let end = value.length
+  while (end > 0 && value[end - 1] === '/') end -= 1
+  return value.slice(0, end)
+}
+
 function encodePlantUml(source: string) {
   const normalized = /@start\w+/i.test(source) ? source : `@startuml\n${source}\n@enduml`
   const bytes = deflateSync(strToU8(normalized), { level: 9 })
@@ -37,7 +43,7 @@ function encodePlantUml(source: string) {
 
 /** Enable PlantUML fenced code blocks as an opt-in official plugin. */
 export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
-  const server = options.server === false ? '' : (options.server?.trim().replace(/\/+$/, '') ?? '')
+  const server = options.server === false ? '' : stripTrailingSlashes(options.server?.trim() ?? '')
 
   return defineMarkdownPlugin({
     name: 'plantuml',

@@ -96,7 +96,7 @@ function setInert(element: HTMLElement, inert: boolean) {
 }
 
 function syncDetails(details: HTMLDetailsElement) {
-  details.dataset.dfEnhanced = 'true'
+  details.dataset.cfEnhanced = 'true'
   const content = details.querySelector<HTMLElement>('[data-cf-slot="content"]')
   if (content) setInert(content, !details.open)
 }
@@ -148,16 +148,16 @@ function feedback(
     restoreClasses()
     if (live) live.textContent = liveText
   }
-  const baseLabel = button.dataset.dfIdleLabel || button.getAttribute('aria-label') || ''
-  button.dataset.dfIdleLabel = baseLabel
+  const baseLabel = button.dataset.cfIdleLabel || button.getAttribute('aria-label') || ''
+  button.dataset.cfIdleLabel = baseLabel
   button.classList.toggle('cf-action-success', success)
   button.classList.toggle('cf-action-error', !success)
   if (success) {
-    button.dataset.dfCopied = 'true'
-    delete button.dataset.dfCopyError
+    button.dataset.cfCopied = 'true'
+    delete button.dataset.cfCopyError
   } else {
-    button.dataset.dfCopyError = 'true'
-    delete button.dataset.dfCopied
+    button.dataset.cfCopyError = 'true'
+    delete button.dataset.cfCopied
   }
   const label = success ? `${baseLabel} ✓` : failureLabel || baseLabel
   button.setAttribute('aria-label', label)
@@ -177,9 +177,9 @@ async function copyForAction(action: string, button: HTMLElement, state: NativeE
   if (!interaction) return
   const value =
     action === 'copy-section-link'
-      ? `${window.location.origin}${window.location.pathname}${window.location.search}${interaction.dataset.dfAnchor ?? ''}`
+      ? `${window.location.origin}${window.location.pathname}${window.location.search}${interaction.dataset.cfAnchor ?? ''}`
       : action === 'copy-snippet'
-        ? (interaction.dataset.dfValue ?? '')
+        ? (interaction.dataset.cfValue ?? '')
         : action === 'copy-code'
           ? (interaction.closest('.cf-code')?.querySelector('pre')?.textContent ?? '')
           : action === 'copy-terminal'
@@ -187,7 +187,7 @@ async function copyForAction(action: string, button: HTMLElement, state: NativeE
             : ''
   const success = await copyMarkdownText(value)
   if (!ownsBehavior(state, behavior)) return
-  feedback(button, success, state, behavior, interaction.dataset.dfCopyFailureLabel)
+  feedback(button, success, state, behavior, interaction.dataset.cfCopyFailureLabel)
 }
 
 function tabTriggers(root: HTMLElement) {
@@ -263,14 +263,14 @@ function activateTab(
       state.tabs.delete(root)
     })
   }
-  const value = trigger.dataset.dfTab ?? ''
+  const value = trigger.dataset.cfTab ?? ''
   triggers.forEach((candidate) => {
     const selected = candidate === trigger
     candidate.setAttribute('aria-selected', String(selected))
     candidate.tabIndex = selected ? 0 : -1
   })
   panels.forEach((panel) => {
-    panel.hidden = panel.dataset.dfTabPanel !== value
+    panel.hidden = panel.dataset.cfTabPanel !== value
   })
   revealTab(trigger)
   if (focus) trigger.focus()
@@ -321,8 +321,8 @@ function toggleFileTree(button: HTMLButtonElement, state: NativeEnhancementState
   const expanded = button.getAttribute('aria-expanded') !== 'false'
   const nextExpanded = !expanded
   button.setAttribute('aria-expanded', String(nextExpanded))
-  branch.dataset.dfState = nextExpanded ? 'expanded' : 'collapsed'
-  content.dataset.dfState = nextExpanded ? 'expanded' : 'collapsed'
+  branch.dataset.cfState = nextExpanded ? 'expanded' : 'collapsed'
+  content.dataset.cfState = nextExpanded ? 'expanded' : 'collapsed'
   if (nextExpanded) content.removeAttribute('aria-hidden')
   else content.setAttribute('aria-hidden', 'true')
   setInert(content, !nextExpanded)
@@ -373,7 +373,7 @@ function createState(root: ParentNode): NativeEnhancementState {
       event.preventDefault()
       if (typeof tabList.scrollBy === 'function') {
         tabList.scrollBy({
-          left: Number(tabScroll.dataset.dfDirection || 1) * Math.max(180, tabList.clientWidth * 0.72),
+          left: Number(tabScroll.dataset.cfDirection || 1) * Math.max(180, tabList.clientWidth * 0.72),
           behavior: 'smooth'
         })
       }
@@ -390,7 +390,7 @@ function createState(root: ParentNode): NativeEnhancementState {
       return
     }
     const action = closestWithin<HTMLElement>(root, event.target, '[data-cf-action]')
-    if (action?.dataset.dfAction) void copyForAction(action.dataset.dfAction, action, state)
+    if (action?.dataset.cfAction) void copyForAction(action.dataset.cfAction, action, state)
   }
   const onKeyDown = (event: Event) => {
     if (!(event instanceof KeyboardEvent) || !(event.target instanceof HTMLButtonElement)) return
