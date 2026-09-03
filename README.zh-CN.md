@@ -4,8 +4,6 @@
 
 Canofold 是一个静态优先、低侵入、可扩展的知识文档平台。它使用统一的内容模型，将 Markdown 和 MDX 构建成多语言、多版本的网站、搜索索引和 AI-ready 知识输出。
 
-> **从 Docfuse 迁移？** Canofold 是其后继名称。请将 `docfuse` 替换为 `canofold`、`@docfuse/*` 替换为 `@canofold/*`、`docfuse.config.*` 重命名为 `canofold.config.*`，并将 `.docfuse/` 重命名为 `.canofold/`。旧 Docfuse 包会暂时保留，待 Canofold 包完成发布和验证后再标记为 deprecated。
-
 ## 包与用途
 
 | 包 | 适用场景 |

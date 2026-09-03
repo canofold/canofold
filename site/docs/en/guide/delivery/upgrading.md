@@ -21,20 +21,6 @@ pnpm exec canofold build
 
 The first build bypasses old cache state and proves that the new release can generate a complete site from source. The second build verifies the persistent cache path.
 
-## Migrating from Docfuse 0.1
-
-Canofold 0.2 is the renamed successor to Docfuse. Update all project-owned names together:
-
-| Docfuse 0.1 | Canofold 0.2 |
-| --- | --- |
-| `docfuse` | `canofold` |
-| `@docfuse/markdown` | `@canofold/markdown` |
-| `@docfuse/plugins` | `@canofold/plugins` |
-| `docfuse.config.*` | `canofold.config.*` |
-| `.docfuse/` | `.canofold/` |
-
-Install the successor packages, rename the configuration file, and run a clean build before deleting the old generated directory. The former npm packages remain available temporarily and will show a deprecation notice after the successor packages are published and verified.
-
 ## Pre-release checks
 
 - Open the home page, deep routes, the 404 page, and static assets in the production preview.

@@ -8,7 +8,6 @@ dist/
 *.tgz
 
 # Canofold generated artifacts at any depth, including `site/.canofold`.
-# Keep the previous Docfuse directory ignored so leftover local output is not committed.
 .canofold/
 .canofold-dev/
 .docfuse/

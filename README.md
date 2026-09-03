@@ -4,8 +4,6 @@ English | [简体中文](./README.zh-CN.md)
 
 Canofold is a static-first, minimally invasive, and extensible knowledge and documentation platform. It uses a unified content model to turn Markdown and MDX into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
 
-> **Migrating from Docfuse?** Canofold is its successor. Replace `docfuse` with `canofold`, `@docfuse/*` with `@canofold/*`, `docfuse.config.*` with `canofold.config.*`, and `.docfuse/` with `.canofold/`. The Docfuse packages remain available temporarily and will be deprecated only after the Canofold packages are published and verified.
-
 ## Packages
 
 | Package | Use it when |
