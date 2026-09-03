@@ -322,7 +322,7 @@ Command failed with exit code 1
 
 独占一行的 HTTP(S) 链接在启用 `linkCard()` 后转换为链接卡片：
 
-[Canofold GitHub 仓库](https://github.com/canofold/docfuse)
+[Canofold GitHub 仓库](https://github.com/canofold/canofold)
 
 ### File Tree / 文件树
 

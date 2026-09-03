@@ -5,8 +5,8 @@ export default defineConfig({
   title: 'Canofold',
   description: '静态优先、低侵入、可扩展的知识文档平台',
   siteUrl: 'https://canofold.dev',
-  github: 'https://github.com/canofold/docfuse',
-  editUrl: 'https://github.com/canofold/docfuse/edit/main/site/docs',
+  github: 'https://github.com/canofold/canofold',
+  editUrl: 'https://github.com/canofold/canofold/edit/main/site/docs',
   requiredVersion: '^0.2.0',
   theme: {
     logo: '/logo-light.svg',

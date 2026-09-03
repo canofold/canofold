@@ -7,11 +7,11 @@
   "homepage": "https://canofold.dev/markdown/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/canofold/docfuse.git",
+    "url": "git+https://github.com/canofold/canofold.git",
     "directory": "packages/markdown"
   },
   "bugs": {
-    "url": "https://github.com/canofold/docfuse/issues"
+    "url": "https://github.com/canofold/canofold/issues"
   },
   "keywords": [
     "markdown",

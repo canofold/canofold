@@ -304,7 +304,7 @@ Exact props, types, and public entries.
 
 With `linkCard()` enabled, a standalone HTTP(S) link becomes a link card:
 
-[Canofold on GitHub](https://github.com/canofold/docfuse)
+[Canofold on GitHub](https://github.com/canofold/canofold)
 
 ### File Tree
 

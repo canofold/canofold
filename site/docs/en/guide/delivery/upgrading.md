@@ -8,7 +8,7 @@ order: 45
 
 # Upgrading Canofold
 
-Before upgrading, read the compatibility changes and upgrade steps for the target version in the [Changelog](https://github.com/canofold/docfuse/blob/main/CHANGELOG.md). If your project directly depends on `@canofold/markdown` or `@canofold/plugins`, review their versions and public entries as well.
+Before upgrading, read the compatibility changes and upgrade steps for the target version in the [Changelog](https://github.com/canofold/canofold/blob/main/CHANGELOG.md). If your project directly depends on `@canofold/markdown` or `@canofold/plugins`, review their versions and public entries as well.
 
 Install an explicit project-local CLI release, commit the lockfile, and make sure `requiredVersion` includes that release:
 

@@ -6,7 +6,7 @@ Security fixes target the latest release line. The `0.x` series is experimental;
 
 ## Reporting a vulnerability
 
-Please do not open a public issue for a security vulnerability. Use GitHub's private vulnerability reporting for `canofold/docfuse` when available, or contact the repository owner through the email listed on the GitHub profile. Include:
+Please do not open a public issue for a security vulnerability. Use GitHub's private vulnerability reporting for `canofold/canofold` when available, or contact the repository owner through the email listed on the GitHub profile. Include:
 
 - affected package and version;
 - a minimal reproduction or proof of concept;

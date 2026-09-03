@@ -7,11 +7,11 @@
   "homepage": "https://canofold.dev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/canofold/docfuse.git",
+    "url": "git+https://github.com/canofold/canofold.git",
     "directory": "packages/plugins"
   },
   "bugs": {
-    "url": "https://github.com/canofold/docfuse/issues"
+    "url": "https://github.com/canofold/canofold/issues"
   },
   "keywords": [
     "canofold",
