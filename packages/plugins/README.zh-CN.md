@@ -47,6 +47,6 @@ export default defineConfig({
 
 包根入口和 `@canofold/plugins/math` 等工厂子路径属于公共 API。浏览器与 CSS 入口由生成站点消费，不是插件工厂。
 
-选项、完整示例、生命周期区别和验证方法见[官方插件指南](https://docfuse.dev/guide/site/plugins/)。
+选项、完整示例、生命周期区别和验证方法见[官方插件指南](https://canofold.dev/guide/site/plugins/)。
 
 许可证：MIT

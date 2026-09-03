@@ -5,6 +5,7 @@
 - Rename the project from Docfuse to Canofold, including the CLI, configuration file, generated output directory, environment variables, DOM/CSS prefixes, and package names.
 - Publish the successor packages as `canofold`, `@canofold/markdown`, and `@canofold/plugins`; the previously published Docfuse packages will remain available with migration notices.
 - Transfer the living repository to `canofold/docfuse` without deleting the previous Docfuse repository. npm publishing continues through OIDC staged releases of `canofold`, `@canofold/markdown`, and `@canofold/plugins`.
+- Use `https://canofold.dev` as the canonical site origin; `docfuse.dev` remains available for redirects until the cutover.
 
 ## 0.1.2 - 2026-08-30
 

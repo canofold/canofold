@@ -28,6 +28,6 @@ pnpm exec canofold dev
 
 Canofold 是构建工具，不是沙箱。MDX、本地组件、配置和 Extension 都会以构建进程的权限执行，只能使用经过审核的源码。
 
-使用方法、配置、部署和故障排查见 [Canofold 文档](https://docfuse.dev/guide/)。
+使用方法、配置、部署和故障排查见 [Canofold 文档](https://canofold.dev/guide/)。
 
 许可证：MIT

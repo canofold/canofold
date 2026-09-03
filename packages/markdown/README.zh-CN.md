@@ -45,6 +45,6 @@ import '@canofold/plugins/math.css'
 <Markdown source={source} options={{ plugins: [math()] }} />
 ```
 
-渲染选项、MDX、写作语法、主题和浏览器增强见 [Markdown SDK 文档](https://docfuse.dev/markdown/)。
+渲染选项、MDX、写作语法、主题和浏览器增强见 [Markdown SDK 文档](https://canofold.dev/markdown/)。
 
 许可证：MIT

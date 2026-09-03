@@ -40,15 +40,15 @@ pnpm exec canofold init
 pnpm docs:dev
 ```
 
-脚本中的裸 `canofold` 会由包管理器从 `node_modules/.bin` 解析。临时执行本地版本时使用 `pnpm exec canofold ...`；只有全局安装且全局 bin 在 PATH 中时，才可以在任意 Shell 直接运行裸 `canofold ...`。完整说明见[安装与运行](https://docfuse.dev/guide/introduction/installation/)。
+脚本中的裸 `canofold` 会由包管理器从 `node_modules/.bin` 解析。临时执行本地版本时使用 `pnpm exec canofold ...`；只有全局安装且全局 bin 在 PATH 中时，才可以在任意 Shell 直接运行裸 `canofold ...`。完整说明见[安装与运行](https://canofold.dev/guide/introduction/installation/)。
 
 ## 文档入口
 
-- [指南](https://docfuse.dev/guide/)：安装、内容创作、站点配置、构建与发布流程。
-- [参考](https://docfuse.dev/reference/)：站点字段、Frontmatter、CLI、React API、构建产物和项目资源。
-- [Markdown SDK](https://docfuse.dev/markdown/)：`@canofold/markdown` 的能力边界、接入方式和写作语法。
-- [Playground](https://docfuse.dev/markdown/playground/)：对照查看 Markdown 源码、标准元素和扩展组件的渲染效果。
-- [安全边界](https://docfuse.dev/reference/output/security/)：可信 Markdown、MDX、扩展和私有站点要求。
+- [指南](https://canofold.dev/guide/)：安装、内容创作、站点配置、构建与发布流程。
+- [参考](https://canofold.dev/reference/)：站点字段、Frontmatter、CLI、React API、构建产物和项目资源。
+- [Markdown SDK](https://canofold.dev/markdown/)：`@canofold/markdown` 的能力边界、接入方式和写作语法。
+- [Playground](https://canofold.dev/markdown/playground/)：对照查看 Markdown 源码、标准元素和扩展组件的渲染效果。
+- [安全边界](https://canofold.dev/reference/output/security/)：可信 Markdown、MDX、扩展和私有站点要求。
 
 Canofold 构建的是完整静态 HTML，默认使用内置 compact 本地搜索，也可通过 `@canofold/plugins` 启用 Pagefind；同时可生成 `llms.txt`、Markdown 原文、页面索引和分片语料。输出目录默认是 `.canofold/dist/`，可发布到任意静态托管平台。
 

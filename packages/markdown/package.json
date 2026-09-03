@@ -4,7 +4,7 @@
   "description": "An interactive, themeable Markdown renderer for knowledge and documentation sites.",
   "license": "MIT",
   "author": "Canofold Contributors",
-  "homepage": "https://docfuse.dev/markdown/",
+  "homepage": "https://canofold.dev/markdown/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/canofold/docfuse.git",

@@ -40,15 +40,15 @@ Put daily commands in project scripts:
 pnpm docs:dev
 ```
 
-The package manager resolves bare `canofold` inside scripts from `node_modules/.bin`. Use `pnpm exec canofold ...` for an ad-hoc local command. A bare command in an arbitrary shell requires a global install and a global bin directory on PATH. See [Installation and invocation](https://docfuse.dev/en/guide/introduction/installation/) for the complete model.
+The package manager resolves bare `canofold` inside scripts from `node_modules/.bin`. Use `pnpm exec canofold ...` for an ad-hoc local command. A bare command in an arbitrary shell requires a global install and a global bin directory on PATH. See [Installation and invocation](https://canofold.dev/en/guide/introduction/installation/) for the complete model.
 
 ## Documentation
 
-- [Guide](https://docfuse.dev/en/guide/): installation, authoring, site configuration, build, and delivery workflows.
-- [Reference](https://docfuse.dev/en/reference/): site fields, frontmatter, CLI, React API, build output, and project resources.
-- [Markdown SDK](https://docfuse.dev/en/markdown/): `@canofold/markdown` boundaries, integration, and authoring syntax.
-- [Markdown Playground](https://docfuse.dev/en/markdown/playground/): compare Markdown source with standard elements and extension-component output.
-- [Security boundaries](https://docfuse.dev/en/reference/output/security/): trusted Markdown, MDX, extensions, and private sites.
+- [Guide](https://canofold.dev/en/guide/): installation, authoring, site configuration, build, and delivery workflows.
+- [Reference](https://canofold.dev/en/reference/): site fields, frontmatter, CLI, React API, build output, and project resources.
+- [Markdown SDK](https://canofold.dev/en/markdown/): `@canofold/markdown` boundaries, integration, and authoring syntax.
+- [Markdown Playground](https://canofold.dev/en/markdown/playground/): compare Markdown source with standard elements and extension-component output.
+- [Security boundaries](https://canofold.dev/en/reference/output/security/): trusted Markdown, MDX, extensions, and private sites.
 
 Canofold emits complete static HTML, uses its built-in compact local search by default, and offers Pagefind through `@canofold/plugins`. It can also generate `llms.txt`, Markdown sources, page indexes, and bounded corpus shards. The default output directory is `.canofold/dist/`, ready for any static host.
 

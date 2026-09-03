@@ -28,6 +28,6 @@ pnpm exec canofold dev
 
 Canofold is a build tool, not a sandbox. MDX, local components, configuration, and extensions execute with build-process permissions and must come from reviewed sources.
 
-See the [Canofold documentation](https://docfuse.dev/en/guide/) for authoring, configuration, deployment, and troubleshooting.
+See the [Canofold documentation](https://canofold.dev/en/guide/) for authoring, configuration, deployment, and troubleshooting.
 
 License: MIT

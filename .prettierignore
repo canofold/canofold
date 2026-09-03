@@ -3,5 +3,7 @@ node_modules
 **/dist
 **/.docfuse
 **/.docfuse-dev
+**/.canofold
+**/.canofold-dev
 coverage
 **/*.md

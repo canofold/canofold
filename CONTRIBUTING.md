@@ -55,7 +55,7 @@ Stable API changes require a compatibility note and a changelog entry. Internal 
 
 Canofold is in stabilization mode. A new top-level configuration field, public export, plugin factory, or lifecycle hook requires a concrete current use case, focused contract tests, public documentation, and release-budget verification. Prefer improving reliability and diagnostics over expanding the capability surface.
 
-For a release-impacting change, run `pnpm test:release`, update `CHANGELOG.md`, inspect the packed packages, and verify the generated site in current desktop and mobile browsers. The [public API policy](https://docfuse.dev/en/reference/api/public-api/) defines the supported surface. A new dependency needs a trust, license, and size justification; executable configuration or extension changes need an explicit security-boundary review.
+For a release-impacting change, run `pnpm test:release`, update `CHANGELOG.md`, inspect the packed packages, and verify the generated site in current desktop and mobile browsers. The [public API policy](https://canofold.dev/en/reference/api/public-api/) defines the supported surface. A new dependency needs a trust, license, and size justification; executable configuration or extension changes need an explicit security-boundary review.
 
 ## Release process
 

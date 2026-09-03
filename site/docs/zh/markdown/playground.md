@@ -28,7 +28,7 @@ layout: playground
 
 状态可以使用 :badge[默认]、:badge[Beta]{tone="accent"}、:badge[已发布]{tone="success"}、:badge[待确认]{tone="warning"} 和 :badge[有风险]{tone="danger"}。
 
-[普通链接](/guide/introduction/getting-started/) 保留下划线和清晰的 hover 状态；自动链接也遵循相同规则：https://docfuse.dev 。
+[普通链接](/guide/introduction/getting-started/) 保留下划线和清晰的 hover 状态；自动链接也遵循相同规则：https://canofold.dev 。
 
 [引用式链接][guide] 与普通链接使用同一视觉规则。反斜杠转义后的 \*星号\* 保持为文字，HTML 实体 `&copy;` 解码为 &copy;。这一行末尾改用显式 `<br />`，<br />
 因此这里是一个明确的 `br` 硬换行。

@@ -4,7 +4,7 @@
   "description": "A static-first, minimally invasive knowledge and documentation platform for Markdown, MDX, search, and AI-ready output.",
   "license": "MIT",
   "author": "Canofold Contributors",
-  "homepage": "https://docfuse.dev",
+  "homepage": "https://canofold.dev",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/canofold/docfuse.git",

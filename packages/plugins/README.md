@@ -47,6 +47,6 @@ When using the plugins directly with `@canofold/markdown` in a React application
 
 Package-root and focused factory entries such as `@canofold/plugins/math` are public. Browser and CSS entries are consumed by generated sites and should not be treated as plugin factories.
 
-See the [official plugin guide](https://docfuse.dev/en/guide/site/plugins/) for options, examples, lifecycle differences, and verification steps.
+See the [official plugin guide](https://canofold.dev/en/guide/site/plugins/) for options, examples, lifecycle differences, and verification steps.
 
 License: MIT

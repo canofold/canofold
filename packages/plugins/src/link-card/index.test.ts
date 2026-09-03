@@ -22,13 +22,13 @@ describe('linkCard plugin', () => {
   })
 
   it('leaves relative links and internal hosts as ordinary paragraphs', async () => {
-    const html = await render('[Relative](/guide/)\n\n[Internal](https://docfuse.dev/guide)', [
-      linkCard({ internalHosts: ['docfuse.dev'] })
+    const html = await render('[Relative](/guide/)\n\n[Internal](https://canofold.dev/guide)', [
+      linkCard({ internalHosts: ['canofold.dev'] })
     ])
 
     expect(html).not.toContain('cf-link-card')
     expect(html).toContain('href="/guide/"')
-    expect(html).toContain('href="https://docfuse.dev/guide"')
+    expect(html).toContain('href="https://canofold.dev/guide"')
   })
 
   it('does not rewrite inline links next to other text', async () => {

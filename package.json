@@ -2,7 +2,7 @@
   "name": "canofold-workspace",
   "private": true,
   "license": "MIT",
-  "homepage": "https://docfuse.dev",
+  "homepage": "https://canofold.dev",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/canofold/docfuse.git"

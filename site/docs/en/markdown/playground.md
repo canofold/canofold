@@ -26,7 +26,7 @@ Body text supports **strong**, _emphasis_, ~~deletion~~, <mark>highlight</mark>,
 
 Statuses use :badge[Default], :badge[Beta]{tone="accent"}, :badge[Released]{tone="success"}, :badge[Review]{tone="warning"}, and :badge[Risk]{tone="danger"}.
 
-[A normal link](/en/guide/introduction/getting-started/) and an autolink <https://docfuse.dev> keep the same visual and keyboard contract.
+[A normal link](/en/guide/introduction/getting-started/) and an autolink <https://canofold.dev> keep the same visual and keyboard contract.
 
 ---
 

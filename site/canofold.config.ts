@@ -4,7 +4,7 @@ import { defineConfig } from 'canofold'
 export default defineConfig({
   title: 'Canofold',
   description: '静态优先、低侵入、可扩展的知识文档平台',
-  siteUrl: 'https://docfuse.dev',
+  siteUrl: 'https://canofold.dev',
   github: 'https://github.com/canofold/docfuse',
   editUrl: 'https://github.com/canofold/docfuse/edit/main/site/docs',
   requiredVersion: '^0.2.0',
@@ -26,8 +26,8 @@ export default defineConfig({
       mermaid(),
       plantUml({ server: 'https://www.plantuml.com/plantuml/svg' }),
       kroki(),
-      externalLinks({ internalHosts: ['docfuse.dev'] }),
-      linkCard({ internalHosts: ['docfuse.dev'] })
+      externalLinks({ internalHosts: ['canofold.dev'] }),
+      linkCard({ internalHosts: ['canofold.dev'] })
     ]
   },
   navigation: {
