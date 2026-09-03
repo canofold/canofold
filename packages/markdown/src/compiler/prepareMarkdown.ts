@@ -72,7 +72,7 @@ export async function prepareMarkdown(
   })
   const tree = processor.parse(normalizeCallouts(source))
   const document = await processor.run(tree, {
-    data: { docfuseLocale: options?.locale?.trim() || undefined }
+    data: { canofoldLocale: options?.locale?.trim() || undefined }
   })
   return {
     document: document as PreparedMarkdown['document'],

@@ -16,9 +16,9 @@ export const RICH_MARKDOWN_BEHAVIOR_NAMES = [
 type RichBehaviorName = (typeof RICH_MARKDOWN_BEHAVIOR_NAMES)[number]
 
 const selectors: Record<RichBehaviorName, string> = {
-  gallery: '[data-df-island="gallery"]',
-  image: '[data-df-island="image"]',
-  table: '[data-df-island="table"]'
+  gallery: '[data-cf-island="gallery"]',
+  image: '[data-cf-island="image"]',
+  table: '[data-cf-island="table"]'
 }
 
 const loaders: Record<RichBehaviorName, () => Promise<IslandModule>> = {
@@ -38,7 +38,7 @@ function knownRichNames(names: readonly MarkdownBehaviorName[]): RichBehaviorNam
 function matchingElements(root: ParentNode, selector: string) {
   const own = root instanceof HTMLElement && root.matches(selector) ? [root] : []
   return [...own, ...root.querySelectorAll<HTMLElement>(selector)].filter(
-    (element) => !element.closest('[data-df-runtime="react"]')
+    (element) => !element.closest('[data-cf-runtime="react"]')
   )
 }
 

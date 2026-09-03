@@ -24,7 +24,7 @@ pnpm docs:check
 pnpm docs:build
 ```
 
-静态文件默认生成到 `.docfuse/dist/`。
+静态文件默认生成到 `.canofold/dist/`。
 :::
 
 :::step[预览生产产物]
@@ -37,7 +37,7 @@ pnpm docs:preview
 :::
 ::::
 
-需要排除旧缓存影响时运行 `pnpm exec docfuse build --no-cache`。需要删除生成产物和构建状态时运行 `pnpm exec docfuse clean`。
+需要排除旧缓存影响时运行 `pnpm exec canofold build --no-cache`。需要删除生成产物和构建状态时运行 `pnpm exec canofold clean`。
 
 ## 按能力验收
 
@@ -48,4 +48,4 @@ pnpm docs:preview
 | Extension | 源码和页面修改已经生效，声明的文件存在于 `outputDir/extensions/{name}/` |
 | 项目静态资源 | 深层路由中的图片、字体和下载文件没有 404 |
 
-构建完成后，按[部署指南](/guide/delivery/deployment/)发布 `.docfuse/dist/`。
+构建完成后，按[部署指南](/guide/delivery/deployment/)发布 `.canofold/dist/`。

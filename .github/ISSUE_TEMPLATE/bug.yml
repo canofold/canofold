@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible Docfuse defect
+description: Report a reproducible Canofold defect
 title: '[Bug]: '
 labels: [bug]
 body:
@@ -12,8 +12,8 @@ body:
   - type: input
     attributes:
       label: Versions
-      description: Docfuse, Node.js, package manager, and operating-system versions.
-      placeholder: docfuse 0.1.0; Node 22.x; pnpm 11.9; macOS 15
+      description: Canofold, Node.js, package manager, and operating-system versions.
+      placeholder: canofold 0.2.0; Node 22.x; pnpm 11.9; macOS 15
     validations:
       required: true
   - type: textarea

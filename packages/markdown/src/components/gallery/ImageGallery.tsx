@@ -150,27 +150,27 @@ function galleryLabels(labels: ImageGalleryProps['labels'], props: Record<string
   return {
     gallery:
       labels?.gallery ??
-      (stringProp(props, 'data-df-gallery-label', 'dataDfGalleryLabel') ||
+      (stringProp(props, 'data-cf-gallery-label', 'dataCfGalleryLabel') ||
         DEFAULT_MARKDOWN_LABELS.imageGallery),
     close:
       labels?.close ??
-      (stringProp(props, 'data-df-close-label', 'dataDfCloseLabel') ||
+      (stringProp(props, 'data-cf-close-label', 'dataCfCloseLabel') ||
         DEFAULT_MARKDOWN_LABELS.closeImageGallery),
     previous:
       labels?.previous ??
-      (stringProp(props, 'data-df-previous-label', 'dataDfPreviousLabel') ||
+      (stringProp(props, 'data-cf-previous-label', 'dataCfPreviousLabel') ||
         DEFAULT_MARKDOWN_LABELS.previousGalleryImage),
     next:
       labels?.next ??
-      (stringProp(props, 'data-df-next-label', 'dataDfNextLabel') ||
+      (stringProp(props, 'data-cf-next-label', 'dataCfNextLabel') ||
         DEFAULT_MARKDOWN_LABELS.nextGalleryImage),
     thumbnails:
       labels?.thumbnails ??
-      (stringProp(props, 'data-df-thumbnails-label', 'dataDfThumbnailsLabel') ||
+      (stringProp(props, 'data-cf-thumbnails-label', 'dataCfThumbnailsLabel') ||
         DEFAULT_MARKDOWN_LABELS.galleryThumbnails),
     image:
       labels?.image ??
-      (stringProp(props, 'data-df-image-label', 'dataDfImageLabel') || DEFAULT_MARKDOWN_LABELS.galleryImage)
+      (stringProp(props, 'data-cf-image-label', 'dataCfImageLabel') || DEFAULT_MARKDOWN_LABELS.galleryImage)
   }
 }
 
@@ -240,11 +240,11 @@ export function ImageGallery({
     <>
       {resolvedItems.length
         ? resolvedItems.map((item, index) => (
-            <figure key={`${item.src}-${index}`} data-df-slot="item">
+            <figure key={`${item.src}-${index}`} data-cf-slot="item">
               <button
-                className="df-gallery-trigger"
+                className="cf-gallery-trigger"
                 type="button"
-                data-df-action="open-gallery"
+                data-cf-action="open-gallery"
                 aria-label={`${item.alt || labels.image} ${index + 1}`}
                 aria-haspopup="dialog"
                 onClick={(event) => open(index, event.currentTarget)}
@@ -269,8 +269,8 @@ export function ImageGallery({
         <MarkdownDialogPortal>
           <div
             ref={dialogRef}
-            className="df-gallery-lightbox"
-            data-df-slot="lightbox"
+            className="cf-gallery-lightbox"
+            data-cf-slot="lightbox"
             role="dialog"
             aria-modal="true"
             aria-label={labels.gallery}
@@ -278,19 +278,19 @@ export function ImageGallery({
             onKeyDown={onDialogKeyDown}
           >
             <div
-              className="df-gallery-backdrop"
-              data-df-action="close-gallery"
+              className="cf-gallery-backdrop"
+              data-cf-action="close-gallery"
               aria-hidden="true"
               onClick={close}
             />
-            <div className="df-gallery-dialog">
-              <div className="df-gallery-dialog-head">
+            <div className="cf-gallery-dialog">
+              <div className="cf-gallery-dialog-head">
                 <span>{labels.gallery}</span>
                 <button
                   ref={closeRef}
-                  className="df-icon-button"
+                  className="cf-icon-button"
                   type="button"
-                  data-df-action="close-gallery"
+                  data-cf-action="close-gallery"
                   aria-label={labels.close}
                   title={labels.close}
                   onClick={close}
@@ -298,12 +298,12 @@ export function ImageGallery({
                   <MarkdownIcon name="close" size={20} />
                 </button>
               </div>
-              <div className="df-gallery-stage">
+              <div className="cf-gallery-stage">
                 {resolvedItems.length > 1 ? (
                   <button
-                    className="df-gallery-nav df-gallery-prev"
+                    className="cf-gallery-nav cf-gallery-prev"
                     type="button"
-                    data-df-action="previous-gallery-image"
+                    data-cf-action="previous-gallery-image"
                     aria-label={labels.previous}
                     title={labels.previous}
                     onClick={() => move(-1)}
@@ -322,10 +322,10 @@ export function ImageGallery({
                     height={activeItem.height}
                   />
                   <figcaption>
-                    <span className="df-gallery-caption">{activeItem.caption || activeItem.alt}</span>
+                    <span className="cf-gallery-caption">{activeItem.caption || activeItem.alt}</span>
                     <small
-                      className="df-gallery-count"
-                      data-df-gallery-count=""
+                      className="cf-gallery-count"
+                      data-cf-gallery-count=""
                       aria-live="polite"
                       aria-atomic="true"
                     >
@@ -335,9 +335,9 @@ export function ImageGallery({
                 </figure>
                 {resolvedItems.length > 1 ? (
                   <button
-                    className="df-gallery-nav df-gallery-next"
+                    className="cf-gallery-nav cf-gallery-next"
                     type="button"
-                    data-df-action="next-gallery-image"
+                    data-cf-action="next-gallery-image"
                     aria-label={labels.next}
                     title={labels.next}
                     onClick={() => move(1)}
@@ -347,13 +347,13 @@ export function ImageGallery({
                 ) : null}
               </div>
               {resolvedItems.length > 1 ? (
-                <div className="df-gallery-thumbs" role="group" aria-label={labels.thumbnails}>
+                <div className="cf-gallery-thumbs" role="group" aria-label={labels.thumbnails}>
                   {resolvedItems.map((item, index) => (
                     <button
                       key={`${item.src}-thumb-${index}`}
                       className={index === activeIndex ? 'is-current' : undefined}
                       type="button"
-                      data-df-action="select-gallery-image"
+                      data-cf-action="select-gallery-image"
                       aria-current={index === activeIndex ? 'true' : undefined}
                       aria-label={`${item.alt || labels.image} ${index + 1}`}
                       onClick={() => setActiveIndex(index)}
@@ -373,17 +373,17 @@ export function ImageGallery({
   return (
     <div
       {...markdownDomProps(inputProps)}
-      className={['df-image-gallery', className].filter(Boolean).join(' ')}
-      data-df-component="gallery"
-      data-df-slot="root"
-      data-df-island="gallery"
-      data-df-gallery-items={serializedItems}
-      data-df-gallery-label={labels.gallery}
-      data-df-close-label={labels.close}
-      data-df-previous-label={labels.previous}
-      data-df-next-label={labels.next}
-      data-df-thumbnails-label={labels.thumbnails}
-      data-df-image-label={labels.image}
+      className={['cf-image-gallery', className].filter(Boolean).join(' ')}
+      data-cf-component="gallery"
+      data-cf-slot="root"
+      data-cf-island="gallery"
+      data-cf-gallery-items={serializedItems}
+      data-cf-gallery-label={labels.gallery}
+      data-cf-close-label={labels.close}
+      data-cf-previous-label={labels.previous}
+      data-cf-next-label={labels.next}
+      data-cf-thumbnails-label={labels.thumbnails}
+      data-cf-image-label={labels.image}
       role={role}
       aria-label={labels.gallery}
     >

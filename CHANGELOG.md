@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 - Unreleased
+
+- Rename the project from Docfuse to Canofold, including the CLI, configuration file, generated output directory, environment variables, DOM/CSS prefixes, and package names.
+- Publish the successor packages as `canofold`, `@canofold/markdown`, and `@canofold/plugins`; the previously published Docfuse packages will remain available with migration notices.
+- Transfer the living repository to `canofold/docfuse` without deleting the previous Docfuse repository. npm publishing continues through OIDC staged releases of `canofold`, `@canofold/markdown`, and `@canofold/plugins`.
+
 ## 0.1.2 - 2026-08-30
 
 - Update the production dependency stack, including Zod 4, Shiki 4, Chokidar 5, and current React patch releases.

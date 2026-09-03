@@ -8,7 +8,7 @@ order: 21
 
 # 组织文档内容
 
-Docfuse 从文件目录生成 URL、分区和递归侧栏。本页只说明内容树；页面元数据见 [Frontmatter](/reference/configuration/frontmatter/)。
+Canofold 从文件目录生成 URL、分区和递归侧栏。本页只说明内容树；页面元数据见 [Frontmatter](/reference/configuration/frontmatter/)。
 
 ## 目录规则
 

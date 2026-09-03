@@ -83,7 +83,7 @@ export interface MarkdownThemeInput {
   motion?: Partial<MarkdownThemeMotion>
 }
 
-/** Default semantic color anchors shared by Markdown and the Docfuse shell. */
+/** Default semantic color anchors shared by Markdown and the Canofold shell. */
 export const DEFAULT_SEMANTIC_COLORS = {
   light: {
     blue: '#0088ff',
@@ -126,9 +126,9 @@ export const DEFAULT_MARKDOWN_THEME: ResolvedMarkdownTheme = {
       borderStrong: 'transparent',
       hairline: 'rgb(29 29 31 / 0.1)',
       primary: DEFAULT_SEMANTIC_COLORS.light.blue,
-      primarySoft: 'color-mix(in srgb, var(--df-accent-500) 10%, white)',
+      primarySoft: 'color-mix(in srgb, var(--cf-accent-500) 10%, white)',
       primaryForeground: DEFAULT_SEMANTIC_COLORS.light.blue,
-      primaryDeep: 'color-mix(in srgb, var(--df-accent-500) 78%, black)',
+      primaryDeep: 'color-mix(in srgb, var(--cf-accent-500) 78%, black)',
       accent: DEFAULT_SEMANTIC_COLORS.light.indigo,
       info: DEFAULT_SEMANTIC_COLORS.light.blue,
       infoDeep: DEFAULT_SEMANTIC_COLORS.light.blue,
@@ -158,9 +158,9 @@ export const DEFAULT_MARKDOWN_THEME: ResolvedMarkdownTheme = {
       borderStrong: 'transparent',
       hairline: 'rgb(255 255 255 / 0.12)',
       primary: DEFAULT_SEMANTIC_COLORS.dark.blue,
-      primarySoft: 'color-mix(in srgb, var(--df-accent-500) 18%, var(--df-surface))',
+      primarySoft: 'color-mix(in srgb, var(--cf-accent-500) 18%, var(--cf-surface))',
       primaryForeground: DEFAULT_SEMANTIC_COLORS.dark.blue,
-      primaryDeep: 'color-mix(in srgb, var(--df-accent-500) 76%, white)',
+      primaryDeep: 'color-mix(in srgb, var(--cf-accent-500) 76%, white)',
       accent: DEFAULT_SEMANTIC_COLORS.dark.indigo,
       info: DEFAULT_SEMANTIC_COLORS.dark.blue,
       infoDeep: DEFAULT_SEMANTIC_COLORS.dark.blue,
@@ -211,66 +211,66 @@ export const DEFAULT_MARKDOWN_THEME: ResolvedMarkdownTheme = {
 
 export const MARKDOWN_THEME_VARIABLES = {
   colors: {
-    canvas: '--df-canvas',
-    foreground: '--df-ink',
-    text: '--df-ink-body',
-    muted: '--df-ink-secondary',
-    mutedSubtle: '--df-ink-tertiary',
-    surface: '--df-surface',
-    surfaceSecondary: '--df-surface-secondary',
-    surfaceSoft: '--df-surface-soft',
-    surfaceElevated: '--df-surface-elevated',
-    border: '--df-border',
-    borderStrong: '--df-border-strong',
-    hairline: '--df-hairline',
-    primary: '--df-accent-500',
-    primarySoft: '--df-accent-soft',
-    primaryForeground: '--df-accent-strong',
-    primaryDeep: '--df-accent-deep',
-    accent: '--df-accent-secondary',
-    info: '--df-info',
-    infoDeep: '--df-info-deep',
-    success: '--df-success',
-    successDeep: '--df-success-deep',
-    warning: '--df-warning',
-    warningDeep: '--df-warning-deep',
-    danger: '--df-danger',
-    dangerDeep: '--df-danger-deep',
-    codeBackground: '--df-surface-code',
-    codeForeground: '--df-code-ink',
-    overlay: '--df-overlay',
-    shadow: '--df-shadow-raised',
-    shadowSmall: '--df-shadow-raised-sm'
+    canvas: '--cf-canvas',
+    foreground: '--cf-ink',
+    text: '--cf-ink-body',
+    muted: '--cf-ink-secondary',
+    mutedSubtle: '--cf-ink-tertiary',
+    surface: '--cf-surface',
+    surfaceSecondary: '--cf-surface-secondary',
+    surfaceSoft: '--cf-surface-soft',
+    surfaceElevated: '--cf-surface-elevated',
+    border: '--cf-border',
+    borderStrong: '--cf-border-strong',
+    hairline: '--cf-hairline',
+    primary: '--cf-accent-500',
+    primarySoft: '--cf-accent-soft',
+    primaryForeground: '--cf-accent-strong',
+    primaryDeep: '--cf-accent-deep',
+    accent: '--cf-accent-secondary',
+    info: '--cf-info',
+    infoDeep: '--cf-info-deep',
+    success: '--cf-success',
+    successDeep: '--cf-success-deep',
+    warning: '--cf-warning',
+    warningDeep: '--cf-warning-deep',
+    danger: '--cf-danger',
+    dangerDeep: '--cf-danger-deep',
+    codeBackground: '--cf-surface-code',
+    codeForeground: '--cf-code-ink',
+    overlay: '--cf-overlay',
+    shadow: '--cf-shadow-raised',
+    shadowSmall: '--cf-shadow-raised-sm'
   },
   typography: {
-    displayFont: '--df-font-display',
-    sansFont: '--df-font-sans',
-    monoFont: '--df-font-mono',
-    bodySize: '--df-body-font-size',
-    bodyLineHeight: '--df-body-line-height',
-    headingLineHeight: '--df-heading-line-height',
-    heading1Size: '--df-heading-1-size',
-    heading2Size: '--df-heading-2-size',
-    heading3Size: '--df-heading-3-size',
-    heading4Size: '--df-heading-4-size',
-    heading5Size: '--df-heading-5-size',
-    heading6Size: '--df-heading-6-size'
+    displayFont: '--cf-font-display',
+    sansFont: '--cf-font-sans',
+    monoFont: '--cf-font-mono',
+    bodySize: '--cf-body-font-size',
+    bodyLineHeight: '--cf-body-line-height',
+    headingLineHeight: '--cf-heading-line-height',
+    heading1Size: '--cf-heading-1-size',
+    heading2Size: '--cf-heading-2-size',
+    heading3Size: '--cf-heading-3-size',
+    heading4Size: '--cf-heading-4-size',
+    heading5Size: '--cf-heading-5-size',
+    heading6Size: '--cf-heading-6-size'
   },
   layout: {
-    readingWidth: '--df-reading-width',
-    contentWidth: '--df-content-width',
-    gutter: '--df-site-gutter'
+    readingWidth: '--cf-reading-width',
+    contentWidth: '--cf-content-width',
+    gutter: '--cf-site-gutter'
   },
   geometry: {
-    radiusSmall: '--df-radius-sm',
-    radiusMedium: '--df-radius-md',
-    radiusLarge: '--df-radius-lg',
-    radiusFull: '--df-radius-full'
+    radiusSmall: '--cf-radius-sm',
+    radiusMedium: '--cf-radius-md',
+    radiusLarge: '--cf-radius-lg',
+    radiusFull: '--cf-radius-full'
   },
   motion: {
-    durationFast: '--df-duration-fast',
-    durationNormal: '--df-duration-normal',
-    easing: '--df-easing-default'
+    durationFast: '--cf-duration-fast',
+    durationNormal: '--cf-duration-normal',
+    easing: '--cf-easing-default'
   }
 } as const
 

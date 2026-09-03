@@ -28,7 +28,7 @@ async function importInChild(importPath, expression = 'true') {
 }
 
 test('target package export maps point to existing and loadable artifacts', async () => {
-  for (const packageDirectory of ['packages/markdown', 'packages/docfuse', 'packages/plugins']) {
+  for (const packageDirectory of ['packages/markdown', 'packages/canofold', 'packages/plugins']) {
     const directory = join(root, packageDirectory)
     const manifest = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
 
@@ -54,13 +54,13 @@ test('target package export maps point to existing and loadable artifacts', asyn
 test('published JavaScript entry points expose only the documented runtime API', async () => {
   const contracts = new Map([
     [
-      'packages/docfuse/dist/index.js',
+      'packages/canofold/dist/index.js',
       [
-        'DOCFUSE_EXTENSION_API_VERSION',
+        'CANOFOLD_EXTENSION_API_VERSION',
         'defineConfig',
         'defineExtension',
         'defineSearchProvider',
-        'docfuseVersion'
+        'canofoldVersion'
       ]
     ],
     [
@@ -96,15 +96,15 @@ test('published JavaScript entry points expose only the documented runtime API',
   }
 })
 
-test('Docfuse config declarations expose the contract without bundling the Zod schema', async () => {
-  const declarations = await readFile(join(root, 'packages/docfuse/dist/index.d.ts'), 'utf8')
+test('Canofold config declarations expose the contract without bundling the Zod schema', async () => {
+  const declarations = await readFile(join(root, 'packages/canofold/dist/index.d.ts'), 'utf8')
   assert.doesNotMatch(declarations, /from ['"]zod['"]|\bZod[A-Z]/)
-  assert.ok(Buffer.byteLength(declarations) < 15 * 1024, 'docfuse declarations must stay below 15 KB')
+  assert.ok(Buffer.byteLength(declarations) < 15 * 1024, 'canofold declarations must stay below 15 KB')
 })
 
-test('plugin declarations do not require the Docfuse runtime package', async () => {
+test('plugin declarations do not require the Canofold runtime package', async () => {
   const declarations = await Promise.all(
     ['index.d.ts', 'pagefind.d.ts'].map((file) => readFile(join(root, 'packages/plugins/dist', file), 'utf8'))
   )
-  for (const declaration of declarations) assert.doesNotMatch(declaration, /from ['"]docfuse['"]/)
+  for (const declaration of declarations) assert.doesNotMatch(declaration, /from ['"]canofold['"]/)
 })

@@ -8,7 +8,7 @@ order: 21
 
 # Content structure
 
-Docfuse derives URLs, sections, and a recursive sidebar from the file tree. This page owns the tree model; see [Frontmatter](/en/reference/configuration/frontmatter/) for page metadata.
+Canofold derives URLs, sections, and a recursive sidebar from the file tree. This page owns the tree model; see [Frontmatter](/en/reference/configuration/frontmatter/) for page metadata.
 
 ## Directory rules
 

@@ -1,25 +1,39 @@
 ---
-title: Upgrading Docfuse
+title: Upgrading Canofold
 description: Update project dependencies, review compatibility changes, and verify build and deployment output
 group: Guide
 subgroup: Delivery and operations
 order: 45
 ---
 
-# Upgrading Docfuse
+# Upgrading Canofold
 
-Before upgrading, read the compatibility changes and upgrade steps for the target version in the [Changelog](https://github.com/jiangxinlei/docfuse/blob/main/CHANGELOG.md). If your project directly depends on `@docfuse/markdown` or `@docfuse/plugins`, review their versions and public entries as well.
+Before upgrading, read the compatibility changes and upgrade steps for the target version in the [Changelog](https://github.com/canofold/docfuse/blob/main/CHANGELOG.md). If your project directly depends on `@canofold/markdown` or `@canofold/plugins`, review their versions and public entries as well.
 
 Install an explicit project-local CLI release, commit the lockfile, and make sure `requiredVersion` includes that release:
 
 ```bash
-pnpm add -D docfuse@<version>
-pnpm exec docfuse check
-pnpm exec docfuse build --no-cache
-pnpm exec docfuse build
+pnpm add -D canofold@<version>
+pnpm exec canofold check
+pnpm exec canofold build --no-cache
+pnpm exec canofold build
 ```
 
 The first build bypasses old cache state and proves that the new release can generate a complete site from source. The second build verifies the persistent cache path.
+
+## Migrating from Docfuse 0.1
+
+Canofold 0.2 is the renamed successor to Docfuse. Update all project-owned names together:
+
+| Docfuse 0.1 | Canofold 0.2 |
+| --- | --- |
+| `docfuse` | `canofold` |
+| `@docfuse/markdown` | `@canofold/markdown` |
+| `@docfuse/plugins` | `@canofold/plugins` |
+| `docfuse.config.*` | `canofold.config.*` |
+| `.docfuse/` | `.canofold/` |
+
+Install the successor packages, rename the configuration file, and run a clean build before deleting the old generated directory. The former npm packages remain available temporarily and will show a deprecation notice after the successor packages are published and verified.
 
 ## Pre-release checks
 

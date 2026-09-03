@@ -4,7 +4,7 @@ const result = await build({
   stdin: {
     contents: `
       import { math } from './dist/index.js'
-      globalThis.__docfusePluginBrowserSmoke = math()
+      globalThis.__canofoldPluginBrowserSmoke = math()
     `,
     resolveDir: process.cwd(),
     sourcefile: 'browser-consumer.mjs'
@@ -19,7 +19,7 @@ const result = await build({
 })
 
 const source = result.outputFiles[0]?.text ?? ''
-if (!source.includes('__docfusePluginBrowserSmoke')) {
+if (!source.includes('__canofoldPluginBrowserSmoke')) {
   throw new Error('Plugin browser consumer bundle did not include the imported math factory')
 }
 if (/node:(?:fs|path|zlib)|Pagefind did not return an index/.test(source)) {

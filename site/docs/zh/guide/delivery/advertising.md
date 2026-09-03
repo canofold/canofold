@@ -9,10 +9,10 @@ sidebar: false
 
 # 配置广告位
 
-Docfuse 提供一个位于右侧页内导航下方的图片广告位，不包含广告后台、投放计划或统计系统。
+Canofold 提供一个位于右侧页内导航下方的图片广告位，不包含广告后台、投放计划或统计系统。
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   advertising: {

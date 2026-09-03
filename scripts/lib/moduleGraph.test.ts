@@ -12,7 +12,7 @@ afterEach(async () => {
 
 describe('moduleGraph', () => {
   it('follows parent-directory imports and includes dynamic imports only when requested', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'docfuse-module-graph-'))
+    const root = await mkdtemp(join(tmpdir(), 'canofold-module-graph-'))
     temporaryDirectories.push(root)
     await mkdir(join(root, 'server'), { recursive: true })
     await writeFile(

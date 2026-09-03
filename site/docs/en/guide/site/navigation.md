@@ -8,7 +8,7 @@ order: 31
 
 # Navigation and routing
 
-Docfuse derives URLs and recursive sidebars from directories and accepts explicit top navigation per locale. This is the canonical navigation and routing page; see [Content structure](/en/guide/writing/content-structure/) for directory design.
+Canofold derives URLs and recursive sidebars from directories and accepts explicit top navigation per locale. This is the canonical navigation and routing page; see [Content structure](/en/guide/writing/content-structure/) for directory design.
 
 ## URL mapping
 
@@ -23,8 +23,8 @@ Each page produces a directory-style `index.html` and a Markdown mirror. The def
 
 ## Top navigation
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   i18n: { defaultLocale: 'en', locales: ['en', 'zh'] },
@@ -45,7 +45,7 @@ export default defineConfig({
 
 This example assumes English is the default locale. If `zh` is the default, remove `/zh/` from Chinese routes and add `/en/` to English routes.
 
-A `link` is either an absolute site route or an HTTP(S) URL. When a locale has no explicit navigation, Docfuse derives it from first-level content sections. A missing internal target fails checks or builds.
+A `link` is either an absolute site route or an HTTP(S) URL. When a locale has no explicit navigation, Canofold derives it from first-level content sections. A missing internal target fails checks or builds.
 
 ## Recursive sidebar
 

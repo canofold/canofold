@@ -4,21 +4,21 @@ import { join, resolve } from 'node:path'
 import { filesUnder } from './lib/files.mjs'
 
 const root = resolve(import.meta.dirname, '..')
-const outputRoot = join(root, 'site/.docfuse/dist')
+const outputRoot = join(root, 'site/.canofold/dist')
 const budgets = {
-  'assets/docfuse.css': 24 * 1024,
-  'assets/docfuse-search.js': 4 * 1024,
-  'assets/docfuse-markdown/index.js': 5 * 1024,
-  'assets/docfuse-plugins/kroki.js': 3 * 1024,
-  'assets/docfuse-plugins/mermaid.js': 6 * 1024,
-  'assets/docfuse-plugins/plantuml.js': 3 * 1024,
-  'assets/docfuse-plugins/diagrams.css': 4 * 1024,
-  'assets/docfuse-plugins/mermaid/mermaid.esm.min.mjs': 16 * 1024,
+  'assets/canofold.css': 24 * 1024,
+  'assets/canofold-search.js': 4 * 1024,
+  'assets/canofold-markdown/index.js': 5 * 1024,
+  'assets/canofold-plugins/kroki.js': 3 * 1024,
+  'assets/canofold-plugins/mermaid.js': 6 * 1024,
+  'assets/canofold-plugins/plantuml.js': 3 * 1024,
+  'assets/canofold-plugins/diagrams.css': 4 * 1024,
+  'assets/canofold-plugins/mermaid/mermaid.esm.min.mjs': 16 * 1024,
   'pagefind/pagefind.js': 16 * 1024,
   'pagefind/pagefind-worker.js': 20 * 1024
 }
 const optionalPluginBudgets = new Set(
-  Object.keys(budgets).filter((relativePath) => relativePath.startsWith('assets/docfuse-plugins/'))
+  Object.keys(budgets).filter((relativePath) => relativePath.startsWith('assets/canofold-plugins/'))
 )
 const pagefindTotalBudget = 4 * 1024 * 1024
 const pluginRuntimeBudget = 4 * 1024 * 1024
@@ -48,14 +48,14 @@ if (pagefindBytes > pagefindTotalBudget) {
   failures.push(`pagefind/: ${pagefindBytes} bytes exceeds ${pagefindTotalBudget}`)
 }
 
-const pluginRoot = join(outputRoot, 'assets/docfuse-plugins')
+const pluginRoot = join(outputRoot, 'assets/canofold-plugins')
 const pluginFiles = await filesUnder(pluginRoot)
 const pluginBytes = (await Promise.all(pluginFiles.map(async (path) => (await stat(path)).size))).reduce(
   (total, bytes) => total + bytes,
   0
 )
 if (pluginBytes > pluginRuntimeBudget) {
-  failures.push(`assets/docfuse-plugins/: ${pluginBytes} bytes exceeds ${pluginRuntimeBudget}`)
+  failures.push(`assets/canofold-plugins/: ${pluginBytes} bytes exceeds ${pluginRuntimeBudget}`)
 }
 for (const path of pluginFiles) {
   if (path.endsWith('.map')) failures.push(`${path}: source maps must not be published to the generated site`)

@@ -1,4 +1,4 @@
-import { defineMarkdownPlugin, type MarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import type { Element, Root } from 'hast'
 import { visit } from 'unist-util-visit'
 import { hostnameOf, isInternalHost } from '../shared/urls'
@@ -21,7 +21,7 @@ export function externalLinks(options: ExternalLinksOptions = {}): MarkdownPlugi
     version: PLUGIN_VERSION,
     cacheKey: { newTab, rel, internalHosts },
     browserCompiler: {
-      module: '@docfuse/plugins/external-links',
+      module: '@canofold/plugins/external-links',
       exportName: 'externalLinks',
       options: { newTab, rel, internalHosts }
     },

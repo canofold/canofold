@@ -31,6 +31,6 @@ import { StatusBadge } from './StatusBadge'
 <StatusBadge stable />
 ```
 
-MDX 只允许导入 `react`、`react/jsx-runtime` 和项目目录内的相对文件。其他 npm 包、项目外路径和 Docfuse 内部组件入口会使构建失败。组件变化后，引用它的页面会重新构建。
+MDX 只允许导入 `react`、`react/jsx-runtime` 和项目目录内的相对文件。其他 npm 包、项目外路径和 Canofold 内部组件入口会使构建失败。组件变化后，引用它的页面会重新构建。
 
 MDX 执行 JSX 与 JavaScript，必须视为可信构建代码；`markdown.html: 'sanitize'` 不能提供沙箱。复杂应用演示应使用截图、录屏或无业务依赖的本地 wrapper。

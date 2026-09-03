@@ -1,6 +1,6 @@
 ---
 title: 定制主题
-description: 配置 Docfuse 的 Logo、配色、排版和项目样式
+description: 配置 Canofold 的 Logo、配色、排版和项目样式
 group: 指南
 subgroup: 站点能力
 order: 36
@@ -14,8 +14,8 @@ order: 36
 
 把图片放入 `docs/public/`，再使用站点绝对路径：
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   theme: {
@@ -23,7 +23,7 @@ export default defineConfig({
     logoDark: '/logo-dark.svg',
     favicon: '/favicon.svg',
     baseColor: 'paper',
-    accentColor: 'docfuse',
+    accentColor: 'canofold',
     darkMode: true,
     radius: 8
   }
@@ -38,8 +38,8 @@ export default defineConfig({
 
 `accentColor` 控制链接、按钮和焦点等主交互颜色，可以使用内置预设，也可以传入合法 CSS 颜色：
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   theme: {
@@ -49,7 +49,7 @@ export default defineConfig({
 })
 ```
 
-站点 Shell 与 `@docfuse/markdown` 共用以下语义色：
+站点 Shell 与 `@canofold/markdown` 共用以下语义色：
 
 | 角色 | Theme Token | 用途 |
 |---|---|---|
@@ -60,12 +60,12 @@ export default defineConfig({
 | 警告 | `warning`、`warningDeep` | `warning` 提示块和待确认状态 |
 | 危险 | `danger`、`dangerDeep` | `danger` 提示块、错误和破坏性状态 |
 
-默认信息色与 Docfuse 主色使用同一蓝色锚点。`accentColor` 只改变主交互颜色；状态色保持固定，避免不同语义随品牌色变化。需要调整时再单独覆盖对应 Token。
+默认信息色与 Canofold 主色使用同一蓝色锚点。`accentColor` 只改变主交互颜色；状态色保持固定，避免不同语义随品牌色变化。需要调整时再单独覆盖对应 Token。
 
 需要覆盖具体语义色时，只写与预设不同的值：
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   theme: {
@@ -87,8 +87,8 @@ export default defineConfig({
 
 ## 排版与布局
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   theme: {
@@ -113,12 +113,12 @@ export default defineConfig({
 
 ## 项目 CSS
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   styles: ['./docs/brand.css']
 })
 ```
 
-项目 CSS 在默认样式和主题变量之后加载。优先使用主题 Token、`classNames` 和项目自己的 class。只有公共 API 明确说明的语义属性才能作为选择器；不要依赖内部 `.df-*` 类名或精确布局结构。
+项目 CSS 在默认样式和主题变量之后加载。优先使用主题 Token、`classNames` 和项目自己的 class。只有公共 API 明确说明的语义属性才能作为选择器；不要依赖内部 `.cf-*` 类名或精确布局结构。

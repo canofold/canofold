@@ -9,10 +9,10 @@ sidebar: false
 
 # Advertising
 
-Docfuse provides one image slot below the page outline. It does not include an ad backend, campaign scheduler, or analytics system.
+Canofold provides one image slot below the page outline. It does not include an ad backend, campaign scheduler, or analytics system.
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   advertising: {

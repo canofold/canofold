@@ -24,7 +24,7 @@ Checks config, frontmatter, code fences, internal links, static assets, routes, 
 pnpm docs:build
 ```
 
-Static files are written to `.docfuse/dist/` by default.
+Static files are written to `.canofold/dist/` by default.
 :::
 
 :::step[Preview production output]
@@ -37,7 +37,7 @@ Check the home page, deep routes, 404 page, search, locales, versions, and stati
 :::
 ::::
 
-Run `pnpm exec docfuse build --no-cache` to rule out stale cache state. Run `pnpm exec docfuse clean` to delete generated output and build state.
+Run `pnpm exec canofold build --no-cache` to rule out stale cache state. Run `pnpm exec canofold clean` to delete generated output and build state.
 
 ## Verify each capability
 
@@ -48,4 +48,4 @@ Run `pnpm exec docfuse build --no-cache` to rule out stale cache state. Run `pnp
 | Extension | Source and page changes are visible, and declared files exist under `outputDir/extensions/{name}/` |
 | Project assets | Images, fonts, and downloads work from deep routes without 404 responses |
 
-When the build is ready, publish `.docfuse/dist/` using the [deployment guide](/en/guide/delivery/deployment/).
+When the build is ready, publish `.canofold/dist/` using the [deployment guide](/en/guide/delivery/deployment/).

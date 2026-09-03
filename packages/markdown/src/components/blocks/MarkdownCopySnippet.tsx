@@ -28,25 +28,25 @@ export function MarkdownCopySnippet({
   inner = false,
   ...props
 }: InternalMarkdownCopySnippetProps) {
-  const value = directValue ?? (stringProp(props, 'data-df-value', 'dataDfValue') || reactText(children))
+  const value = directValue ?? (stringProp(props, 'data-cf-value', 'dataCfValue') || reactText(children))
   const copyLabel =
     directCopyLabel ||
-    stringProp(props, 'data-df-copy-label', 'dataDfCopyLabel') ||
+    stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') ||
     DEFAULT_MARKDOWN_LABELS.copySnippet
   const copyFailureLabel =
     directCopyFailureLabel ||
-    stringProp(props, 'data-df-copy-failure-label', 'dataDfCopyFailureLabel') ||
+    stringProp(props, 'data-cf-copy-failure-label', 'dataCfCopyFailureLabel') ||
     DEFAULT_MARKDOWN_LABELS.copyFailed
-  const className = mergeMarkdownClasses('df-copy-snippet', directClassName)
+  const className = mergeMarkdownClasses('cf-copy-snippet', directClassName)
   const { className: _className, ...rest } = markdownDomProps(props)
   const content = (
     <>
-      <code data-df-slot="content">{children ?? value}</code>
+      <code data-cf-slot="content">{children ?? value}</code>
       <MarkdownCopyButton
         value={value}
         label={copyLabel}
         action="copy-snippet"
-        className="df-copy-snippet-button"
+        className="cf-copy-snippet-button"
         failureLabel={copyFailureLabel}
       />
     </>
@@ -57,12 +57,12 @@ export function MarkdownCopySnippet({
     <span
       {...rest}
       className={className}
-      data-df-component="copy-snippet"
-      data-df-slot="root"
-      data-df-behavior="copy-snippet"
-      data-df-value={value}
-      data-df-copy-label={copyLabel}
-      data-df-copy-failure-label={copyFailureLabel}
+      data-cf-component="copy-snippet"
+      data-cf-slot="root"
+      data-cf-behavior="copy-snippet"
+      data-cf-value={value}
+      data-cf-copy-label={copyLabel}
+      data-cf-copy-failure-label={copyFailureLabel}
     >
       {content}
     </span>

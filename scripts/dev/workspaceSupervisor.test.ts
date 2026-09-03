@@ -40,7 +40,7 @@ describe('pipePrefixedOutput', () => {
 describe('workspaceProcessConfigs', () => {
   it('enables the inspector only for debug sessions and forwards the site port', () => {
     const regular = workspaceProcessConfigs({
-      env: { DOCFUSE_DEV_INSPECT: '9999' },
+      env: { CANOFOLD_DEV_INSPECT: '9999' },
       port: '34567',
       workspaceId: 'regular-workspace'
     })
@@ -53,9 +53,9 @@ describe('workspaceProcessConfigs', () => {
 
     expect(regular).toHaveLength(3)
     expect(regular.every((config) => config.env.PORT === '34567')).toBe(true)
-    expect(regular.every((config) => config.env.DOCFUSE_DEV_WORKSPACE_ID === 'regular-workspace')).toBe(true)
-    expect(regular.every((config) => config.env.DOCFUSE_DEV_INSPECT === undefined)).toBe(true)
-    expect(debug.every((config) => config.env.DOCFUSE_DEV_INSPECT === '9230')).toBe(true)
+    expect(regular.every((config) => config.env.CANOFOLD_DEV_WORKSPACE_ID === 'regular-workspace')).toBe(true)
+    expect(regular.every((config) => config.env.CANOFOLD_DEV_INSPECT === undefined)).toBe(true)
+    expect(debug.every((config) => config.env.CANOFOLD_DEV_INSPECT === '9230')).toBe(true)
   })
 })
 

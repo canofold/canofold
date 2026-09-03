@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install Docfuse in a project
+description: Install Canofold in a project
 group: Guide
 subgroup: Introduction
 order: 3
@@ -8,20 +8,20 @@ order: 3
 
 # Installation
 
-Docfuse requires Node.js 22 or newer. Install it as a development dependency so local development and CI use the same locked version.
+Canofold requires Node.js 22 or newer. Install it as a development dependency so local development and CI use the same locked version.
 
 :::code-group[Package manager]
 
 ```bash title="pnpm"
-pnpm add -D docfuse
+pnpm add -D canofold
 ```
 
 ```bash title="npm"
-npm install --save-dev docfuse
+npm install --save-dev canofold
 ```
 
 ```bash title="yarn"
-yarn add --dev docfuse
+yarn add --dev canofold
 ```
 
 :::

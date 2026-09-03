@@ -26,10 +26,10 @@ order: 73
 - Put Markdown plugins in `markdown.plugins`; put `pagefind()` in `search.provider`.
 - Mermaid requires `mermaid`, and Pagefind requires `pagefind`. Restart the development server after installing a dependency.
 - Make sure the syntax is page content rather than example source nested inside an outer `markdown` fence.
-- `docfuse check` validates config and plugin declarations. Use `docfuse dev` or `docfuse build` to verify the transform itself.
+- `canofold check` validates config and plugin declarations. Use `canofold dev` or `canofold build` to verify the transform itself.
 - Custom plugin names must be unique. Bump `version` when transform code changes and include resolved options in `cacheKey`.
 
-If checks and rendered output disagree, run `pnpm exec docfuse build --no-cache`. For browser-side failures, inspect the console and Network panel for missing plugin scripts, missing styles, or CSP blocks.
+If checks and rendered output disagree, run `pnpm exec canofold build --no-cache`. For browser-side failures, inspect the console and Network panel for missing plugin scripts, missing styles, or CSP blocks.
 
 ## An extension fails to load or generate output
 
@@ -37,7 +37,7 @@ If checks and rendered output disagree, run `pnpm exec docfuse build --no-cache`
 - `apiVersion` must currently be `1`, extension names must be unique, and `options` must be JSON-serializable.
 - `transformSource` must return a string. `extendPage` may only return fields allowed by the Extension API.
 - Every path written by `generate` must be listed in `outputs`. Missing, duplicate, and undeclared writes fail the build.
-- `docfuse check` does not run `generate`. Run `docfuse build` and inspect `outputDir/extensions/{name}/` when verifying extra files.
+- `canofold check` does not run `generate`. Run `canofold build` and inspect `outputDir/extensions/{name}/` when verifying extra files.
 
 Extension errors include the extension name, hook, and related page when applicable. Fix the innermost error first, then rebuild.
 
@@ -58,7 +58,7 @@ This is expected with `plantUml({ server: false })`. Configure a trusted PlantUM
 - Check whether the page sets `search: false`.
 - With the default compact provider, verify `/search/<version>/<locale>.json`.
 - After configuring `pagefind()`, verify `/pagefind/pagefind.js` and its index chunks.
-- When an extension changes `searchText` through `extendPage`, rebuild the search index. `docfuse check` does not write an index.
+- When an extension changes `searchText` through `extendPage`, rebuild the search index. `canofold check` does not write an index.
 
 ## Deployment returns 404
 

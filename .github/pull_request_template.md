@@ -4,9 +4,9 @@
 
 ## Scope
 
-- [ ] `@docfuse/markdown`
-- [ ] `docfuse`
-- [ ] `@docfuse/plugins`
+- [ ] `@canofold/markdown`
+- [ ] `canofold`
+- [ ] `@canofold/plugins`
 - [ ] Documentation or tooling
 
 ## Compatibility and security

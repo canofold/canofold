@@ -35,20 +35,20 @@ function MarkdownHeadingAnchor({
   const feedbackLabel = status === 'success' ? `${label} ✓` : status === 'error' ? copyFailureLabel : label
   return (
     <button
-      className={`df-anchor${status === 'success' ? ' df-action-success' : ''}${
-        status === 'error' ? ' df-action-error' : ''
+      className={`cf-anchor${status === 'success' ? ' cf-action-success' : ''}${
+        status === 'error' ? ' cf-action-error' : ''
       }`}
       type="button"
       data-anchor={anchor}
-      data-df-action="copy-section-link"
-      data-df-anchor-label={label}
-      data-df-copy-error={status === 'error' ? 'true' : undefined}
+      data-cf-action="copy-section-link"
+      data-cf-anchor-label={label}
+      data-cf-copy-error={status === 'error' ? 'true' : undefined}
       aria-label={feedbackLabel}
       title={feedbackLabel}
       onClick={copy}
     >
       <MarkdownIcon name="link" />
-      <span className="df-sr-only" aria-live="polite" aria-atomic="true">
+      <span className="cf-sr-only" aria-live="polite" aria-atomic="true">
         {status === 'idle' ? '' : feedbackLabel}
       </span>
     </button>
@@ -62,7 +62,7 @@ interface MarkdownHeadingProps extends Omit<HTMLAttributes<HTMLHeadingElement>, 
   anchor?: string
   anchorLabel?: string
   copyFailureLabel?: string
-  'data-df-element'?: string
+  'data-cf-element'?: string
   children?: ReactNode
 }
 
@@ -79,21 +79,21 @@ export function MarkdownHeading({
 }: MarkdownHeadingProps) {
   const Heading: ElementType = as ?? `h${level}`
   const headingClasses = className?.split(/\s+/).filter(Boolean) ?? []
-  const isVisuallyHidden = headingClasses.some((name) => name === 'sr-only' || name === 'df-sr-only')
+  const isVisuallyHidden = headingClasses.some((name) => name === 'sr-only' || name === 'cf-sr-only')
   const showsAnchor = level > 1 && Boolean(anchor) && !isVisuallyHidden
-  if (isVisuallyHidden && !headingClasses.includes('df-sr-only')) headingClasses.push('df-sr-only')
-  if (showsAnchor) headingClasses.push('df-heading-with-anchor')
+  if (isVisuallyHidden && !headingClasses.includes('cf-sr-only')) headingClasses.push('cf-sr-only')
+  if (showsAnchor) headingClasses.push('cf-heading-with-anchor')
   const headingClass = headingClasses.join(' ')
   return (
     <Heading {...props} id={id} className={headingClass || undefined}>
       {children}
       {showsAnchor && anchor ? (
         <span
-          className="df-anchor-island"
-          data-df-behavior="heading"
-          data-df-anchor={anchor}
-          data-df-anchor-label={anchorLabel || DEFAULT_MARKDOWN_LABELS.copySectionLink}
-          data-df-copy-failure-label={copyFailureLabel || DEFAULT_MARKDOWN_LABELS.copyFailed}
+          className="cf-anchor-island"
+          data-cf-behavior="heading"
+          data-cf-anchor={anchor}
+          data-cf-anchor-label={anchorLabel || DEFAULT_MARKDOWN_LABELS.copySectionLink}
+          data-cf-copy-failure-label={copyFailureLabel || DEFAULT_MARKDOWN_LABELS.copyFailed}
         >
           <MarkdownHeadingAnchor
             anchor={anchor}

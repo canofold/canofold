@@ -8,14 +8,14 @@ order: 33
 
 # Configure localization
 
-The default locale uses root URLs. Other locales use a `/<locale>/` prefix. Docfuse does not redirect visitors based on browser language, so `/` always serves `defaultLocale`.
+The default locale uses root URLs. Other locales use a `/<locale>/` prefix. Canofold does not redirect visitors based on browser language, so `/` always serves `defaultLocale`.
 
 ## Source layout
 
-`docfuse init` places the default locale at the root of `docs/` and creates subdirectories only for other locales. With English as the default, the source tree can look like this:
+`canofold init` places the default locale at the root of `docs/` and creates subdirectories only for other locales. With English as the default, the source tree can look like this:
 
 :::file-tree
-- docfuse.config.ts
+- canofold.config.ts
 - docs/
   - index.md
   - guide/
@@ -28,12 +28,12 @@ The default locale uses root URLs. Other locales use a `/<locale>/` prefix. Docf
 
 The English home maps to `/` and the English installation page maps to `/guide/install/`; the Chinese pages map to `/zh/` and `/zh/guide/install/`.
 
-The default locale may also use an explicit directory such as `docs/en/index.md`. The Docfuse website uses this symmetrical layout. Both forms are supported, but do not create `docs/index.md` and `docs/en/index.md` together. They would both map to `/`, and checks and builds report a route conflict.
+The default locale may also use an explicit directory such as `docs/en/index.md`. The Canofold website uses this symmetrical layout. Both forms are supported, but do not create `docs/index.md` and `docs/en/index.md` together. They would both map to `/`, and checks and builds report a route conflict.
 
 ## Configure locales and navigation
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   i18n: {
@@ -57,8 +57,8 @@ Links for the default locale have no locale prefix. Links for every other locale
 
 To add Japanese, include `ja` in `locales` and create the matching pages under `docs/ja/`. Chinese and English interface messages are built in. Other locales can override `i18n.messages`, with omitted fields falling back to English.
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   i18n: {
@@ -87,6 +87,6 @@ export default defineConfig({
 
 ## Check translation coverage
 
-`docfuse check` compares page-relative paths across locales and reports missing pages. Titles, body text, sidebar labels, and screenshots are not translated automatically and must be maintained for each locale.
+`canofold check` compares page-relative paths across locales and reports missing pages. Titles, body text, sidebar labels, and screenshots are not translated automatically and must be maintained for each locale.
 
 The generated root `404.html` selects its message and home link from the locale prefix in the requested URL.

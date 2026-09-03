@@ -27,12 +27,12 @@ describe('React Markdown composite interactions', () => {
     const root = createRoot(container)
 
     await act(async () =>
-      root.render(<MarkdownCopySnippet value="pnpm add @docfuse/markdown" copyLabel="复制命令" />)
+      root.render(<MarkdownCopySnippet value="pnpm add @canofold/markdown" copyLabel="复制命令" />)
     )
-    const button = container.querySelector('[data-df-action="copy-snippet"]') as HTMLButtonElement
+    const button = container.querySelector('[data-cf-action="copy-snippet"]') as HTMLButtonElement
     await act(async () => button.click())
 
-    expect(writeText).toHaveBeenCalledWith('pnpm add @docfuse/markdown')
+    expect(writeText).toHaveBeenCalledWith('pnpm add @canofold/markdown')
     expect(button.dataset.dfCopied).toBe('true')
     expect(button.getAttribute('aria-label')).toContain('复制命令')
     expect(button.querySelector('[aria-live="polite"]')?.textContent).toContain('复制命令')
@@ -47,7 +47,7 @@ describe('React Markdown composite interactions', () => {
     const root = createRoot(container)
     await act(async () => root.render(<MarkdownCopySnippet value="copy me" />))
 
-    const button = container.querySelector('[data-df-action="copy-snippet"]') as HTMLButtonElement
+    const button = container.querySelector('[data-cf-action="copy-snippet"]') as HTMLButtonElement
     await act(async () => button.click())
 
     expect(button.dataset.dfCopyError).toBe('true')
@@ -62,14 +62,14 @@ describe('React Markdown composite interactions', () => {
         {...({
           value: 'pnpm test',
           node: { type: 'element' },
-          dataDfFoo: 'internal',
+          dataCfFoo: 'internal',
           customThing: 'invalid'
         } as MarkdownCopySnippetProps)}
       />
     )
 
     expect(html).not.toMatch(/\snode=/)
-    expect(html).not.toMatch(/\sdataDfFoo=/)
+    expect(html).not.toMatch(/\sdataCfFoo=/)
     expect(html).not.toMatch(/\scustomThing=/)
   })
 
@@ -89,13 +89,13 @@ describe('React Markdown composite interactions', () => {
         </MarkdownCodeBlock>
         <MarkdownFileTree>
           <ul>
-            <li data-df-file-tree-branch>
+            <li data-cf-file-tree-branch>
               <button type="button">docs</button>
               <ul>
-                <li data-df-file-tree-file>README.md</li>
+                <li data-cf-file-tree-file>README.md</li>
               </ul>
             </li>
-            <li data-df-file-tree-file>README.md</li>
+            <li data-cf-file-tree-file>README.md</li>
           </ul>
         </MarkdownFileTree>
       </MarkdownSlotsProvider>
@@ -114,32 +114,32 @@ describe('React Markdown composite interactions', () => {
       root.render(
         <MarkdownTabs>
           <div role="tablist">
-            <button role="tab" data-df-tab="pnpm" aria-selected="true" tabIndex={0}>
+            <button role="tab" data-cf-tab="pnpm" aria-selected="true" tabIndex={0}>
               pnpm
             </button>
-            <button role="tab" data-df-tab="npm" aria-selected="false" tabIndex={-1}>
+            <button role="tab" data-cf-tab="npm" aria-selected="false" tabIndex={-1}>
               npm
             </button>
           </div>
-          <div role="tabpanel" data-df-tab-panel="pnpm">
+          <div role="tabpanel" data-cf-tab-panel="pnpm">
             pnpm content
           </div>
-          <div role="tabpanel" data-df-tab-panel="npm" hidden>
+          <div role="tabpanel" data-cf-tab-panel="npm" hidden>
             npm content
           </div>
         </MarkdownTabs>
       )
     })
 
-    const pnpm = container.querySelector('[data-df-tab="pnpm"]') as HTMLButtonElement
-    const npm = container.querySelector('[data-df-tab="npm"]') as HTMLButtonElement
+    const pnpm = container.querySelector('[data-cf-tab="pnpm"]') as HTMLButtonElement
+    const npm = container.querySelector('[data-cf-tab="npm"]') as HTMLButtonElement
 
     await act(async () => {
       npm.click()
     })
     expect(npm.getAttribute('aria-selected')).toBe('true')
-    expect(container.querySelector('[data-df-tab-panel="pnpm"]')?.hasAttribute('hidden')).toBe(true)
-    expect(container.querySelector('[data-df-tab-panel="npm"]')?.hasAttribute('hidden')).toBe(false)
+    expect(container.querySelector('[data-cf-tab-panel="pnpm"]')?.hasAttribute('hidden')).toBe(true)
+    expect(container.querySelector('[data-cf-tab-panel="npm"]')?.hasAttribute('hidden')).toBe(false)
 
     await act(async () => {
       npm.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
@@ -169,34 +169,34 @@ describe('React Markdown composite interactions', () => {
       root.render(
         <MarkdownTabs>
           <div role="tablist">
-            <button role="tab" data-df-tab="first" aria-selected="false">
+            <button role="tab" data-cf-tab="first" aria-selected="false">
               First
             </button>
-            <button role="tab" data-df-tab="disabled" disabled>
+            <button role="tab" data-cf-tab="disabled" disabled>
               Disabled
             </button>
-            <button role="tab" data-df-tab="third" aria-selected="true">
+            <button role="tab" data-cf-tab="third" aria-selected="true">
               Third
             </button>
           </div>
-          <div role="tabpanel" data-df-tab-panel="first">
+          <div role="tabpanel" data-cf-tab-panel="first">
             First content
           </div>
-          <div role="tabpanel" data-df-tab-panel="disabled">
+          <div role="tabpanel" data-cf-tab-panel="disabled">
             Disabled content
           </div>
-          <div role="tabpanel" data-df-tab-panel="third">
+          <div role="tabpanel" data-cf-tab-panel="third">
             Third content
           </div>
         </MarkdownTabs>
       )
     })
 
-    const first = container.querySelector('[data-df-tab="first"]') as HTMLButtonElement
-    const disabled = container.querySelector('[data-df-tab="disabled"]') as HTMLButtonElement
-    const third = container.querySelector('[data-df-tab="third"]') as HTMLButtonElement
+    const first = container.querySelector('[data-cf-tab="first"]') as HTMLButtonElement
+    const disabled = container.querySelector('[data-cf-tab="disabled"]') as HTMLButtonElement
+    const third = container.querySelector('[data-cf-tab="third"]') as HTMLButtonElement
     expect(third.getAttribute('aria-selected')).toBe('true')
-    expect(container.querySelector('[data-df-tab-panel="third"]')?.hasAttribute('hidden')).toBe(false)
+    expect(container.querySelector('[data-cf-tab-panel="third"]')?.hasAttribute('hidden')).toBe(false)
 
     await act(async () => {
       third.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
@@ -219,18 +219,18 @@ describe('React Markdown composite interactions', () => {
       root.render(
         <MarkdownTabs>
           <div role="tablist">
-            <button ref={triggerRef} role="tab" data-df-tab="pnpm">
+            <button ref={triggerRef} role="tab" data-cf-tab="pnpm">
               pnpm
             </button>
           </div>
-          <div role="tabpanel" data-df-tab-panel="pnpm">
+          <div role="tabpanel" data-cf-tab-panel="pnpm">
             pnpm content
           </div>
         </MarkdownTabs>
       )
     })
 
-    expect(triggerRef.current).toBe(container.querySelector('[data-df-tab="pnpm"]'))
+    expect(triggerRef.current).toBe(container.querySelector('[data-cf-tab="pnpm"]'))
     expect(warning).not.toHaveBeenCalled()
 
     warning.mockRestore()
@@ -245,11 +245,11 @@ describe('React Markdown composite interactions', () => {
     const tabs = (
       <MarkdownTabs>
         <div role="tablist">
-          <button role="tab" data-df-tab="first">
+          <button role="tab" data-cf-tab="first">
             First
           </button>
         </div>
-        <div role="tabpanel" data-df-tab-panel="first">
+        <div role="tabpanel" data-cf-tab-panel="first">
           Content
         </div>
       </MarkdownTabs>
@@ -284,7 +284,7 @@ describe('React Markdown composite interactions', () => {
 
   it('keeps File Tree and Gallery behavior inside React components', async () => {
     const container = document.createElement('div')
-    container.className = 'df-content'
+    container.className = 'cf-content'
     document.body.append(container)
     const root = createRoot(container)
 
@@ -293,12 +293,12 @@ describe('React Markdown composite interactions', () => {
         <>
           <MarkdownFileTree>
             <ul>
-              <li data-df-file-tree-branch>
+              <li data-cf-file-tree-branch>
                 <button type="button" aria-expanded="true">
                   docs
                 </button>
                 <ul>
-                  <li data-df-file-tree-file aria-current="page">
+                  <li data-cf-file-tree-file aria-current="page">
                     README.md
                   </li>
                 </ul>
@@ -317,32 +317,32 @@ describe('React Markdown composite interactions', () => {
       )
     })
 
-    const toggle = container.querySelector('[data-df-file-tree-toggle]') as HTMLButtonElement
-    expect(container.querySelectorAll('[data-df-slot="folder-icon"]')).toHaveLength(1)
-    expect(container.querySelectorAll('[data-df-slot="folder-icon"] svg')).toHaveLength(1)
-    expect(container.querySelectorAll('[data-df-slot="file-icon"]')).toHaveLength(1)
-    expect(container.querySelectorAll('[data-df-slot="file-icon"] svg')).toHaveLength(1)
-    expect(toggle.classList.contains('df-file-tree-folder')).toBe(true)
-    expect(container.querySelector('[data-df-file-tree-file]')?.classList).toContain('df-file-tree-current')
+    const toggle = container.querySelector('[data-cf-file-tree-toggle]') as HTMLButtonElement
+    expect(container.querySelectorAll('[data-cf-slot="folder-icon"]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-cf-slot="folder-icon"] svg')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-cf-slot="file-icon"]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-cf-slot="file-icon"] svg')).toHaveLength(1)
+    expect(toggle.classList.contains('cf-file-tree-folder')).toBe(true)
+    expect(container.querySelector('[data-cf-file-tree-file]')?.classList).toContain('cf-file-tree-current')
     await act(async () => toggle.click())
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
-    const fileTreeChildren = container.querySelector('.df-file-tree-children')
-    expect(fileTreeChildren?.getAttribute('data-df-state')).toBe('collapsed')
+    const fileTreeChildren = container.querySelector('.cf-file-tree-children')
+    expect(fileTreeChildren?.getAttribute('data-cf-state')).toBe('collapsed')
     expect(fileTreeChildren?.getAttribute('aria-hidden')).toBe('true')
     expect(fileTreeChildren?.hasAttribute('inert')).toBe(true)
 
-    const galleryTrigger = container.querySelector('[data-df-action="open-gallery"]') as HTMLButtonElement
+    const galleryTrigger = container.querySelector('[data-cf-action="open-gallery"]') as HTMLButtonElement
     await act(async () => galleryTrigger.click())
-    expect(document.body.querySelector('[data-df-slot="lightbox"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-cf-slot="lightbox"]')).not.toBeNull()
     expect(document.body.querySelector('[aria-label="Next image"]')).not.toBeNull()
 
-    const next = document.body.querySelector('[data-df-action="next-gallery-image"]') as HTMLButtonElement
+    const next = document.body.querySelector('[data-cf-action="next-gallery-image"]') as HTMLButtonElement
     await act(async () => next.click())
-    expect(document.body.querySelector('[data-df-gallery-count]')?.textContent).toBe('2 / 2')
+    expect(document.body.querySelector('[data-cf-gallery-count]')?.textContent).toBe('2 / 2')
 
-    const close = document.body.querySelector('[data-df-action="close-gallery"]') as HTMLButtonElement
+    const close = document.body.querySelector('[data-cf-action="close-gallery"]') as HTMLButtonElement
     await act(async () => close.click())
-    expect(document.body.querySelector('[data-df-slot="lightbox"]')).toBeNull()
+    expect(document.body.querySelector('[data-cf-slot="lightbox"]')).toBeNull()
 
     await act(async () => root.unmount())
     container.remove()
@@ -355,12 +355,12 @@ describe('React Markdown composite interactions', () => {
       root.render(
         <MarkdownFileTree>
           <ul>
-            <li data-df-file-tree-branch>
+            <li data-cf-file-tree-branch>
               <button type="button" aria-expanded={false}>
                 docs
               </button>
               <ul>
-                <li data-df-file-tree-file>README.md</li>
+                <li data-cf-file-tree-file>README.md</li>
               </ul>
             </li>
           </ul>
@@ -368,8 +368,8 @@ describe('React Markdown composite interactions', () => {
       )
     )
 
-    expect(container.querySelector('[data-df-file-tree-toggle]')?.getAttribute('aria-expanded')).toBe('false')
-    expect(container.querySelector('.df-file-tree-children')?.getAttribute('data-df-state')).toBe('collapsed')
+    expect(container.querySelector('[data-cf-file-tree-toggle]')?.getAttribute('aria-expanded')).toBe('false')
+    expect(container.querySelector('.cf-file-tree-children')?.getAttribute('data-cf-state')).toBe('collapsed')
     await act(async () => root.unmount())
   })
 
@@ -388,7 +388,7 @@ describe('React Markdown composite interactions', () => {
     })
 
     const details = container.querySelector('details') as HTMLDetailsElement
-    const content = container.querySelector('.df-details-content') as HTMLElement
+    const content = container.querySelector('.cf-details-content') as HTMLElement
     expect(details.dataset.dfBehavior).toBe('details')
     expect(details.dataset.dfEnhanced).toBe('true')
     expect(content.hasAttribute('inert')).toBe(false)
@@ -418,12 +418,12 @@ describe('React Markdown composite interactions', () => {
     const second = { src: 'two.png', alt: 'Two' }
 
     await act(async () => root.render(<MarkdownGallery items={[first, second]} />))
-    const triggers = container.querySelectorAll<HTMLButtonElement>('[data-df-action="open-gallery"]')
+    const triggers = container.querySelectorAll<HTMLButtonElement>('[data-cf-action="open-gallery"]')
     await act(async () => triggers[1]?.click())
-    expect(document.body.querySelector('[data-df-slot="lightbox"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-cf-slot="lightbox"]')).not.toBeNull()
 
     await act(async () => root.render(<MarkdownGallery items={[first]} />))
-    expect(document.body.querySelector('[data-df-slot="lightbox"]')).toBeNull()
+    expect(document.body.querySelector('[data-cf-slot="lightbox"]')).toBeNull()
 
     await act(async () => root.unmount())
     container.remove()
@@ -445,13 +445,13 @@ describe('React Markdown composite interactions', () => {
       )
     })
 
-    const trigger = container.querySelector('[data-df-action="zoom-image"]') as HTMLButtonElement
+    const trigger = container.querySelector('[data-cf-action="zoom-image"]') as HTMLButtonElement
     const previousOverflow = document.body.style.overflow
     await act(async () => trigger.click())
 
     const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement
     const close = document.body.querySelector(
-      '[data-df-action="close-image"][data-df-slot="close"]'
+      '[data-cf-action="close-image"][data-cf-slot="close"]'
     ) as HTMLButtonElement
     expect(dialog.getAttribute('aria-label')).toBe('Preview image')
     expect(document.activeElement).toBe(close)
@@ -497,20 +497,20 @@ describe('React Markdown composite interactions', () => {
       )
     })
 
-    const trigger = container.querySelector('[data-df-action="zoom-table"]') as HTMLButtonElement
+    const trigger = container.querySelector('[data-cf-action="zoom-table"]') as HTMLButtonElement
     await act(async () => trigger.click())
     const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement
     const close = document.body.querySelector(
-      '[data-df-slot="preview"] [data-df-action="close-table"][data-df-slot="close"]'
+      '[data-cf-slot="preview"] [data-cf-action="close-table"][data-cf-slot="close"]'
     ) as HTMLButtonElement
     expect(
-      document.body.querySelector('[data-df-slot="preview"] .df-table-window > .df-data-table > table')
+      document.body.querySelector('[data-cf-slot="preview"] .cf-table-window > .cf-data-table > table')
     ).not.toBeNull()
     expect(close.getAttribute('aria-label')).toBe('关闭表格预览')
     expect(document.activeElement).toBe(dialog)
     expect(
       document.body
-        .querySelector('[data-df-slot="preview"] .df-table-preview-backdrop')
+        .querySelector('[data-cf-slot="preview"] .cf-table-preview-backdrop')
         ?.getAttribute('aria-hidden')
     ).toBe('true')
 
@@ -576,7 +576,7 @@ describe('React Markdown composite interactions', () => {
       )
     })
 
-    const button = container.querySelector('[data-df-action="sort-table"]') as HTMLButtonElement
+    const button = container.querySelector('[data-cf-action="sort-table"]') as HTMLButtonElement
     expect(button.querySelector('.lucide-chevrons-up-down')).not.toBeNull()
 
     await act(async () => button.click())

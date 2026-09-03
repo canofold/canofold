@@ -38,15 +38,15 @@ function enhanceNode(
   const element = node as MarkdownReactElement
   const children = Children.toArray(element.props.children).filter((child) => !isWhitespaceNode(child))
   const isFile =
-    element.props['data-df-file-tree-file'] !== undefined || element.props.dataDfFileTreeFile !== undefined
+    element.props['data-cf-file-tree-file'] !== undefined || element.props.dataCfFileTreeFile !== undefined
   const isBranch =
-    element.props['data-df-file-tree-branch'] !== undefined ||
-    element.props.dataDfFileTreeBranch !== undefined
+    element.props['data-cf-file-tree-branch'] !== undefined ||
+    element.props.dataCfFileTreeBranch !== undefined
   const isCurrent =
     element.props['aria-current'] === 'page' ||
     element.props['aria-current'] === true ||
-    element.props['data-df-current'] !== undefined ||
-    element.props.dataDfCurrent !== undefined
+    element.props['data-cf-current'] !== undefined ||
+    element.props.dataCfCurrent !== undefined
   const triggerIndex = isBranch
     ? children.findIndex(
         (child) => isValidElement(child) && elementTypeName(child as MarkdownReactElement) === 'button'
@@ -58,7 +58,7 @@ function enhanceNode(
       )
     : -1
   const explicitPath = String(
-    element.props['data-df-file-tree-path'] ?? element.props.dataDfFileTreePath ?? ''
+    element.props['data-cf-file-tree-path'] ?? element.props.dataCfFileTreePath ?? ''
   )
   const branchLabel =
     triggerIndex >= 0 ? reactText((children[triggerIndex] as MarkdownReactElement).props.children) : ''
@@ -77,18 +77,18 @@ function enhanceNode(
       const hasFolderIcon = triggerChildren.some(
         (triggerChild) =>
           isValidElement(triggerChild) &&
-          ((triggerChild as MarkdownReactElement).props['data-df-slot'] === 'folder-icon' ||
-            (triggerChild as MarkdownReactElement).props.dataDfSlot === 'folder-icon')
+          ((triggerChild as MarkdownReactElement).props['data-cf-slot'] === 'folder-icon' ||
+            (triggerChild as MarkdownReactElement).props.dataCfSlot === 'folder-icon')
       )
       return cloneElement(trigger, {
-        className: mergeMarkdownClasses('df-file-tree-folder', trigger.props.className),
-        'data-df-action': 'toggle-file-tree',
-        'data-df-file-tree-toggle': '',
+        className: mergeMarkdownClasses('cf-file-tree-folder', trigger.props.className),
+        'data-cf-action': 'toggle-file-tree',
+        'data-cf-file-tree-toggle': '',
         'aria-expanded': String(expanded),
         children: hasFolderIcon
           ? triggerChildren
           : [
-              <span key="folder-icon" className="df-file-tree-folder-icon" data-df-slot="folder-icon">
+              <span key="folder-icon" className="cf-file-tree-folder-icon" data-cf-slot="folder-icon">
                 <MarkdownIcon name="folder" />
               </span>,
               ...triggerChildren
@@ -104,8 +104,8 @@ function enhanceNode(
       return (
         <div
           key={`${branchPath}-children`}
-          className="df-file-tree-children"
-          data-df-state={expanded ? 'expanded' : 'collapsed'}
+          className="cf-file-tree-children"
+          data-cf-state={expanded ? 'expanded' : 'collapsed'}
           aria-hidden={expanded ? undefined : 'true'}
           inert={expanded ? undefined : true}
         >
@@ -118,13 +118,13 @@ function enhanceNode(
   const hasFileIcon = children.some(
     (child) =>
       isValidElement(child) &&
-      ((child as MarkdownReactElement).props['data-df-slot'] === 'file-icon' ||
-        (child as MarkdownReactElement).props.dataDfSlot === 'file-icon')
+      ((child as MarkdownReactElement).props['data-cf-slot'] === 'file-icon' ||
+        (child as MarkdownReactElement).props.dataCfSlot === 'file-icon')
   )
   const nextChildren =
     isFile && !hasFileIcon
       ? [
-          <span key="file-icon" className="df-file-tree-file-icon" data-df-slot="file-icon">
+          <span key="file-icon" className="cf-file-tree-file-icon" data-cf-slot="file-icon">
             <MarkdownIcon name="file" />
           </span>,
           ...enhancedChildren
@@ -135,9 +135,9 @@ function enhanceNode(
       ? {
           className: mergeMarkdownClasses(
             [
-              isFile ? 'df-file-tree-file' : '',
-              isBranch ? 'df-file-tree-branch' : '',
-              isCurrent ? 'df-file-tree-current' : ''
+              isFile ? 'cf-file-tree-file' : '',
+              isBranch ? 'cf-file-tree-branch' : '',
+              isCurrent ? 'cf-file-tree-current' : ''
             ]
               .filter(Boolean)
               .join(' '),
@@ -147,8 +147,8 @@ function enhanceNode(
       : {}),
     ...(isBranch
       ? {
-          'data-df-state': expanded ? 'expanded' : 'collapsed',
-          'data-df-file-tree-path': branchPath
+          'data-cf-state': expanded ? 'expanded' : 'collapsed',
+          'data-cf-file-tree-path': branchPath
         }
       : {}),
     children: nextChildren
@@ -169,17 +169,17 @@ export function MarkdownFileTree({ children, ...props }: InternalMarkdownFileTre
     )
   const slottedContent = Children.map(content, (child) =>
     isValidElement(child)
-      ? cloneElement(child as ReactElement<Record<string, unknown>>, { 'data-df-slot': 'content' })
+      ? cloneElement(child as ReactElement<Record<string, unknown>>, { 'data-cf-slot': 'content' })
       : child
   )
   const cleanProps = markdownDomProps(props)
   return (
     <div
       {...cleanProps}
-      className={mergeMarkdownClasses('df-file-tree', props.className)}
-      data-df-component="file-tree"
-      data-df-slot="root"
-      data-df-behavior="file-tree"
+      className={mergeMarkdownClasses('cf-file-tree', props.className)}
+      data-cf-component="file-tree"
+      data-cf-slot="root"
+      data-cf-behavior="file-tree"
     >
       {slottedContent}
     </div>

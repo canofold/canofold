@@ -4,8 +4,8 @@ import { analyzeMdxModuleBoundary } from './mdxModules'
 describe('analyzeMdxModuleBoundary', () => {
   it('collects default, named, aliased, namespace, and side-effect imports', () => {
     const result = analyzeMdxModuleBoundary(`import React from 'react'
-import { Alert, Badge as Status } from 'docfuse/components'
-import * as Markdown from '@docfuse/markdown'
+import { Alert, Badge as Status } from 'canofold/components'
+import * as Markdown from '@canofold/markdown'
 import './setup'
 
 # Page`)
@@ -13,14 +13,14 @@ import './setup'
     expect(result.imports).toEqual([
       { specifier: 'react', bindings: [{ imported: 'default', local: 'React' }] },
       {
-        specifier: 'docfuse/components',
+        specifier: 'canofold/components',
         bindings: [
           { imported: 'Alert', local: 'Alert' },
           { imported: 'Badge', local: 'Status' }
         ]
       },
       {
-        specifier: '@docfuse/markdown',
+        specifier: '@canofold/markdown',
         bindings: [{ imported: '*', local: 'Markdown', namespace: true }]
       },
       { specifier: './setup', bindings: [] }

@@ -1,4 +1,4 @@
-import { defineMarkdownPlugin, type MarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import { deflateSync, strToU8 } from 'fflate'
 
 import { diagramFence } from '../shared/diagram'
@@ -44,15 +44,15 @@ export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
     version: PLUGIN_VERSION,
     cacheKey: { server },
     browserCompiler: {
-      module: '@docfuse/plugins/plantuml',
+      module: '@canofold/plugins/plantuml',
       exportName: 'plantUml',
       options: { server: server || false }
     },
     fenceLanguages: ['plantuml', 'puml'],
     appliesTo: ({ source }) => hasMarkdownFenceLanguage(source, new Set(['plantuml', 'puml'])),
     assets: {
-      clients: [{ id: 'plantuml', module: '@docfuse/plugins/client/plantuml' }],
-      styles: [{ id: 'diagrams', module: '@docfuse/plugins/diagram.css' }]
+      clients: [{ id: 'plantuml', module: '@canofold/plugins/client/plantuml' }],
+      styles: [{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }]
     },
     rehypePlugins: [
       diagramFence({

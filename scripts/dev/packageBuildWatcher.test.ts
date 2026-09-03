@@ -87,7 +87,7 @@ describe('createPackageBuildScheduler', () => {
 
 describe('createPollingWatcher', () => {
   it('detects source changes without allocating one file-system watcher per directory', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'docfuse-polling-watcher-'))
+    const directory = await mkdtemp(join(tmpdir(), 'canofold-polling-watcher-'))
     temporaryDirectories.push(directory)
     const watcher = await createPollingWatcher([directory], { intervalMs: 10 })
     let changes = 0
@@ -103,7 +103,7 @@ describe('createPollingWatcher', () => {
 
 describe('development state files', () => {
   it('writes atomically and only removes the owning session', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'docfuse-dev-state-'))
+    const directory = await mkdtemp(join(tmpdir(), 'canofold-dev-state-'))
     temporaryDirectories.push(directory)
     const statePath = join(directory, 'markdown.json')
     const heartbeatAt = new Date('2026-07-23T00:00:00.000Z').toISOString()
@@ -124,11 +124,11 @@ describe('development state files', () => {
   })
 
   it('invalidates a previous ready session before the initial build and removes its own state on close', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'docfuse-dev-session-'))
+    const directory = await mkdtemp(join(tmpdir(), 'canofold-dev-session-'))
     temporaryDirectories.push(directory)
-    const statePath = join(directory, 'docfuse.json')
+    const statePath = join(directory, 'canofold.json')
     await writeDevState(statePath, {
-      package: 'docfuse',
+      package: 'canofold',
       status: 'ready',
       generation: 7,
       sessionId: 'previous-session',
@@ -143,7 +143,7 @@ describe('development state files', () => {
     }
     const watcher = new FakeWatcher()
     const starting = startPackageBuildWatcher({
-      packageName: 'docfuse',
+      packageName: 'canofold',
       statePath,
       watchPaths: ['/source'],
       createWatcher: () => watcher,
@@ -165,13 +165,13 @@ describe('development state files', () => {
   })
 
   it('removes its state when the source watcher cannot start', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'docfuse-dev-watcher-failure-'))
+    const directory = await mkdtemp(join(tmpdir(), 'canofold-dev-watcher-failure-'))
     temporaryDirectories.push(directory)
-    const statePath = join(directory, 'docfuse.json')
+    const statePath = join(directory, 'canofold.json')
 
     await expect(
       startPackageBuildWatcher({
-        packageName: 'docfuse',
+        packageName: 'canofold',
         statePath,
         watchPaths: ['/source'],
         createWatcher: async () => {
@@ -185,7 +185,7 @@ describe('development state files', () => {
   })
 
   it('publishes coherent generations for multiple incremental build tasks', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'docfuse-incremental-state-'))
+    const directory = await mkdtemp(join(tmpdir(), 'canofold-incremental-state-'))
     temporaryDirectories.push(directory)
     const statePath = join(directory, 'markdown.json')
     const errors: unknown[] = []

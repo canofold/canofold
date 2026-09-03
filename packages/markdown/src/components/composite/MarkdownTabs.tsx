@@ -36,11 +36,11 @@ function isElementWithProps(node: ReactNode): node is ReactElement<Record<string
 }
 
 function tabValue(element: ReactElement<Record<string, unknown>>) {
-  return String(attribute(element.props, 'data-df-tab', 'dataDfTab') ?? '')
+  return String(attribute(element.props, 'data-cf-tab', 'dataCfTab') ?? '')
 }
 
 function panelValue(element: ReactElement<Record<string, unknown>>) {
-  return String(attribute(element.props, 'data-df-tab-panel', 'dataDfTabPanel') ?? '')
+  return String(attribute(element.props, 'data-cf-tab-panel', 'dataCfTabPanel') ?? '')
 }
 
 function tabListChildren(element: ReactElement<Record<string, unknown>>) {
@@ -205,8 +205,8 @@ export function MarkdownTabs({
   const [canScrollStart, setCanScrollStart] = useState(false)
   const [canScrollEnd, setCanScrollEnd] = useState(false)
   const generatedId = useId().replace(/:/g, '')
-  const serializedId = String(attribute(props, 'data-df-tabs-id', 'dataDfTabsId') ?? '')
-  const idPrefix = serializedId || `df-tabs-${generatedId}`
+  const serializedId = String(attribute(props, 'data-cf-tabs-id', 'dataCfTabsId') ?? '')
+  const idPrefix = serializedId || `cf-tabs-${generatedId}`
   const content = enhanceTabs(children, activeValue, setSelectedValue, triggerRefs, tabListRef, idPrefix)
   useEffect(() => {
     if (kind !== 'code-group') return
@@ -236,7 +236,7 @@ export function MarkdownTabs({
   }
   const cleanProps = markdownDomProps(props)
   const className = mergeMarkdownClasses(
-    kind === 'code-group' ? 'df-tabs df-code-group' : 'df-tabs',
+    kind === 'code-group' ? 'cf-tabs cf-code-group' : 'cf-tabs',
     props.className
   )
   if (Component) {
@@ -245,10 +245,10 @@ export function MarkdownTabs({
         {...cleanProps}
         className={className}
         kind={kind}
-        data-df-component={kind}
-        data-df-slot="root"
-        data-df-behavior="tabs"
-        data-df-tabs-id={idPrefix}
+        data-cf-component={kind}
+        data-cf-slot="root"
+        data-cf-behavior="tabs"
+        data-cf-tabs-id={idPrefix}
       >
         {content}
       </Component>
@@ -258,17 +258,17 @@ export function MarkdownTabs({
     <div
       {...cleanProps}
       className={className}
-      data-df-component={kind}
-      data-df-slot="root"
-      data-df-behavior="tabs"
-      data-df-tabs-id={idPrefix}
+      data-cf-component={kind}
+      data-cf-slot="root"
+      data-cf-behavior="tabs"
+      data-cf-tabs-id={idPrefix}
     >
       {kind === 'code-group' ? (
         <button
           type="button"
-          className="df-code-tabs-scroll df-code-tabs-scroll-start"
-          data-df-action="scroll-code-tabs"
-          data-df-direction="-1"
+          className="cf-code-tabs-scroll cf-code-tabs-scroll-start"
+          data-cf-action="scroll-code-tabs"
+          data-cf-direction="-1"
           aria-label="Previous code files"
           hidden={!canScrollStart}
           onClick={() => scrollFiles(-1)}
@@ -280,9 +280,9 @@ export function MarkdownTabs({
       {kind === 'code-group' ? (
         <button
           type="button"
-          className="df-code-tabs-scroll df-code-tabs-scroll-end"
-          data-df-action="scroll-code-tabs"
-          data-df-direction="1"
+          className="cf-code-tabs-scroll cf-code-tabs-scroll-end"
+          data-cf-action="scroll-code-tabs"
+          data-cf-direction="1"
           aria-label="Next code files"
           hidden={!canScrollEnd}
           onClick={() => scrollFiles(1)}

@@ -1,6 +1,6 @@
 ---
 title: Frontmatter reference
-description: Look up Docfuse page metadata fields, defaults, and scope
+description: Look up Canofold page metadata fields, defaults, and scope
 group: Reference
 subgroup: Configuration and CLI
 order: 52
@@ -10,7 +10,7 @@ order: 52
 
 Frontmatter appears at the top of a Markdown or MDX file. General page fields apply to all content. `hero` and `features` apply only to each locale's home page.
 
-Unknown fields may be parsed, but they do not affect Docfuse behavior and are not automatically published to the AI page index. `ai/pages.json` keeps only `title`, `description`, `createdAt`, `updatedAt`, `order`, `group`, `subgroup`, `tags`, and `owner`.
+Unknown fields may be parsed, but they do not affect Canofold behavior and are not automatically published to the AI page index. `ai/pages.json` keeps only `title`, `description`, `createdAt`, `updatedAt`, `order`, `group`, `subgroup`, `tags`, and `owner`.
 
 ## General page fields
 
@@ -52,11 +52,11 @@ Directory `index.md` files are authoritative for group labels and collapsed stat
 
 ### Date fields
 
-Add `createdAt` or `updatedAt` only when those dates must remain stable across machines. Use `YYYY-MM-DD`, or include `Z` or an offset such as `+08:00` when a time is present. Without `updatedAt`, Docfuse falls back to the source file modification time, which may change after checkout, file copies, or CI builds.
+Add `createdAt` or `updatedAt` only when those dates must remain stable across machines. Use `YYYY-MM-DD`, or include `Z` or an offset such as `+08:00` when a time is present. Without `updatedAt`, Canofold falls back to the source file modification time, which may change after checkout, file copies, or CI builds.
 
 ## Home-page fields
 
-Configure each locale home page in the `index.md` at that locale's content root. The default locale uses `docs/index.md`; other locales use `docs/{locale}/index.md`. `docfuse.config.ts` holds site-wide configuration, not home-page copy.
+Configure each locale home page in the `index.md` at that locale's content root. The default locale uses `docs/index.md`; other locales use `docs/{locale}/index.md`. `canofold.config.ts` holds site-wide configuration, not home-page copy.
 
 ```yaml
 ---
@@ -102,7 +102,7 @@ features:
 | `text` | `string` | Yes | Button label |
 | `link` | `string` | Yes | Absolute site path or HTTPS URL |
 | `primary` | `boolean` | No | Use the primary style; a home page may define at most one |
-| `icon` | `string` | No | Use a built-in Lucide icon from Docfuse |
+| `icon` | `string` | No | Use a built-in Lucide icon from Canofold |
 
 ### Feature cards
 
@@ -119,6 +119,6 @@ When both `image` and `icon` are present, `image` wins. Omitting both creates a 
 
 An image path that starts with `/` maps to `{docsDir}/public/`. For example, `/banner.png` maps to `{docsDir}/public/banner.png`, and `/feature/api.svg` maps to `{docsDir}/public/feature/api.svg`.
 
-Actions and feature cards can also use Docfuse's built-in Lucide icons without an extra icon package. Accepted values are `ai`, `box`, `code`, `file`, `file-code`, `gauge`, `globe`, `layers`, `rocket`, `search`, `sparkles`, and `terminal`.
+Actions and feature cards can also use Canofold's built-in Lucide icons without an extra icon package. Accepted values are `ai`, `box`, `code`, `file`, `file-code`, `gauge`, `globe`, `layers`, `rocket`, `search`, `sparkles`, and `terminal`.
 
-Docfuse validates home-page fields during content scanning. Invalid types, unknown nested fields, unsupported icons, or multiple primary actions fail checks and builds.
+Canofold validates home-page fields during content scanning. Invalid types, unknown nested fields, unsupported icons, or multiple primary actions fail checks and builds.

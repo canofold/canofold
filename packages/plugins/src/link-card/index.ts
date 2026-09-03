@@ -1,4 +1,4 @@
-import { defineMarkdownPlugin, type MarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import type { ElementContent, Root } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
 import { element } from '../shared/hast'
@@ -44,7 +44,7 @@ export function linkCard(options: LinkCardOptions = {}): MarkdownPlugin {
     version: PLUGIN_VERSION,
     cacheKey: { internalHosts, includeRelative },
     browserCompiler: {
-      module: '@docfuse/plugins/link-card',
+      module: '@canofold/plugins/link-card',
       exportName: 'linkCard',
       options: { internalHosts, includeRelative }
     },
@@ -59,13 +59,13 @@ export function linkCard(options: LinkCardOptions = {}): MarkdownPlugin {
           if (meaningful.length !== 1 || onlyChild?.type !== 'element' || onlyChild.tagName !== 'a') return
           const href = String(onlyChild.properties.href ?? '')
           if (!isExternalHttpLink(href, internalHosts, includeRelative)) return
-          if (onlyChild.properties.dataDfElement === 'file-link') return
+          if (onlyChild.properties.dataCfElement === 'file-link') return
 
           const title = textOf(onlyChild).trim() || displayHost(href)
           const meta = displayHost(href)
           parent.children[index] = element(
             'a',
-            { ...onlyChild.properties, className: ['df-link-card'], href, dataDfComponent: 'link-card' },
+            { ...onlyChild.properties, className: ['cf-link-card'], href, dataCfComponent: 'link-card' },
             [
               element('strong', {}, [{ type: 'text', value: title }]),
               ...(meta && meta !== title ? [element('span', {}, [{ type: 'text', value: meta }])] : [])

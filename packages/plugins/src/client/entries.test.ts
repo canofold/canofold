@@ -7,15 +7,15 @@ import { enhance as enhancePlantuml } from './plantuml'
 afterEach(() => {
   document.body.innerHTML = ''
   const runtime = globalThis as typeof globalThis & {
-    __docfuseFinishMermaid?: () => void
-    __docfuseMermaidRenders?: number
-    __docfuseMermaidActive?: number
-    __docfuseMermaidMaxActive?: number
+    __canofoldFinishMermaid?: () => void
+    __canofoldMermaidRenders?: number
+    __canofoldMermaidActive?: number
+    __canofoldMermaidMaxActive?: number
   }
-  delete runtime.__docfuseFinishMermaid
-  delete runtime.__docfuseMermaidRenders
-  delete runtime.__docfuseMermaidActive
-  delete runtime.__docfuseMermaidMaxActive
+  delete runtime.__canofoldFinishMermaid
+  delete runtime.__canofoldMermaidRenders
+  delete runtime.__canofoldMermaidActive
+  delete runtime.__canofoldMermaidMaxActive
 })
 
 describe('diagram client entries', () => {
@@ -35,7 +35,7 @@ describe('diagram client entries', () => {
     ['kroki', enhanceKroki],
     ['plantuml', enhancePlantuml]
   ])('enhances and disposes the %s browser entry', (kind, enhance) => {
-    document.body.innerHTML = `<figure data-df-plugin-diagram="${kind}"></figure>`
+    document.body.innerHTML = `<figure data-cf-plugin-diagram="${kind}"></figure>`
     const figure = document.querySelector<HTMLElement>('figure')!
 
     const dispose = enhance(document)
@@ -49,26 +49,26 @@ describe('diagram client entries', () => {
     const moduleSource = `export default {
       initialize() {},
       async render() {
-        globalThis.__docfuseMermaidRenders = (globalThis.__docfuseMermaidRenders || 0) + 1;
+        globalThis.__canofoldMermaidRenders = (globalThis.__canofoldMermaidRenders || 0) + 1;
         return { svg: '<svg data-rendered="true"></svg>' };
       }
     }`
     const moduleUrl = `data:text/javascript,${encodeURIComponent(moduleSource)}`
-    document.body.innerHTML = `<figure data-df-plugin-diagram="mermaid" data-df-source="A --&gt; B" data-df-module-url="${moduleUrl}"><div class="df-diagram-preview"></div></figure>`
+    document.body.innerHTML = `<figure data-cf-plugin-diagram="mermaid" data-cf-source="A --&gt; B" data-cf-module-url="${moduleUrl}"><div class="cf-diagram-preview"></div></figure>`
 
     const dispose = enhanceMermaid(document)
     await vi.waitFor(() =>
-      expect(document.querySelector('.df-diagram-preview svg')?.getAttribute('data-rendered')).toBe('true')
+      expect(document.querySelector('.cf-diagram-preview svg')?.getAttribute('data-rendered')).toBe('true')
     )
     expect(
-      (globalThis as typeof globalThis & { __docfuseMermaidRenders?: number }).__docfuseMermaidRenders
+      (globalThis as typeof globalThis & { __canofoldMermaidRenders?: number }).__canofoldMermaidRenders
     ).toBe(1)
 
     dispose()
     document.documentElement.classList.toggle('dark')
     await new Promise((resolve) => requestAnimationFrame(resolve))
     expect(
-      (globalThis as typeof globalThis & { __docfuseMermaidRenders?: number }).__docfuseMermaidRenders
+      (globalThis as typeof globalThis & { __canofoldMermaidRenders?: number }).__canofoldMermaidRenders
     ).toBe(1)
   })
 
@@ -90,56 +90,56 @@ describe('diagram client entries', () => {
       initialize() {},
       render() {
         return new Promise((resolve) => {
-          globalThis.__docfuseFinishMermaid = () => resolve({ svg: '<svg data-late="true"></svg>' });
+          globalThis.__canofoldFinishMermaid = () => resolve({ svg: '<svg data-late="true"></svg>' });
         });
       }
     }`
     const moduleUrl = `data:text/javascript,${encodeURIComponent(moduleSource)}#late`
-    document.body.innerHTML = `<figure data-df-plugin-diagram="mermaid" data-df-source="A --&gt; B" data-df-module-url="${moduleUrl}"><div class="df-diagram-preview"></div></figure>`
+    document.body.innerHTML = `<figure data-cf-plugin-diagram="mermaid" data-cf-source="A --&gt; B" data-cf-module-url="${moduleUrl}"><div class="cf-diagram-preview"></div></figure>`
 
     const dispose = enhanceMermaid(document)
     await vi.waitFor(() =>
       expect(
-        (globalThis as typeof globalThis & { __docfuseFinishMermaid?: () => void }).__docfuseFinishMermaid
+        (globalThis as typeof globalThis & { __canofoldFinishMermaid?: () => void }).__canofoldFinishMermaid
       ).toBeTypeOf('function')
     )
     dispose()
     ;(
       globalThis as typeof globalThis & {
-        __docfuseFinishMermaid?: () => void
+        __canofoldFinishMermaid?: () => void
       }
-    ).__docfuseFinishMermaid?.()
+    ).__canofoldFinishMermaid?.()
     await Promise.resolve()
     await Promise.resolve()
 
-    expect(document.querySelector('.df-diagram-preview')?.innerHTML).toBe('')
+    expect(document.querySelector('.cf-diagram-preview')?.innerHTML).toBe('')
   })
 
   it('serializes Mermaid initialize and render calls for a shared module', async () => {
     const moduleSource = `export default {
       initialize() {},
       async render(id) {
-        globalThis.__docfuseMermaidActive = (globalThis.__docfuseMermaidActive || 0) + 1;
-        globalThis.__docfuseMermaidMaxActive = Math.max(
-          globalThis.__docfuseMermaidMaxActive || 0,
-          globalThis.__docfuseMermaidActive
+        globalThis.__canofoldMermaidActive = (globalThis.__canofoldMermaidActive || 0) + 1;
+        globalThis.__canofoldMermaidMaxActive = Math.max(
+          globalThis.__canofoldMermaidMaxActive || 0,
+          globalThis.__canofoldMermaidActive
         );
         await new Promise((resolve) => setTimeout(resolve, 0));
-        globalThis.__docfuseMermaidActive -= 1;
+        globalThis.__canofoldMermaidActive -= 1;
         return { svg: '<svg data-id="' + id + '"></svg>' };
       }
     }`
     const moduleUrl = `data:text/javascript,${encodeURIComponent(moduleSource)}#serialized`
     document.body.innerHTML = [
-      `<figure data-df-plugin-diagram="mermaid" data-df-source="A" data-df-module-url="${moduleUrl}"><div class="df-diagram-preview"></div></figure>`,
-      `<figure data-df-plugin-diagram="mermaid" data-df-source="B" data-df-module-url="${moduleUrl}"><div class="df-diagram-preview"></div></figure>`
+      `<figure data-cf-plugin-diagram="mermaid" data-cf-source="A" data-cf-module-url="${moduleUrl}"><div class="cf-diagram-preview"></div></figure>`,
+      `<figure data-cf-plugin-diagram="mermaid" data-cf-source="B" data-cf-module-url="${moduleUrl}"><div class="cf-diagram-preview"></div></figure>`
     ].join('')
 
     const diagrams = enhanceMermaid(document)
     await diagrams.ready
 
     expect(
-      (globalThis as typeof globalThis & { __docfuseMermaidMaxActive?: number }).__docfuseMermaidMaxActive
+      (globalThis as typeof globalThis & { __canofoldMermaidMaxActive?: number }).__canofoldMermaidMaxActive
     ).toBe(1)
     diagrams.dispose()
   })

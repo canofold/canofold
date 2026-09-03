@@ -1,4 +1,4 @@
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { mermaid } from './index'
@@ -12,16 +12,16 @@ describe('mermaid plugin', () => {
     const html = renderToStaticMarkup(result.content)
 
     expect(plugin.fenceLanguages).toEqual(['mermaid'])
-    expect(html).toContain('data-df-plugin-diagram="mermaid"')
-    expect(html).toContain('data-df-module-url="https://cdn.example/mermaid.mjs"')
-    expect(html).toContain('<pre class="df-diagram-source"')
-    expect(html).toContain('class="df-diagram-zoom-controls"')
-    expect(html).toContain('data-df-diagram-action="zoom-in"')
+    expect(html).toContain('data-cf-plugin-diagram="mermaid"')
+    expect(html).toContain('data-cf-module-url="https://cdn.example/mermaid.mjs"')
+    expect(html).toContain('<pre class="cf-diagram-source"')
+    expect(html).toContain('class="cf-diagram-zoom-controls"')
+    expect(html).toContain('data-cf-diagram-action="zoom-in"')
     expect(html).toContain('graph LR\nA --&gt; B')
     expect(result.assets.pluginClients).toEqual([
       expect.objectContaining({
         id: 'mermaid',
-        module: '@docfuse/plugins/client/mermaid',
+        module: '@canofold/plugins/client/mermaid',
         resources: [
           expect.objectContaining({
             module: 'mermaid/dist/mermaid.esm.min.mjs',
@@ -30,7 +30,7 @@ describe('mermaid plugin', () => {
         ]
       })
     ])
-    expect(result.assets.pluginStyles).toEqual([{ id: 'diagrams', module: '@docfuse/plugins/diagram.css' }])
+    expect(result.assets.pluginStyles).toEqual([{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }])
   })
 
   it('uses the bundled browser runtime by default', async () => {
@@ -39,8 +39,8 @@ describe('mermaid plugin', () => {
     })
     const html = renderToStaticMarkup(result.content)
 
-    expect(html).toContain('data-df-plugin-diagram="mermaid"')
-    expect(html).not.toContain('data-df-module-url="https://')
+    expect(html).toContain('data-cf-plugin-diagram="mermaid"')
+    expect(html).not.toContain('data-cf-module-url="https://')
   })
 
   it('uses built-in Chinese action labels for a Chinese document', async () => {

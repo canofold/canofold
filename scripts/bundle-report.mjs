@@ -27,16 +27,16 @@ const asyncBudgets = {
   'client/index.js': 108 * 1024
 }
 const reactRuntimeBudget = 72 * 1024
-const docfuseDist = join(process.cwd(), 'packages/docfuse/dist')
-const docfuseBudgets = {
+const canofoldDist = join(process.cwd(), 'packages/canofold/dist')
+const canofoldBudgets = {
   'cli.js': 3 * 1024,
   'playground-client.js': 3 * 1024,
   'styles.input.css': 8 * 1024
 }
 // Stale-lock recovery is part of the production build path; keep the complete
 // CLI graph bounded after accounting for that ownership check.
-const docfuseJavaScriptBudget = 62 * 1024
-const docfuseBrowserEntries = new Set(['playground-client.js'])
+const canofoldJavaScriptBudget = 62 * 1024
+const canofoldBrowserEntries = new Set(['playground-client.js'])
 const pluginDist = join(process.cwd(), 'packages/plugins/dist')
 const pluginClientBudgets = {
   'client/kroki.js': 3 * 1024,
@@ -116,29 +116,29 @@ if (/mermaid\.esm|@mermaid-js|plantuml-encoder/.test(rootImplementationSource)) 
   failures.push('index.js contains a full diagram runtime')
 }
 
-const docfuseFiles = (await relativeFiles(docfuseDist)).filter((file) => /\.(?:js|css)$/.test(file)).sort()
-const docfuseRows = []
-const docfuseJavaScript = []
-for (const file of docfuseFiles) {
-  const source = await readFile(join(docfuseDist, file))
+const canofoldFiles = (await relativeFiles(canofoldDist)).filter((file) => /\.(?:js|css)$/.test(file)).sort()
+const canofoldRows = []
+const canofoldJavaScript = []
+for (const file of canofoldFiles) {
+  const source = await readFile(join(canofoldDist, file))
   const gzipBytes = gzipSync(source).byteLength
-  const budget = docfuseBudgets[file]
-  docfuseRows.push({ file, rawBytes: source.byteLength, gzipBytes, budget })
-  if (file.endsWith('.js') && !docfuseBrowserEntries.has(file)) docfuseJavaScript.push(source)
+  const budget = canofoldBudgets[file]
+  canofoldRows.push({ file, rawBytes: source.byteLength, gzipBytes, budget })
+  if (file.endsWith('.js') && !canofoldBrowserEntries.has(file)) canofoldJavaScript.push(source)
   if (budget && gzipBytes > budget) {
-    failures.push(`docfuse/${file}: ${gzipBytes} gzip bytes exceeds ${budget}`)
+    failures.push(`canofold/${file}: ${gzipBytes} gzip bytes exceeds ${budget}`)
   }
 }
-const docfuseJavaScriptBytes = gzipSync(Buffer.concat(docfuseJavaScript)).byteLength
-docfuseRows.push({
+const canofoldJavaScriptBytes = gzipSync(Buffer.concat(canofoldJavaScript)).byteLength
+canofoldRows.push({
   file: 'Node JavaScript',
-  rawBytes: docfuseJavaScript.reduce((total, source) => total + source.byteLength, 0),
-  gzipBytes: docfuseJavaScriptBytes,
-  budget: docfuseJavaScriptBudget
+  rawBytes: canofoldJavaScript.reduce((total, source) => total + source.byteLength, 0),
+  gzipBytes: canofoldJavaScriptBytes,
+  budget: canofoldJavaScriptBudget
 })
-if (docfuseJavaScriptBytes > docfuseJavaScriptBudget) {
+if (canofoldJavaScriptBytes > canofoldJavaScriptBudget) {
   failures.push(
-    `docfuse Node JavaScript: ${docfuseJavaScriptBytes} gzip bytes exceeds ${docfuseJavaScriptBudget}`
+    `canofold Node JavaScript: ${canofoldJavaScriptBytes} gzip bytes exceeds ${canofoldJavaScriptBudget}`
   )
 }
 
@@ -195,8 +195,8 @@ console.table(
 )
 
 console.table(
-  docfuseRows.map((row) => ({
-    file: `docfuse/${row.file}`,
+  canofoldRows.map((row) => ({
+    file: `canofold/${row.file}`,
     rawKB: (row.rawBytes / 1024).toFixed(2),
     gzipKB: (row.gzipBytes / 1024).toFixed(2),
     budgetKB: row.budget ? (row.budget / 1024).toFixed(2) : '-'

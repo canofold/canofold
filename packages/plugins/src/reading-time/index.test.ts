@@ -1,4 +1,4 @@
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { countReadingTime, readingTime } from './index'
@@ -13,17 +13,17 @@ describe('readingTime plugin', () => {
   it('inserts a reading-time line with minute and word counts', async () => {
     const html = await render('# Hello\n\n' + 'word '.repeat(220))
 
-    expect(html).toContain('class="df-reading-time"')
-    expect(html).toContain('data-df-reading-minutes="1"')
+    expect(html).toContain('class="cf-reading-time"')
+    expect(html).toContain('data-cf-reading-minutes="1"')
     expect(html).toContain('1 min read')
-    expect(html.indexOf('<h1')).toBeLessThan(html.indexOf('class="df-reading-time"'))
+    expect(html.indexOf('<h1')).toBeLessThan(html.indexOf('class="cf-reading-time"'))
   })
 
   it('counts CJK characters separately and uses the built-in Chinese label', async () => {
     const html = await render('中文阅读时长测试正文'.repeat(50), readingTime(), 'zh-CN')
 
     expect(html).toContain('约 2 分钟阅读')
-    expect(html).toContain('data-df-reading-minutes="2"')
+    expect(html).toContain('data-cf-reading-minutes="2"')
   })
 
   it('selects locale-specific labels for Markdown and MDX', async () => {
@@ -43,7 +43,7 @@ describe('readingTime plugin', () => {
   it('does not add reading metadata to an empty document', async () => {
     const html = await render('   \n\n')
 
-    expect(html).not.toContain('class="df-reading-time"')
+    expect(html).not.toContain('class="cf-reading-time"')
     expect(html).not.toContain('min read')
   })
 
@@ -52,8 +52,8 @@ describe('readingTime plugin', () => {
     const withoutCode = await render(source)
     const withCode = await render(source, readingTime({ includeCode: true, wordsPerMinute: 100 }))
 
-    expect(withoutCode).toContain('data-df-reading-minutes="1"')
-    expect(withCode).toMatch(/data-df-reading-minutes="[2-9]"/)
+    expect(withoutCode).toContain('data-cf-reading-minutes="1"')
+    expect(withCode).toMatch(/data-cf-reading-minutes="[2-9]"/)
   })
 
   it('exposes a pure counter for the cache identity inputs', () => {

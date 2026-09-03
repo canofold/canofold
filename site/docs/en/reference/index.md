@@ -1,6 +1,6 @@
 ---
 title: Reference
-description: Look up Docfuse configuration, APIs, commands, and build output
+description: Look up Canofold configuration, APIs, commands, and build output
 group: Reference
 order: 50
 sidebar: false

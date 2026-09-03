@@ -45,15 +45,15 @@ describe('renderPreparedHtml', () => {
     )
 
     expect(html).toMatch(/<h2[^>]*id="getting-started"/)
-    expect(html).toContain('df-callout df-callout-tip')
-    expect(html).toContain('data-df-component="callout"')
-    expect(html).toContain('df-callout-title" data-df-slot="title"')
-    expect(html).toContain('df-callout-body" data-df-slot="content"')
-    expect(html).toContain('class="df-code"')
+    expect(html).toContain('cf-callout cf-callout-tip')
+    expect(html).toContain('data-cf-component="callout"')
+    expect(html).toContain('cf-callout-title" data-cf-slot="title"')
+    expect(html).toContain('cf-callout-body" data-cf-slot="content"')
+    expect(html).toContain('class="cf-code"')
     expect(html).toContain('class="shiki')
-    expect(html).toContain('class="df-code-lang" data-df-slot="title">ts<')
-    expect(html).toContain('data-df-action="copy-code"')
-    expect(html).not.toContain('data-df-action="download-code"')
+    expect(html).toContain('class="cf-code-lang" data-cf-slot="title">ts<')
+    expect(html).toContain('data-cf-action="copy-code"')
+    expect(html).not.toContain('data-cf-action="download-code"')
     expect(html).not.toContain('download="snippet.ts"')
   })
 
@@ -64,12 +64,12 @@ describe('renderPreparedHtml', () => {
     expect(html).not.toMatch(/class="line"[^>]*>[\s\S]*?<\/span>\n<span class="line"/)
   })
 
-  it('uses the Docfuse light and dark syntax themes by default', async () => {
-    const html = await renderPreparedHtml(['```ts', "const title = 'Docfuse'", '```'].join('\n'))
+  it('uses the Canofold light and dark syntax themes by default', async () => {
+    const html = await renderPreparedHtml(['```ts', "const title = 'Canofold'", '```'].join('\n'))
     const markdownHtml = await renderPreparedHtml(['```md', '# Heading', '```'].join('\n'))
 
-    expect(html).toContain('docfuse-light')
-    expect(html).toContain('docfuse-dark')
+    expect(html).toContain('canofold-light')
+    expect(html).toContain('canofold-dark')
     expect(html).toContain('#C6B5FF')
     expect(html).toContain('--shiki-dark:#C6B5FF')
     expect(html).toContain('#9FD3A7')
@@ -84,7 +84,7 @@ describe('renderPreparedHtml', () => {
 
     expect(html).toContain('github-light')
     expect(html).toContain('github-dark')
-    expect(html).not.toContain('docfuse-light')
+    expect(html).not.toContain('canofold-light')
   })
 
   it('preserves bracketed code titles and code-group file labels', async () => {
@@ -101,23 +101,23 @@ describe('renderPreparedHtml', () => {
       ].join('\n')
     )
 
-    expect(html).toContain('class="df-code-tab-label">config.ts<')
+    expect(html).toContain('class="cf-code-tab-label">config.ts<')
     expect(html).toContain('title="config.ts"')
-    expect(html).toContain('data-df-action="copy-code"')
+    expect(html).toContain('data-cf-action="copy-code"')
     expect(html).not.toContain('download="config.ts"')
-    expect(html).toContain('data-df-file-icon="config" data-df-file-kind="config" aria-hidden="true"></span>')
+    expect(html).toContain('data-cf-file-icon="config" data-cf-file-kind="config" aria-hidden="true"></span>')
   })
 
   it('preserves a standalone filename and fence-meta line highlights', async () => {
     const html = await renderPreparedHtml(
-      ['```ts title="docfuse.config.ts" {2}', "const title = 'Docfuse'", 'const search = true', '```'].join(
+      ['```ts title="canofold.config.ts" {2}', "const title = 'Canofold'", 'const search = true', '```'].join(
         '\n'
       )
     )
 
-    expect(html).toContain('data-df-filename="docfuse.config.ts"')
-    expect(html).toContain('class="df-code-file-name">docfuse.config.ts<')
-    expect(html).toContain('data-df-file-kind="config"')
+    expect(html).toContain('data-cf-filename="canofold.config.ts"')
+    expect(html).toContain('class="cf-code-file-name">canofold.config.ts<')
+    expect(html).toContain('data-cf-file-kind="config"')
     expect(html).toContain('class="line highlighted"')
   })
 
@@ -126,7 +126,7 @@ describe('renderPreparedHtml', () => {
       [
         '```ts',
         "const removed = 'docs' // [!code --]",
-        "const added = 'docfuse' // [!code ++]",
+        "const added = 'canofold' // [!code ++]",
         'const highlighted = true // [!code highlight]',
         'const focused = buildSite(config) // [!code focus]',
         'const output = resolveOutput(config) // [!code word:resolveOutput]',
@@ -191,16 +191,16 @@ describe('renderPreparedHtml', () => {
     })
     expect(html).toContain('opaque value')
     expect(html).toContain('language-text')
-    expect(html).toContain('data-df-language="text"')
+    expect(html).toContain('data-cf-language="text"')
   })
 
   it('renders plain-text fences with the same line model as highlighted code', async () => {
     const html = await renderPreparedHtml(
-      ['```txt', 'docfuse.config.ts', 'docs/', '  index.md', '```'].join('\n')
+      ['```txt', 'canofold.config.ts', 'docs/', '  index.md', '```'].join('\n')
     )
 
     expect(html.match(/class="line"/g)).toHaveLength(3)
-    expect(html).toContain('<span class="line">docfuse.config.ts</span>')
+    expect(html).toContain('<span class="line">canofold.config.ts</span>')
     expect(html).toContain('<span class="line">  index.md</span>')
   })
 
@@ -214,26 +214,26 @@ describe('renderPreparedHtml', () => {
     expect(html).toContain('language-vue')
     expect(html).toContain('--shiki-dark:')
     expect(html).toContain('&lt;script')
-    expect(html).toContain('data-df-file-icon="vue"')
+    expect(html).toContain('data-cf-file-icon="vue"')
   })
 
   it('loads the dotenv grammar for environment files', async () => {
     const html = await renderPreparedHtml(
-      ['```dotenv [.env.production]', 'DOCFUSE_SEARCH=true', 'DOCFUSE_BASE_PATH=/docs/', '```'].join('\n')
+      ['```dotenv [.env.production]', 'CANOFOLD_SEARCH=true', 'CANOFOLD_BASE_PATH=/docs/', '```'].join('\n')
     )
 
     expect(html).toContain('language-dotenv')
     expect(html).toContain('--shiki-dark:')
-    expect(html).toContain('data-df-file-icon="environment"')
+    expect(html).toContain('data-cf-file-icon="environment"')
     expect(html.match(/class="line"/g)).toHaveLength(2)
   })
 
   it('keeps inline code and GFM tables as semantic HTML', async () => {
     const html = await renderPreparedHtml(['| A | B |', '| - | - |', '| 1 | `code` |'].join('\n'))
-    expect(html).toMatch(/<table[^>]*data-df-slot="table"/)
-    expect(html).toContain('class="df-sort-button"')
-    expect(html).toContain('data-df-action="download-table"')
-    expect(html).toContain('<code data-df-element="inline-code">code</code>')
+    expect(html).toMatch(/<table[^>]*data-cf-slot="table"/)
+    expect(html).toContain('class="cf-sort-button"')
+    expect(html).toContain('data-cf-action="download-table"')
+    expect(html).toContain('<code data-cf-element="inline-code">code</code>')
   })
 
   it('does not normalize callout examples inside fenced code', async () => {
@@ -247,7 +247,7 @@ describe('renderPreparedHtml', () => {
       [':::tip Read ] first, then [ continue', 'Safe body.', ':::'].join('\n')
     )
 
-    expect(html).toContain('df-callout df-callout-tip')
+    expect(html).toContain('cf-callout cf-callout-tip')
     expect(html).toContain('Read ] first, then [ continue')
     expect(html).toContain('Safe body.')
   })
@@ -280,27 +280,27 @@ describe('renderPreparedHtml', () => {
       { html: 'trusted' }
     )
 
-    expect(html).toContain('df-callout df-callout-info')
-    expect(html).toContain('df-callout df-callout-danger')
+    expect(html).toContain('cf-callout cf-callout-info')
+    expect(html).toContain('cf-callout cf-callout-danger')
     expect(html).toContain('class="contains-task-list"')
     expect(html).toContain('class="task-list-item"')
     expect(html).toContain('aria-label="Completed task"')
     expect(html).toContain('aria-label="Incomplete task"')
-    expect(html).toContain('<del data-df-element="strikethrough">Removed</del>')
-    expect(html).toContain('<mark data-df-element="highlight">marked</mark>')
-    expect(html).toContain('<kbd data-df-element="keyboard">Tab</kbd>')
+    expect(html).toContain('<del data-cf-element="strikethrough">Removed</del>')
+    expect(html).toContain('<mark data-cf-element="highlight">marked</mark>')
+    expect(html).toContain('<kbd data-cf-element="keyboard">Tab</kbd>')
     expect(html).toContain(
-      '<details data-df-component="details" data-df-slot="root" data-df-behavior="details"'
+      '<details data-cf-component="details" data-cf-slot="root" data-cf-behavior="details"'
     )
-    expect(html).toContain('<summary data-df-slot="summary"')
-    expect(html).toContain('class="df-details-content" data-df-slot="content"')
-    expect(html).toContain('<dl data-df-element="definition-list">')
-    expect(html).toContain('<dt data-df-element="definition-term">Term</dt>')
-    expect(html).toMatch(/<dd data-df-element="definition-description">Definition\s*<\/dd>/)
+    expect(html).toContain('<summary data-cf-slot="summary"')
+    expect(html).toContain('class="cf-details-content" data-cf-slot="content"')
+    expect(html).toContain('<dl data-cf-element="definition-list">')
+    expect(html).toContain('<dt data-cf-element="definition-term">Term</dt>')
+    expect(html).toMatch(/<dd data-cf-element="definition-description">Definition\s*<\/dd>/)
     expect(html).toContain('data-footnotes')
-    expect(html).toContain('data-df-element="footnotes"')
-    expect(html).not.toContain('class="sr-only df-heading-with-anchor"')
-    expect(html).not.toContain('data-df-behavior="heading"')
+    expect(html).toContain('data-cf-element="footnotes"')
+    expect(html).not.toContain('class="sr-only cf-heading-with-anchor"')
+    expect(html).not.toContain('data-cf-behavior="heading"')
   })
 
   it('renders Definition List Markdown as semantic HTML', async () => {
@@ -316,13 +316,13 @@ describe('renderPreparedHtml', () => {
       ].join('\n')
     )
 
-    expect(html).toContain('<dl data-df-element="definition-list">')
-    expect(html).toContain('<dt data-df-element="definition-term">Fixed behavior</dt>')
+    expect(html).toContain('<dl data-cf-element="definition-list">')
+    expect(html).toContain('<dt data-cf-element="definition-term">Fixed behavior</dt>')
     expect(html).toMatch(
-      /<dd data-df-element="definition-description">Semantic structure and keyboard behavior\.\s*<\/dd>/
+      /<dd data-cf-element="definition-description">Semantic structure and keyboard behavior\.\s*<\/dd>/
     )
-    expect(html).toContain('<dt data-df-element="definition-term">Configurable behavior</dt>')
-    expect(html).toContain('<p data-df-element="paragraph">Definitions can contain a second paragraph.</p>')
+    expect(html).toContain('<dt data-cf-element="definition-term">Configurable behavior</dt>')
+    expect(html).toContain('<p data-cf-element="paragraph">Definitions can contain a second paragraph.</p>')
   })
 
   it('renders Tabs and Code Group directives with the shared tab contract', async () => {
@@ -339,24 +339,24 @@ describe('renderPreparedHtml', () => {
         '',
         ':::code-group[包管理器]',
         '```bash title="pnpm"',
-        'pnpm add @docfuse/markdown',
+        'pnpm add @canofold/markdown',
         '```',
         '```bash title="npm"',
-        'npm install @docfuse/markdown',
+        'npm install @canofold/markdown',
         '```',
         ':::'
       ].join('\n'),
       { html: 'trusted' }
     )
 
-    expect(result.html).toContain('class="df-tabs"')
-    expect(result.html).toContain('class="df-tabs df-code-group"')
-    expect(result.html).toContain('data-df-slot="tab-list"')
-    expect(result.html).toContain('data-df-slot="panel"')
+    expect(result.html).toContain('class="cf-tabs"')
+    expect(result.html).toContain('class="cf-tabs cf-code-group"')
+    expect(result.html).toContain('data-cf-slot="tab-list"')
+    expect(result.html).toContain('data-cf-slot="panel"')
     expect(result.html).toContain('role="tablist"')
     expect(result.html).toContain('role="tabpanel"')
     expect(result.html).toContain('aria-selected="true"')
-    expect(result.html).toContain('data-df-tab="tab-1"')
+    expect(result.html).toContain('data-cf-tab="tab-1"')
     expect(result.html).toContain('>pnpm<')
     expect(result.html).toContain('>npm<')
     expect(result.html).toContain('>pnpm</span>')
@@ -364,7 +364,7 @@ describe('renderPreparedHtml', () => {
     expect(result.html).toContain(' add</span>')
     expect(result.html).toContain(' install</span>')
     expect(result.html).not.toMatch(
-      /<button[^>]*data-df-tab="quick-install-1"[^>]*>\s*<span class="df-code-file-icon"/i
+      /<button[^>]*data-cf-tab="quick-install-1"[^>]*>\s*<span class="cf-code-file-icon"/i
     )
   })
 
@@ -404,7 +404,7 @@ describe('renderPreparedHtml', () => {
       [
         ':::code-group[Repository files]',
         '```text title=".env.production"',
-        'DOCFUSE_SEARCH=true',
+        'CANOFOLD_SEARCH=true',
         '```',
         '```yaml title="pnpm-workspace.yaml"',
         'packages: []',
@@ -413,10 +413,10 @@ describe('renderPreparedHtml', () => {
       ].join('\n')
     )
 
-    expect(result.html).toContain('data-df-file-icon="environment"')
-    expect(result.html).toContain('data-df-file-kind="environment"')
+    expect(result.html).toContain('data-cf-file-icon="environment"')
+    expect(result.html).toContain('data-cf-file-kind="environment"')
     expect(result.html).not.toContain('>ENV</span>')
-    expect(result.html).toContain('data-df-file-kind="package"')
+    expect(result.html).toContain('data-cf-file-kind="package"')
   })
 
   it('renders terminal fences as copyable dark output blocks', async () => {
@@ -426,13 +426,13 @@ describe('renderPreparedHtml', () => {
       )
     )
 
-    expect(result.html).toContain('class="df-terminal"')
-    expect(result.html).not.toContain('data-df-source=')
+    expect(result.html).toContain('class="cf-terminal"')
+    expect(result.html).not.toContain('data-cf-source=')
     expect(result.html).toContain('>Build output<')
-    expect(result.html).toContain('class="df-copy-snippet-button"')
+    expect(result.html).toContain('class="cf-copy-snippet-button"')
     expect(result.html).toContain('aria-label="Copy terminal output"')
-    expect(result.html).toContain('class="df-terminal-prompt">$</span> pnpm run build:site')
-    expect(result.html).toContain('class="df-terminal-status">✓</span> Built 42 pages in 1.8s')
+    expect(result.html).toContain('class="cf-terminal-prompt">$</span> pnpm run build:site')
+    expect(result.html).toContain('class="cf-terminal-status">✓</span> Built 42 pages in 1.8s')
   })
 
   it('uses the configurable terminal title when fenced metadata omits one', async () => {
@@ -440,7 +440,7 @@ describe('renderPreparedHtml', () => {
       labels: { terminalTitle: '终端' }
     })
 
-    expect(result.html).toContain('data-df-title="终端"')
+    expect(result.html).toContain('data-cf-title="终端"')
     expect(result.html).toContain('>终端<')
   })
 
@@ -449,7 +449,7 @@ describe('renderPreparedHtml', () => {
       [
         '::::steps[发布流程]',
         ':::step[安装渲染器]',
-        '添加 `@docfuse/markdown`。',
+        '添加 `@canofold/markdown`。',
         ':::',
         ':::step[构建站点]',
         '执行构建并检查输出。',
@@ -459,12 +459,12 @@ describe('renderPreparedHtml', () => {
       { html: 'trusted' }
     )
 
-    expect(result.html).toMatch(/<ol[^>]*class="df-steps"[^>]*aria-label="发布流程"[^>]*>/)
-    expect(result.html).toContain('data-df-component="steps"')
+    expect(result.html).toMatch(/<ol[^>]*class="cf-steps"[^>]*aria-label="发布流程"[^>]*>/)
+    expect(result.html).toContain('data-cf-component="steps"')
     expect(result.html).toContain(
-      '<strong class="df-step-title" data-df-element="strong">安装渲染器</strong>'
+      '<strong class="cf-step-title" data-cf-element="strong">安装渲染器</strong>'
     )
-    expect(result.html).toContain('<strong class="df-step-title" data-df-element="strong">构建站点</strong>')
+    expect(result.html).toContain('<strong class="cf-step-title" data-cf-element="strong">构建站点</strong>')
     expect(result.assets.behaviors).toEqual([])
   })
 
@@ -473,7 +473,7 @@ describe('renderPreparedHtml', () => {
       [
         ':badge[Beta]{tone="accent"}',
         '',
-        ':copy[pnpm add @docfuse/markdown]',
+        ':copy[pnpm add @canofold/markdown]',
         '',
         ':::aside[Implementation note]',
         'Keep the main flow concise.',
@@ -483,7 +483,7 @@ describe('renderPreparedHtml', () => {
         '- docs/',
         '  - guide/',
         '    - index.md',
-        '- docfuse.config.ts',
+        '- canofold.config.ts',
         ':::',
         '',
         '::::card-grid',
@@ -497,7 +497,7 @@ describe('renderPreparedHtml', () => {
         '| --- | --- |',
         '| `slug` | :badge[string] |',
         ':::response[200]',
-        '`{ "title": "Docfuse" }`',
+        '`{ "title": "Canofold" }`',
         ':::',
         '::::',
         '',
@@ -507,26 +507,26 @@ describe('renderPreparedHtml', () => {
       ].join('\n')
     )
 
-    expect(result.html).toContain('class="df-badge df-badge-accent"')
-    expect(result.html).toContain('data-df-component="copy-snippet"')
-    expect(result.html).toContain('class="df-aside" data-df-component="aside"')
-    expect(result.html).toContain('class="df-file-tree" data-df-component="file-tree"')
-    expect(result.html).toContain('data-df-file-tree-branch=""')
-    expect(result.html).toContain('data-df-file-tree-file=""')
-    expect(result.html).toContain('class="df-card-grid" data-df-component="card-grid"')
-    expect(result.html).toContain('class="df-link-card" href="/guide/"')
-    expect(result.html).toContain('class="df-api-block" data-df-component="api"')
-    expect(result.html).toContain('class="df-api-method">GET</span>')
+    expect(result.html).toContain('class="cf-badge cf-badge-accent"')
+    expect(result.html).toContain('data-cf-component="copy-snippet"')
+    expect(result.html).toContain('class="cf-aside" data-cf-component="aside"')
+    expect(result.html).toContain('class="cf-file-tree" data-cf-component="file-tree"')
+    expect(result.html).toContain('data-cf-file-tree-branch=""')
+    expect(result.html).toContain('data-cf-file-tree-file=""')
+    expect(result.html).toContain('class="cf-card-grid" data-cf-component="card-grid"')
+    expect(result.html).toContain('class="cf-link-card" href="/guide/"')
+    expect(result.html).toContain('class="cf-api-block" data-cf-component="api"')
+    expect(result.html).toContain('class="cf-api-method">GET</span>')
     expect(result.html).toContain(
-      'class="df-badge" data-df-component="badge" data-df-slot="label">string</span>'
+      'class="cf-badge" data-cf-component="badge" data-cf-slot="label">string</span>'
     )
-    expect(result.html).toContain('class="df-api-response"')
-    expect(result.html).toContain('class="df-image-gallery" data-df-component="gallery"')
-    expect(result.html).toContain('data-df-gallery-label="Screenshots"')
+    expect(result.html).toContain('class="cf-api-response"')
+    expect(result.html).toContain('class="cf-image-gallery" data-cf-component="gallery"')
+    expect(result.html).toContain('data-cf-gallery-label="Screenshots"')
     expect(result.html).toContain('aria-label="Screenshots"')
     expect(result.html).toContain('<figcaption>Source and preview</figcaption>')
-    expect(result.html.match(/data-df-action="open-gallery"/g)).toHaveLength(1)
-    expect(result.html.match(/<figure data-df-slot="item"/g)).toHaveLength(1)
+    expect(result.html.match(/data-cf-action="open-gallery"/g)).toHaveLength(1)
+    expect(result.html.match(/<figure data-cf-slot="item"/g)).toHaveLength(1)
     expect(result.html).not.toContain('<figure><img src="/editor.png"')
     expect(result.assets.behaviors).toEqual(expect.arrayContaining(['copy-snippet', 'file-tree', 'gallery']))
   })
@@ -551,7 +551,7 @@ describe('renderPreparedHtml', () => {
 
     expect(result.html).toContain('<details open=""')
     expect(result.html).toMatch(
-      /<summary[^>]*data-df-slot="summary"[^>]*data-df-element="summary"[^>]*>Deployment checks/
+      /<summary[^>]*data-cf-slot="summary"[^>]*data-cf-element="summary"[^>]*>Deployment checks/
     )
     expect(result.html).toMatch(/<video[^>]*src="\/demo\.mp4"[^>]*poster="\/poster\.jpg"/)
     expect(result.html).toContain(
@@ -621,7 +621,7 @@ describe('renderPreparedHtml', () => {
   it('marks Markdown images for the React Image Island', async () => {
     const result = await renderPreparedResult('![Preview](/preview.png)')
 
-    expect(result.html).toContain('data-df-island="image"')
+    expect(result.html).toContain('data-cf-island="image"')
     expect(result.html).toContain('src="/preview.png"')
     expect(result.assets.behaviors).toContain('image')
   })
@@ -637,16 +637,16 @@ describe('renderPreparedHtml', () => {
       ].join('\n')
     )
 
-    expect(html).toContain('class="df-file-link"')
-    expect(html).toContain('class="df-file-icon" data-df-file-icon="pdf" aria-hidden="true"></span>')
-    expect(html).toContain('class="df-file-name">quarterly-report.pdf</span>')
-    expect(html).toContain('class="df-file-meta">PDF document · PDF</span>')
-    expect(html).toContain('class="df-file-icon" data-df-file-icon="excel" aria-hidden="true"></span>')
-    expect(html).toContain('class="df-file-name">budget 2026.xlsx</span>')
-    expect(html).toContain('class="df-file-meta">Microsoft Excel · XLSX</span>')
-    expect(html).toContain('class="df-file-download" aria-hidden="true"></span>')
+    expect(html).toContain('class="cf-file-link"')
+    expect(html).toContain('class="cf-file-icon" data-cf-file-icon="pdf" aria-hidden="true"></span>')
+    expect(html).toContain('class="cf-file-name">quarterly-report.pdf</span>')
+    expect(html).toContain('class="cf-file-meta">PDF document · PDF</span>')
+    expect(html).toContain('class="cf-file-icon" data-cf-file-icon="excel" aria-hidden="true"></span>')
+    expect(html).toContain('class="cf-file-name">budget 2026.xlsx</span>')
+    expect(html).toContain('class="cf-file-meta">Microsoft Excel · XLSX</span>')
+    expect(html).toContain('class="cf-file-download" aria-hidden="true"></span>')
     expect(html).toContain(
-      'Keep <a href="./files/guide.docx" data-df-element="link">the Word file</a> inline'
+      'Keep <a href="./files/guide.docx" data-cf-element="link">the Word file</a> inline'
     )
   })
 
@@ -661,9 +661,9 @@ describe('renderPreparedHtml', () => {
       { html: 'trusted' }
     )
 
-    expect(result.html).toContain('data-df-component="image"')
-    expect(result.html).toContain('data-df-island="image"')
-    expect(result.html).toContain('data-df-action="zoom-image"')
+    expect(result.html).toContain('data-cf-component="image"')
+    expect(result.html).toContain('data-cf-island="image"')
+    expect(result.html).toContain('data-cf-action="zoom-image"')
     expect(result.html).toContain('Figure caption')
     expect(result.assets.behaviors).toContain('image')
   })
@@ -673,9 +673,9 @@ describe('renderPreparedHtml', () => {
     const trusted = await renderPreparedHtml('<mark>marked</mark>', { html: 'trusted' })
     const stripped = await renderPreparedHtml('<mark>marked</mark>', { html: 'strip' })
 
-    expect(trusted).toContain('<mark data-df-element="highlight">marked</mark>')
-    expect(byDefault).not.toContain('<mark data-df-element="highlight">marked</mark>')
-    expect(stripped).not.toContain('<mark data-df-element="highlight">marked</mark>')
+    expect(trusted).toContain('<mark data-cf-element="highlight">marked</mark>')
+    expect(byDefault).not.toContain('<mark data-cf-element="highlight">marked</mark>')
+    expect(stripped).not.toContain('<mark data-cf-element="highlight">marked</mark>')
   })
 
   it('sanitizes unsafe HTML while preserving safe semantic content', async () => {
@@ -685,7 +685,7 @@ describe('renderPreparedHtml', () => {
         '<img src="preview.png" alt="Preview" onerror="alert(1)">',
         '<a href="javascript:alert(1)" onclick="alert(1)">Unsafe link</a>',
         '<mark>Safe highlight</mark>',
-        '<div class="df-image-gallery"><img src="one.png" alt="One"></div>'
+        '<div class="cf-image-gallery"><img src="one.png" alt="One"></div>'
       ].join('\n'),
       { html: 'sanitize' }
     )
@@ -721,28 +721,28 @@ describe('renderPreparedHtml', () => {
         '$ pnpm build',
         '```',
         '',
-        '<div class="df-tabs" data-df-component="tabs" data-df-behavior="tabs" onclick="alert(1)">Forged tabs</div>'
+        '<div class="cf-tabs" data-cf-component="tabs" data-cf-behavior="tabs" onclick="alert(1)">Forged tabs</div>'
       ].join('\n'),
       { html: 'sanitize' }
     )
 
-    expect(result.html).toContain('class="df-tabs"')
-    expect(result.html).toContain('data-df-behavior="tabs"')
+    expect(result.html).toContain('class="cf-tabs"')
+    expect(result.html).toContain('data-cf-behavior="tabs"')
     expect(result.html).toContain('role="tablist"')
-    expect(result.html).toContain('class="df-callout df-callout-tip"')
-    expect(result.html).toContain('class="df-steps"')
-    expect(result.html).toContain('data-df-component="terminal"')
+    expect(result.html).toContain('class="cf-callout cf-callout-tip"')
+    expect(result.html).toContain('class="cf-steps"')
+    expect(result.html).toContain('data-cf-component="terminal"')
     expect(result.html).toContain('Forged tabs')
     expect(result.html).not.toContain('onclick')
-    expect(result.html.match(/data-df-behavior="tabs"/g)).toHaveLength(1)
+    expect(result.html.match(/data-cf-behavior="tabs"/g)).toHaveLength(1)
     expect(result.assets.behaviors).toContain('tabs')
   })
 
   it('collects Islands and resources from trusted HTML components', async () => {
     const result = await renderPreparedResult(
       [
-        '<div class="df-image-gallery" data-df-component="gallery"><figure><img src="one.png" alt="One"></figure></div>',
-        '<div class="df-tabs" data-df-component="tabs">Tabs</div>',
+        '<div class="cf-image-gallery" data-cf-component="gallery"><figure><img src="one.png" alt="One"></figure></div>',
+        '<div class="cf-tabs" data-cf-component="tabs">Tabs</div>',
         '<pre class="mermaid">flowchart LR; A --> B</pre>'
       ].join('\n'),
       { html: 'trusted' }
@@ -755,13 +755,13 @@ describe('renderPreparedHtml', () => {
   it('keeps compiler transforms idempotent for trusted rich wrappers', async () => {
     const html = await renderPreparedHtml(
       [
-        '<figure data-df-component="table"><table><tbody><tr><td>A</td></tr></tbody></table></figure>',
-        '<figure data-df-component="code-block"><pre><code>const a = 1</code></pre></figure>'
+        '<figure data-cf-component="table"><table><tbody><tr><td>A</td></tr></tbody></table></figure>',
+        '<figure data-cf-component="code-block"><pre><code>const a = 1</code></pre></figure>'
       ].join('\n'),
       { html: 'trusted' }
     )
-    expect(html.match(/data-df-component="table"/g)).toHaveLength(1)
-    expect(html.match(/data-df-component="code-block"/g)).toHaveLength(1)
+    expect(html.match(/data-cf-component="table"/g)).toHaveLength(1)
+    expect(html.match(/data-cf-component="code-block"/g)).toHaveLength(1)
   })
 
   it('does not treat an annotated fence line as a closing fence', async () => {
@@ -782,9 +782,9 @@ describe('renderPreparedHtml', () => {
     )
 
     expect(html).toMatch(/<h2[^>]*id="section"[^>]*>Section/)
-    expect(html).toMatch(/<table[^>]*data-df-element="table">/)
-    expect(html).not.toContain('df-table-window')
-    expect(html).not.toContain('class="df-code"')
+    expect(html).toMatch(/<table[^>]*data-cf-element="table">/)
+    expect(html).not.toContain('cf-table-window')
+    expect(html).not.toContain('class="cf-code"')
   })
 
   it('supports custom renderer labels', async () => {

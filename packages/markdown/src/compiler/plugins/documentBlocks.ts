@@ -6,7 +6,7 @@ import type { NormalizedMarkdownOptions } from '../normalizeOptions'
 function componentName(node: Element | undefined) {
   if (!node) return ''
   const properties = node.properties
-  return String(properties.dataDfComponent ?? properties['data-df-component'] ?? '')
+  return String(properties.dataCfComponent ?? properties['data-cf-component'] ?? '')
 }
 
 const DOCUMENT_FILE_TYPES = new Map([
@@ -63,20 +63,20 @@ function trackTrustedComponent(
   if (component === 'gallery') {
     assets.markBehavior('gallery')
     const galleryLabel =
-      typeof properties.dataDfGalleryLabel === 'string' && properties.dataDfGalleryLabel.trim()
-        ? properties.dataDfGalleryLabel
-        : typeof properties['data-df-gallery-label'] === 'string' &&
-            properties['data-df-gallery-label'].trim()
-          ? properties['data-df-gallery-label']
+      typeof properties.dataCfGalleryLabel === 'string' && properties.dataCfGalleryLabel.trim()
+        ? properties.dataCfGalleryLabel
+        : typeof properties['data-cf-gallery-label'] === 'string' &&
+            properties['data-cf-gallery-label'].trim()
+          ? properties['data-cf-gallery-label']
           : labels.imageGallery
     node.properties = {
       ...properties,
-      dataDfGalleryLabel: galleryLabel,
-      dataDfCloseLabel: labels.closeImageGallery,
-      dataDfPreviousLabel: labels.previousGalleryImage,
-      dataDfNextLabel: labels.nextGalleryImage,
-      dataDfThumbnailsLabel: labels.galleryThumbnails,
-      dataDfImageLabel: labels.galleryImage
+      dataCfGalleryLabel: galleryLabel,
+      dataCfCloseLabel: labels.closeImageGallery,
+      dataCfPreviousLabel: labels.previousGalleryImage,
+      dataCfNextLabel: labels.nextGalleryImage,
+      dataCfThumbnailsLabel: labels.galleryThumbnails,
+      dataCfImageLabel: labels.galleryImage
     }
   }
   if (component === 'tabs' || component === 'code-group') assets.markBehavior('tabs')
@@ -87,8 +87,8 @@ function trackTrustedComponent(
     assets.markBehavior('copy-snippet')
     node.properties = {
       ...properties,
-      dataDfCopyLabel: labels.copySnippet,
-      dataDfCopyFailureLabel: labels.copyFailed
+      dataCfCopyLabel: labels.copySnippet,
+      dataCfCopyFailureLabel: labels.copyFailed
     }
   }
   if (component === 'table') assets.markBehavior('table')
@@ -112,7 +112,7 @@ export const rehypeDocumentBlocks = (
       }
 
       if (node.tagName === 'section' && node.properties?.dataFootnotes !== undefined) {
-        node.properties = { ...node.properties, dataDfElement: 'footnotes' }
+        node.properties = { ...node.properties, dataCfElement: 'footnotes' }
         return
       }
 
@@ -135,14 +135,14 @@ export const rehypeDocumentBlocks = (
           assets.markBehavior('image')
           node.properties = {
             ...node.properties,
-            className: [...new Set([...existingClasses, 'df-media-frame'])],
-            dataDfComponent: 'image',
-            dataDfIsland: 'image',
-            dataDfSlot: 'root',
-            dataDfZoomLabel: labels.zoomImage,
-            dataDfCloseLabel: labels.closeImagePreview
+            className: [...new Set([...existingClasses, 'cf-media-frame'])],
+            dataCfComponent: 'image',
+            dataCfIsland: 'image',
+            dataCfSlot: 'root',
+            dataCfZoomLabel: labels.zoomImage,
+            dataCfCloseLabel: labels.closeImagePreview
           }
-          if (caption) caption.properties = { ...caption.properties, dataDfSlot: 'caption' }
+          if (caption) caption.properties = { ...caption.properties, dataCfSlot: 'caption' }
           return
         }
       }
@@ -151,14 +151,14 @@ export const rehypeDocumentBlocks = (
         assets.markBehavior('details')
         node.properties = {
           ...node.properties,
-          dataDfComponent: 'details',
-          dataDfBehavior: 'details',
-          dataDfSlot: 'root'
+          dataCfComponent: 'details',
+          dataCfBehavior: 'details',
+          dataCfSlot: 'root'
         }
         const summary = node.children?.find(
           (child): child is Element => child.type === 'element' && child.tagName === 'summary'
         )
-        if (summary) summary.properties = { ...summary.properties, dataDfSlot: 'summary' }
+        if (summary) summary.properties = { ...summary.properties, dataCfSlot: 'summary' }
         return
       }
 
@@ -166,9 +166,9 @@ export const rehypeDocumentBlocks = (
         assets.markBehavior('heading')
         node.properties = {
           ...node.properties,
-          dataDfAnchor: `#${node.properties.id}`,
-          dataDfAnchorLabel: labels.copySectionLink,
-          dataDfCopyFailureLabel: labels.copyFailed
+          dataCfAnchor: `#${node.properties.id}`,
+          dataCfAnchorLabel: labels.copySectionLink,
+          dataCfCopyFailureLabel: labels.copyFailed
         }
         return
       }
@@ -185,17 +185,17 @@ export const rehypeDocumentBlocks = (
           ...onlyChild,
           properties: {
             ...onlyChild.properties,
-            className: [...new Set([...classNames(onlyChild), 'df-file-link'])],
-            dataDfFileKind: file.kind,
-            dataDfElement: 'file-link'
+            className: [...new Set([...classNames(onlyChild), 'cf-file-link'])],
+            dataCfFileKind: file.kind,
+            dataCfElement: 'file-link'
           },
           children: [
             {
               type: 'element',
               tagName: 'span',
               properties: {
-                className: ['df-file-icon'],
-                dataDfFileIcon: file.kind,
+                className: ['cf-file-icon'],
+                dataCfFileIcon: file.kind,
                 ariaHidden: 'true'
               },
               children: []
@@ -203,18 +203,18 @@ export const rehypeDocumentBlocks = (
             {
               type: 'element',
               tagName: 'span',
-              properties: { className: ['df-file-details'] },
+              properties: { className: ['cf-file-details'] },
               children: [
                 {
                   type: 'element',
                   tagName: 'span',
-                  properties: { className: ['df-file-name'] },
+                  properties: { className: ['cf-file-name'] },
                   children: [{ type: 'text', value: file.filename }]
                 },
                 {
                   type: 'element',
                   tagName: 'span',
-                  properties: { className: ['df-file-meta'] },
+                  properties: { className: ['cf-file-meta'] },
                   children: [{ type: 'text', value: `${file.label} · ${file.badge}` }]
                 }
               ]
@@ -222,7 +222,7 @@ export const rehypeDocumentBlocks = (
             {
               type: 'element',
               tagName: 'span',
-              properties: { className: ['df-file-download'], ariaHidden: 'true' },
+              properties: { className: ['cf-file-download'], ariaHidden: 'true' },
               children: []
             }
           ]
@@ -240,7 +240,7 @@ export const rehypeDocumentBlocks = (
         children.push({
           type: 'element',
           tagName: 'figcaption',
-          properties: { dataDfSlot: 'caption' },
+          properties: { dataCfSlot: 'caption' },
           children: [{ type: 'text', value: String(caption) }]
         })
       }
@@ -248,12 +248,12 @@ export const rehypeDocumentBlocks = (
         type: 'element',
         tagName: 'figure',
         properties: {
-          className: ['df-media-frame'],
-          dataDfComponent: 'image',
-          dataDfIsland: 'image',
-          dataDfSlot: 'root',
-          dataDfZoomLabel: labels.zoomImage,
-          dataDfCloseLabel: labels.closeImagePreview
+          className: ['cf-media-frame'],
+          dataCfComponent: 'image',
+          dataCfIsland: 'image',
+          dataCfSlot: 'root',
+          dataCfZoomLabel: labels.zoomImage,
+          dataCfCloseLabel: labels.closeImagePreview
         },
         children
       }

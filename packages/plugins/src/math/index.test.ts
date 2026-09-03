@@ -1,4 +1,4 @@
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { hasMathSyntax, math } from './index'

@@ -22,24 +22,24 @@ Extensions do not add Markdown syntax or browser components. They are for reposi
 The project owns extension files and registers them from the site configuration:
 
 :::file-tree
-- docfuse.config.ts
+- canofold.config.ts
 - extensions/
   - release-notes.ts
 :::
 
 ## When an extension runs
 
-`docfuse check`, `docfuse build`, and `docfuse dev` all load extensions. `transformSource` and `extendPage` take part in checking and building content. `generate` runs only when `build` or `dev` writes site output. `docfuse preview` serves existing output and does not run extensions.
+`canofold check`, `canofold build`, and `canofold dev` all load extensions. `transformSource` and `extendPage` take part in checking and building content. `generate` runs only when `build` or `dev` writes site output. `canofold preview` serves existing output and does not run extensions.
 
 ::::steps[Build lifecycle]
 :::step[Transform source]
-After reading each Markdown or MDX file, Docfuse calls `transformSource`. The returned source continues into Markdown analysis and rendering.
+After reading each Markdown or MDX file, Canofold calls `transformSource`. The returned source continues into Markdown analysis and rendering.
 :::
 :::step[Extend the page]
-After title, description, body, and route are known, Docfuse calls `extendPage`. The hook can change public metadata and search or AI inclusion.
+After title, description, body, and route are known, Canofold calls `extendPage`. The hook can change public metadata and search or AI inclusion.
 :::
 :::step[Generate files]
-After all pages are complete, Docfuse calls `generate`. The extension can write only predeclared outputs through `emitFile`.
+After all pages are complete, Canofold calls `generate`. The extension can write only predeclared outputs through `emitFile`.
 :::
 ::::
 
@@ -48,7 +48,7 @@ Multiple extensions run in configuration order. Source and page changes returned
 ## Create an extension
 
 ```ts title="extensions/release-notes.ts"
-import { defineExtension } from 'docfuse'
+import { defineExtension } from 'canofold'
 
 export default defineExtension((options) => {
   const channel = typeof options.channel === 'string' ? options.channel : 'stable'
@@ -72,8 +72,8 @@ export default defineExtension((options) => {
 
 ## Register the extension
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   extensions: [
@@ -107,7 +107,7 @@ Verify these results:
 
 1. `/releases/` displays `Current channel: stable`.
 2. Searching for `stable release` finds the page.
-3. `/extensions/release-notes/manifest.json` returns the generated JSON. The file is stored at `.docfuse/dist/extensions/release-notes/manifest.json`.
+3. `/extensions/release-notes/manifest.json` returns the generated JSON. The file is stored at `.canofold/dist/extensions/release-notes/manifest.json`.
 
 `docs:check` runs the first two hooks but does not write `manifest.json`. Run `docs:build` or `docs:dev` to verify `generate`.
 

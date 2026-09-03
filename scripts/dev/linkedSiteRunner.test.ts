@@ -4,7 +4,7 @@ import { createLinkedSiteReconciler } from './linkedSiteRunner.mjs'
 const now = Date.parse('2026-07-23T00:00:10.000Z')
 
 function state(
-  packageName: 'markdown' | 'docfuse',
+  packageName: 'markdown' | 'canofold',
   generation: number,
   status: 'building' | 'ready' | 'error' = 'ready'
 ) {
@@ -19,7 +19,7 @@ function state(
 
 describe('createLinkedSiteReconciler', () => {
   it('starts only when both packages are ready and restarts once for a new generation', async () => {
-    let states = [state('markdown', 1, 'building'), state('docfuse', 1)]
+    let states = [state('markdown', 1, 'building'), state('canofold', 1)]
     let nextChild = 0
     const startSite = vi.fn(async () => ({ id: ++nextChild }))
     const stopSite = vi.fn(async () => {})
@@ -33,20 +33,20 @@ describe('createLinkedSiteReconciler', () => {
     await reconciler.reconcile()
     expect(startSite).not.toHaveBeenCalled()
 
-    states = [state('markdown', 1), state('docfuse', 1)]
+    states = [state('markdown', 1), state('canofold', 1)]
     await reconciler.reconcile()
     await reconciler.reconcile()
     expect(startSite).toHaveBeenCalledTimes(1)
     expect(stopSite).not.toHaveBeenCalled()
 
-    states = [state('markdown', 2), state('docfuse', 1)]
+    states = [state('markdown', 2), state('canofold', 1)]
     await reconciler.reconcile()
     expect(stopSite).toHaveBeenCalledWith({ id: 1 })
     expect(startSite).toHaveBeenCalledTimes(2)
   })
 
   it('stops the site when a package is building, failed, missing, or stale', async () => {
-    let states = [state('markdown', 1), state('docfuse', 1)]
+    let states = [state('markdown', 1), state('canofold', 1)]
     const child = { id: 1 }
     const startSite = vi.fn(async () => child)
     const stopSite = vi.fn(async () => {})
@@ -58,13 +58,13 @@ describe('createLinkedSiteReconciler', () => {
     })
 
     await reconciler.reconcile()
-    states = [state('markdown', 2, 'error'), state('docfuse', 1)]
+    states = [state('markdown', 2, 'error'), state('canofold', 1)]
     await reconciler.reconcile()
     expect(stopSite).toHaveBeenCalledWith(child)
 
     states = [
       { ...state('markdown', 3), heartbeatAt: new Date(now - 16_000).toISOString() },
-      state('docfuse', 1)
+      state('canofold', 1)
     ]
     await reconciler.reconcile()
     expect(startSite).toHaveBeenCalledTimes(1)
@@ -77,7 +77,7 @@ describe('createLinkedSiteReconciler', () => {
   it('ignores ready states written by another workspace session', async () => {
     const states = [
       { ...state('markdown', 1), workspaceId: 'older-workspace' },
-      { ...state('docfuse', 1), workspaceId: 'older-workspace' }
+      { ...state('canofold', 1), workspaceId: 'older-workspace' }
     ]
     const startSite = vi.fn(async () => ({ id: 1 }))
     const reconciler = createLinkedSiteReconciler({
@@ -93,7 +93,7 @@ describe('createLinkedSiteReconciler', () => {
   })
 
   it('retries a failed site generation after site content changes', async () => {
-    const states = [state('markdown', 1), state('docfuse', 1)]
+    const states = [state('markdown', 1), state('canofold', 1)]
     let onUnexpectedExit: (() => void) | undefined
     let nextChild = 0
     const startSite = vi.fn(async (onExit: () => void) => {
@@ -117,7 +117,7 @@ describe('createLinkedSiteReconciler', () => {
   })
 
   it('does not lose a content change that arrives while the site is starting', async () => {
-    const states = [state('markdown', 1), state('docfuse', 1)]
+    const states = [state('markdown', 1), state('canofold', 1)]
     let onUnexpectedExit: (() => void) | undefined
     let releaseStart!: () => void
     const firstStart = new Promise<{ id: number }>((resolve) => {

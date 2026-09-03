@@ -1,13 +1,13 @@
 ---
 title: Markdown 语法参考
-description: 查询 Docfuse 支持的 Markdown、GFM、富内容指令和插件语法
+description: 查询 Canofold 支持的 Markdown、GFM、富内容指令和插件语法
 group: Markdown SDK
 order: 82
 ---
 
 # Markdown 语法参考
 
-Docfuse 支持 CommonMark、GFM 和一组面向技术文档的指令。标准 Markdown 用于正文；Docfuse 指令用于 Tabs、步骤、文件树等结构化内容。编译器负责生成 HTML、ARIA 和交互属性，文档里不需要写 `df-*` 类名。
+Canofold 支持 CommonMark、GFM 和一组面向技术文档的指令。标准 Markdown 用于正文；Canofold 指令用于 Tabs、步骤、文件树等结构化内容。编译器负责生成 HTML、ARIA 和交互属性，文档里不需要写 `cf-*` 类名。
 
 ## 标准 Markdown 与 GFM
 
@@ -36,8 +36,8 @@ Docfuse 支持 CommonMark、GFM 和一组面向技术文档的指令。标准 Ma
 围栏后的 `title`、`filename`、`label` 或 `[文件名]` 会显示为代码块标题。`{2,4-5}` 用于高亮指定行。
 
 ````markdown
-```ts title="docfuse.config.ts" {2}
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts" {2}
+import { defineConfig } from 'canofold'
 export default defineConfig({ title: 'Docs' })
 ```
 
@@ -59,7 +59,7 @@ export const routes = []
 ````markdown
 ```ts
 const oldName = 'docs' // [!code --]
-const newName = 'docfuse' // [!code ++]
+const newName = 'canofold' // [!code ++]
 const result = buildSite(config) // [!code focus]
 const output = resolveOutput(config) // [!code word:resolveOutput]
 throw new Error('Invalid config') // [!code error]
@@ -77,7 +77,7 @@ console.warn('Missing description') // [!code warning]
 :::
 ```
 
-也可以写成 `:::tip 提交前检查`。Docfuse 会在解析前把它转换成相同结构。
+也可以写成 `:::tip 提交前检查`。Canofold 会在解析前把它转换成相同结构。
 
 ## Tabs 与代码组
 
@@ -86,10 +86,10 @@ Tabs 只能直接包含 `tab`。标签未填写时使用本地化的默认名称
 ```markdown
 ::::tabs[安装方式]
 :::tab[pnpm]
-运行 `pnpm add -D docfuse`。
+运行 `pnpm add -D canofold`。
 :::
 :::tab[npm]
-运行 `npm install --save-dev docfuse`。
+运行 `npm install --save-dev canofold`。
 :::
 ::::
 ```
@@ -99,10 +99,10 @@ Tabs 只能直接包含 `tab`。标签未填写时使用本地化的默认名称
 ````markdown
 :::code-group[包管理器]
 ```bash title="pnpm"
-pnpm add -D docfuse
+pnpm add -D canofold
 ```
 ```bash title="npm"
-npm install --save-dev docfuse
+npm install --save-dev canofold
 ```
 :::
 ````
@@ -117,7 +117,7 @@ Steps 只能直接包含 `step`：
 运行 `pnpm build`。
 :::
 :::step[发布]
-上传 `.docfuse/dist`。
+上传 `.canofold/dist`。
 :::
 ::::
 ```
@@ -140,7 +140,7 @@ $ pnpm build
 - docs/
   - guide/
     - index.md
-- docfuse.config.ts
+- canofold.config.ts
 :::
 ```
 
@@ -170,7 +170,7 @@ $ pnpm build
 | `slug` | :badge[string] |
 
 :::response[200]
-`{ "title": "Docfuse" }`
+`{ "title": "Canofold" }`
 :::
 ::::
 ```
@@ -184,7 +184,7 @@ $ pnpm build
 
 状态：:badge[Beta]{tone="accent"}
 
-命令：:copy[pnpm add @docfuse/markdown]
+命令：:copy[pnpm add @canofold/markdown]
 ```
 
 Badge 的 `tone` 可以是 `accent`、`success`、`warning` 或 `danger`。`:copy` 必须包含可复制文本。
@@ -249,6 +249,6 @@ flowchart LR
 
 原生 HTML 只适合作为可信内容的逃生口。站点可以通过 `markdown.html` 选择 `trusted`、`sanitize` 或 `strip`；独立使用 `<Markdown>` 时默认值是 `strip`。
 
-Docfuse 会严格检查指令名称、形态、必填属性和嵌套关系。无效指令会中止渲染，`docfuse check` 会同时给出文件和源码位置。自定义插件必须通过 `directiveNames` 声明自己拥有的指令；未声明的名称会按拼写错误处理。
+Canofold 会严格检查指令名称、形态、必填属性和嵌套关系。无效指令会中止渲染，`canofold check` 会同时给出文件和源码位置。自定义插件必须通过 `directiveNames` 声明自己拥有的指令；未声明的名称会按拼写错误处理。
 
 需要逐项查看渲染效果时，打开 [Playground](/markdown/playground/)。

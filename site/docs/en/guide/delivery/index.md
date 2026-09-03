@@ -11,5 +11,5 @@ sidebar: false
 
 - [Build and preview](/en/guide/delivery/build-preview/): check content, use the build cache, and verify production output.
 - [Deployment](/en/guide/delivery/deployment/): deliver the static directory to a hosting platform.
-- [Upgrade Docfuse](/en/guide/delivery/upgrading/): update dependencies and verify compatibility.
+- [Upgrade Canofold](/en/guide/delivery/upgrading/): update dependencies and verify compatibility.
 - [Security boundaries](/en/reference/output/security/): content trust, private access, secrets, and CSP.

@@ -41,7 +41,7 @@ describe('serialized island rendering', () => {
     const mapped = renderToStaticMarkup(<>{readSerializedChildren(serialized)}</>)
     const intrinsic = renderToStaticMarkup(<>{readSerializedChildren(serialized, {}, false)}</>)
 
-    expect(mapped).toContain('data-df-element="strong"')
+    expect(mapped).toContain('data-cf-element="strong"')
     expect(intrinsic).toBe('Before <strong>important</strong>')
   })
 

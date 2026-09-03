@@ -8,15 +8,15 @@ order: 71
 
 # Build artifacts
 
-`docfuse build` writes `.docfuse/dist` by default. A full build writes to a temporary directory and atomically replaces the existing output only after success, so a failed build preserves the last successful site.
+`canofold build` writes `.canofold/dist` by default. A full build writes to a temporary directory and atomically replaces the existing output only after success, so a failed build preserves the last successful site.
 
 :::file-tree
-- .docfuse/
+- .canofold/
   - dist/
     - index.html
     - 404.html
     - assets/
-      - docfuse.css
+      - canofold.css
     - search/
       - {version}/
         - {locale}.json
@@ -43,8 +43,8 @@ Every built page has static HTML and adjacent Markdown source. Native DOM owns b
 |---|---|---|
 | Page `index.html` | Always | Static page containing the complete rendered body |
 | Page `index.md` | Always | Markdown or MDX source used by the build after source extensions run |
-| `assets/docfuse.css` | Always | Site shell, semantic tokens, and configured styles |
-| `assets/docfuse-markdown/*` | A page needs browser behavior | Native enhancer and lazy rich interactions |
+| `assets/canofold.css` | Always | Site shell, semantic tokens, and configured styles |
+| `assets/canofold-markdown/*` | A page needs browser behavior | Native enhancer and lazy rich interactions |
 | `assets/fonts/*` | The math plugin is enabled and at least one page contains math | Complete KaTeX WOFF2 font set |
 | `search/*` | The default compact provider is enabled | Version- and locale-scoped single-file indexes |
 | `pagefind/*` | `pagefind()` is configured | Chunked locale/version-aware index |

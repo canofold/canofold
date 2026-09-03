@@ -6,13 +6,13 @@ import { renderToStaticMarkup } from 'react-dom/server'
 const entry = resolve('packages/markdown/dist/server.js')
 if (!existsSync(entry)) {
   console.error(
-    'Missing packages/markdown/dist/server.js. Run `pnpm --filter @docfuse/markdown build` first.'
+    'Missing packages/markdown/dist/server.js. Run `pnpm --filter @canofold/markdown build` first.'
   )
   process.exit(1)
 }
 
 const { createMarkdownRenderer } = await import(entry)
-const requestedPageCount = Number(process.env.DOCFUSE_MARKDOWN_BENCHMARK_PAGES ?? 100)
+const requestedPageCount = Number(process.env.CANOFOLD_MARKDOWN_BENCHMARK_PAGES ?? 100)
 const pageCount = Number.isFinite(requestedPageCount) ? Math.max(1, Math.floor(requestedPageCount)) : 100
 const showcaseFixture = readFileSync(resolve('site/docs/zh/markdown/playground.md'), 'utf8')
 
@@ -82,8 +82,8 @@ flowchart LR
 
 \`\`\`plantuml
 @startuml
-Author -> Docfuse: Markdown
-Docfuse -> Browser: Static HTML
+Author -> Canofold: Markdown
+Canofold -> Browser: Static HTML
 @enduml
 \`\`\``,
   showcaseFixture

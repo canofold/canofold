@@ -1,6 +1,6 @@
 ---
 title: Official plugins
-description: Enable diagrams, math, links, reading time, and Pagefind with @docfuse/plugins
+description: Enable diagrams, math, links, reading time, and Pagefind with @canofold/plugins
 group: Guide
 subgroup: Site capabilities
 order: 38
@@ -12,20 +12,20 @@ A Markdown plugin is a build-time transform added to the content compiler. It re
 
 For example, `math()` turns `$E = mc^2$` into KaTeX HTML during the build. `mermaid()` loads its diagram client only on pages that contain executable Mermaid fences. A search provider has a different lifecycle: it receives the completed site and writes a site-wide index instead of transforming one document.
 
-Official plugins are published in `@docfuse/plugins`:
+Official plugins are published in `@canofold/plugins`:
 
 :::code-group[Package manager]
 
 ```bash title="pnpm"
-pnpm add -D @docfuse/plugins
+pnpm add -D @canofold/plugins
 ```
 
 ```bash title="npm"
-npm install --save-dev @docfuse/plugins
+npm install --save-dev @canofold/plugins
 ```
 
 ```bash title="yarn"
-yarn add --dev @docfuse/plugins
+yarn add --dev @canofold/plugins
 ```
 
 :::
@@ -37,7 +37,7 @@ yarn add --dev @docfuse/plugins
 | `externalLinks()` | `markdown.plugins` | Add safe attributes to external links | None |
 | `linkCard()` | `markdown.plugins` | Render a standalone link as a card | None |
 | `readingTime()` | `markdown.plugins` | Show reading time below the title | None |
-| `math()` | `markdown.plugins` | Render mathematical notation | Import `@docfuse/plugins/math.css` when using the Markdown package directly |
+| `math()` | `markdown.plugins` | Render mathematical notation | Import `@canofold/plugins/math.css` when using the Markdown package directly |
 | `mermaid()` | `markdown.plugins` | Render Mermaid diagrams | Install `mermaid` |
 | `plantUml()` | `markdown.plugins` | Render PlantUML diagrams | Configure a trusted `server` |
 | `kroki()` | `markdown.plugins` | Render Graphviz and D2 through Kroki | Uses `https://kroki.io` by default; self-hosting is supported |
@@ -51,9 +51,9 @@ These packages run during local development and site builds, so install them as 
 pnpm add -D mermaid pagefind
 ```
 
-```ts title="docfuse.config.ts"
-import { externalLinks, math, mermaid, pagefind } from '@docfuse/plugins'
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { externalLinks, math, mermaid, pagefind } from '@canofold/plugins'
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   search: {
@@ -82,7 +82,7 @@ flowchart LR
 ```
 ````
 
-`docfuse check` loads the config and uses plugin declarations to validate directives and code fences; it does not render complete pages. `docfuse build` and `docfuse dev` execute plugin transforms. Removing a plugin stops its syntax from being transformed, and fences not claimed by another plugin remain subject to the unknown-language policy.
+`canofold check` loads the config and uses plugin declarations to validate directives and code fences; it does not render complete pages. `canofold build` and `canofold dev` execute plugin transforms. Removing a plugin stops its syntax from being transformed, and fences not claimed by another plugin remain subject to the unknown-language policy.
 
 ## Run and verify
 
@@ -140,16 +140,16 @@ Every option is optional. The table lists the behavior used when an option is om
 | Search provider | An index generated from the complete site | `search.provider` |
 | Extension | Repository source transforms, page metadata, or extra files | `extensions` |
 
-The package manager installs the complete `@docfuse/plugins` package. Only plugins passed to the config process content and affect build output. Capabilities with browser runtimes also load assets per page. Only an executable Mermaid fence activates Mermaid; a Mermaid example shown inside a tutorial code block does not load the runtime.
+The package manager installs the complete `@canofold/plugins` package. Only plugins passed to the config process content and affect build output. Capabilities with browser runtimes also load assets per page. Only an executable Mermaid fence activates Mermaid; a Mermaid example shown inside a tutorial code block does not load the runtime.
 
 Use the package root in normal site config. Capability subpaths remain public APIs for libraries and tools that resolve one focused entry.
 
 ## Build a minimal plugin
 
-A custom plugin can live in the project and be imported by `docfuse.config.ts`. This complete example adds a project-owned `data-section` attribute to every level-two heading without relying on internal Docfuse classes:
+A custom plugin can live in the project and be imported by `canofold.config.ts`. This complete example adds a project-owned `data-section` attribute to every level-two heading without relying on internal Canofold classes:
 
 ```js title="markdown/section-labels.mjs"
-import { defineMarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin } from '@canofold/markdown'
 
 function markSections() {
   return (tree) => {
@@ -173,8 +173,8 @@ export function sectionLabels() {
 }
 ```
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 import { sectionLabels } from './markdown/section-labels.mjs'
 
 export default defineConfig({

@@ -8,20 +8,20 @@ import { execPnpmSync } from './lib/packageManager.mjs'
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const packages = [
   {
-    name: '@docfuse/markdown',
+    name: '@canofold/markdown',
     root: join(workspace, 'packages/markdown'),
     compressedBudget: 400 * 1024,
     // Declarations, file-tree icons (27 SVG), runtime chunks and CSS.
     fileCountBudget: 135
   },
   {
-    name: 'docfuse',
-    root: join(workspace, 'packages/docfuse'),
+    name: 'canofold',
+    root: join(workspace, 'packages/canofold'),
     compressedBudget: 192 * 1024,
     fileCountBudget: 45
   },
   {
-    name: '@docfuse/plugins',
+    name: '@canofold/plugins',
     root: join(workspace, 'packages/plugins'),
     compressedBudget: 400 * 1024,
     // Twenty KaTeX fonts plus one declaration and runtime per public plugin
@@ -29,7 +29,7 @@ const packages = [
     fileCountBudget: 50
   }
 ]
-const temporaryRoot = await mkdtemp(join(tmpdir(), 'docfuse-package-report-'))
+const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-package-report-'))
 
 try {
   const rows = []

@@ -1,6 +1,6 @@
 ---
 title: 站点配置参考
-description: 查询 docfuse.config 的字段、默认值、取值边界和相关指南
+description: 查询 canofold.config 的字段、默认值、取值边界和相关指南
 group: 参考
 subgroup: 配置与命令
 order: 51
@@ -8,17 +8,17 @@ order: 51
 
 # 站点配置参考
 
-Docfuse 从项目根目录加载一个 `docfuse.config.ts`、`.mts`、`.cts`、`.js`、`.mjs` 或 `.cjs`。多个同名变体会被视为歧义，未知字段和非法值会直接报错。
+Canofold 从项目根目录加载一个 `canofold.config.ts`、`.mts`、`.cts`、`.js`、`.mjs` 或 `.cjs`。多个同名变体会被视为歧义，未知字段和非法值会直接报错。
 
 ```ts
-import { defineConfig } from 'docfuse'
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   title: 'Acme Docs',
   description: 'Acme 平台开发文档',
   siteUrl: 'https://docs.acme.com',
   basePath: '/',
-  requiredVersion: '^0.1.0'
+  requiredVersion: '^0.2.0'
 })
 ```
 
@@ -28,7 +28,7 @@ export default defineConfig({
 
 | 字段 | 默认值 | 说明 |
 |---|---|---|
-| `title` | `Docfuse` | 站点名称和默认页签标题 |
+| `title` | `Canofold` | 站点名称和默认页签标题 |
 | `description` | `Technical documentation` | 页面未写 `description` 时的站点描述 |
 | `siteUrl` | 未设置 | canonical、`hreflang` 和 sitemap 使用的 HTTP(S) origin，不包路径、查询和哈希 |
 | `basePath` | `/` | 子路径部署前缀，必须以 `/` 开头和结尾 |
@@ -36,7 +36,7 @@ export default defineConfig({
 | `github` | 未设置 | 页头 GitHub 入口的 HTTP(S) URL |
 | `requiredVersion` | 未设置 | 当前 CLI 必须满足的 semver 范围 |
 | `docsDir` | `docs` | 单版本内容目录；不能与 `versions` 同时配置 |
-| `outputDir` | `.docfuse/dist` | 静态站点输出目录 |
+| `outputDir` | `.canofold/dist` | 静态站点输出目录 |
 | `styles` | `[]` | 在默认样式之后加载的项目 CSS 文件 |
 | `layout.header` | `true` | 是否渲染品牌、顶部导航、搜索入口和语言/版本控件 |
 
@@ -54,7 +54,7 @@ export default defineConfig({
 | `markdown.labels` | 按 locale 使用内置文案 | 覆盖 Markdown 交互的可访问性文案 |
 | `markdown.plugins` | `[]` | 受信任的构建期 Markdown 插件，按数组顺序执行 |
 
-独立使用 `<Markdown>` 时，HTML 默认值是 `strip`，与 Docfuse 站点配置的 `sanitize` 不同。接入方法见 [Markdown](/markdown/)，插件配置见[官方插件](/guide/site/plugins/)。
+独立使用 `<Markdown>` 时，HTML 默认值是 `strip`，与 Canofold 站点配置的 `sanitize` 不同。接入方法见 [Markdown](/markdown/)，插件配置见[官方插件](/guide/site/plugins/)。
 
 ## 主题与搜索
 
@@ -62,7 +62,7 @@ export default defineConfig({
 |---|---|---|
 | `theme.logo` / `logoDark` | 未设置 | 亮色和暗色品牌图片；`logoDark` 需要同时设置 `logo` 和 `darkMode: true` |
 | `theme.favicon` | 内置图标 | 站点 favicon |
-| `theme.accentColor` | `docfuse` | 预设名或合法 CSS 颜色 |
+| `theme.accentColor` | `canofold` | 预设名或合法 CSS 颜色 |
 | `theme.baseColor` | `paper` | `paper`、`neutral`、`slate`、`zinc` 或 `stone` |
 | `theme.darkMode` | `false` | 生成暗色主题和切换控件 |
 | `theme.radius` | `8` | 小、中、大圆角的站点快捷值 |

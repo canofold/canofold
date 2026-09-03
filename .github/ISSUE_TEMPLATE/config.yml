@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/jiangxinlei/docfuse/security/advisories/new
+    url: https://github.com/canofold/docfuse/security/advisories/new
     about: Report vulnerabilities privately. Do not open a public issue.
   - name: Usage question
-    url: https://github.com/jiangxinlei/docfuse/discussions
+    url: https://github.com/canofold/docfuse/discussions
     about: Ask for help and discuss ideas with the community.

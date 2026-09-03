@@ -1,4 +1,4 @@
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { inflateSync } from 'node:zlib'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
@@ -28,11 +28,11 @@ describe('kroki plugin', () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const html = await render('```dot\ndigraph G { a -> b }\n```')
 
-    expect(html).toContain('data-df-plugin-diagram="kroki"')
+    expect(html).toContain('data-cf-plugin-diagram="kroki"')
     expect(html).toContain('src="https://kroki.io/graphviz/svg/')
-    expect(html).toContain('class="df-diagram-img"')
-    expect(html).toContain('class="df-diagram-zoom-controls"')
-    expect(html).not.toContain('data-df-component="code-block"')
+    expect(html).toContain('class="cf-diagram-img"')
+    expect(html).toContain('class="cf-diagram-zoom-controls"')
+    expect(html).not.toContain('data-cf-component="code-block"')
     expect(warning).not.toHaveBeenCalled()
     warning.mockRestore()
   })
@@ -49,7 +49,7 @@ describe('kroki plugin', () => {
   it('leaves unrelated fences alone', async () => {
     const html = await render('```ts\nconst ready = true\n```')
 
-    expect(html).toContain('data-df-component="code-block"')
+    expect(html).toContain('data-cf-component="code-block"')
     expect(html).not.toContain('kroki-diagram')
   })
 

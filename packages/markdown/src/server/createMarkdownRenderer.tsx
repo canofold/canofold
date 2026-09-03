@@ -66,7 +66,7 @@ export function createMarkdownRenderer(contextOptions: MarkdownServerContextOpti
             slots={options.slots}
             className={options.className}
             as={options.as}
-            data-df-runtime="static"
+            data-cf-runtime="static"
             urlTransform={options.urlTransform}
           />
         ),
@@ -84,7 +84,7 @@ export function createMarkdownRenderer(contextOptions: MarkdownServerContextOpti
       const evaluated = await evaluate(
         {
           value: normalizeCallouts(source),
-          data: { docfuseLocale: options.markdown?.locale?.trim() || undefined }
+          data: { canofoldLocale: options.markdown?.locale?.trim() || undefined }
         },
         {
           ...runtime,
@@ -105,7 +105,7 @@ export function createMarkdownRenderer(contextOptions: MarkdownServerContextOpti
       return {
         content: (
           <MarkdownRoot
-            data-df-runtime="static"
+            data-cf-runtime="static"
             as={options.as}
             className={options.className}
             classNames={options.classNames}

@@ -164,8 +164,8 @@ function componentFromDataAttribute(value: unknown): MarkdownComponentName | und
 
 function componentFromProps(props: MarkdownElementProps): MarkdownComponentName | undefined {
   return (
-    componentFromDataAttribute(props['data-df-component']) ??
-    componentFromDataAttribute(props.dataDfComponent)
+    componentFromDataAttribute(props['data-cf-component']) ??
+    componentFromDataAttribute(props.dataCfComponent)
   )
 }
 
@@ -239,9 +239,9 @@ function createMarkdownElement(
     const Component: ElementType = intrinsicOverride(components, tagName) ?? (tagName as ElementType)
     const transformedProps = transformMarkdownUrlProps(props, urlTransform)
     if (elementName === 'heading' && /^h[1-6]$/.test(tagName)) {
-      const anchor = props['data-df-anchor'] ?? props.dataDfAnchor
-      const anchorLabel = props['data-df-anchor-label'] ?? props.dataDfAnchorLabel
-      const copyFailureLabel = props['data-df-copy-failure-label'] ?? props.dataDfCopyFailureLabel
+      const anchor = props['data-cf-anchor'] ?? props.dataCfAnchor
+      const anchorLabel = props['data-cf-anchor-label'] ?? props.dataCfAnchorLabel
+      const copyFailureLabel = props['data-cf-copy-failure-label'] ?? props.dataCfCopyFailureLabel
       return createElement(MarkdownHeading, {
         ...transformedProps,
         as: Component,
@@ -250,7 +250,7 @@ function createMarkdownElement(
         anchorLabel: typeof anchorLabel === 'string' ? anchorLabel : undefined,
         copyFailureLabel: typeof copyFailureLabel === 'string' ? copyFailureLabel : undefined,
         className: mergeClassNames(transformedProps.className, classNames[elementName]),
-        'data-df-element': dataElementName,
+        'data-cf-element': dataElementName,
         children
       })
     }
@@ -259,7 +259,7 @@ function createMarkdownElement(
       {
         ...transformedProps,
         className: mergeClassNames(transformedProps.className, classNames[elementName]),
-        'data-df-element': dataElementName
+        'data-cf-element': dataElementName
       },
       children
     )
@@ -271,7 +271,7 @@ function createMarkdownElement(
 
 function createMarkdownSvg(slots: MarkdownSlots, components: MarkdownComponents) {
   return function MarkdownSvg({ children, node: _node, ...props }: MarkdownElementProps) {
-    const name = props['data-df-icon'] ?? props.dataDfIcon
+    const name = props['data-cf-icon'] ?? props.dataCfIcon
     const customSlot =
       typeof name === 'string' ? getMarkdownIconSlot(slots, name as MarkdownIconName) : undefined
     if (customSlot) {
@@ -282,19 +282,19 @@ function createMarkdownSvg(slots: MarkdownSlots, components: MarkdownComponents)
       })
     }
 
-    const { ['data-df-icon']: _dataDfIcon, dataDfIcon: _dataDfIconCamel, ...svgProps } = props
+    const { ['data-cf-icon']: _dataCfIcon, dataCfIcon: _dataCfIconCamel, ...svgProps } = props
     return createElement(intrinsicOverride(components, 'svg') ?? 'svg', svgProps, children)
   }
 }
 
 function createMarkdownFigcaption(slots: MarkdownSlots, components: MarkdownComponents) {
   return function MarkdownFigcaption({ children, node: _node, ...props }: MarkdownElementProps) {
-    const Caption = props['data-df-slot'] === 'caption' ? getMarkdownCaptionSlot(slots) : undefined
+    const Caption = props['data-cf-slot'] === 'caption' ? getMarkdownCaptionSlot(slots) : undefined
     if (Caption) {
       return createElement(Caption, {
         children,
         className: typeof props.className === 'string' ? props.className : undefined,
-        'data-df-slot': typeof props['data-df-slot'] === 'string' ? props['data-df-slot'] : undefined
+        'data-cf-slot': typeof props['data-cf-slot'] === 'string' ? props['data-cf-slot'] : undefined
       })
     }
     return createElement(intrinsicOverride(components, 'figcaption') ?? 'figcaption', props, children)
@@ -334,7 +334,7 @@ function createMarkdownDiv(
       intrinsicOverride(components, 'div') ?? 'div',
       {
         ...props,
-        ...(component ? { 'data-df-component': component } : {})
+        ...(component ? { 'data-cf-component': component } : {})
       },
       children
     )
@@ -373,14 +373,14 @@ function createMarkdownSemanticExtension(
     if (extension) return extension
     const isFootnotes =
       tagName === 'section' &&
-      (props['data-df-element'] === 'footnotes' || props.dataDfElement === 'footnotes')
+      (props['data-cf-element'] === 'footnotes' || props.dataCfElement === 'footnotes')
     return createElement(
       intrinsicOverride(components, tagName) ?? tagName,
       {
         ...props,
         className: isFootnotes ? mergeClassNames(props.className, classNames.footnotes) : props.className,
-        ...(isFootnotes ? { 'data-df-element': 'footnotes' } : {}),
-        ...(component ? { 'data-df-component': component } : {})
+        ...(isFootnotes ? { 'data-cf-element': 'footnotes' } : {}),
+        ...(component ? { 'data-cf-component': component } : {})
       },
       children
     )
@@ -433,7 +433,7 @@ function createMarkdownFigure(
         })
       return createElement(
         intrinsicOverride(components, 'figure') ?? 'figure',
-        { ...props, className: mergeClassNames(props.className, className), 'data-df-component': component },
+        { ...props, className: mergeClassNames(props.className, className), 'data-cf-component': component },
         children
       )
     }
@@ -441,7 +441,7 @@ function createMarkdownFigure(
       intrinsicOverride(components, 'figure') ?? 'figure',
       {
         ...props,
-        ...(component ? { 'data-df-component': component } : {})
+        ...(component ? { 'data-cf-component': component } : {})
       },
       children
     )
@@ -464,7 +464,7 @@ function createMarkdownOrderedList(classNames: MarkdownClassNames, components: M
       {
         ...props,
         className: mergeClassNames(props.className, classNames.list),
-        ...(component ? { 'data-df-component': component } : {})
+        ...(component ? { 'data-cf-component': component } : {})
       },
       children
     )

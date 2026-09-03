@@ -154,7 +154,7 @@ export interface MarkdownPluginClientResource {
 export interface MarkdownPluginStyleAsset {
   /** Stable identifier used for output naming and de-duplication. */
   id: string
-  /** Public package export, for example `@docfuse/plugins/diagram.css`. */
+  /** Public package export, for example `@canofold/plugins/diagram.css`. */
   module: string
 }
 

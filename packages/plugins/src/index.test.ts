@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as plugins from './index'
 
-describe('@docfuse/plugins aggregate entry', () => {
+describe('@canofold/plugins aggregate entry', () => {
   it('exports every documented factory', () => {
     expect(Object.keys(plugins).sort()).toEqual([
       'externalLinks',

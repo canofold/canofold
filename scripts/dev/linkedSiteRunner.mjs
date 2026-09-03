@@ -3,9 +3,9 @@ const DEFAULT_LEASE_MS = 15_000
 function readyKey(states, now, leaseMs, workspaceId) {
   const byPackage = new Map(states.filter(Boolean).map((state) => [state.package, state]))
   const markdown = byPackage.get('markdown')
-  const docfuse = byPackage.get('docfuse')
-  if (!markdown || !docfuse) return undefined
-  for (const state of [markdown, docfuse]) {
+  const canofold = byPackage.get('canofold')
+  if (!markdown || !canofold) return undefined
+  for (const state of [markdown, canofold]) {
     const heartbeat = Date.parse(state.heartbeatAt)
     if (
       state.status !== 'ready' ||
@@ -16,7 +16,7 @@ function readyKey(states, now, leaseMs, workspaceId) {
       return undefined
     }
   }
-  return `${markdown.sessionId}:${markdown.generation}|${docfuse.sessionId}:${docfuse.generation}`
+  return `${markdown.sessionId}:${markdown.generation}|${canofold.sessionId}:${canofold.generation}`
 }
 
 export function createLinkedSiteReconciler({

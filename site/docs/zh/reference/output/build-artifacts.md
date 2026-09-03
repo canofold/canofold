@@ -1,6 +1,6 @@
 ---
 title: 构建产物参考
-description: 了解 Docfuse 输出目录中的页面、资源、搜索、SEO、AI 和重定向文件
+description: 了解 Canofold 输出目录中的页面、资源、搜索、SEO、AI 和重定向文件
 group: 参考
 subgroup: 产物与质量
 order: 71
@@ -8,17 +8,17 @@ order: 71
 
 # 构建产物参考
 
-`docfuse build` 把文档编译成可以直接部署的静态站点，默认写入 `.docfuse/dist`。每个页面都有包含完整正文的 HTML 和相邻的 Markdown 原文；目录中还包括主题样式、交互资源、搜索索引以及按配置生成的 SEO 和 AI 文件。
+`canofold build` 把文档编译成可以直接部署的静态站点，默认写入 `.canofold/dist`。每个页面都有包含完整正文的 HTML 和相邻的 Markdown 原文；目录中还包括主题样式、交互资源、搜索索引以及按配置生成的 SEO 和 AI 文件。
 
 完整重建先在临时目录生成产物，成功后再原子替换现有输出；构建失败时保留上一次成功结果。
 
 :::file-tree
-- .docfuse/
+- .canofold/
   - dist/
     - index.html
     - 404.html
     - assets/
-      - docfuse.css
+      - canofold.css
     - search/
       - {version}/
         - {locale}.json
@@ -43,8 +43,8 @@ order: 71
 |---|---|---|
 | 页面 `index.html` | 始终 | 包含完整正文的静态页面 |
 | 页面 `index.md` | 始终 | 构建时使用的页面 Markdown/MDX 源文 |
-| `assets/docfuse.css` | 始终 | 默认主题、Token 和用户样式 |
-| `assets/docfuse-markdown/*` | 页面存在交互 behavior | 原生增强入口与按需富交互代码 |
+| `assets/canofold.css` | 始终 | 默认主题、Token 和用户样式 |
+| `assets/canofold-markdown/*` | 页面存在交互 behavior | 原生增强入口与按需富交互代码 |
 | `assets/fonts/*` | 启用 math 插件且至少一页包含数学 | KaTeX 的完整 WOFF2 字体集 |
 | `search/*` | 默认 compact Provider 启用 | 按版本和语言生成的单文件索引 |
 | `pagefind/*` | 配置 `pagefind()` | 按查询加载、按语言和版本过滤的分块索引 |

@@ -1,13 +1,13 @@
 ---
 title: Markdown syntax reference
-description: Look up Markdown, GFM, rich-content directives, and plugin syntax supported by Docfuse
+description: Look up Markdown, GFM, rich-content directives, and plugin syntax supported by Canofold
 group: Markdown SDK
 order: 82
 ---
 
 # Markdown syntax reference
 
-Docfuse supports CommonMark, GFM, and a small directive grammar for technical documentation. Use standard Markdown for prose and Docfuse directives for structured content such as tabs, steps, and file trees. The compiler owns the HTML, ARIA, and interaction attributes, so documents do not need `df-*` class names.
+Canofold supports CommonMark, GFM, and a small directive grammar for technical documentation. Use standard Markdown for prose and Canofold directives for structured content such as tabs, steps, and file trees. The compiler owns the HTML, ARIA, and interaction attributes, so documents do not need `cf-*` class names.
 
 ## Standard Markdown and GFM
 
@@ -36,8 +36,8 @@ Footnote reference.[^source]
 Add `title`, `filename`, `label`, or `[filename]` after the fence to label a code block. Use `{2,4-5}` to highlight selected lines.
 
 ````markdown
-```ts title="docfuse.config.ts" {2}
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts" {2}
+import { defineConfig } from 'canofold'
 export default defineConfig({ title: 'Docs' })
 ```
 
@@ -59,7 +59,7 @@ Use Shiki annotations in code comments when a sample needs to explain a change o
 ````markdown
 ```ts
 const oldName = 'docs' // [!code --]
-const newName = 'docfuse' // [!code ++]
+const newName = 'canofold' // [!code ++]
 const result = buildSite(config) // [!code focus]
 const output = resolveOutput(config) // [!code word:resolveOutput]
 throw new Error('Invalid config') // [!code error]
@@ -86,10 +86,10 @@ Tabs may contain only direct `tab` children. Missing labels use localized defaul
 ```markdown
 ::::tabs[Install]
 :::tab[pnpm]
-Run `pnpm add -D docfuse`.
+Run `pnpm add -D canofold`.
 :::
 :::tab[npm]
-Run `npm install --save-dev docfuse`.
+Run `npm install --save-dev canofold`.
 :::
 ::::
 ```
@@ -99,10 +99,10 @@ A code group may contain only fenced code blocks. `title` or `filename` becomes 
 ````markdown
 :::code-group[Package manager]
 ```bash title="pnpm"
-pnpm add -D docfuse
+pnpm add -D canofold
 ```
 ```bash title="npm"
-npm install --save-dev docfuse
+npm install --save-dev canofold
 ```
 :::
 ````
@@ -117,7 +117,7 @@ Steps may contain only direct `step` children:
 Run `pnpm build`.
 :::
 :::step[Publish]
-Upload `.docfuse/dist`.
+Upload `.canofold/dist`.
 :::
 ::::
 ```
@@ -140,7 +140,7 @@ $ pnpm build
 - docs/
   - guide/
     - index.md
-- docfuse.config.ts
+- canofold.config.ts
 :::
 ```
 
@@ -151,7 +151,7 @@ $ pnpm build
 ```markdown
 ::::card-grid
 :::card[Get started]{href="/en/guide/"}
-Install Docfuse and build the first site.
+Install Canofold and build the first site.
 :::
 :::card[Configuration]{href="/en/reference/configuration/"}
 Look up every configuration field.
@@ -170,7 +170,7 @@ Look up every configuration field.
 | `slug` | :badge[string] |
 
 :::response[200]
-`{ "title": "Docfuse" }`
+`{ "title": "Canofold" }`
 :::
 ::::
 ```
@@ -184,7 +184,7 @@ Put supporting detail here without interrupting the main flow.
 
 Status: :badge[Beta]{tone="accent"}
 
-Command: :copy[pnpm add @docfuse/markdown]
+Command: :copy[pnpm add @canofold/markdown]
 ```
 
 Badge `tone` accepts `accent`, `success`, `warning`, or `danger`. `:copy` requires text to copy.
@@ -249,6 +249,6 @@ Inline math $E = mc^2$.
 
 Native HTML remains an escape hatch for trusted content. A site chooses `trusted`, `sanitize`, or `strip` through `markdown.html`; standalone `<Markdown>` rendering defaults to `strip`.
 
-Docfuse validates directive names, form, required attributes, and nesting. Invalid syntax stops rendering, and `docfuse check` reports the file and source position. A custom plugin must declare its directives through `directiveNames`; undeclared names are treated as authoring errors.
+Canofold validates directive names, form, required attributes, and nesting. Invalid syntax stops rendering, and `canofold check` reports the file and source position. A custom plugin must declare its directives through `directiveNames`; undeclared names are treated as authoring errors.
 
 Open the [Playground](/en/markdown/playground/) to inspect each rendered element.

@@ -17,30 +17,30 @@ afterEach(() => {
 describe('native Markdown behaviors', () => {
   it('keeps tab keyboard state, focus, and panels synchronized', async () => {
     const root = document.createElement('div')
-    root.innerHTML = `<div data-df-behavior="tabs">
+    root.innerHTML = `<div data-cf-behavior="tabs">
       <div role="tablist">
-        <button role="tab" data-df-tab="one" aria-selected="true" tabindex="0">One</button>
-        <button role="tab" data-df-tab="disabled" aria-selected="false" tabindex="-1" disabled>Disabled</button>
-        <button role="tab" data-df-tab="three" aria-selected="false" tabindex="-1">Three</button>
+        <button role="tab" data-cf-tab="one" aria-selected="true" tabindex="0">One</button>
+        <button role="tab" data-cf-tab="disabled" aria-selected="false" tabindex="-1" disabled>Disabled</button>
+        <button role="tab" data-cf-tab="three" aria-selected="false" tabindex="-1">Three</button>
       </div>
-      <div role="tabpanel" data-df-tab-panel="one">First</div>
-      <div role="tabpanel" data-df-tab-panel="disabled" hidden>Disabled</div>
-      <div role="tabpanel" data-df-tab-panel="three" hidden>Third</div>
+      <div role="tabpanel" data-cf-tab-panel="one">First</div>
+      <div role="tabpanel" data-cf-tab-panel="disabled" hidden>Disabled</div>
+      <div role="tabpanel" data-cf-tab-panel="three" hidden>Third</div>
     </div>`
     document.body.append(root)
     enhancement = enhanceMarkdown(root, { behaviors: ['tabs'] })
     await enhancement.ready
 
-    const first = root.querySelector<HTMLButtonElement>('[data-df-tab="one"]')!
-    const third = root.querySelector<HTMLButtonElement>('[data-df-tab="three"]')!
+    const first = root.querySelector<HTMLButtonElement>('[data-cf-tab="one"]')!
+    const third = root.querySelector<HTMLButtonElement>('[data-cf-tab="three"]')!
     first.focus()
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
 
     expect(document.activeElement).toBe(third)
     expect(third.getAttribute('aria-selected')).toBe('true')
     expect(first.tabIndex).toBe(-1)
-    expect(root.querySelector<HTMLElement>('[data-df-tab-panel="one"]')?.hidden).toBe(true)
-    expect(root.querySelector<HTMLElement>('[data-df-tab-panel="three"]')?.hidden).toBe(false)
+    expect(root.querySelector<HTMLElement>('[data-cf-tab-panel="one"]')?.hidden).toBe(true)
+    expect(root.querySelector<HTMLElement>('[data-cf-tab-panel="three"]')?.hidden).toBe(false)
 
     third.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
     expect(document.activeElement).toBe(first)
@@ -54,9 +54,9 @@ describe('native Markdown behaviors', () => {
     const writeText = vi.fn(async () => undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     const root = document.createElement('div')
-    root.innerHTML = `<article data-df-runtime="react">
-      <span data-df-behavior="copy-snippet" data-df-value="pnpm test">
-        <button data-df-action="copy-snippet">Copy</button>
+    root.innerHTML = `<article data-cf-runtime="react">
+      <span data-cf-behavior="copy-snippet" data-cf-value="pnpm test">
+        <button data-cf-action="copy-snippet">Copy</button>
       </span>
     </article>`
     document.body.append(root)
@@ -71,14 +71,14 @@ describe('native Markdown behaviors', () => {
 
   it('synchronizes native disclosure and file-tree accessibility state', async () => {
     const root = document.createElement('div')
-    root.innerHTML = `<details data-df-behavior="details" open>
+    root.innerHTML = `<details data-cf-behavior="details" open>
       <summary>More</summary>
-      <div data-df-slot="content"><a href="#more">Content</a></div>
+      <div data-cf-slot="content"><a href="#more">Content</a></div>
     </details>
-    <div data-df-behavior="file-tree">
-      <div data-df-file-tree-branch data-df-state="expanded">
-        <button data-df-action="toggle-file-tree" aria-expanded="true">docs</button>
-        <div class="df-file-tree-children" data-df-state="expanded"><a href="#file">README</a></div>
+    <div data-cf-behavior="file-tree">
+      <div data-cf-file-tree-branch data-cf-state="expanded">
+        <button data-cf-action="toggle-file-tree" aria-expanded="true">docs</button>
+        <div class="cf-file-tree-children" data-cf-state="expanded"><a href="#file">README</a></div>
       </div>
     </div>`
     document.body.append(root)
@@ -86,15 +86,15 @@ describe('native Markdown behaviors', () => {
     await enhancement.ready
 
     const details = root.querySelector('details')!
-    const disclosure = details.querySelector<HTMLElement>('[data-df-slot="content"]')!
+    const disclosure = details.querySelector<HTMLElement>('[data-cf-slot="content"]')!
     expect(details.dataset.dfEnhanced).toBe('true')
     expect(disclosure.hasAttribute('inert')).toBe(false)
     details.open = false
     details.dispatchEvent(new Event('toggle'))
     expect(disclosure.hasAttribute('inert')).toBe(true)
 
-    const toggle = root.querySelector<HTMLButtonElement>('[data-df-action="toggle-file-tree"]')!
-    const children = root.querySelector<HTMLElement>('.df-file-tree-children')!
+    const toggle = root.querySelector<HTMLButtonElement>('[data-cf-action="toggle-file-tree"]')!
+    const children = root.querySelector<HTMLElement>('.cf-file-tree-children')!
     toggle.click()
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
     expect(children.dataset.dfState).toBe('collapsed')
@@ -104,9 +104,9 @@ describe('native Markdown behaviors', () => {
 
   it('toggles a file-tree branch that uses a plain nested list', async () => {
     const root = document.createElement('div')
-    root.innerHTML = `<div data-df-behavior="file-tree">
-      <div data-df-file-tree-branch data-df-state="expanded">
-        <button data-df-action="toggle-file-tree" aria-expanded="true">docs</button>
+    root.innerHTML = `<div data-cf-behavior="file-tree">
+      <div data-cf-file-tree-branch data-cf-state="expanded">
+        <button data-cf-action="toggle-file-tree" aria-expanded="true">docs</button>
         <ul><li>README.md</li></ul>
       </div>
     </div>`
@@ -114,7 +114,7 @@ describe('native Markdown behaviors', () => {
     enhancement = enhanceMarkdown(root, { behaviors: ['file-tree'] })
     await enhancement.ready
 
-    const toggle = root.querySelector<HTMLButtonElement>('[data-df-action="toggle-file-tree"]')!
+    const toggle = root.querySelector<HTMLButtonElement>('[data-cf-action="toggle-file-tree"]')!
     const children = root.querySelector<HTMLUListElement>('ul')!
     toggle.click()
 
@@ -128,9 +128,9 @@ describe('native Markdown behaviors', () => {
     const writeText = vi.fn(async () => undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     const root = document.createElement('div')
-    root.innerHTML = `<span data-df-behavior="copy-snippet" data-df-value="pnpm test">
+    root.innerHTML = `<span data-cf-behavior="copy-snippet" data-cf-value="pnpm test">
       <code>pnpm test</code>
-      <button data-df-action="copy-snippet" aria-label="Copy" title="Copy">
+      <button data-cf-action="copy-snippet" aria-label="Copy" title="Copy">
         <svg aria-hidden="true"></svg><span aria-live="polite" aria-atomic="true"></span>
       </button>
     </span>`
@@ -144,7 +144,7 @@ describe('native Markdown behaviors', () => {
       expect(writeText).toHaveBeenCalledWith('pnpm test')
       expect(button.dataset.dfCopied).toBe('true')
     })
-    expect(button.classList.contains('df-action-success')).toBe(true)
+    expect(button.classList.contains('cf-action-success')).toBe(true)
     expect(button.getAttribute('aria-label')).toBe('Copy ✓')
     expect(button.querySelector('[aria-live]')?.textContent).toBe('Copy ✓')
     expect(button.querySelector('svg')).not.toBeNull()
@@ -152,50 +152,50 @@ describe('native Markdown behaviors', () => {
 
   it('restores DOM state when the last enhancement is disposed', async () => {
     const root = document.createElement('div')
-    root.innerHTML = `<details data-df-behavior="details">
-      <summary>More</summary><div data-df-slot="content"><a href="#more">Content</a></div>
+    root.innerHTML = `<details data-cf-behavior="details">
+      <summary>More</summary><div data-cf-slot="content"><a href="#more">Content</a></div>
     </details>
-    <div data-df-behavior="tabs">
-      <button role="tab" data-df-tab="one" aria-selected="true" tabindex="0">One</button>
-      <button role="tab" data-df-tab="two" aria-selected="false" tabindex="-1">Two</button>
-      <div role="tabpanel" data-df-tab-panel="one">One</div>
-      <div role="tabpanel" data-df-tab-panel="two" hidden>Two</div>
+    <div data-cf-behavior="tabs">
+      <button role="tab" data-cf-tab="one" aria-selected="true" tabindex="0">One</button>
+      <button role="tab" data-cf-tab="two" aria-selected="false" tabindex="-1">Two</button>
+      <div role="tabpanel" data-cf-tab-panel="one">One</div>
+      <div role="tabpanel" data-cf-tab-panel="two" hidden>Two</div>
     </div>
-    <div data-df-behavior="file-tree"><div data-df-file-tree-branch data-df-state="expanded">
-      <button data-df-action="toggle-file-tree" aria-expanded="true">docs</button>
-      <div class="df-file-tree-children" data-df-state="expanded">README</div>
+    <div data-cf-behavior="file-tree"><div data-cf-file-tree-branch data-cf-state="expanded">
+      <button data-cf-action="toggle-file-tree" aria-expanded="true">docs</button>
+      <div class="cf-file-tree-children" data-cf-state="expanded">README</div>
     </div></div>
-    <div data-df-behavior="code-toolbar" data-df-language="ts" data-df-source="const value = true"></div>`
+    <div data-cf-behavior="code-toolbar" data-cf-language="ts" data-cf-source="const value = true"></div>`
     document.body.append(root)
     enhancement = enhanceMarkdown(root, {
       behaviors: ['details', 'tabs', 'file-tree', 'code-toolbar']
     })
     await enhancement.ready
 
-    root.querySelector<HTMLButtonElement>('[data-df-tab="two"]')!.click()
-    root.querySelector<HTMLButtonElement>('[data-df-action="toggle-file-tree"]')!.click()
+    root.querySelector<HTMLButtonElement>('[data-cf-tab="two"]')!.click()
+    root.querySelector<HTMLButtonElement>('[data-cf-action="toggle-file-tree"]')!.click()
     enhancement.dispose()
 
     const details = root.querySelector('details')!
-    const disclosure = details.querySelector<HTMLElement>('[data-df-slot="content"]')!
+    const disclosure = details.querySelector<HTMLElement>('[data-cf-slot="content"]')!
     expect(details.dataset.dfEnhanced).toBeUndefined()
     expect(disclosure.hasAttribute('inert')).toBe(false)
-    expect(root.querySelector('[data-df-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
-    expect(root.querySelector<HTMLElement>('[data-df-tab-panel="one"]')?.hidden).toBe(false)
-    expect(root.querySelector<HTMLElement>('[data-df-tab-panel="two"]')?.hidden).toBe(true)
-    expect(root.querySelector('[data-df-action="toggle-file-tree"]')?.getAttribute('aria-expanded')).toBe(
+    expect(root.querySelector('[data-cf-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(root.querySelector<HTMLElement>('[data-cf-tab-panel="one"]')?.hidden).toBe(false)
+    expect(root.querySelector<HTMLElement>('[data-cf-tab-panel="two"]')?.hidden).toBe(true)
+    expect(root.querySelector('[data-cf-action="toggle-file-tree"]')?.getAttribute('aria-expanded')).toBe(
       'true'
     )
-    expect(root.querySelector('.df-file-tree-children')?.hasAttribute('inert')).toBe(false)
+    expect(root.querySelector('.cf-file-tree-children')?.hasAttribute('inert')).toBe(false)
   })
 
   it('keeps shared root behavior active until its last owner disposes', async () => {
     const root = document.createElement('div')
-    root.innerHTML = `<div data-df-behavior="tabs">
-      <button role="tab" data-df-tab="one" aria-selected="true" tabindex="0">One</button>
-      <button role="tab" data-df-tab="two" aria-selected="false" tabindex="-1">Two</button>
-      <div role="tabpanel" data-df-tab-panel="one">One</div>
-      <div role="tabpanel" data-df-tab-panel="two" hidden>Two</div>
+    root.innerHTML = `<div data-cf-behavior="tabs">
+      <button role="tab" data-cf-tab="one" aria-selected="true" tabindex="0">One</button>
+      <button role="tab" data-cf-tab="two" aria-selected="false" tabindex="-1">Two</button>
+      <div role="tabpanel" data-cf-tab-panel="one">One</div>
+      <div role="tabpanel" data-cf-tab-panel="two" hidden>Two</div>
     </div>`
     document.body.append(root)
     const first = enhanceMarkdown(root, { behaviors: ['tabs'] })
@@ -203,27 +203,27 @@ describe('native Markdown behaviors', () => {
     await Promise.all([first.ready, second.ready])
 
     first.dispose()
-    root.querySelector<HTMLButtonElement>('[data-df-tab="two"]')!.click()
-    expect(root.querySelector('[data-df-tab="two"]')?.getAttribute('aria-selected')).toBe('true')
+    root.querySelector<HTMLButtonElement>('[data-cf-tab="two"]')!.click()
+    expect(root.querySelector('[data-cf-tab="two"]')?.getAttribute('aria-selected')).toBe('true')
 
     second.dispose()
-    expect(root.querySelector('[data-df-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
-    root.querySelector<HTMLButtonElement>('[data-df-tab="two"]')!.click()
-    expect(root.querySelector('[data-df-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(root.querySelector('[data-cf-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
+    root.querySelector<HTMLButtonElement>('[data-cf-tab="two"]')!.click()
+    expect(root.querySelector('[data-cf-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
   })
 
   it('releases only the behavior owned by each enhancement', async () => {
     const writeText = vi.fn(async () => undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     const root = document.createElement('div')
-    root.innerHTML = `<div data-df-behavior="tabs">
-      <button role="tab" data-df-tab="one" aria-selected="true">One</button>
-      <button role="tab" data-df-tab="two" aria-selected="false">Two</button>
-      <div role="tabpanel" data-df-tab-panel="one">One</div>
-      <div role="tabpanel" data-df-tab-panel="two" hidden>Two</div>
+    root.innerHTML = `<div data-cf-behavior="tabs">
+      <button role="tab" data-cf-tab="one" aria-selected="true">One</button>
+      <button role="tab" data-cf-tab="two" aria-selected="false">Two</button>
+      <div role="tabpanel" data-cf-tab-panel="one">One</div>
+      <div role="tabpanel" data-cf-tab-panel="two" hidden>Two</div>
     </div>
-    <span data-df-behavior="copy-snippet" data-df-value="pnpm test">
-      <button data-df-action="copy-snippet" aria-label="Copy">Copy</button>
+    <span data-cf-behavior="copy-snippet" data-cf-value="pnpm test">
+      <button data-cf-action="copy-snippet" aria-label="Copy">Copy</button>
     </span>`
     document.body.append(root)
     const tabs = enhanceMarkdown(root, { behaviors: ['tabs'] })
@@ -231,10 +231,10 @@ describe('native Markdown behaviors', () => {
     await Promise.all([tabs.ready, copy.ready])
 
     tabs.dispose()
-    root.querySelector<HTMLButtonElement>('[data-df-tab="two"]')!.click()
-    expect(root.querySelector('[data-df-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
+    root.querySelector<HTMLButtonElement>('[data-cf-tab="two"]')!.click()
+    expect(root.querySelector('[data-cf-tab="one"]')?.getAttribute('aria-selected')).toBe('true')
 
-    root.querySelector<HTMLButtonElement>('[data-df-action="copy-snippet"]')!.click()
+    root.querySelector<HTMLButtonElement>('[data-cf-action="copy-snippet"]')!.click()
     await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('pnpm test'))
     copy.dispose()
   })
@@ -243,12 +243,12 @@ describe('native Markdown behaviors', () => {
     const writeText = vi.fn(async () => undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     const root = document.createElement('div')
-    root.innerHTML = `<details data-df-behavior="details">
+    root.innerHTML = `<details data-cf-behavior="details">
       <summary>Details</summary>
-      <div data-df-slot="content">Content</div>
+      <div data-cf-slot="content">Content</div>
     </details>
-    <span data-df-behavior="copy-snippet" data-df-value="pnpm test">
-      <button data-df-action="copy-snippet" aria-label="Copy">Copy</button>
+    <span data-cf-behavior="copy-snippet" data-cf-value="pnpm test">
+      <button data-cf-action="copy-snippet" aria-label="Copy">Copy</button>
     </span>`
     document.body.append(root)
     const detailsEnhancement = enhanceMarkdown(root, { behaviors: ['details'] })
@@ -256,7 +256,7 @@ describe('native Markdown behaviors', () => {
     await Promise.all([detailsEnhancement.ready, copyEnhancement.ready])
 
     const details = root.querySelector<HTMLDetailsElement>('details')!
-    const content = root.querySelector<HTMLElement>('[data-df-slot="content"]')!
+    const content = root.querySelector<HTMLElement>('[data-cf-slot="content"]')!
     expect(details.dataset.dfEnhanced).toBe('true')
     expect(content.hasAttribute('inert')).toBe(true)
 
@@ -267,7 +267,7 @@ describe('native Markdown behaviors', () => {
     details.dispatchEvent(new Event('toggle'))
     expect(details.dataset.dfEnhanced).toBeUndefined()
 
-    root.querySelector<HTMLButtonElement>('[data-df-action="copy-snippet"]')!.click()
+    root.querySelector<HTMLButtonElement>('[data-cf-action="copy-snippet"]')!.click()
     await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('pnpm test'))
     copyEnhancement.dispose()
   })
@@ -277,8 +277,8 @@ describe('native Markdown behaviors', () => {
     const writeText = vi.fn(async () => undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     const root = document.createElement('div')
-    root.innerHTML = `<span data-df-behavior="copy-snippet" data-df-value="pnpm test">
-      <button data-df-action="copy-snippet" aria-label="Copy" title="Copy"><span aria-live="polite"></span></button>
+    root.innerHTML = `<span data-cf-behavior="copy-snippet" data-cf-value="pnpm test">
+      <button data-cf-action="copy-snippet" aria-label="Copy" title="Copy"><span aria-live="polite"></span></button>
     </span>`
     document.body.append(root)
     enhancement = enhanceMarkdown(root, { behaviors: ['copy-snippet'] })
@@ -311,8 +311,8 @@ describe('native Markdown behaviors', () => {
       }
     })
     const root = document.createElement('div')
-    root.innerHTML = `<span data-df-behavior="copy-snippet" data-df-value="pnpm test">
-      <button data-df-action="copy-snippet" aria-label="Copy"><span aria-live="polite"></span></button>
+    root.innerHTML = `<span data-cf-behavior="copy-snippet" data-cf-value="pnpm test">
+      <button data-cf-action="copy-snippet" aria-label="Copy"><span aria-live="polite"></span></button>
     </span>`
     document.body.append(root)
     enhancement = enhanceMarkdown(root, { behaviors: ['copy-snippet'] })

@@ -10,8 +10,8 @@ order: 35
 
 Once a page is public, configure its old URL before moving the file:
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   redirects: {

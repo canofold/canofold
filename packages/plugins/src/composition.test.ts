@@ -1,4 +1,4 @@
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { math } from './math/index'
@@ -36,8 +36,8 @@ describe('official plugin composition', () => {
     const html = renderToStaticMarkup(rendered.content)
 
     expect(html).toContain('class="language-ts"')
-    expect(html).toContain('data-df-plugin-diagram="mermaid"')
-    expect(html).toContain('data-df-plugin-diagram="plantuml"')
+    expect(html).toContain('data-cf-plugin-diagram="mermaid"')
+    expect(html).toContain('data-cf-plugin-diagram="plantuml"')
     expect(html).toContain('class="katex-display"')
     expect(html).not.toContain('class="language-text"')
   })

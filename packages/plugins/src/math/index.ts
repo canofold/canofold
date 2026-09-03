@@ -1,4 +1,4 @@
-import { defineMarkdownPlugin, type MarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import { hasMarkdownFenceLanguage, markdownProse } from '../shared/markdownSource'
@@ -41,7 +41,7 @@ export function math(options: MathOptions = {}): MarkdownPlugin {
     name: 'math',
     version: PLUGIN_VERSION,
     cacheKey: resolved,
-    browserCompiler: { module: '@docfuse/plugins/math', exportName: 'math', options: resolved },
+    browserCompiler: { module: '@canofold/plugins/math', exportName: 'math', options: resolved },
     appliesTo: ({ source }) => hasMathSyntax(source),
     fenceLanguages: ['math'],
     assets: { math: true },

@@ -9,7 +9,7 @@ if (!tag || !/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tag)) {
 const expectedVersion = tag.slice(1)
 const packageFiles = [
   'packages/markdown/package.json',
-  'packages/docfuse/package.json',
+  'packages/canofold/package.json',
   'packages/plugins/package.json'
 ]
 

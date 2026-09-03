@@ -6,15 +6,15 @@ import { createPollingWatcher, readDevState } from './packageBuildWatcher.mjs'
 import { createLinkedSiteReconciler } from './linkedSiteRunner.mjs'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
-const stateDirectory = join(repoRoot, '.docfuse-dev')
-const statePaths = [join(stateDirectory, 'markdown.json'), join(stateDirectory, 'docfuse.json')]
+const stateDirectory = join(repoRoot, '.canofold-dev')
+const statePaths = [join(stateDirectory, 'markdown.json'), join(stateDirectory, 'canofold.json')]
 const siteRoot = join(repoRoot, 'site')
-const cliPath = join(repoRoot, 'packages/docfuse/dist/cli.js')
+const cliPath = join(repoRoot, 'packages/canofold/dist/cli.js')
 const configuredPort = process.env.PORT
-const configuredInspectPort = process.env.DOCFUSE_DEV_INSPECT
-const workspaceId = process.env.DOCFUSE_DEV_WORKSPACE_ID
+const configuredInspectPort = process.env.CANOFOLD_DEV_INSPECT
+const workspaceId = process.env.CANOFOLD_DEV_WORKSPACE_ID
 
-if (!workspaceId) throw new Error('DOCFUSE_DEV_WORKSPACE_ID is required')
+if (!workspaceId) throw new Error('CANOFOLD_DEV_WORKSPACE_ID is required')
 
 if (configuredPort) {
   const port = Number(configuredPort)
@@ -25,7 +25,7 @@ if (configuredPort) {
 if (configuredInspectPort) {
   const inspectPort = Number(configuredInspectPort)
   if (!Number.isInteger(inspectPort) || inspectPort < 1 || inspectPort > 65_535) {
-    throw new Error(`Invalid DOCFUSE_DEV_INSPECT: ${configuredInspectPort}`)
+    throw new Error(`Invalid CANOFOLD_DEV_INSPECT: ${configuredInspectPort}`)
   }
 }
 
@@ -50,18 +50,18 @@ function startSite(onUnexpectedExit) {
     ended = true
     resolveExit()
     if (stopping) return
-    if (error) console.error('[docfuse:site]', error)
-    else console.error(`[docfuse:site] exited unexpectedly (${signal ?? code ?? 'unknown'})`)
+    if (error) console.error('[canofold:site]', error)
+    else console.error(`[canofold:site] exited unexpectedly (${signal ?? code ?? 'unknown'})`)
     onUnexpectedExit()
   }
   child.once('error', (error) => finish(error))
   child.once('exit', (code, signal) => finish(undefined, code, signal))
-  console.log(`[docfuse:site] starting ${siteRoot}`)
+  console.log(`[canofold:site] starting ${siteRoot}`)
   return { child, exit, markStopping: () => (stopping = true) }
 }
 
 async function stopSite(handle) {
-  console.log('[docfuse:site] stopping until package builds are ready')
+  console.log('[canofold:site] stopping until package builds are ready')
   handle.markStopping()
   if (handle.child.exitCode !== null || handle.child.signalCode !== null) return
   handle.child.kill('SIGTERM')
@@ -79,20 +79,20 @@ async function stopSite(handle) {
 }
 
 await mkdir(stateDirectory, { recursive: true })
-console.log('[docfuse:site] waiting for Markdown and Docfuse build states')
+console.log('[canofold:site] waiting for Markdown and Canofold build states')
 const reconciler = createLinkedSiteReconciler({
   readStates: () => Promise.all(statePaths.map((statePath) => readDevState(statePath))),
   startSite,
   stopSite,
   workspaceId,
-  onError: (error) => console.error('[docfuse:site]', error)
+  onError: (error) => console.error('[canofold:site]', error)
 })
 const watcher = await createPollingWatcher(statePaths)
 watcher.on('all', () => void reconciler.reconcile())
-watcher.on('error', (error) => console.error('[docfuse:site]', error))
-const siteWatcher = await createPollingWatcher([join(siteRoot, 'docs'), join(siteRoot, 'docfuse.config.ts')])
+watcher.on('error', (error) => console.error('[canofold:site]', error))
+const siteWatcher = await createPollingWatcher([join(siteRoot, 'docs'), join(siteRoot, 'canofold.config.ts')])
 siteWatcher.on('all', () => void reconciler.retry())
-siteWatcher.on('error', (error) => console.error('[docfuse:site]', error))
+siteWatcher.on('error', (error) => console.error('[canofold:site]', error))
 const leaseTimer = setInterval(() => void reconciler.reconcile(), 5_000)
 await reconciler.reconcile()
 

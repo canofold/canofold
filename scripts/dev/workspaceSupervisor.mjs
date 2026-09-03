@@ -100,9 +100,9 @@ export function workspaceProcessConfigs({
   env = process.env,
   workspaceId = randomUUID()
 } = {}) {
-  const sharedEnv = { ...env, DOCFUSE_DEV_WORKSPACE_ID: workspaceId }
-  if (debug) sharedEnv.DOCFUSE_DEV_INSPECT = env.DOCFUSE_DEV_INSPECT || '9230'
-  else delete sharedEnv.DOCFUSE_DEV_INSPECT
+  const sharedEnv = { ...env, CANOFOLD_DEV_WORKSPACE_ID: workspaceId }
+  if (debug) sharedEnv.CANOFOLD_DEV_INSPECT = env.CANOFOLD_DEV_INSPECT || '9230'
+  else delete sharedEnv.CANOFOLD_DEV_INSPECT
   if (port) sharedEnv.PORT = port
   return [
     {
@@ -113,9 +113,9 @@ export function workspaceProcessConfigs({
       env: sharedEnv
     },
     {
-      name: 'docfuse',
+      name: 'canofold',
       command: process.execPath,
-      args: [join(repoRoot, 'scripts/dev/watchDocfuse.mjs')],
+      args: [join(repoRoot, 'scripts/dev/watchCanofold.mjs')],
       cwd: repoRoot,
       env: sharedEnv
     },
