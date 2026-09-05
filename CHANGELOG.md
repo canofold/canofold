@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 - Unreleased
+## 0.2.0 - 2026-09-05
 
 - Ship the CLI, configuration file, generated output directory, environment variables, DOM/CSS prefixes, and package names as Canofold.
 - Publish `canofold`, `@canofold/markdown`, and `@canofold/plugins`.
