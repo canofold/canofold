@@ -283,9 +283,9 @@ export function createPackageBuildScheduler({
   }
 }
 
-export function runCommand(command, args, { cwd, env = process.env } = {}) {
+export function runCommand(command, args, { cwd } = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, env, stdio: 'inherit' })
+    const child = spawn(command, args, { cwd, stdio: 'inherit' })
     child.once('error', reject)
     child.once('exit', (code, signal) => {
       if (code === 0) {

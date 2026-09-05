@@ -1,10 +1,6 @@
 import { execFileSync } from 'node:child_process'
 
-export function packageManagerInvocationFor(
-  args,
-  platform = process.platform,
-  commandShell = process.env.ComSpec
-) {
+export function packageManagerInvocationFor(args, platform = process.platform, commandShell = 'cmd.exe') {
   if (platform === 'win32') {
     return {
       command: commandShell || 'cmd.exe',
