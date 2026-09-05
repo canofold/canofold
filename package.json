@@ -47,7 +47,7 @@
   "devDependencies": {
     "@canofold/plugins": "workspace:*",
     "@playwright/test": "^1.62.1",
-    "@types/node": "^22.10.0",
+    "@types/node": "^26.4.1",
     "@vitest/coverage-v8": "4.1.11",
     "canofold": "workspace:*",
     "jsdom": "24.1.3",
