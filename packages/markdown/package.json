@@ -104,7 +104,7 @@
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
-    "vite": "^6.4.3",
+    "vite": "^8.2.2",
     "vitest": "^4.1.11"
   }
 }
