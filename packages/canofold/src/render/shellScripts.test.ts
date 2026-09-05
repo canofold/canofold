@@ -109,7 +109,7 @@ describe('browser shell scripts', () => {
     )
   })
 
-  it('keeps the home header transparent until the page scrolls', () => {
+  it('progressively strengthens the home header background as the page scrolls', () => {
     document.body.innerHTML = '<header class="cf-header cf-header-home"></header>'
     let scrollY = 0
     Object.defineProperty(window, 'scrollY', {
@@ -119,11 +119,25 @@ describe('browser shell scripts', () => {
 
     new Function(shellScript)()
     const header = document.querySelector<HTMLElement>('.cf-header-home')
-    expect(header?.classList.contains('cf-header-scrolled')).toBe(false)
+    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('0%')
+    expect(header?.style.getPropertyValue('--cf-header-backdrop-blur')).toBe('0px')
+    expect(header?.style.getPropertyValue('--cf-header-backdrop-saturation')).toBe('100%')
 
-    scrollY = 24
+    scrollY = 48
     window.dispatchEvent(new Event('scroll'))
-    expect(header?.classList.contains('cf-header-scrolled')).toBe(true)
+    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('34%')
+    expect(header?.style.getPropertyValue('--cf-header-backdrop-blur')).toBe('11px')
+    expect(header?.style.getPropertyValue('--cf-header-backdrop-saturation')).toBe('130%')
+
+    scrollY = 96
+    window.dispatchEvent(new Event('scroll'))
+    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('68%')
+    expect(header?.style.getPropertyValue('--cf-header-backdrop-blur')).toBe('22px')
+    expect(header?.style.getPropertyValue('--cf-header-backdrop-saturation')).toBe('160%')
+
+    scrollY = 0
+    window.dispatchEvent(new Event('scroll'))
+    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('0%')
   })
 
   it('keeps repeated same-page fragment links under native anchor scrolling', () => {

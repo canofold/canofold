@@ -75,17 +75,15 @@ a {
 }
 
 .cf-header-home {
+  --cf-header-surface-mix: 0%;
+  --cf-header-backdrop-blur: 0px;
+  --cf-header-backdrop-saturation: 100%;
+
   border-bottom-color: transparent;
   background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.cf-header-home.cf-header-scrolled {
-  border-bottom-color: color-mix(in srgb, var(--cf-accent-500) 18%, transparent);
-  background: color-mix(in srgb, var(--cf-surface) 68%, transparent);
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  background: color-mix(in srgb, var(--cf-surface) var(--cf-header-surface-mix), transparent);
+  backdrop-filter: blur(var(--cf-header-backdrop-blur)) saturate(var(--cf-header-backdrop-saturation));
+  -webkit-backdrop-filter: blur(var(--cf-header-backdrop-blur)) saturate(var(--cf-header-backdrop-saturation));
 }
 
 .cf-header-inner {
@@ -891,7 +889,6 @@ a {
   font-family: Inter, 'DM Sans', system-ui, sans-serif;
   font-size: clamp(4.35rem, 7.5vw, 5.65rem);
   font-weight: 700;
-  letter-spacing: -0.06em;
   line-height: 0.92;
   overflow-wrap: anywhere;
   text-wrap: balance;

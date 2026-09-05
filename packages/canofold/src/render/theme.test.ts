@@ -16,9 +16,9 @@ describe('buildThemeVariables', () => {
 
     expect(css).toMatch(/\.cf-header-link\s*\{[^}]*font-size: 0\.9375rem;/s)
     expect(css).toMatch(
-      /\.cf-header-home\s*\{[^}]*border-bottom-color: transparent;[^}]*background: transparent;/s
+      /\.cf-header-home\s*\{[^}]*--cf-header-surface-mix: 0%;[^}]*border-bottom-color: transparent;[^}]*background: transparent;[^}]*background: color-mix\(in srgb, var\(--cf-surface\) var\(--cf-header-surface-mix\), transparent\);/s
     )
-    expect(css).toMatch(/\.cf-header-home\.cf-header-scrolled\s*\{[^}]*backdrop-filter: blur\(22px\)/s)
+    expect(css).not.toContain('.cf-header-home.cf-header-scrolled')
     expect(homeHeaderRule).not.toContain('display: none')
     expect(css).toMatch(/\.cf-home\s*\{[^}]*padding: var\(--cf-header-height\) 0 0;/s)
     expect(css).toMatch(

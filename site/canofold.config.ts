@@ -9,9 +9,9 @@ export default defineConfig({
   editUrl: 'https://github.com/canofold/canofold/edit/main/site/docs',
   requiredVersion: '^0.2.0',
   theme: {
-    logo: '/logo-light.png',
-    logoDark: '/logo-dark.png',
-    favicon: '/favicon.png',
+    logo: '/logo-light.webp',
+    logoDark: '/logo-dark.webp',
+    favicon: '/favicon.webp',
     darkMode: true
   },
   search: {

@@ -22,7 +22,10 @@ export const shellScript = `window.__canofoldBootstrapShell = () => {
 
   const homeHeader = q('.cf-header-home')
   function syncHomeHeader() {
-    homeHeader?.classList.toggle('cf-header-scrolled', window.scrollY > 8)
+    const progress = Math.min(1, Math.max(0, window.scrollY / 96))
+    homeHeader?.style.setProperty('--cf-header-surface-mix', progress * 68 + '%')
+    homeHeader?.style.setProperty('--cf-header-backdrop-blur', progress * 22 + 'px')
+    homeHeader?.style.setProperty('--cf-header-backdrop-saturation', 100 + progress * 60 + '%')
   }
   syncHomeHeader()
   on(window, 'scroll', syncHomeHeader, { passive: true })
