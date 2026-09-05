@@ -10,8 +10,6 @@ dist/
 # Canofold generated artifacts at any depth, including `site/.canofold`.
 .canofold/
 .canofold-dev/
-.docfuse/
-.docfuse-dev/
 
 # Local environment files
 .env

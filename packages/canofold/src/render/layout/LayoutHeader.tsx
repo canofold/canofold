@@ -7,21 +7,21 @@ function BrandMark() {
   return (
     <svg className="cf-brand-mark" width="32" height="32" viewBox="0 0 512 512" aria-hidden="true">
       <defs>
-        <linearGradient id="cf-brand-top" x1="80" y1="70" x2="430" y2="245" gradientUnits="userSpaceOnUse">
+        <linearGradient id="cf-brand-top" x1="90" y1="60" x2="400" y2="260" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#1768FF" />
-          <stop offset="0.48" stopColor="#119BFA" />
+          <stop offset="0.5" stopColor="#119BFA" />
           <stop offset="1" stopColor="#18D8D3" />
         </linearGradient>
-        <linearGradient id="cf-brand-mid" x1="215" y1="255" x2="440" y2="245" gradientUnits="userSpaceOnUse">
+        <linearGradient id="cf-brand-fold" x1="70" y1="220" x2="210" y2="300" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#2C7BFF" />
-          <stop offset="1" stopColor="#1768F4" />
+          <stop offset="1" stopColor="#554FF5" />
         </linearGradient>
         <linearGradient
           id="cf-brand-bottom"
-          x1="215"
-          y1="292"
-          x2="92"
-          y2="445"
+          x1="200"
+          y1="270"
+          x2="90"
+          y2="460"
           gradientUnits="userSpaceOnUse"
         >
           <stop offset="0" stopColor="#554FF5" />
@@ -31,28 +31,28 @@ function BrandMark() {
         <mask id="cf-brand-spark-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
           <rect width="512" height="512" fill="#fff" />
           <path
-            d="M220 245C225 273 247 295 275 300C247 305 225 327 220 355C215 327 193 305 165 300C193 295 215 273 220 245Z"
+            d="M112 201C117 229 139 251 167 256C139 261 117 283 112 311C107 283 85 261 57 256C85 251 107 229 112 201Z"
             fill="#000"
           />
         </mask>
       </defs>
       <g mask="url(#cf-brand-spark-cut)" fill="none" strokeLinejoin="round">
         <path
-          d="M173 321C128 321 101 296 101 255V159C101 112 134 79 181 79H242C322 79 383 120 420 184"
+          d="M348 138A150 150 0 0 0 107 243"
           stroke="url(#cf-brand-top)"
-          strokeWidth="82"
+          strokeWidth="86"
           strokeLinecap="round"
         />
         <path
-          d="M213 286C241 247 279 225 327 225H427"
-          stroke="url(#cf-brand-mid)"
+          d="M78 256C118 228 158 228 208 256"
+          stroke="url(#cf-brand-fold)"
           strokeWidth="70"
           strokeLinecap="round"
         />
         <path
-          d="M220 296C248 333 238 371 207 402C176 433 137 444 101 444"
+          d="M107 269A150 150 0 0 0 348 374"
           stroke="url(#cf-brand-bottom)"
-          strokeWidth="72"
+          strokeWidth="86"
           strokeLinecap="round"
         />
       </g>

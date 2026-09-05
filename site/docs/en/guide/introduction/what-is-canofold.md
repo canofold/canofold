@@ -8,7 +8,9 @@ order: 1
 
 # What is Canofold?
 
-Canofold is a static-first, minimally invasive, and extensible knowledge and documentation platform. It uses a unified content model to turn Markdown and MDX into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
+One canonical source. Unfolded.
+
+Canofold is a static-first, minimally invasive, and extensible knowledge and documentation platform. It treats one Markdown and MDX tree as the canonical source, then unfolds it into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
 
 It fits teams that version knowledge alongside code, configuration, or other project assets. Adoption does not require changes to application source or a separate documentation frontend. One CLI handles development, checks, builds, and previews.
 
@@ -18,9 +20,9 @@ Docs, configuration, and commands stay in the existing repository. `canofold ini
 
 The build output is static. Production does not require a Canofold service, a Node.js server, or a database.
 
-## Produce multiple outputs from one source
+## Unfold one source into multiple outputs
 
-The same Markdown and MDX produce the complete static site, local search indexes, Markdown mirrors, `llms.txt`, and bounded content shards. The website, search, and AI tools use one content source instead of separately maintained copies.
+The same Markdown and MDX unfold into the complete static site, local search indexes, Markdown mirrors, `llms.txt`, and bounded content shards. The website, search, and AI tools read one canonical source instead of separately maintained copies.
 
 Navigation, sidebars, locale routes, and version routes are generated from the content structure and configuration as well.
 

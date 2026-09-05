@@ -59,7 +59,7 @@ describe('buildThemeVariables', () => {
       /\.cf-hero-visual\s*\{[^}]*position: relative;[^}]*grid-column: 2;[^}]*width: min\(100%, 33rem\);/s
     )
     expect(css).toMatch(
-      /\.cf-hero-title\s*\{[^}]*padding-inline-end: 0\.16em;[^}]*background: linear-gradient[^}]*font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;[^}]*font-weight: 700;[^}]*overflow-wrap: anywhere;/s
+      /\.cf-hero-title\s*\{[^}]*padding-inline-end: 0\.16em;[^}]*background: linear-gradient[^}]*font-family:\s*Inter,\s*'DM Sans',\s*system-ui,\s*sans-serif;[^}]*font-weight: 700;[^}]*overflow-wrap: anywhere;/s
     )
     expect(heroRule).not.toContain('width: 100%')
     expect(heroRule).not.toContain('min-height')

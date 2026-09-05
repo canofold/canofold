@@ -8,7 +8,7 @@ sidebar: false
 
 # Markdown SDK
 
-`@canofold/markdown` is a standalone Markdown SDK. It provides React rendering, build and SSR support, content analysis, theme contracts, and browser enhancement. The Canofold CLI uses it to render documentation pages as well.
+`@canofold/markdown` is a standalone Markdown SDK. It unfolds the same canonical source in React, SSR, and static HTML, and provides content analysis, theme contracts, and browser enhancement. The Canofold CLI uses it to render documentation pages as well.
 
 It supports code, tables, callouts, tabs, steps, file trees, media, and other documentation elements. Math and diagrams are enabled through official plugins.
 

@@ -8,7 +8,7 @@ order: 2
 
 # Why choose Canofold?
 
-Canofold is for teams that want to manage knowledge in source files without maintaining a separate documentation frontend. It treats Markdown and MDX as versioned content, then builds the website, search indexes, and AI-ready knowledge outputs together.
+Canofold is for teams that want to manage knowledge in source files without maintaining a separate documentation frontend. Markdown and MDX are the canonical source; one build unfolds them into the website, search indexes, and AI-ready knowledge outputs.
 
 Its delivery layer combines a static documentation generator with a standalone Markdown SDK. The platform itself is not limited to technical documentation; it also fits product guides, team knowledge bases, and operating manuals.
 
@@ -24,9 +24,9 @@ Canofold renders pages and builds navigation, search indexes, and AI data during
 
 Static delivery leaves caching, rollback, and access control with the hosting platform. A private knowledge base must still protect the complete output directory at that layer.
 
-## Use one content model for every entry point
+## One canonical source for every entry point
 
-Canofold parses one Markdown and MDX source. Page structure, navigation, search text, locale and version routes, Markdown mirrors, `llms.txt`, and bounded content shards all come from the same content model.
+Canofold parses one Markdown and MDX source. Page structure, navigation, search text, locale and version routes, Markdown mirrors, `llms.txt`, and bounded content shards are unfolded from that canonical source.
 
 The website, site search, and AI tools therefore read the same titles, body content, and metadata. A content change happens once instead of being copied through separate pipelines.
 

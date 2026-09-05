@@ -112,8 +112,7 @@ a {
   display: block;
   flex: 0 0 auto;
   width: auto;
-  max-width: 10rem;
-  height: 3rem;
+  height: 2rem;
   object-fit: contain;
 }
 
@@ -889,7 +888,7 @@ a {
   background: linear-gradient(105deg, #06185f 0%, #0d6df0 54%, #8f43eb 100%);
   background-clip: text;
   -webkit-background-clip: text;
-  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-family: Inter, 'DM Sans', system-ui, sans-serif;
   font-size: clamp(4.35rem, 7.5vw, 5.65rem);
   font-weight: 700;
   letter-spacing: -0.06em;
@@ -1629,7 +1628,7 @@ a {
   }
 
   .cf-brand-logo {
-    max-width: clamp(5rem, 27vw, 7rem);
+    max-width: min(7.5rem, 30vw);
     height: auto;
     max-height: 2.25rem;
   }
