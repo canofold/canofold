@@ -13,7 +13,7 @@ async function sourceFiles(directory) {
   for (const entry of entries) {
     const path = join(directory, entry.name)
     if (entry.isDirectory()) {
-      if (['dist', 'node_modules', '.docfuse', 'coverage'].includes(entry.name)) continue
+      if (['dist', 'node_modules', '.canofold', 'coverage'].includes(entry.name)) continue
       files.push(...(await sourceFiles(path)))
       continue
     }
@@ -30,10 +30,10 @@ async function sourceText(directory) {
   return entries
 }
 
-test('Markdown package stays independent from Docfuse and framework adapters', async () => {
+test('Markdown package stays independent from Canofold and framework adapters', async () => {
   const entries = await sourceText(join(root, 'packages/markdown/src'))
   const forbiddenImport =
-    /(?:from\s+|import\s*\(\s*)['"](?:docfuse(?:\/|['"])|@docfuse\/(?:react-markdown|vue-markdown|cli)(?:\/|['"]))/
+    /(?:from\s+|import\s*\(\s*)['"](?:canofold(?:\/|['"])|@canofold\/(?:react-markdown|vue-markdown|cli)(?:\/|['"]))/
 
   for (const [file, source] of entries) {
     assert.doesNotMatch(source, forbiddenImport, `${file} imports a platform or adapter package`)
@@ -66,20 +66,20 @@ test('Markdown production source keeps the compiler and React layers explicitly 
   }
 })
 
-test('Docfuse uses the target package boundary and not legacy adapters', async () => {
-  const entries = await sourceText(join(root, 'packages/docfuse/src'))
+test('Canofold uses the target package boundary and not legacy adapters', async () => {
+  const entries = await sourceText(join(root, 'packages/canofold/src'))
   const forbiddenImport =
-    /(?:from\s+|import\s*\(\s*)['"]@docfuse\/(?:react-markdown|vue-markdown|cli)(?:\/|['"])/
+    /(?:from\s+|import\s*\(\s*)['"]@canofold\/(?:react-markdown|vue-markdown|cli)(?:\/|['"])/
 
   for (const [file, source] of entries) {
     assert.doesNotMatch(source, forbiddenImport, `${file} imports a legacy adapter/package`)
   }
 
-  const renderSite = await readFile(join(root, 'packages/docfuse/src/render/renderSite.tsx'), 'utf8')
+  const renderSite = await readFile(join(root, 'packages/canofold/src/render/renderSite.tsx'), 'utf8')
   assert.match(
     renderSite,
-    /from ['"]@docfuse\/markdown\/server['"]/,
-    'Docfuse Markdown build must use the server entry'
+    /from ['"]@canofold\/markdown\/server['"]/,
+    'Canofold Markdown build must use the server entry'
   )
 })
 
@@ -93,7 +93,7 @@ test('Markdown interactions use stable action attributes instead of visual class
   )
   const richBehaviors = await readFile(join(root, 'packages/markdown/src/islands.ts'), 'utf8')
   const componentMap = await readFile(join(root, 'packages/markdown/src/react/componentMap.tsx'), 'utf8')
-  assert.match(source, /data-df-action/, 'Markdown components must expose stable action attributes')
+  assert.match(source, /data-cf-action/, 'Markdown components must expose stable action attributes')
   assert.match(
     richBehaviors,
     /import\(['"].\/islands\//,
@@ -121,10 +121,10 @@ test('Markdown interactions use stable action attributes instead of visual class
     'importing the client must not start the host runtime'
   )
   assert.match(source, /hydrateRoot/)
-  assert.doesNotMatch(source, /window\.__docfuseMarkdown/)
+  assert.doesNotMatch(source, /window\.__canofoldMarkdown/)
   assert.doesNotMatch(
     source,
-    /componentFromClassName|class(?:es|List)?\.(?:has|contains)\(['"]df-/,
+    /componentFromClassName|class(?:es|List)?\.(?:has|contains)\(['"]cf-/,
     'visual classes must not select component behavior'
   )
   assert.doesNotMatch(
@@ -160,7 +160,7 @@ test('public React component documentation matches the source type contract', as
 
 test('public and maintainer documentation matches the three-package contract', async () => {
   const packageManifests = await Promise.all(
-    ['docfuse', 'markdown', 'plugins'].map((name) =>
+    ['canofold', 'markdown', 'plugins'].map((name) =>
       readFile(join(root, 'packages', name, 'package.json'), 'utf8').then(JSON.parse)
     )
   )
@@ -176,8 +176,8 @@ test('public and maintainer documentation matches the three-package contract', a
       /publishes two packages|packs both packages|publish both packages|both published tarballs|两个 npm Tarball|只发布[^\n]*两个包/
     )
   }
-  assert.match(contributing, /`@docfuse\/plugins`[^\n]*Markdown plugins and search providers/)
-  assert.doesNotMatch(contributing, /`@docfuse\/plugins`[^\n]*site-extension/)
+  assert.match(contributing, /`@canofold\/plugins`[^\n]*Markdown plugins and search providers/)
+  assert.doesNotMatch(contributing, /`@canofold\/plugins`[^\n]*site-extension/)
   assert.match(contributing, /pnpm test:release/)
   for (const source of publicReferences) {
     for (const manifest of packageManifests) {
@@ -238,7 +238,7 @@ test('Markdown plugins, search providers, and site extensions keep distinct life
 })
 
 test('published packages include matching English and Chinese READMEs', async () => {
-  for (const directory of ['docfuse', 'markdown', 'plugins']) {
+  for (const directory of ['canofold', 'markdown', 'plugins']) {
     const packageRoot = join(root, 'packages', directory)
     const manifest = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'))
     const english = await readFile(join(packageRoot, 'README.md'), 'utf8')
@@ -251,14 +251,14 @@ test('published packages include matching English and Chinese READMEs', async ()
 })
 
 test('ContentGraph remains content facts consumed by downstream derived views', async () => {
-  const graphSource = await readFile(join(root, 'packages/docfuse/src/content/graph.ts'), 'utf8')
-  const graphTypes = await readFile(join(root, 'packages/docfuse/src/content/types.ts'), 'utf8')
+  const graphSource = await readFile(join(root, 'packages/canofold/src/content/graph.ts'), 'utf8')
+  const graphTypes = await readFile(join(root, 'packages/canofold/src/content/types.ts'), 'utf8')
   const downstreamSources = await Promise.all(
     [
-      'packages/docfuse/src/render/layout/model.ts',
-      'packages/docfuse/src/search/index.ts',
-      'packages/docfuse/src/ai/writeAiOutputs.ts',
-      'packages/docfuse/src/output/plan.ts'
+      'packages/canofold/src/render/layout/model.ts',
+      'packages/canofold/src/search/index.ts',
+      'packages/canofold/src/ai/writeAiOutputs.ts',
+      'packages/canofold/src/output/plan.ts'
     ].map((path) => readFile(join(root, path), 'utf8'))
   )
 
@@ -273,10 +273,10 @@ test('ContentGraph remains content facts consumed by downstream derived views', 
   }
 })
 
-test('Docfuse and Markdown do not publish legacy theme token aliases', async () => {
+test('Canofold and Markdown do not publish legacy theme token aliases', async () => {
   const sources = await Promise.all([
-    readFile(join(root, 'packages/docfuse/src/render/styles.input.css'), 'utf8'),
-    readFile(join(root, 'packages/docfuse/src/render/theme.ts'), 'utf8'),
+    readFile(join(root, 'packages/canofold/src/render/styles.input.css'), 'utf8'),
+    readFile(join(root, 'packages/canofold/src/render/theme.ts'), 'utf8'),
     readFile(join(root, 'packages/markdown/src/tokens.css'), 'utf8')
   ])
   const legacyToken =
@@ -287,49 +287,49 @@ test('Docfuse and Markdown do not publish legacy theme token aliases', async () 
   }
 })
 
-test('Docfuse shell publishes only the canonical site-shell stylesheet', async () => {
-  const source = await readFile(join(root, 'packages/docfuse/src/render/styles.input.css'), 'utf8')
+test('Canofold shell publishes only the canonical site-shell stylesheet', async () => {
+  const source = await readFile(join(root, 'packages/canofold/src/render/styles.input.css'), 'utf8')
 
-  assert.match(source, /\.df-shell\s*\{/)
-  assert.match(source, /\.df-sidebar\s*\{/)
+  assert.match(source, /\.cf-shell\s*\{/)
+  assert.match(source, /\.cf-sidebar\s*\{/)
   assert.match(source, /scrollbar-width:\s*none/)
   assert.match(source, /prefers-reduced-motion/)
   assert.doesNotMatch(source, /apple-/)
-  assert.doesNotMatch(source, /\.df-sidebar-open\b/)
-  assert.doesNotMatch(source, /\.df-outline-link-active\b/)
-  assert.doesNotMatch(source, /body\[data-docfuse-sidebar-open\]/)
+  assert.doesNotMatch(source, /\.cf-sidebar-open\b/)
+  assert.doesNotMatch(source, /\.cf-outline-link-active\b/)
+  assert.doesNotMatch(source, /body\[data-canofold-sidebar-open\]/)
 })
 
 test('the retired showcase stylesheet stays deleted', async () => {
   await assert.rejects(() => access(join(root, 'site/docs/showcase.css')))
 })
 
-test('workspace styles do not reference undefined Docfuse custom properties', async () => {
+test('workspace styles do not reference undefined Canofold custom properties', async () => {
   const stylePaths = [
     'packages/markdown/src/tokens.css',
     'packages/markdown/src/styles.css',
-    'packages/docfuse/src/render/styles.input.css'
+    'packages/canofold/src/render/styles.input.css'
   ]
-  const definitionPaths = [...stylePaths, 'packages/docfuse/src/render/theme.ts']
+  const definitionPaths = [...stylePaths, 'packages/canofold/src/render/theme.ts']
   const [sources, definitionSources] = await Promise.all([
     Promise.all(stylePaths.map((path) => readFile(join(root, path), 'utf8'))),
     Promise.all(definitionPaths.map((path) => readFile(join(root, path), 'utf8')))
   ])
   const definitions = new Set(
-    definitionSources.flatMap((source) => [...source.matchAll(/(--df-[\w-]+)\s*:/g)].map((match) => match[1]))
+    definitionSources.flatMap((source) => [...source.matchAll(/(--cf-[\w-]+)\s*:/g)].map((match) => match[1]))
   )
 
   for (const [index, source] of sources.entries()) {
-    const missing = [...new Set([...source.matchAll(/var\((--df-[\w-]+)/g)].map((match) => match[1]))].filter(
+    const missing = [...new Set([...source.matchAll(/var\((--cf-[\w-]+)/g)].map((match) => match[1]))].filter(
       (name) => !definitions.has(name)
     )
-    assert.deepEqual(missing, [], `${stylePaths[index]} references undefined Docfuse custom properties`)
+    assert.deepEqual(missing, [], `${stylePaths[index]} references undefined Canofold custom properties`)
   }
 })
 
-test('Docfuse consumes the deep renderer instead of Markdown compiler internals', async () => {
-  const renderSite = await readFile(join(root, 'packages/docfuse/src/render/renderSite.tsx'), 'utf8')
-  const renderMdx = await readFile(join(root, 'packages/docfuse/src/render/renderMdx.tsx'), 'utf8')
+test('Canofold consumes the deep renderer instead of Markdown compiler internals', async () => {
+  const renderSite = await readFile(join(root, 'packages/canofold/src/render/renderSite.tsx'), 'utf8')
+  const renderMdx = await readFile(join(root, 'packages/canofold/src/render/renderMdx.tsx'), 'utf8')
   const source = `${renderSite}\n${renderMdx}`
 
   assert.match(source, /createMarkdownRenderer/)
@@ -362,32 +362,32 @@ test('workspace exposes one core package, one renderer package, and one official
     }
   }
 
-  assert.deepEqual(packageDirectories.sort(), ['docfuse', 'markdown', 'plugins'])
+  assert.deepEqual(packageDirectories.sort(), ['canofold', 'markdown', 'plugins'])
 
   const rootPackage = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
-  const docfusePackage = JSON.parse(await readFile(join(root, 'packages/docfuse/package.json'), 'utf8'))
+  const canofoldPackage = JSON.parse(await readFile(join(root, 'packages/canofold/package.json'), 'utf8'))
   const markdownPackage = JSON.parse(await readFile(join(root, 'packages/markdown/package.json'), 'utf8'))
   const pluginsPackage = JSON.parse(await readFile(join(root, 'packages/plugins/package.json'), 'utf8'))
 
-  assert.equal(docfusePackage.name, 'docfuse')
-  assert.equal(markdownPackage.name, '@docfuse/markdown')
-  assert.equal(pluginsPackage.name, '@docfuse/plugins')
-  assert.doesNotMatch(rootPackage.scripts.build, /@docfuse\/(?:react-markdown|vue-markdown|cli)/)
-  assert.doesNotMatch(rootPackage.scripts.typecheck, /@docfuse\/(?:react-markdown|vue-markdown|cli)/)
-  assert.doesNotMatch(JSON.stringify(markdownPackage.dependencies), /docfuse/i)
+  assert.equal(canofoldPackage.name, 'canofold')
+  assert.equal(markdownPackage.name, '@canofold/markdown')
+  assert.equal(pluginsPackage.name, '@canofold/plugins')
+  assert.doesNotMatch(rootPackage.scripts.build, /@canofold\/(?:react-markdown|vue-markdown|cli)/)
+  assert.doesNotMatch(rootPackage.scripts.typecheck, /@canofold\/(?:react-markdown|vue-markdown|cli)/)
+  assert.doesNotMatch(JSON.stringify(markdownPackage.dependencies), /canofold/i)
   assert.doesNotMatch(
     JSON.stringify(markdownPackage.dependencies),
     /katex|remark-math|rehype-katex|mermaid|fflate/,
-    'Optional math and diagram runtimes belong to @docfuse/plugins, not the Markdown core'
+    'Optional math and diagram runtimes belong to @canofold/plugins, not the Markdown core'
   )
   assert.match(JSON.stringify(pluginsPackage.dependencies), /"katex"/)
-  assert.doesNotMatch(JSON.stringify(pluginsPackage.dependencies), /"docfuse"|"mermaid"|"pagefind"/)
+  assert.doesNotMatch(JSON.stringify(pluginsPackage.dependencies), /"canofold"|"mermaid"|"pagefind"/)
   assert.deepEqual(pluginsPackage.peerDependenciesMeta, {
     mermaid: { optional: true },
     pagefind: { optional: true }
   })
 
-  assert.deepEqual(Object.keys(docfusePackage.exports), ['.'])
+  assert.deepEqual(Object.keys(canofoldPackage.exports), ['.'])
   assert.deepEqual(Object.keys(markdownPackage.exports), [
     '.',
     './client',
@@ -442,14 +442,14 @@ test('workspace exposes one core package, one renderer package, and one official
   }
 })
 
-test('Docfuse typechecks every public Markdown code entry from source', async () => {
-  const docfuseTsconfig = JSON.parse(await readFile(join(root, 'packages/docfuse/tsconfig.json'), 'utf8'))
+test('Canofold typechecks every public Markdown code entry from source', async () => {
+  const canofoldTsconfig = JSON.parse(await readFile(join(root, 'packages/canofold/tsconfig.json'), 'utf8'))
   const markdownPackage = JSON.parse(await readFile(join(root, 'packages/markdown/package.json'), 'utf8'))
-  const paths = docfuseTsconfig.compilerOptions?.paths ?? {}
+  const paths = canofoldTsconfig.compilerOptions?.paths ?? {}
 
   for (const [subpath, conditions] of Object.entries(markdownPackage.exports)) {
     if (typeof conditions === 'string' || !conditions.import) continue
-    const specifier = subpath === '.' ? '@docfuse/markdown' : `@docfuse/markdown/${subpath.slice(2)}`
+    const specifier = subpath === '.' ? '@canofold/markdown' : `@canofold/markdown/${subpath.slice(2)}`
     assert.ok(paths[specifier], `${specifier} needs a workspace source path for clean typechecks`)
   }
 })
@@ -461,14 +461,14 @@ test('Markdown benchmark uses the current default-locale fixture', async () => {
 
   assert.equal(
     rootPackage.scripts['benchmark:markdown'],
-    'pnpm --filter @docfuse/markdown build && node packages/markdown/scripts/benchmark.mjs'
+    'pnpm --filter @canofold/markdown build && node packages/markdown/scripts/benchmark.mjs'
   )
   assert.match(benchmark, /site\/docs\/zh\/markdown\/playground\.md/)
   await access(fixture)
 })
 
 test('CI and public documentation use the supported Node.js runtime', async () => {
-  const docfusePackage = JSON.parse(await readFile(join(root, 'packages/docfuse/package.json'), 'utf8'))
+  const canofoldPackage = JSON.parse(await readFile(join(root, 'packages/canofold/package.json'), 'utf8'))
   const workflow = await readFile(join(root, '.github/workflows/ci.yml'), 'utf8')
   const publicGuides = await Promise.all(
     [
@@ -481,7 +481,7 @@ test('CI and public documentation use the supported Node.js runtime', async () =
     ].map((path) => readFile(join(root, path), 'utf8'))
   )
 
-  assert.equal(docfusePackage.engines.node, '>=22')
+  assert.equal(canofoldPackage.engines.node, '>=22')
   const setupNodeSteps = workflow.match(/uses:\s*actions\/setup-node@/g)?.length ?? 0
   const node22Steps = workflow.match(/node-version:\s*22/g)?.length ?? 0
   assert.ok(setupNodeSteps >= 3, 'release, platform, and React jobs must all configure Node.js')

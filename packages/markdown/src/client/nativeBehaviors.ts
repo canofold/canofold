@@ -80,7 +80,7 @@ function eventTarget(root: ParentNode) {
 function matchingElements<T extends Element>(root: ParentNode, selector: string): T[] {
   const own = root instanceof Element && root.matches(selector) ? [root as T] : []
   return [...own, ...root.querySelectorAll<T>(selector)].filter(
-    (element) => !element.closest('[data-df-runtime="react"]')
+    (element) => !element.closest('[data-cf-runtime="react"]')
   )
 }
 
@@ -96,17 +96,17 @@ function setInert(element: HTMLElement, inert: boolean) {
 }
 
 function syncDetails(details: HTMLDetailsElement) {
-  details.dataset.dfEnhanced = 'true'
-  const content = details.querySelector<HTMLElement>('[data-df-slot="content"]')
+  details.dataset.cfEnhanced = 'true'
+  const content = details.querySelector<HTMLElement>('[data-cf-slot="content"]')
   if (content) setInert(content, !details.open)
 }
 
 function initializeDetails(root: ParentNode, state: NativeEnhancementState) {
-  for (const details of matchingElements<HTMLDetailsElement>(root, '[data-df-behavior="details"]')) {
+  for (const details of matchingElements<HTMLDetailsElement>(root, '[data-cf-behavior="details"]')) {
     if (state.details.has(details)) continue
     state.details.add(details)
-    const restoreDetails = attributeRestorer(details, ['data-df-enhanced'])
-    const content = details.querySelector<HTMLElement>('[data-df-slot="content"]')
+    const restoreDetails = attributeRestorer(details, ['data-cf-enhanced'])
+    const content = details.querySelector<HTMLElement>('[data-cf-slot="content"]')
     const restoreContent = content ? attributeRestorer(content, ['inert']) : () => undefined
     const onToggle = () => syncDetails(details)
     syncDetails(details)
@@ -134,9 +134,9 @@ function feedback(
     enhancement.feedback.delete(button)
   }
   const restoreAttributes = attributeRestorer(button, [
-    'data-df-idle-label',
-    'data-df-copied',
-    'data-df-copy-error',
+    'data-cf-idle-label',
+    'data-cf-copied',
+    'data-cf-copy-error',
     'aria-label',
     'title'
   ])
@@ -148,16 +148,16 @@ function feedback(
     restoreClasses()
     if (live) live.textContent = liveText
   }
-  const baseLabel = button.dataset.dfIdleLabel || button.getAttribute('aria-label') || ''
-  button.dataset.dfIdleLabel = baseLabel
-  button.classList.toggle('df-action-success', success)
-  button.classList.toggle('df-action-error', !success)
+  const baseLabel = button.dataset.cfIdleLabel || button.getAttribute('aria-label') || ''
+  button.dataset.cfIdleLabel = baseLabel
+  button.classList.toggle('cf-action-success', success)
+  button.classList.toggle('cf-action-error', !success)
   if (success) {
-    button.dataset.dfCopied = 'true'
-    delete button.dataset.dfCopyError
+    button.dataset.cfCopied = 'true'
+    delete button.dataset.cfCopyError
   } else {
-    button.dataset.dfCopyError = 'true'
-    delete button.dataset.dfCopied
+    button.dataset.cfCopyError = 'true'
+    delete button.dataset.cfCopied
   }
   const label = success ? `${baseLabel} ✓` : failureLabel || baseLabel
   button.setAttribute('aria-label', label)
@@ -173,25 +173,25 @@ function feedback(
 async function copyForAction(action: string, button: HTMLElement, state: NativeEnhancementState) {
   const behavior = COPY_ACTION_BEHAVIORS[action]
   if (!behavior || !ownsBehavior(state, behavior)) return
-  const interaction = button.closest<HTMLElement>('[data-df-behavior], [data-df-island]')
+  const interaction = button.closest<HTMLElement>('[data-cf-behavior], [data-cf-island]')
   if (!interaction) return
   const value =
     action === 'copy-section-link'
-      ? `${window.location.origin}${window.location.pathname}${window.location.search}${interaction.dataset.dfAnchor ?? ''}`
+      ? `${window.location.origin}${window.location.pathname}${window.location.search}${interaction.dataset.cfAnchor ?? ''}`
       : action === 'copy-snippet'
-        ? (interaction.dataset.dfValue ?? '')
+        ? (interaction.dataset.cfValue ?? '')
         : action === 'copy-code'
-          ? (interaction.closest('.df-code')?.querySelector('pre')?.textContent ?? '')
+          ? (interaction.closest('.cf-code')?.querySelector('pre')?.textContent ?? '')
           : action === 'copy-terminal'
-            ? (interaction.closest('.df-terminal')?.querySelector('pre')?.textContent ?? '')
+            ? (interaction.closest('.cf-terminal')?.querySelector('pre')?.textContent ?? '')
             : ''
   const success = await copyMarkdownText(value)
   if (!ownsBehavior(state, behavior)) return
-  feedback(button, success, state, behavior, interaction.dataset.dfCopyFailureLabel)
+  feedback(button, success, state, behavior, interaction.dataset.cfCopyFailureLabel)
 }
 
 function tabTriggers(root: HTMLElement) {
-  return [...root.querySelectorAll<HTMLButtonElement>('[role="tab"][data-df-tab]')]
+  return [...root.querySelectorAll<HTMLButtonElement>('[role="tab"][data-cf-tab]')]
 }
 
 function revealTab(trigger: HTMLElement) {
@@ -208,10 +208,10 @@ function revealTab(trigger: HTMLElement) {
 function syncTabOverflow(tabsRoot: HTMLElement) {
   const list = tabsRoot.querySelector<HTMLElement>(':scope > [role="tablist"]')
   const start = tabsRoot.querySelector<HTMLButtonElement>(
-    ':scope > [data-df-action="scroll-code-tabs"][data-df-direction="-1"]'
+    ':scope > [data-cf-action="scroll-code-tabs"][data-cf-direction="-1"]'
   )
   const end = tabsRoot.querySelector<HTMLButtonElement>(
-    ':scope > [data-df-action="scroll-code-tabs"][data-df-direction="1"]'
+    ':scope > [data-cf-action="scroll-code-tabs"][data-cf-direction="1"]'
   )
   if (!list || !start || !end) return
   const maximum = Math.max(0, list.scrollWidth - list.clientWidth)
@@ -220,13 +220,13 @@ function syncTabOverflow(tabsRoot: HTMLElement) {
 }
 
 function initializeTabOverflow(root: ParentNode, state: NativeEnhancementState) {
-  for (const tabsRoot of matchingElements<HTMLElement>(root, '.df-code-group[data-df-behavior="tabs"]')) {
+  for (const tabsRoot of matchingElements<HTMLElement>(root, '.cf-code-group[data-cf-behavior="tabs"]')) {
     if (state.tabOverflow.has(tabsRoot)) continue
     const list = tabsRoot.querySelector<HTMLElement>(':scope > [role="tablist"]')
     if (!list) continue
     state.tabOverflow.add(tabsRoot)
     const controls = [
-      ...tabsRoot.querySelectorAll<HTMLElement>(':scope > [data-df-action="scroll-code-tabs"]')
+      ...tabsRoot.querySelectorAll<HTMLElement>(':scope > [data-cf-action="scroll-code-tabs"]')
     ]
     const restoreControls = controls.map((control) => attributeRestorer(control, ['hidden']))
     const update = () => syncTabOverflow(tabsRoot)
@@ -251,7 +251,7 @@ function activateTab(
 ) {
   if (trigger.disabled || trigger.getAttribute('aria-disabled') === 'true') return
   const triggers = tabTriggers(root)
-  const panels = [...root.querySelectorAll<HTMLElement>('[role="tabpanel"][data-df-tab-panel]')]
+  const panels = [...root.querySelectorAll<HTMLElement>('[role="tabpanel"][data-cf-tab-panel]')]
   if (!state.tabs.has(root)) {
     state.tabs.add(root)
     const restoreTriggers = triggers.map((candidate) =>
@@ -263,14 +263,14 @@ function activateTab(
       state.tabs.delete(root)
     })
   }
-  const value = trigger.dataset.dfTab ?? ''
+  const value = trigger.dataset.cfTab ?? ''
   triggers.forEach((candidate) => {
     const selected = candidate === trigger
     candidate.setAttribute('aria-selected', String(selected))
     candidate.tabIndex = selected ? 0 : -1
   })
   panels.forEach((panel) => {
-    panel.hidden = panel.dataset.dfTabPanel !== value
+    panel.hidden = panel.dataset.cfTabPanel !== value
   })
   revealTab(trigger)
   if (focus) trigger.focus()
@@ -303,14 +303,14 @@ function handleTabsKey(
 }
 
 function toggleFileTree(button: HTMLButtonElement, state: NativeEnhancementState) {
-  const branch = button.closest<HTMLElement>('[data-df-file-tree-branch]')
-  const content = branch?.querySelector<HTMLElement>(':scope > .df-file-tree-children, :scope > ul')
+  const branch = button.closest<HTMLElement>('[data-cf-file-tree-branch]')
+  const content = branch?.querySelector<HTMLElement>(':scope > .cf-file-tree-children, :scope > ul')
   if (!branch || !content) return
   if (!state.fileTrees.has(button)) {
     state.fileTrees.add(button)
     const restoreButton = attributeRestorer(button, ['aria-expanded'])
-    const restoreBranch = attributeRestorer(branch, ['data-df-state'])
-    const restoreContent = attributeRestorer(content, ['data-df-state', 'aria-hidden', 'inert'])
+    const restoreBranch = attributeRestorer(branch, ['data-cf-state'])
+    const restoreContent = attributeRestorer(content, ['data-cf-state', 'aria-hidden', 'inert'])
     addBehaviorCleanup(state, 'file-tree', () => {
       restoreButton()
       restoreBranch()
@@ -321,8 +321,8 @@ function toggleFileTree(button: HTMLButtonElement, state: NativeEnhancementState
   const expanded = button.getAttribute('aria-expanded') !== 'false'
   const nextExpanded = !expanded
   button.setAttribute('aria-expanded', String(nextExpanded))
-  branch.dataset.dfState = nextExpanded ? 'expanded' : 'collapsed'
-  content.dataset.dfState = nextExpanded ? 'expanded' : 'collapsed'
+  branch.dataset.cfState = nextExpanded ? 'expanded' : 'collapsed'
+  content.dataset.cfState = nextExpanded ? 'expanded' : 'collapsed'
   if (nextExpanded) content.removeAttribute('aria-hidden')
   else content.setAttribute('aria-hidden', 'true')
   setInert(content, !nextExpanded)
@@ -343,11 +343,11 @@ function createState(root: ParentNode): NativeEnhancementState {
   const target = eventTarget(root)
   const onClick = (event: Event) => {
     if (!(event.target instanceof Element)) return
-    if (event.target.closest('[data-df-runtime="react"]')) return
+    if (event.target.closest('[data-cf-runtime="react"]')) return
     const summary = closestWithin<HTMLElement>(
       root,
       event.target,
-      'details[data-df-behavior="details"] > summary'
+      'details[data-cf-behavior="details"] > summary'
     )
     const details = summary?.parentElement as HTMLDetailsElement | undefined
     if (details && ownsBehavior(state, 'details')) {
@@ -355,8 +355,8 @@ function createState(root: ParentNode): NativeEnhancementState {
         if (ownsBehavior(state, 'details')) syncDetails(details)
       })
     }
-    const tab = closestWithin<HTMLButtonElement>(root, event.target, '[role="tab"][data-df-tab]')
-    const tabsRoot = tab?.closest<HTMLElement>('[data-df-behavior="tabs"]')
+    const tab = closestWithin<HTMLButtonElement>(root, event.target, '[role="tab"][data-cf-tab]')
+    const tabsRoot = tab?.closest<HTMLElement>('[data-cf-behavior="tabs"]')
     if (tab && tabsRoot && ownsBehavior(state, 'tabs')) {
       event.preventDefault()
       activateTab(tabsRoot, tab, state)
@@ -365,15 +365,15 @@ function createState(root: ParentNode): NativeEnhancementState {
     const tabScroll = closestWithin<HTMLButtonElement>(
       root,
       event.target,
-      '[data-df-action="scroll-code-tabs"]'
+      '[data-cf-action="scroll-code-tabs"]'
     )
-    const tabScrollRoot = tabScroll?.closest<HTMLElement>('.df-code-group[data-df-behavior="tabs"]')
+    const tabScrollRoot = tabScroll?.closest<HTMLElement>('.cf-code-group[data-cf-behavior="tabs"]')
     const tabList = tabScrollRoot?.querySelector<HTMLElement>(':scope > [role="tablist"]')
     if (tabScroll && tabScrollRoot && tabList && ownsBehavior(state, 'tabs')) {
       event.preventDefault()
       if (typeof tabList.scrollBy === 'function') {
         tabList.scrollBy({
-          left: Number(tabScroll.dataset.dfDirection || 1) * Math.max(180, tabList.clientWidth * 0.72),
+          left: Number(tabScroll.dataset.cfDirection || 1) * Math.max(180, tabList.clientWidth * 0.72),
           behavior: 'smooth'
         })
       }
@@ -382,20 +382,20 @@ function createState(root: ParentNode): NativeEnhancementState {
     const treeToggle = closestWithin<HTMLButtonElement>(
       root,
       event.target,
-      '[data-df-action="toggle-file-tree"]'
+      '[data-cf-action="toggle-file-tree"]'
     )
     if (treeToggle && ownsBehavior(state, 'file-tree')) {
       event.preventDefault()
       toggleFileTree(treeToggle, state)
       return
     }
-    const action = closestWithin<HTMLElement>(root, event.target, '[data-df-action]')
-    if (action?.dataset.dfAction) void copyForAction(action.dataset.dfAction, action, state)
+    const action = closestWithin<HTMLElement>(root, event.target, '[data-cf-action]')
+    if (action?.dataset.cfAction) void copyForAction(action.dataset.cfAction, action, state)
   }
   const onKeyDown = (event: Event) => {
     if (!(event instanceof KeyboardEvent) || !(event.target instanceof HTMLButtonElement)) return
-    if (event.target.closest('[data-df-runtime="react"]')) return
-    const tabsRoot = event.target.closest<HTMLElement>('[data-df-behavior="tabs"]')
+    if (event.target.closest('[data-cf-runtime="react"]')) return
+    const tabsRoot = event.target.closest<HTMLElement>('[data-cf-behavior="tabs"]')
     if (tabsRoot && ownsBehavior(state, 'tabs')) handleTabsKey(tabsRoot, event.target, event, state)
   }
   target.addEventListener('click', onClick)

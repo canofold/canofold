@@ -10,7 +10,7 @@ import { Markdown } from './Markdown'
 async function waitForMarkdown(container: HTMLElement) {
   const deadline = Date.now() + 6_000
 
-  while (!container.querySelector('[data-df-root="markdown"]') && Date.now() < deadline) {
+  while (!container.querySelector('[data-cf-root="markdown"]') && Date.now() < deadline) {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 25))
     })
@@ -37,7 +37,7 @@ describe('Markdown browser component', () => {
 
     await waitForMarkdown(container)
 
-    expect(container.querySelector('[data-df-root="markdown"]')).not.toBeNull()
+    expect(container.querySelector('[data-cf-root="markdown"]')).not.toBeNull()
     expect(container.querySelector('h1')?.textContent).toBe('Browser Markdown')
     await act(async () => root.unmount())
   }, 10_000)

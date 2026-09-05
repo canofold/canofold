@@ -1,6 +1,6 @@
 ---
 title: 安全边界
-description: 了解 Docfuse 对 Markdown、MDX、外部服务、密钥和私有站点的安全假设
+description: 了解 Canofold 对 Markdown、MDX、外部服务、密钥和私有站点的安全假设
 group: 参考
 subgroup: 产物与质量
 order: 74
@@ -8,7 +8,7 @@ order: 74
 
 # 安全边界
 
-Docfuse 在构建期执行仓库配置、扩展、MDX 和本地 TSX。构建必须只运行可信仓库内容。扩展路径和输出约束用于保护构建不变量，并不会隔离扩展代码或它导入的依赖。
+Canofold 在构建期执行仓库配置、扩展、MDX 和本地 TSX。构建必须只运行可信仓库内容。扩展路径和输出约束用于保护构建不变量，并不会隔离扩展代码或它导入的依赖。
 
 ## 内容信任级别
 
@@ -22,11 +22,11 @@ Docfuse 在构建期执行仓库配置、扩展、MDX 和本地 TSX。构建必�
 
 ## 密钥
 
-- 不要把密钥写入 Markdown、MDX、`docfuse.config.ts` 浏览器字段或 `docs/public/`。
+- 不要把密钥写入 Markdown、MDX、`canofold.config.ts` 浏览器字段或 `docs/public/`。
 
 ## 私有托管
 
-Docfuse 不提供 SSO/RBAC。身份层必须保护整个静态站点，包括 Markdown 原文、搜索、AI 文件、资源和重定向页面。
+Canofold 不提供 SSO/RBAC。身份层必须保护整个静态站点，包括 Markdown 原文、搜索、AI 文件、资源和重定向页面。
 
 ## HTML 与链接
 

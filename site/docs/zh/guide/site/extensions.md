@@ -22,18 +22,18 @@ Extension 不会创建新的 Markdown 语法，也不会给页面增加浏览器
 扩展文件由项目维护，并从站点配置注册：
 
 :::file-tree
-- docfuse.config.ts
+- canofold.config.ts
 - extensions/
   - release-notes.ts
 :::
 
 ## 扩展何时运行
 
-`docfuse check`、`docfuse build` 和 `docfuse dev` 都会加载扩展。`transformSource` 和 `extendPage` 参与内容检查与构建；`generate` 只在 `build` 和 `dev` 生成站点产物时执行。`docfuse preview` 只提供已有产物，不运行扩展。
+`canofold check`、`canofold build` 和 `canofold dev` 都会加载扩展。`transformSource` 和 `extendPage` 参与内容检查与构建；`generate` 只在 `build` 和 `dev` 生成站点产物时执行。`canofold preview` 只提供已有产物，不运行扩展。
 
 ::::steps[构建生命周期]
 :::step[转换源码]
-Docfuse 读取每篇 Markdown 或 MDX 后调用 `transformSource`，返回值继续进入 Markdown 分析和渲染。
+Canofold 读取每篇 Markdown 或 MDX 后调用 `transformSource`，返回值继续进入 Markdown 分析和渲染。
 :::
 :::step[补充页面]
 页面的标题、描述、正文和路由确定后调用 `extendPage`。它可以修改公开页面信息以及搜索、AI 收录状态。
@@ -48,7 +48,7 @@ Docfuse 读取每篇 Markdown 或 MDX 后调用 `transformSource`，返回值继
 ## 创建扩展
 
 ```ts title="extensions/release-notes.ts"
-import { defineExtension } from 'docfuse'
+import { defineExtension } from 'canofold'
 
 export default defineExtension((options) => {
   const channel = typeof options.channel === 'string' ? options.channel : 'stable'
@@ -72,8 +72,8 @@ export default defineExtension((options) => {
 
 ## 注册扩展
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   extensions: [
@@ -107,7 +107,7 @@ pnpm docs:preview
 
 1. `/releases/` 显示“当前发布渠道：stable”。
 2. 搜索 `stable release` 可以找到该页面。
-3. `/extensions/release-notes/manifest.json` 返回扩展生成的 JSON；对应文件位于 `.docfuse/dist/extensions/release-notes/manifest.json`。
+3. `/extensions/release-notes/manifest.json` 返回扩展生成的 JSON；对应文件位于 `.canofold/dist/extensions/release-notes/manifest.json`。
 
 `docs:check` 会执行前两个 Hook，但不会写入 `manifest.json`。验证 `generate` 时必须运行 `docs:build` 或 `docs:dev`。
 

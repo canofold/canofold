@@ -1,4 +1,4 @@
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { externalLinks } from './index'
@@ -20,8 +20,8 @@ describe('externalLinks plugin', () => {
 
   it('leaves relative links and internal hosts untouched', async () => {
     const html = await renderLinks(
-      '[Relative](/guide/) and [Internal](https://docfuse.dev/guide) and [Sub](https://api.docfuse.dev/)',
-      externalLinks({ internalHosts: ['docfuse.dev'] })
+      '[Relative](/guide/) and [Internal](https://canofold.dev/guide) and [Sub](https://api.canofold.dev/)',
+      externalLinks({ internalHosts: ['canofold.dev'] })
     )
 
     expect(html).not.toContain('target="_blank"')

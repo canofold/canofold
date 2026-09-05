@@ -8,7 +8,7 @@ import { execPnpmSync } from './lib/packageManager.mjs'
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const packageRoot = join(workspace, 'packages/markdown')
 const versions = process.env.REACT_VERSION ? [process.env.REACT_VERSION] : ['18.2.0', '18.3.1', '19.2.0']
-const temporaryRoot = await mkdtemp(join(tmpdir(), 'docfuse-react-matrix-'))
+const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-react-matrix-'))
 
 function run(command, args, cwd) {
   execFileSync(command, args, { cwd, stdio: 'inherit', env: { ...process.env, CI: 'true' } })
@@ -34,7 +34,7 @@ try {
           private: true,
           type: 'module',
           dependencies: {
-            '@docfuse/markdown': `file:${tarball}`,
+            '@canofold/markdown': `file:${tarball}`,
             react: version,
             'react-dom': version
           }
@@ -48,8 +48,8 @@ try {
       `
 import React, { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { Markdown } from '@docfuse/markdown'
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { Markdown } from '@canofold/markdown'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 
 if (!React.version.startsWith('${version.split('.')[0]}.')) {
   throw new Error('Expected React ${version}, received ' + React.version)
@@ -69,7 +69,7 @@ try {
 } finally {
   console.error = originalError
 }
-if (!html.includes('data-df-component="markdown"') || !html.includes('data-df-component="tabs"')) {
+if (!html.includes('data-cf-component="markdown"') || !html.includes('data-cf-component="tabs"')) {
   throw new Error('Markdown SSR output is incomplete')
 }
 if (warnings.length) throw new Error('Markdown SSR emitted React warnings: ' + warnings.join('\\n'))

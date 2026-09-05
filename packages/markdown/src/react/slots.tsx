@@ -28,7 +28,7 @@ export interface MarkdownIconSlotProps {
 export interface MarkdownCaptionSlotProps {
   children?: ReactNode
   className?: string
-  'data-df-slot'?: string
+  'data-cf-slot'?: string
 }
 
 export interface MarkdownSlots {

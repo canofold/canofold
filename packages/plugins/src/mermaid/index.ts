@@ -1,4 +1,4 @@
-import { defineMarkdownPlugin, type MarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 
 import { diagramFence } from '../shared/diagram'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
@@ -19,7 +19,7 @@ export function mermaid(options: MermaidOptions = {}): MarkdownPlugin {
     version: PLUGIN_VERSION,
     cacheKey: { moduleUrl: moduleUrl ?? null },
     browserCompiler: {
-      module: '@docfuse/plugins/mermaid',
+      module: '@canofold/plugins/mermaid',
       exportName: 'mermaid',
       options: moduleUrl ? { moduleUrl } : {}
     },
@@ -29,7 +29,7 @@ export function mermaid(options: MermaidOptions = {}): MarkdownPlugin {
       clients: [
         {
           id: 'mermaid',
-          module: '@docfuse/plugins/client/mermaid',
+          module: '@canofold/plugins/client/mermaid',
           resources: [
             {
               module: 'mermaid/dist/mermaid.esm.min.mjs',
@@ -45,7 +45,7 @@ export function mermaid(options: MermaidOptions = {}): MarkdownPlugin {
           ]
         }
       ],
-      styles: [{ id: 'diagrams', module: '@docfuse/plugins/diagram.css' }]
+      styles: [{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }]
     },
     rehypePlugins: [
       diagramFence({

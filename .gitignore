@@ -7,9 +7,9 @@ dist/
 *.tsbuildinfo
 *.tgz
 
-# Docfuse generated artifacts at any depth, including `site/.docfuse`
-.docfuse/
-.docfuse-dev/
+# Canofold generated artifacts at any depth, including `site/.canofold`.
+.canofold/
+.canofold-dev/
 
 # Local environment files
 .env

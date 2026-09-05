@@ -1,16 +1,16 @@
 ---
-title: Docfuse
-seoTitle: 'Docfuse | Static-first knowledge and documentation platform'
+title: Canofold
+seoTitle: 'Canofold | Static-first knowledge and documentation platform'
 description: Build multilingual, versioned websites, search indexes, and AI-ready knowledge outputs from one Markdown and MDX content model
 order: 0
 hero:
-  accent: One content model for sites, search, and AI-ready knowledge
-  tagline: Docfuse is a static-first, minimally invasive, and extensible knowledge and documentation platform. It uses a unified content model to turn Markdown and MDX into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
+  accent: One canonical source, Unfolded
+  tagline: Canofold is a static-first, minimally invasive, and extensible knowledge and documentation platform. It treats one Markdown and MDX tree as the canonical source, then unfolds it into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
   image: /banner.webp
-  imageAlt: Documentation content flowing through Docfuse into a static site
+  imageAlt: Documentation content flowing through Canofold into a static site
   actions:
-    - text: What is Docfuse
-      link: /en/guide/introduction/what-is-docfuse/
+    - text: What is Canofold
+      link: /en/guide/introduction/what-is-canofold/
       primary: true
       icon: file
     - text: Get started
@@ -21,7 +21,7 @@ features:
     title: Add docs without a separate frontend
     details: Keep docs, configuration, and commands in the existing repository without changing application source.
   - image: /feature/ai.svg
-    title: One source produces every output
+    title: One source, unfolded into every output
     details: One build emits static pages, Markdown mirrors, llms.txt, and bounded content shards.
   - image: /feature/md.svg
     title: Rich content needs no handwritten HTML
@@ -34,5 +34,5 @@ features:
     details: Indexes ship with the site, so results never mix another locale or version.
   - image: /feature/pkg.svg
     title: Use the renderer without the CLI
-    details: Use @docfuse/markdown directly in React, SSR, and static generation pipelines.
+    details: Use @canofold/markdown directly in React, SSR, and static generation pipelines.
 ---

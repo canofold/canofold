@@ -1,16 +1,16 @@
 ---
-title: Docfuse
-seoTitle: Docfuse｜静态优先的知识文档平台
+title: Canofold
+seoTitle: Canofold｜静态优先的知识文档平台
 description: 从统一的 Markdown 和 MDX 内容模型构建多语言、多版本的网站、搜索索引和 AI-ready 知识输出
 order: 0
 hero:
-  accent: 一份内容，同时交付网站、搜索与 AI-ready 知识
-  tagline: Docfuse 是一个静态优先、低侵入、可扩展的知识文档平台。它使用统一的内容模型，将 Markdown 和 MDX 构建成多语言、多版本的网站、搜索索引和 AI-ready 知识输出。
+  accent: 一份源，多处展开
+  tagline: Canofold 是一个静态优先、低侵入、可扩展的知识文档平台。它把同一份 Markdown 和 MDX 当作源，展开成多语言、多版本的网站、搜索索引和 AI-ready 知识输出。
   image: /banner.webp
-  imageAlt: Docfuse 构建产物示意图
+  imageAlt: Canofold 构建产物示意图
   actions:
-    - text: 什么是 Docfuse
-      link: /guide/introduction/what-is-docfuse/
+    - text: 什么是 Canofold
+      link: /guide/introduction/what-is-canofold/
       primary: true
       icon: file
     - text: 快速开始
@@ -21,7 +21,7 @@ features:
     title: 低侵入接入现有仓库
     details: 文档、配置和命令脚本留在原仓库，不改业务源码，也不必另建文档前端。
   - image: /feature/ai.svg
-    title: 一份内容生成多种产物
+    title: 一份源，展开成多种产物
     details: 一次构建同时生成静态页面、Markdown 镜像、llms.txt 和分片语料。
   - image: /feature/md.svg
     title: 丰富内容不必手写 HTML
@@ -34,5 +34,5 @@ features:
     details: 索引随站点生成，查询结果不会混入其他语言或版本。
   - image: /feature/pkg.svg
     title: 渲染器可脱离 CLI 使用
-    details: '@docfuse/markdown 可直接接入 React、SSR 和静态生成流程。'
+    details: '@canofold/markdown 可直接接入 React、SSR 和静态生成流程。'
 ---

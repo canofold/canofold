@@ -47,9 +47,9 @@ describe('Markdown asset collector', () => {
     ['heading', '## Install'],
     ['code-toolbar', '<MarkdownCodeBlock />'],
     ['code-toolbar', '```ts\nconst answer = 42\n```'],
-    ['copy-snippet', '<span data-df-component="copy-snippet">copy</span>'],
+    ['copy-snippet', '<span data-cf-component="copy-snippet">copy</span>'],
     ['table', '<MarkdownTable />'],
-    ['table', '| Name | Value |\n| --- | --- |\n| Docfuse | Fast |']
+    ['table', '| Name | Value |\n| --- | --- |\n| Canofold | Fast |']
   ])('detects the %s browser resource fact from MDX source', (behavior, source) => {
     expect(detectMarkdownAssets(source).behaviors).toContain(behavior)
   })

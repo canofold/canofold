@@ -14,7 +14,7 @@ afterEach(async () => {
 
 describe('acquireWorkspaceLock', () => {
   it('rejects a second active development session and releases its own lock', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'docfuse-workspace-lock-'))
+    const directory = await mkdtemp(join(tmpdir(), 'canofold-workspace-lock-'))
     temporaryDirectories.push(directory)
     const lockPath = join(directory, 'workspace.lock')
     const first = acquireWorkspaceLock(lockPath, {
@@ -29,7 +29,7 @@ describe('acquireWorkspaceLock', () => {
         workspaceId: 'second',
         isProcessAlive: () => true
       })
-    ).toThrow('Docfuse development is already running (PID 101)')
+    ).toThrow('Canofold development is already running (PID 101)')
 
     first.release()
     const second = acquireWorkspaceLock(lockPath, {
@@ -41,7 +41,7 @@ describe('acquireWorkspaceLock', () => {
   })
 
   it('replaces a stale lock from a process that no longer exists', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'docfuse-stale-workspace-lock-'))
+    const directory = await mkdtemp(join(tmpdir(), 'canofold-stale-workspace-lock-'))
     temporaryDirectories.push(directory)
     const lockPath = join(directory, 'workspace.lock')
     acquireWorkspaceLock(lockPath, {

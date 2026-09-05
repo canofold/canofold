@@ -15,7 +15,7 @@ Each version has its own source directory and URL prefix. The current version us
 This example uses English as the default locale, keeps current documentation in `docs/`, and stores the old release in `versions/v1/`:
 
 :::file-tree
-- docfuse.config.ts
+- canofold.config.ts
 - docs/
   - index.md
   - zh/
@@ -29,8 +29,8 @@ This example uses English as the default locale, keeps current documentation in 
 
 The current English and Chinese homes map to `/` and `/zh/`; the v1 homes map to `/v1/` and `/v1/zh/`.
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   versions: {
@@ -57,7 +57,7 @@ Keep `docsDir` and `base` boundaries clear across versions so that two pages can
 
 ## Switch pages
 
-When a reader switches versions, Docfuse looks for the same page-relative path in the target version. If it does not exist, the link falls back to that version's home page for the current locale. Redirects can preserve common entry points after an old version removes or moves a page.
+When a reader switches versions, Canofold looks for the same page-relative path in the target version. If it does not exist, the link falls back to that version's home page for the current locale. Redirects can preserve common entry points after an old version removes or moves a page.
 
 ## Search and AI output
 
@@ -65,8 +65,8 @@ Compact Search writes a separate JSON file for each version and locale. Pagefind
 
 AI artifacts include only `versions.current` by default. Set `ai.versions: 'all'` to write historical versions into separate partitions:
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   ai: {

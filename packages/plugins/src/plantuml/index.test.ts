@@ -1,4 +1,4 @@
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { plantUml } from './index'
@@ -12,10 +12,10 @@ describe('plantUml plugin', () => {
     const html = renderToStaticMarkup(result.content)
 
     expect(plugin.fenceLanguages).toEqual(['plantuml', 'puml'])
-    expect(html).toContain('data-df-plugin-diagram="plantuml"')
+    expect(html).toContain('data-cf-plugin-diagram="plantuml"')
     expect(html).toContain('src="https://plantuml.example/svg/')
-    expect(html).toContain('<pre class="df-diagram-source"')
-    expect(html).toContain('class="df-diagram-zoom-controls"')
+    expect(html).toContain('<pre class="cf-diagram-source"')
+    expect(html).toContain('class="cf-diagram-zoom-controls"')
     expect(html).toContain('Alice -&gt; Bob: hello')
   })
 
@@ -25,9 +25,9 @@ describe('plantUml plugin', () => {
     })
     const html = renderToStaticMarkup(result.content)
 
-    expect(html).toContain('data-df-plugin-diagram="plantuml"')
+    expect(html).toContain('data-cf-plugin-diagram="plantuml"')
     expect(html).not.toContain('src="https://plantuml.example/')
-    expect(html).not.toContain('class="df-diagram-zoom-controls"')
+    expect(html).not.toContain('class="cf-diagram-zoom-controls"')
   })
 
   it('localizes generated image alternative text', async () => {

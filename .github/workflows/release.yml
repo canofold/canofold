@@ -12,7 +12,7 @@ concurrency:
 jobs:
   publish:
     name: Publish npm packages
-    if: ${{ github.repository == 'jiangxinlei/docfuse' }}
+    if: ${{ github.repository == 'canofold/canofold' }}
     permissions:
       contents: read
       id-token: write
@@ -45,9 +45,9 @@ jobs:
       - name: Pack publishable packages
         run: |
           mkdir release-packages
-          pnpm --filter @docfuse/markdown pack --pack-destination release-packages
-          pnpm --filter docfuse pack --pack-destination release-packages
-          pnpm --filter @docfuse/plugins pack --pack-destination release-packages
+          pnpm --filter @canofold/markdown pack --pack-destination release-packages
+          pnpm --filter canofold pack --pack-destination release-packages
+          pnpm --filter @canofold/plugins pack --pack-destination release-packages
 
       - name: Stage packages in dependency order
         run: |
@@ -62,14 +62,14 @@ jobs:
             fi
           }
 
-          stage_if_missing "@docfuse/markdown" "./release-packages/docfuse-markdown-${version}.tgz"
-          stage_if_missing "docfuse" "./release-packages/docfuse-${version}.tgz"
-          stage_if_missing "@docfuse/plugins" "./release-packages/docfuse-plugins-${version}.tgz"
+          stage_if_missing "@canofold/markdown" "./release-packages/canofold-markdown-${version}.tgz"
+          stage_if_missing "canofold" "./release-packages/canofold-${version}.tgz"
+          stage_if_missing "@canofold/plugins" "./release-packages/canofold-plugins-${version}.tgz"
 
       - name: Wait for npm 2FA approval
         run: |
           version="${GITHUB_REF_NAME#v}"
-          packages=("@docfuse/markdown" "docfuse" "@docfuse/plugins")
+          packages=("@canofold/markdown" "canofold" "@canofold/plugins")
 
           for attempt in $(seq 1 120); do
             pending=()
@@ -94,7 +94,7 @@ jobs:
   github-release:
     name: Create GitHub release
     needs: publish
-    if: ${{ github.repository == 'jiangxinlei/docfuse' }}
+    if: ${{ github.repository == 'canofold/canofold' }}
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -107,5 +107,5 @@ jobs:
           if gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             echo "GitHub release ${GITHUB_REF_NAME} already exists; skipping."
           else
-            gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --verify-tag --generate-notes --title "Docfuse ${GITHUB_REF_NAME}"
+            gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --verify-tag --generate-notes --title "Canofold ${GITHUB_REF_NAME}"
           fi

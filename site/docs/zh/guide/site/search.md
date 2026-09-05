@@ -17,24 +17,24 @@ order: 32
 :::code-group[包管理器]
 
 ```bash title="pnpm"
-pnpm add -D @docfuse/plugins pagefind
+pnpm add -D @canofold/plugins pagefind
 ```
 
 ```bash title="npm"
-npm install --save-dev @docfuse/plugins pagefind
+npm install --save-dev @canofold/plugins pagefind
 ```
 
 ```bash title="yarn"
-yarn add --dev @docfuse/plugins pagefind
+yarn add --dev @canofold/plugins pagefind
 ```
 
 :::
 
 然后配置搜索 Provider：
 
-```ts title="docfuse.config.ts"
-import { pagefind } from '@docfuse/plugins'
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { pagefind } from '@canofold/plugins'
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   search: { provider: pagefind() }

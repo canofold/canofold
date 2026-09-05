@@ -119,7 +119,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Markdown package
-        run: pnpm --filter @docfuse/markdown build
+        run: pnpm --filter @canofold/markdown build
 
       - name: Test packaged consumer
         run: node scripts/test-react-consumer.mjs

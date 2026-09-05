@@ -1,4 +1,4 @@
-import type { SearchProvider } from 'docfuse'
+import type { SearchProvider } from 'canofold'
 
 const PLUGIN_VERSION = '1'
 const unusedPagefindUiFiles = [

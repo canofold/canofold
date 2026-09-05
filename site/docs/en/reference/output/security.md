@@ -8,7 +8,7 @@ order: 74
 
 # Security boundaries
 
-Docfuse executes repository configuration, extensions, MDX, and local TSX during builds. Run production builds only for trusted repository content. Extension path and output restrictions protect build invariants; they do not sandbox extension code or its imported packages.
+Canofold executes repository configuration, extensions, MDX, and local TSX during builds. Run production builds only for trusted repository content. Extension path and output restrictions protect build invariants; they do not sandbox extension code or its imported packages.
 
 ## Content trust levels
 
@@ -26,7 +26,7 @@ Never place secrets in Markdown, MDX, browser configuration fields, or `docs/pub
 
 ## Private hosting
 
-Docfuse does not provide SSO/RBAC. A hosting identity layer must protect HTML, Markdown sources, search, AI files, assets, and redirects together.
+Canofold does not provide SSO/RBAC. A hosting identity layer must protect HTML, Markdown sources, search, AI files, assets, and redirects together.
 
 ## HTML and external runtimes
 

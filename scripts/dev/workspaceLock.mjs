@@ -57,10 +57,10 @@ export function acquireWorkspaceLock(
       if (error?.code !== 'EEXIST') throw error
       const existing = readLock(lockPath)
       if (existing && isProcessAlive(existing.pid)) {
-        throw new Error(`Docfuse development is already running (PID ${existing.pid})`)
+        throw new Error(`Canofold development is already running (PID ${existing.pid})`)
       }
       unlinkIfPresent(lockPath)
     }
   }
-  throw new Error('Could not acquire the Docfuse development lock')
+  throw new Error('Could not acquire the Canofold development lock')
 }

@@ -92,9 +92,9 @@ function sortableTable(
           'aria-sort': active ? (direction === 'asc' ? 'ascending' : 'descending') : undefined,
           children: (
             <button
-              className="df-sort-button"
+              className="cf-sort-button"
               type="button"
-              data-df-action="sort-table"
+              data-cf-action="sort-table"
               data-column={String(column)}
               data-sort={direction}
               aria-pressed={active ? 'true' : 'false'}
@@ -102,8 +102,8 @@ function sortableTable(
               title={sortLabel.replace('{column}', String(column + 1))}
               onClick={() => onSort?.(column)}
             >
-              <span className="df-sort-label">{cell.props.children}</span>
-              <span className="df-sort-icon" aria-hidden="true">
+              <span className="cf-sort-label">{cell.props.children}</span>
+              <span className="cf-sort-icon" aria-hidden="true">
                 <MarkdownIcon name="sort" direction={direction} />
               </span>
             </button>
@@ -161,34 +161,34 @@ export function MarkdownTable({
   const dialogRef = useRef<HTMLDivElement | null>(null)
   const title =
     directTitle ||
-    stringProp(props, 'data-df-table-title', 'dataDfTableTitle') ||
+    stringProp(props, 'data-cf-table-title', 'dataCfTableTitle') ||
     DEFAULT_MARKDOWN_LABELS.tableTitle
   const copyLabel =
     directCopyLabel ||
-    stringProp(props, 'data-df-copy-label', 'dataDfCopyLabel') ||
+    stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') ||
     DEFAULT_MARKDOWN_LABELS.copyTableCsv
   const copyFailureLabel =
     directCopyFailureLabel ||
-    stringProp(props, 'data-df-copy-failure-label', 'dataDfCopyFailureLabel') ||
+    stringProp(props, 'data-cf-copy-failure-label', 'dataCfCopyFailureLabel') ||
     DEFAULT_MARKDOWN_LABELS.copyFailed
   const downloadLabel =
     directDownloadLabel ||
-    stringProp(props, 'data-df-download-label', 'dataDfDownloadLabel') ||
+    stringProp(props, 'data-cf-download-label', 'dataCfDownloadLabel') ||
     DEFAULT_MARKDOWN_LABELS.downloadTableCsv
   const zoomLabel =
     directZoomLabel ||
-    stringProp(props, 'data-df-zoom-label', 'dataDfZoomLabel') ||
+    stringProp(props, 'data-cf-zoom-label', 'dataCfZoomLabel') ||
     DEFAULT_MARKDOWN_LABELS.zoomTable
   const closeLabel =
     directCloseLabel ||
-    stringProp(props, 'data-df-close-label', 'dataDfCloseLabel') ||
+    stringProp(props, 'data-cf-close-label', 'dataCfCloseLabel') ||
     DEFAULT_MARKDOWN_LABELS.closeTablePreview
   const sortLabel =
     directSortLabel ||
-    stringProp(props, 'data-df-sort-label', 'dataDfSortLabel') ||
+    stringProp(props, 'data-cf-sort-label', 'dataCfSortLabel') ||
     DEFAULT_MARKDOWN_LABELS.sortTableColumn
-  const tableData = serializedTable ?? stringProp(props, 'data-df-table', 'dataDfTable')
-  const className = mergeMarkdownClasses('df-table-window', props.className)
+  const tableData = serializedTable ?? stringProp(props, 'data-cf-table', 'dataCfTable')
+  const className = mergeMarkdownClasses('cf-table-window', props.className)
   const { className: _className, ...rest } = markdownDomProps(props)
   const cycleSort = (column: number) =>
     setSort((current) =>
@@ -214,8 +214,8 @@ export function MarkdownTable({
       <MarkdownDialogPortal>
         <div
           ref={dialogRef}
-          className="df-table-preview"
-          data-df-slot="preview"
+          className="cf-table-preview"
+          data-cf-slot="preview"
           role="dialog"
           aria-modal="true"
           aria-label={title}
@@ -223,29 +223,29 @@ export function MarkdownTable({
           onKeyDown={onDialogKeyDown}
         >
           <div
-            className="df-table-preview-backdrop"
-            data-df-action="close-table"
+            className="cf-table-preview-backdrop"
+            data-cf-action="close-table"
             aria-hidden="true"
             onClick={closePreview}
           />
-          <div className="df-table-preview-card">
-            <div className="df-table-preview-head">
+          <div className="cf-table-preview-card">
+            <div className="cf-table-preview-head">
               <strong>{title}</strong>
               <button
                 ref={closeRef}
-                className="df-icon-button"
+                className="cf-icon-button"
                 type="button"
-                data-df-action="close-table"
-                data-df-slot="close"
+                data-cf-action="close-table"
+                data-cf-slot="close"
                 aria-label={closeLabel}
                 onClick={closePreview}
               >
                 <MarkdownIcon name="close" />
               </button>
             </div>
-            <div className="df-table-preview-body">
-              <div className="df-table-window">
-                <div className="df-data-table">{tableWithHandlers}</div>
+            <div className="cf-table-preview-body">
+              <div className="cf-table-window">
+                <div className="cf-data-table">{tableWithHandlers}</div>
               </div>
             </div>
           </div>
@@ -254,12 +254,12 @@ export function MarkdownTable({
     ) : null
   const content = (
     <>
-      <div className="df-block-toolbar" data-df-slot="toolbar">
-        <span className="df-block-title" data-df-slot="title">
+      <div className="cf-block-toolbar" data-cf-slot="toolbar">
+        <span className="cf-block-title" data-cf-slot="title">
           <MarkdownIcon name="table" />
           <span>{title}</span>
         </span>
-        <div className="df-block-actions" data-df-slot="actions">
+        <div className="cf-block-actions" data-cf-slot="actions">
           <MarkdownCopyButton
             value={csv}
             label={copyLabel}
@@ -275,9 +275,9 @@ export function MarkdownTable({
           />
           <button
             ref={triggerRef}
-            className="df-block-button"
+            className="cf-block-button"
             type="button"
-            data-df-action="zoom-table"
+            data-cf-action="zoom-table"
             aria-label={zoomLabel}
             title={zoomLabel}
             aria-haspopup="dialog"
@@ -287,7 +287,7 @@ export function MarkdownTable({
           </button>
         </div>
       </div>
-      <div className="df-data-table" data-df-slot="content">
+      <div className="cf-data-table" data-cf-slot="content">
         {tableWithHandlers ?? children}
       </div>
       {previewContent}
@@ -298,17 +298,17 @@ export function MarkdownTable({
     <figure
       {...rest}
       className={className}
-      data-df-component="table"
-      data-df-slot="root"
-      data-df-island="table"
-      data-df-table-title={title}
-      data-df-copy-label={copyLabel}
-      data-df-copy-failure-label={copyFailureLabel}
-      data-df-download-label={downloadLabel}
-      data-df-zoom-label={zoomLabel}
-      data-df-close-label={closeLabel}
-      data-df-sort-label={sortLabel}
-      data-df-table={tableData || undefined}
+      data-cf-component="table"
+      data-cf-slot="root"
+      data-cf-island="table"
+      data-cf-table-title={title}
+      data-cf-copy-label={copyLabel}
+      data-cf-copy-failure-label={copyFailureLabel}
+      data-cf-download-label={downloadLabel}
+      data-cf-zoom-label={zoomLabel}
+      data-cf-close-label={closeLabel}
+      data-cf-sort-label={sortLabel}
+      data-cf-table={tableData || undefined}
     >
       {content}
     </figure>

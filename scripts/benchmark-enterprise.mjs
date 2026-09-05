@@ -6,28 +6,28 @@ import { performance } from 'node:perf_hooks'
 import { benchmarkPagefind } from './benchmark-pagefind.mjs'
 import { filesUnder } from './lib/files.mjs'
 const root = resolve(import.meta.dirname, '..')
-const pageCount = Number(process.env.DOCFUSE_BENCHMARK_PAGES || 1000)
-const buildBudgetMs = Number(process.env.DOCFUSE_BUILD_BUDGET_MS || 60_000)
-const cachedBuildBudgetMs = Number(process.env.DOCFUSE_CACHED_BUILD_BUDGET_MS || 15_000)
-const searchBudgetMs = Number(process.env.DOCFUSE_SEARCH_P95_BUDGET_MS || 50)
-const searchColdBudgetMs = Number(process.env.DOCFUSE_SEARCH_COLD_BUDGET_MS || 1500)
-const indexBudgetBytes = Number(process.env.DOCFUSE_SEARCH_INDEX_BUDGET_BYTES || 25 * 1024 * 1024)
-const memoryBudgetBytes = Number(process.env.DOCFUSE_MEMORY_BUDGET_BYTES || 768 * 1024 * 1024)
+const pageCount = Number(process.env.CANOFOLD_BENCHMARK_PAGES || 1000)
+const buildBudgetMs = Number(process.env.CANOFOLD_BUILD_BUDGET_MS || 60_000)
+const cachedBuildBudgetMs = Number(process.env.CANOFOLD_CACHED_BUILD_BUDGET_MS || 15_000)
+const searchBudgetMs = Number(process.env.CANOFOLD_SEARCH_P95_BUDGET_MS || 50)
+const searchColdBudgetMs = Number(process.env.CANOFOLD_SEARCH_COLD_BUDGET_MS || 1500)
+const indexBudgetBytes = Number(process.env.CANOFOLD_SEARCH_INDEX_BUDGET_BYTES || 25 * 1024 * 1024)
+const memoryBudgetBytes = Number(process.env.CANOFOLD_MEMORY_BUDGET_BYTES || 768 * 1024 * 1024)
 
 async function runBuild(fixture) {
   const started = performance.now()
   const stdout = await new Promise((resolveDone, reject) => {
     execFile(
       process.execPath,
-      [join(root, 'packages/docfuse/dist/cli.js'), 'build'],
-      { cwd: fixture, env: { ...process.env, DOCFUSE_BENCHMARK_REPORT: '1' } },
+      [join(root, 'packages/canofold/dist/cli.js'), 'build'],
+      { cwd: fixture, env: { ...process.env, CANOFOLD_BENCHMARK_REPORT: '1' } },
       (error, stdout, stderr) => {
         if (error) reject(new Error(`${stderr || stdout || error.message}`))
         else resolveDone(stdout)
       }
     )
   })
-  const resourceReport = JSON.parse(await readFile(join(fixture, '.docfuse/dist/.benchmark.json'), 'utf8'))
+  const resourceReport = JSON.parse(await readFile(join(fixture, '.canofold/dist/.benchmark.json'), 'utf8'))
   return {
     elapsedMs: performance.now() - started,
     maxRssBytes: resourceReport.maxRssBytes,
@@ -35,7 +35,7 @@ async function runBuild(fixture) {
   }
 }
 
-const fixture = await mkdtemp(join(tmpdir(), 'docfuse-enterprise-benchmark-'))
+const fixture = await mkdtemp(join(tmpdir(), 'canofold-enterprise-benchmark-'))
 try {
   await symlink(
     join(root, 'node_modules'),
@@ -47,8 +47,8 @@ try {
   const writes = []
   writes.push(
     writeFile(
-      join(fixture, 'docfuse.config.ts'),
-      `import { pagefind } from '@docfuse/plugins/pagefind'
+      join(fixture, 'canofold.config.ts'),
+      `import { pagefind } from '@canofold/plugins/pagefind'
 
 export default {
   title: 'Enterprise benchmark',
@@ -77,7 +77,7 @@ export default {
 
   const build = await runBuild(fixture)
   const cachedBuild = await runBuild(fixture)
-  const outputRoot = join(fixture, '.docfuse/dist')
+  const outputRoot = join(fixture, '.canofold/dist')
   const files = await filesUnder(outputRoot)
   const generatedPages = files.filter(
     (path) => path.endsWith('index.html') && path !== join(outputRoot, '404.html')

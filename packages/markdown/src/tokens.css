@@ -1,183 +1,183 @@
 /*
- * Docfuse's shared visual contract.
+ * Canofold's shared visual contract.
  *
  * The palette is intentionally semantic: Markdown and the site shell consume
  * the same variables, while a host can override the documented values from
- * `@docfuse/markdown/theme`. Content surfaces stay opaque; translucent
+ * `@canofold/markdown/theme`. Content surfaces stay opaque; translucent
  * material is reserved for temporary controls and overlays.
  */
 :root {
   color-scheme: light;
 
-  --df-canvas: #f6f6f8;
-  --df-ink: #1d1d1f;
-  --df-ink-body: #363638;
-  --df-ink-secondary: #66666b;
-  --df-ink-tertiary: #737379;
-  --df-surface: #ffffff;
-  --df-surface-secondary: #f3f3f5;
-  --df-surface-soft: #f7f7f9;
-  --df-surface-elevated: #ffffff;
-  --df-surface-code: #f6f6f8;
-  --df-code-ink: #1d1d1f;
-  --df-docfuse-config-icon: url('./file-icons/config.svg');
+  --cf-canvas: #f6f6f8;
+  --cf-ink: #1d1d1f;
+  --cf-ink-body: #363638;
+  --cf-ink-secondary: #66666b;
+  --cf-ink-tertiary: #737379;
+  --cf-surface: #ffffff;
+  --cf-surface-secondary: #f3f3f5;
+  --cf-surface-soft: #f7f7f9;
+  --cf-surface-elevated: #ffffff;
+  --cf-surface-code: #f6f6f8;
+  --cf-code-ink: #1d1d1f;
+  --cf-canofold-config-icon: url('./file-icons/config.svg');
 
   /* The contract keeps these names for theme overrides. Visual rules never
      draw a border; they use surfaces, inset highlights, and shadows instead. */
-  --df-border: transparent;
-  --df-border-strong: transparent;
-  --df-hairline: rgb(29 29 31 / 0.1);
+  --cf-border: transparent;
+  --cf-border-strong: transparent;
+  --cf-hairline: rgb(29 29 31 / 0.1);
 
   /* Default semantic palette. Components derive interaction and status tones
      from this contract instead of introducing local color constants. */
-  --df-accent-500: #0088ff;
-  --df-accent-50: color-mix(in srgb, var(--df-accent-500) 6%, white);
-  --df-accent-100: color-mix(in srgb, var(--df-accent-500) 10%, white);
-  --df-accent-200: color-mix(in srgb, var(--df-accent-500) 20%, white);
-  --df-accent-300: color-mix(in srgb, var(--df-accent-500) 38%, white);
-  --df-accent-400: color-mix(in srgb, var(--df-accent-500) 68%, white);
-  --df-accent-600: color-mix(in srgb, var(--df-accent-500) 88%, black);
-  --df-accent-700: color-mix(in srgb, var(--df-accent-500) 78%, black);
-  --df-accent-800: color-mix(in srgb, var(--df-accent-500) 66%, black);
-  --df-accent-900: color-mix(in srgb, var(--df-accent-500) 52%, black);
-  --df-accent-soft: color-mix(in srgb, var(--df-accent-500) 10%, white);
-  --df-accent-strong: #0088ff;
-  --df-accent-deep: color-mix(in srgb, var(--df-accent-500) 78%, black);
+  --cf-accent-500: #0088ff;
+  --cf-accent-50: color-mix(in srgb, var(--cf-accent-500) 6%, white);
+  --cf-accent-100: color-mix(in srgb, var(--cf-accent-500) 10%, white);
+  --cf-accent-200: color-mix(in srgb, var(--cf-accent-500) 20%, white);
+  --cf-accent-300: color-mix(in srgb, var(--cf-accent-500) 38%, white);
+  --cf-accent-400: color-mix(in srgb, var(--cf-accent-500) 68%, white);
+  --cf-accent-600: color-mix(in srgb, var(--cf-accent-500) 88%, black);
+  --cf-accent-700: color-mix(in srgb, var(--cf-accent-500) 78%, black);
+  --cf-accent-800: color-mix(in srgb, var(--cf-accent-500) 66%, black);
+  --cf-accent-900: color-mix(in srgb, var(--cf-accent-500) 52%, black);
+  --cf-accent-soft: color-mix(in srgb, var(--cf-accent-500) 10%, white);
+  --cf-accent-strong: #0088ff;
+  --cf-accent-deep: color-mix(in srgb, var(--cf-accent-500) 78%, black);
 
   /* Official diagram plugins consume this shared theme contract. */
-  --df-diagram-surface: var(--df-surface-soft);
-  --df-diagram-foreground: var(--df-ink-body);
-  --df-diagram-accent: var(--df-accent-500);
-  --df-diagram-muted: var(--df-ink-secondary);
-  --df-diagram-line: color-mix(in srgb, var(--df-ink-body) 12%, transparent);
-  --df-accent-secondary: #6155f5;
-  --df-info: #0088ff;
-  --df-info-deep: #0088ff;
-  --df-success: #34c759;
-  --df-success-deep: #34c759;
-  --df-warning: #ff8d28;
-  --df-warning-deep: #ff8d28;
-  --df-danger: #ff383c;
-  --df-danger-deep: #ff383c;
-  --df-info-soft: color-mix(in oklab, var(--df-info) 9%, var(--df-surface));
-  --df-success-soft: color-mix(in oklab, var(--df-success) 9%, var(--df-surface));
-  --df-warning-soft: color-mix(in oklab, var(--df-warning) 9%, var(--df-surface));
-  --df-danger-soft: color-mix(in oklab, var(--df-danger) 9%, var(--df-surface));
-  --df-yellow: #ffcc00;
+  --cf-diagram-surface: var(--cf-surface-soft);
+  --cf-diagram-foreground: var(--cf-ink-body);
+  --cf-diagram-accent: var(--cf-accent-500);
+  --cf-diagram-muted: var(--cf-ink-secondary);
+  --cf-diagram-line: color-mix(in srgb, var(--cf-ink-body) 12%, transparent);
+  --cf-accent-secondary: #6155f5;
+  --cf-info: #0088ff;
+  --cf-info-deep: #0088ff;
+  --cf-success: #34c759;
+  --cf-success-deep: #34c759;
+  --cf-warning: #ff8d28;
+  --cf-warning-deep: #ff8d28;
+  --cf-danger: #ff383c;
+  --cf-danger-deep: #ff383c;
+  --cf-info-soft: color-mix(in oklab, var(--cf-info) 9%, var(--cf-surface));
+  --cf-success-soft: color-mix(in oklab, var(--cf-success) 9%, var(--cf-surface));
+  --cf-warning-soft: color-mix(in oklab, var(--cf-warning) 9%, var(--cf-surface));
+  --cf-danger-soft: color-mix(in oklab, var(--cf-danger) 9%, var(--cf-surface));
+  --cf-yellow: #ffcc00;
 
-  --df-overlay: rgb(0 0 0 / 0.42);
-  --df-overlay-scrim: rgb(13 13 15 / 0.9);
-  --df-overlay-control: rgb(255 255 255 / 0.14);
-  --df-overlay-ink: rgb(255 255 255 / 0.78);
-  --df-overlay-ink-muted: rgb(255 255 255 / 0.56);
-  --df-shadow-raised: 0 20px 52px rgb(29 29 31 / 0.14);
-  --df-shadow-raised-sm: 0 8px 22px rgb(29 29 31 / 0.09);
-  --df-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.7);
-  --df-block-shell-shadow: 0 1px 2px rgb(29 29 31 / 0.08), 0 6px 18px rgb(29 29 31 / 0.06);
+  --cf-overlay: rgb(0 0 0 / 0.42);
+  --cf-overlay-scrim: rgb(13 13 15 / 0.9);
+  --cf-overlay-control: rgb(255 255 255 / 0.14);
+  --cf-overlay-ink: rgb(255 255 255 / 0.78);
+  --cf-overlay-ink-muted: rgb(255 255 255 / 0.56);
+  --cf-shadow-raised: 0 20px 52px rgb(29 29 31 / 0.14);
+  --cf-shadow-raised-sm: 0 8px 22px rgb(29 29 31 / 0.09);
+  --cf-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --cf-block-shell-shadow: 0 1px 2px rgb(29 29 31 / 0.08), 0 6px 18px rgb(29 29 31 / 0.06);
 
   /* Terminal is always a dark surface. Traffic-light dots are macOS chrome,
      not semantic status colors — do not reuse them for callouts or badges. */
-  --df-terminal-canvas: #1c1c1e;
-  --df-terminal-toolbar: #2b2b2f;
-  --df-terminal-ink: #f5f5f7;
-  --df-terminal-ink-secondary: #b9b9c0;
-  --df-terminal-ink-tertiary: #98989f;
-  --df-terminal-traffic-close: #ff5f57;
-  --df-terminal-traffic-minimize: #febc2e;
-  --df-terminal-traffic-maximize: #28c840;
+  --cf-terminal-canvas: #1c1c1e;
+  --cf-terminal-toolbar: #2b2b2f;
+  --cf-terminal-ink: #f5f5f7;
+  --cf-terminal-ink-secondary: #b9b9c0;
+  --cf-terminal-ink-tertiary: #98989f;
+  --cf-terminal-traffic-close: #ff5f57;
+  --cf-terminal-traffic-minimize: #febc2e;
+  --cf-terminal-traffic-maximize: #28c840;
 
-  --df-font-display:
+  --cf-font-display:
     -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Segoe UI',
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  --df-font-sans:
+  --cf-font-sans:
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  --df-font-mono: 'SFMono-Regular', 'JetBrains Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  --cf-font-mono: 'SFMono-Regular', 'JetBrains Mono', Consolas, 'Liberation Mono', Menlo, monospace;
   /* Typography scales with the user's root font size. Line heights stay unitless. */
-  --df-body-font-size: 1rem;
-  --df-body-line-height: 1.6;
-  --df-heading-line-height: 1.2;
-  --df-heading-1-size: 2rem;
-  --df-heading-2-size: 1.625rem;
-  --df-heading-3-size: 1.375rem;
-  --df-heading-4-size: 1.25rem;
-  --df-heading-5-size: 1.125rem;
-  --df-heading-6-size: 1.0625rem;
-  --df-reading-width: 100%;
-  --df-content-width: 100%;
-  --df-site-gutter: 2.25rem;
+  --cf-body-font-size: 1rem;
+  --cf-body-line-height: 1.6;
+  --cf-heading-line-height: 1.2;
+  --cf-heading-1-size: 2rem;
+  --cf-heading-2-size: 1.625rem;
+  --cf-heading-3-size: 1.375rem;
+  --cf-heading-4-size: 1.25rem;
+  --cf-heading-5-size: 1.125rem;
+  --cf-heading-6-size: 1.0625rem;
+  --cf-reading-width: 100%;
+  --cf-content-width: 100%;
+  --cf-site-gutter: 2.25rem;
 
-  --df-radius-sm: 4px;
-  --df-radius-md: 6px;
-  --df-radius-lg: 8px;
-  --df-radius-full: 8px;
+  --cf-radius-sm: 4px;
+  --cf-radius-md: 6px;
+  --cf-radius-lg: 8px;
+  --cf-radius-full: 8px;
 
-  --df-duration-fast: 120ms;
-  --df-duration-normal: 220ms;
-  --df-easing-default: cubic-bezier(0.22, 1, 0.36, 1);
-  --df-easing-spring: cubic-bezier(0.2, 0.85, 0.25, 1);
-  --df-glass-blur: 18px;
+  --cf-duration-fast: 120ms;
+  --cf-duration-normal: 220ms;
+  --cf-easing-default: cubic-bezier(0.22, 1, 0.36, 1);
+  --cf-easing-spring: cubic-bezier(0.2, 0.85, 0.25, 1);
+  --cf-glass-blur: 18px;
   /* Major layout dimensions use rem; optical geometry below intentionally uses px. */
-  --df-header-height: 4.25rem;
-  --df-sidebar-width: 17.5rem;
-  --df-outline-width: 18.75rem;
-  --df-focus-ring: 0 0 0 3px color-mix(in srgb, var(--df-accent-500) 24%, transparent);
+  --cf-header-height: 4.25rem;
+  --cf-sidebar-width: 17.5rem;
+  --cf-outline-width: 18.75rem;
+  --cf-focus-ring: 0 0 0 3px color-mix(in srgb, var(--cf-accent-500) 24%, transparent);
 }
 
 html.dark,
 .dark {
   color-scheme: dark;
 
-  --df-canvas: #1c1c1e;
-  --df-ink: #f5f5f7;
-  --df-ink-body: #e3e3e8;
-  --df-ink-secondary: #b9b9c0;
-  --df-ink-tertiary: #98989f;
-  --df-surface: #232326;
-  --df-surface-secondary: #343438;
-  --df-surface-soft: #2b2b2f;
-  --df-surface-elevated: #3b3b40;
-  --df-surface-code: #202023;
-  --df-code-ink: #f5f5f7;
-  --df-hairline: rgb(255 255 255 / 0.12);
+  --cf-canvas: #1c1c1e;
+  --cf-ink: #f5f5f7;
+  --cf-ink-body: #e3e3e8;
+  --cf-ink-secondary: #b9b9c0;
+  --cf-ink-tertiary: #98989f;
+  --cf-surface: #232326;
+  --cf-surface-secondary: #343438;
+  --cf-surface-soft: #2b2b2f;
+  --cf-surface-elevated: #3b3b40;
+  --cf-surface-code: #202023;
+  --cf-code-ink: #f5f5f7;
+  --cf-hairline: rgb(255 255 255 / 0.12);
 
-  --df-accent-500: #0091ff;
-  --df-accent-50: color-mix(in srgb, var(--df-accent-500) 8%, var(--df-surface));
-  --df-accent-100: color-mix(in srgb, var(--df-accent-500) 14%, var(--df-surface));
-  --df-accent-200: color-mix(in srgb, var(--df-accent-500) 25%, var(--df-surface));
-  --df-accent-300: color-mix(in srgb, var(--df-accent-500) 42%, var(--df-surface));
-  --df-accent-400: color-mix(in srgb, var(--df-accent-500) 70%, var(--df-surface));
-  --df-accent-600: color-mix(in srgb, var(--df-accent-500) 88%, white);
-  --df-accent-700: color-mix(in srgb, var(--df-accent-500) 76%, white);
-  --df-accent-800: color-mix(in srgb, var(--df-accent-500) 62%, white);
-  --df-accent-900: color-mix(in srgb, var(--df-accent-500) 46%, white);
-  --df-accent-soft: color-mix(in srgb, var(--df-accent-500) 18%, var(--df-surface));
-  --df-accent-strong: #0091ff;
-  --df-accent-deep: color-mix(in srgb, var(--df-accent-500) 76%, white);
-  --df-accent-secondary: #6d7cff;
-  --df-info: #0091ff;
-  --df-info-deep: #0091ff;
-  --df-success: #30d158;
-  --df-success-deep: #30d158;
-  --df-warning: #ff9230;
-  --df-warning-deep: #ff9230;
-  --df-danger: #ff4245;
-  --df-danger-deep: #ff4245;
-  --df-info-soft: color-mix(in oklab, var(--df-info) 9%, var(--df-surface));
-  --df-success-soft: color-mix(in oklab, var(--df-success) 9%, var(--df-surface));
-  --df-warning-soft: color-mix(in oklab, var(--df-warning) 9%, var(--df-surface));
-  --df-danger-soft: color-mix(in oklab, var(--df-danger) 9%, var(--df-surface));
-  --df-yellow: #ffd600;
-  --df-overlay: rgb(0 0 0 / 0.62);
-  --df-shadow-raised: 0 22px 58px rgb(0 0 0 / 0.34);
-  --df-shadow-raised-sm: 0 10px 28px rgb(0 0 0 / 0.24);
-  --df-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.08);
-  --df-block-shell-shadow: 0 1px 2px rgb(0 0 0 / 0.28), 0 6px 18px rgb(0 0 0 / 0.18);
-  --df-focus-ring: 0 0 0 3px color-mix(in srgb, var(--df-accent-500) 36%, transparent);
+  --cf-accent-500: #0091ff;
+  --cf-accent-50: color-mix(in srgb, var(--cf-accent-500) 8%, var(--cf-surface));
+  --cf-accent-100: color-mix(in srgb, var(--cf-accent-500) 14%, var(--cf-surface));
+  --cf-accent-200: color-mix(in srgb, var(--cf-accent-500) 25%, var(--cf-surface));
+  --cf-accent-300: color-mix(in srgb, var(--cf-accent-500) 42%, var(--cf-surface));
+  --cf-accent-400: color-mix(in srgb, var(--cf-accent-500) 70%, var(--cf-surface));
+  --cf-accent-600: color-mix(in srgb, var(--cf-accent-500) 88%, white);
+  --cf-accent-700: color-mix(in srgb, var(--cf-accent-500) 76%, white);
+  --cf-accent-800: color-mix(in srgb, var(--cf-accent-500) 62%, white);
+  --cf-accent-900: color-mix(in srgb, var(--cf-accent-500) 46%, white);
+  --cf-accent-soft: color-mix(in srgb, var(--cf-accent-500) 18%, var(--cf-surface));
+  --cf-accent-strong: #0091ff;
+  --cf-accent-deep: color-mix(in srgb, var(--cf-accent-500) 76%, white);
+  --cf-accent-secondary: #6d7cff;
+  --cf-info: #0091ff;
+  --cf-info-deep: #0091ff;
+  --cf-success: #30d158;
+  --cf-success-deep: #30d158;
+  --cf-warning: #ff9230;
+  --cf-warning-deep: #ff9230;
+  --cf-danger: #ff4245;
+  --cf-danger-deep: #ff4245;
+  --cf-info-soft: color-mix(in oklab, var(--cf-info) 9%, var(--cf-surface));
+  --cf-success-soft: color-mix(in oklab, var(--cf-success) 9%, var(--cf-surface));
+  --cf-warning-soft: color-mix(in oklab, var(--cf-warning) 9%, var(--cf-surface));
+  --cf-danger-soft: color-mix(in oklab, var(--cf-danger) 9%, var(--cf-surface));
+  --cf-yellow: #ffd600;
+  --cf-overlay: rgb(0 0 0 / 0.62);
+  --cf-shadow-raised: 0 22px 58px rgb(0 0 0 / 0.34);
+  --cf-shadow-raised-sm: 0 10px 28px rgb(0 0 0 / 0.24);
+  --cf-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  --cf-block-shell-shadow: 0 1px 2px rgb(0 0 0 / 0.28), 0 6px 18px rgb(0 0 0 / 0.18);
+  --cf-focus-ring: 0 0 0 3px color-mix(in srgb, var(--cf-accent-500) 36%, transparent);
 }
 
 @media (max-width: 47.5rem) {
   :root {
-    --df-site-gutter: 1.25rem;
+    --cf-site-gutter: 1.25rem;
   }
 }

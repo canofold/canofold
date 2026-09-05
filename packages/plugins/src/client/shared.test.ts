@@ -11,7 +11,7 @@ afterEach(() => {
 
 describe('diagram client lifecycle', () => {
   it('does not report the enhancement ready until asynchronous diagrams finish rendering', async () => {
-    document.body.innerHTML = '<figure data-df-plugin-diagram="mermaid"></figure>'
+    document.body.innerHTML = '<figure data-cf-plugin-diagram="mermaid"></figure>'
     let finishRender: (() => void) | undefined
     const enhancement = enhanceDiagrams(
       document,
@@ -37,15 +37,15 @@ describe('diagram client lifecycle', () => {
 
   it('removes listeners and allows a disposed figure to be enhanced again', () => {
     document.body.innerHTML = `
-      <figure data-df-plugin-diagram="plantuml" data-df-source="A -&gt; B">
-        <button data-df-diagram-action="source" aria-label="Show source"></button>
-        <div class="df-diagram-preview"></div>
-        <pre class="df-diagram-source" hidden></pre>
+      <figure data-cf-plugin-diagram="plantuml" data-cf-source="A -&gt; B">
+        <button data-cf-diagram-action="source" aria-label="Show source"></button>
+        <div class="cf-diagram-preview"></div>
+        <pre class="cf-diagram-source" hidden></pre>
       </figure>`
     const figure = document.querySelector<HTMLElement>('figure')!
     const button = document.querySelector<HTMLButtonElement>('button')!
-    const source = document.querySelector<HTMLElement>('.df-diagram-source')!
-    const preview = document.querySelector<HTMLElement>('.df-diagram-preview')!
+    const source = document.querySelector<HTMLElement>('.cf-diagram-source')!
+    const preview = document.querySelector<HTMLElement>('.cf-diagram-preview')!
 
     const dispose = enhanceDiagrams(document, 'plantuml')
     button.click()
@@ -57,7 +57,7 @@ describe('diagram client lifecycle', () => {
     expect(preview.hidden).toBe(false)
     button.click()
     expect(source.hidden).toBe(true)
-    expect(figure.dataset.dfEnhanced).toBeUndefined()
+    expect(figure.dataset.cfEnhanced).toBeUndefined()
 
     const nextDispose = enhanceDiagrams(document, 'plantuml')
     button.click()
@@ -67,30 +67,30 @@ describe('diagram client lifecycle', () => {
 
   it('restores inline diagram zoom controls and their lifecycle state', () => {
     document.body.innerHTML = `
-      <figure data-df-plugin-diagram="mermaid">
-        <button data-df-diagram-action="source" aria-label="Show source"></button>
-        <div class="df-diagram-preview"></div>
-        <pre class="df-diagram-source" hidden></pre>
-        <div class="df-diagram-zoom-controls">
-          <button data-df-diagram-action="zoom-out">out</button>
-          <button data-df-diagram-action="zoom-reset">reset</button>
-          <button data-df-diagram-action="zoom-in">in</button>
+      <figure data-cf-plugin-diagram="mermaid">
+        <button data-cf-diagram-action="source" aria-label="Show source"></button>
+        <div class="cf-diagram-preview"></div>
+        <pre class="cf-diagram-source" hidden></pre>
+        <div class="cf-diagram-zoom-controls">
+          <button data-cf-diagram-action="zoom-out">out</button>
+          <button data-cf-diagram-action="zoom-reset">reset</button>
+          <button data-cf-diagram-action="zoom-in">in</button>
         </div>
       </figure>`
     const dispose = enhanceDiagrams(document, 'mermaid')
-    const preview = document.querySelector<HTMLElement>('.df-diagram-preview')!
-    const controls = document.querySelector<HTMLElement>('.df-diagram-zoom-controls')!
-    const source = document.querySelector<HTMLButtonElement>('[data-df-diagram-action="source"]')!
-    const zoomIn = document.querySelector<HTMLButtonElement>('[data-df-diagram-action="zoom-in"]')!
-    const reset = document.querySelector<HTMLButtonElement>('[data-df-diagram-action="zoom-reset"]')!
+    const preview = document.querySelector<HTMLElement>('.cf-diagram-preview')!
+    const controls = document.querySelector<HTMLElement>('.cf-diagram-zoom-controls')!
+    const source = document.querySelector<HTMLButtonElement>('[data-cf-diagram-action="source"]')!
+    const zoomIn = document.querySelector<HTMLButtonElement>('[data-cf-diagram-action="zoom-in"]')!
+    const reset = document.querySelector<HTMLButtonElement>('[data-cf-diagram-action="zoom-reset"]')!
 
-    expect(preview.style.getPropertyValue('--df-diagram-zoom-width')).toBe('100%')
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('100%')
     expect(reset.disabled).toBe(true)
     zoomIn.click()
-    expect(preview.style.getPropertyValue('--df-diagram-zoom-width')).toBe('125%')
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('125%')
     expect(reset.disabled).toBe(false)
     reset.click()
-    expect(preview.style.getPropertyValue('--df-diagram-zoom-width')).toBe('100%')
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('100%')
 
     source.click()
     expect(controls.hidden).toBe(true)
@@ -98,13 +98,13 @@ describe('diagram client lifecycle', () => {
     expect(controls.hidden).toBe(false)
 
     dispose()
-    expect(preview.style.getPropertyValue('--df-diagram-zoom-width')).toBe('')
-    expect(preview.dataset.dfScale).toBeUndefined()
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('')
+    expect(preview.dataset.cfScale).toBeUndefined()
     expect(reset.disabled).toBe(false)
   })
 
   it('captures asynchronous render failures instead of leaking an unhandled rejection', async () => {
-    document.body.innerHTML = '<figure data-df-plugin-diagram="mermaid"></figure>'
+    document.body.innerHTML = '<figure data-cf-plugin-diagram="mermaid"></figure>'
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const figure = document.querySelector<HTMLElement>('figure')!
 
@@ -113,14 +113,14 @@ describe('diagram client lifecycle', () => {
     })
     await Promise.resolve()
 
-    expect(figure.dataset.dfRenderError).toBe('true')
-    expect(error).toHaveBeenCalledWith('[docfuse] mermaid render failed:', expect.any(Error))
+    expect(figure.dataset.cfRenderError).toBe('true')
+    expect(error).toHaveBeenCalledWith('[canofold] mermaid render failed:', expect.any(Error))
     dispose()
     error.mockRestore()
   })
 
   it('ignores a render failure that settles after the enhancement is disposed', async () => {
-    document.body.innerHTML = '<figure data-df-plugin-diagram="mermaid"></figure>'
+    document.body.innerHTML = '<figure data-cf-plugin-diagram="mermaid"></figure>'
     let rejectRender: ((error: Error) => void) | undefined
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const figure = document.querySelector<HTMLElement>('figure')!
@@ -138,15 +138,15 @@ describe('diagram client lifecycle', () => {
     await Promise.resolve()
     await Promise.resolve()
 
-    expect(figure.dataset.dfRenderError).toBeUndefined()
+    expect(figure.dataset.cfRenderError).toBeUndefined()
     expect(error).not.toHaveBeenCalled()
     error.mockRestore()
   })
 
   it('copies diagram source when the async Clipboard API is unavailable', async () => {
     document.body.innerHTML = `
-      <figure data-df-plugin-diagram="plantuml" data-df-source="A -&gt; B">
-        <button data-df-diagram-action="copy" aria-label="Copy"></button>
+      <figure data-cf-plugin-diagram="plantuml" data-cf-source="A -&gt; B">
+        <button data-cf-diagram-action="copy" aria-label="Copy"></button>
       </figure>`
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
     const copy = vi.fn(() => true)
@@ -163,8 +163,8 @@ describe('diagram client lifecycle', () => {
 
   it('uses the Clipboard API and restores an action error when disposed', async () => {
     document.body.innerHTML = `
-      <figure data-df-plugin-diagram="plantuml" data-df-source="A -&gt; B">
-        <button data-df-diagram-action="copy" aria-label="Copy"></button>
+      <figure data-cf-plugin-diagram="plantuml" data-cf-source="A -&gt; B">
+        <button data-cf-diagram-action="copy" aria-label="Copy"></button>
       </figure>`
     const writeText = vi.fn(async () => undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
@@ -181,17 +181,17 @@ describe('diagram client lifecycle', () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
     const nextDispose = enhanceDiagrams(document, 'plantuml')
     button.click()
-    await vi.waitFor(() => expect(button.dataset.dfActionError).toBe('true'))
-    expect(error).toHaveBeenCalledWith('[docfuse] Diagram action failed:', expect.any(Error))
+    await vi.waitFor(() => expect(button.dataset.cfActionError).toBe('true'))
+    expect(error).toHaveBeenCalledWith('[canofold] Diagram action failed:', expect.any(Error))
     nextDispose()
-    expect(button.dataset.dfActionError).toBeUndefined()
+    expect(button.dataset.cfActionError).toBeUndefined()
   })
 
   it('keeps the latest copy feedback visible when copy is clicked repeatedly', async () => {
     vi.useFakeTimers()
     document.body.innerHTML = `
-      <figure data-df-plugin-diagram="plantuml" data-df-source="A -&gt; B">
-        <button data-df-diagram-action="copy" aria-label="Copy"></button>
+      <figure data-cf-plugin-diagram="plantuml" data-cf-source="A -&gt; B">
+        <button data-cf-diagram-action="copy" aria-label="Copy"></button>
       </figure>`
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,

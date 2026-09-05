@@ -1,17 +1,17 @@
 {
-  "name": "@docfuse/markdown",
-  "version": "0.1.2",
-  "description": "An interactive, themeable Markdown renderer for technical documentation.",
+  "name": "@canofold/markdown",
+  "version": "0.2.0",
+  "description": "An interactive, themeable Markdown renderer for knowledge and documentation sites.",
   "license": "MIT",
-  "author": "Docfuse Contributors",
-  "homepage": "https://docfuse.dev/markdown/",
+  "author": "Canofold Contributors",
+  "homepage": "https://canofold.dev/markdown/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jiangxinlei/docfuse.git",
+    "url": "git+https://github.com/canofold/canofold.git",
     "directory": "packages/markdown"
   },
   "bugs": {
-    "url": "https://github.com/jiangxinlei/docfuse/issues"
+    "url": "https://github.com/canofold/canofold/issues"
   },
   "keywords": [
     "markdown",

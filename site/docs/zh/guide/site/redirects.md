@@ -10,8 +10,8 @@ order: 35
 
 页面一旦公开，移动文件前先为旧 URL 配置目标：
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   redirects: {

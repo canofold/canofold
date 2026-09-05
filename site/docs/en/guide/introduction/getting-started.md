@@ -1,6 +1,6 @@
 ---
 title: Quick start
-description: Create and preview a first Docfuse site
+description: Create and preview a first Canofold site
 group: Guide
 subgroup: Introduction
 order: 4
@@ -8,7 +8,7 @@ order: 4
 
 # Quick start
 
-First, [install Docfuse](/en/guide/introduction/installation/) in your project.
+First, [install Canofold](/en/guide/introduction/installation/) in your project.
 
 ::::steps[Create the site]
 :::step[Initialize]
@@ -16,10 +16,10 @@ First, [install Docfuse](/en/guide/introduction/installation/) in your project.
 Run this command from the project root:
 
 ```bash
-pnpm exec docfuse init --locale en
+pnpm exec canofold init --locale en
 ```
 
-It creates `docfuse.config.ts`, `docs/index.md`, and a type declaration without overwriting existing content.
+It creates `canofold.config.ts`, `docs/index.md`, and a type declaration without overwriting existing content.
 :::
 
 :::step[Add scripts]
@@ -27,10 +27,10 @@ It creates `docfuse.config.ts`, `docs/index.md`, and a type declaration without 
 ```json title="package.json"
 {
   "scripts": {
-    "docs:dev": "docfuse dev",
-    "docs:check": "docfuse check",
-    "docs:build": "docfuse build",
-    "docs:preview": "docfuse preview"
+    "docs:dev": "canofold dev",
+    "docs:check": "canofold check",
+    "docs:build": "canofold build",
+    "docs:preview": "canofold preview"
   }
 }
 ```
@@ -54,4 +54,4 @@ pnpm docs:build
 pnpm docs:preview
 ```
 
-Static files are written to `.docfuse/dist/`. Continue with [content structure](/en/guide/writing/content-structure/), [theming](/en/guide/site/customization/), or [deployment](/en/guide/delivery/deployment/).
+Static files are written to `.canofold/dist/`. Continue with [content structure](/en/guide/writing/content-structure/), [theming](/en/guide/site/customization/), or [deployment](/en/guide/delivery/deployment/).

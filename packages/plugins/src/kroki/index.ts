@@ -1,4 +1,4 @@
-import { defineMarkdownPlugin, type MarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import { strToU8, zlibSync } from 'fflate'
 
 import { diagramFence } from '../shared/diagram'
@@ -26,13 +26,19 @@ function encodeKroki(source: string) {
   return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
 }
 
+function stripTrailingSlashes(value: string) {
+  let end = value.length
+  while (end > 0 && value[end - 1] === '/') end -= 1
+  return value.slice(0, end)
+}
+
 function krokiUrl(server: string, type: string, format: 'svg' | 'png', source: string) {
   return `${server}/${encodeURIComponent(type)}/${format}/${encodeKroki(source)}`
 }
 
 /** Render plugin-owned diagram fences through a Kroki-compatible server. */
 export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
-  const server = options.server?.replace(/\/+$/, '') || DEFAULT_SERVER
+  const server = (options.server ? stripTrailingSlashes(options.server) : '') || DEFAULT_SERVER
   const languages = { ...DEFAULT_LANGUAGES, ...options.languages }
   const format = options.format === 'png' ? 'png' : 'svg'
   const languageMap = Object.fromEntries(
@@ -46,15 +52,15 @@ export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
     version: PLUGIN_VERSION,
     cacheKey: { server, languages: languageMap, format },
     browserCompiler: {
-      module: '@docfuse/plugins/kroki',
+      module: '@canofold/plugins/kroki',
       exportName: 'kroki',
       options: { server, languages: languageMap, format }
     },
     fenceLanguages: Object.keys(languageMap),
     appliesTo: ({ source }) => hasMarkdownFenceLanguage(source, new Set(Object.keys(languageMap))),
     assets: {
-      clients: [{ id: 'kroki', module: '@docfuse/plugins/client/kroki' }],
-      styles: [{ id: 'diagrams', module: '@docfuse/plugins/diagram.css' }]
+      clients: [{ id: 'kroki', module: '@canofold/plugins/client/kroki' }],
+      styles: [{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }]
     },
     rehypePlugins: [
       diagramFence({

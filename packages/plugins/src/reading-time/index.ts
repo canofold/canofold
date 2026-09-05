@@ -1,4 +1,4 @@
-import { defineMarkdownPlugin, type MarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import type { Root, Text } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
 import { element } from '../shared/hast'
@@ -55,8 +55,8 @@ function collectText(tree: Root, includeCode: boolean) {
 function localeFromFile(file: unknown) {
   if (!file || typeof file !== 'object' || !('data' in file)) return undefined
   const data = file.data
-  if (!data || typeof data !== 'object' || !('docfuseLocale' in data)) return undefined
-  const locale = data.docfuseLocale
+  if (!data || typeof data !== 'object' || !('canofoldLocale' in data)) return undefined
+  const locale = data.canofoldLocale
   return typeof locale === 'string' ? locale.trim().toLowerCase() || undefined : undefined
 }
 
@@ -85,7 +85,7 @@ export function readingTime(options: ReadingTimeOptions = {}): MarkdownPlugin {
     version: PLUGIN_VERSION,
     cacheKey: { wordsPerMinute, cjkWordsPerMinute, includeCode, label, labels },
     browserCompiler: {
-      module: '@docfuse/plugins/reading-time',
+      module: '@canofold/plugins/reading-time',
       exportName: 'readingTime',
       options: { wordsPerMinute, cjkWordsPerMinute, includeCode, label, labels }
     },
@@ -97,9 +97,9 @@ export function readingTime(options: ReadingTimeOptions = {}): MarkdownPlugin {
         const readingTimeNode = element(
           'p',
           {
-            className: ['df-reading-time'],
-            dataDfReadingMinutes: String(counts.minutes),
-            dataDfWordCount: String(counts.latinWords + counts.cjkCharacters)
+            className: ['cf-reading-time'],
+            dataCfReadingMinutes: String(counts.minutes),
+            dataCfWordCount: String(counts.latinWords + counts.cjkCharacters)
           },
           [{ type: 'text', value: resolvedLabel.replaceAll('{minutes}', String(counts.minutes)) }]
         )

@@ -8,7 +8,7 @@ order: 31
 
 # 配置导航与路由
 
-Docfuse 从目录生成 URL 和递归侧栏，顶部导航可按语言显式配置。本页说明导航与路由配置；目录设计见 [组织内容](/guide/writing/content-structure/)。
+Canofold 从目录生成 URL 和递归侧栏，顶部导航可按语言显式配置。本页说明导航与路由配置；目录设计见 [组织内容](/guide/writing/content-structure/)。
 
 ## URL 映射
 
@@ -23,8 +23,8 @@ docs/en/guide/getting-started.md               → /en/guide/getting-started/
 
 ## 顶部导航
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   navigation: {
@@ -42,7 +42,7 @@ export default defineConfig({
 })
 ```
 
-`link` 可以是站内绝对路由或 HTTP(S) 外链。缺少某语言配置时，Docfuse 从一级内容分区生成导航；不存在的站内目标会在检查或构建时失败。
+`link` 可以是站内绝对路由或 HTTP(S) 外链。缺少某语言配置时，Canofold 从一级内容分区生成导航；不存在的站内目标会在检查或构建时失败。
 
 ## 递归侧栏
 

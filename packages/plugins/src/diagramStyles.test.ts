@@ -7,24 +7,24 @@ describe('diagram styles', () => {
   it('keeps the toolbar flush with the diagram shell', async () => {
     const styles = await readFile(diagramStylesUrl, 'utf8')
 
-    expect(styles).toMatch(/\.df-diagram-window > \.df-diagram-toolbar\s*\{[^}]*margin:\s*0;/)
+    expect(styles).toMatch(/\.cf-diagram-window > \.cf-diagram-toolbar\s*\{[^}]*margin:\s*0;/)
   })
 
   it('keeps generic inline-code styles out of the diagram source', async () => {
     const styles = await readFile(diagramStylesUrl, 'utf8')
-    const sourceRule = styles.match(/\.df-diagram-source\s*\{([^}]*)\}/)?.[1]
+    const sourceRule = styles.match(/\.cf-diagram-source\s*\{([^}]*)\}/)?.[1]
 
     expect(sourceRule).toBeDefined()
     expect(sourceRule).not.toMatch(/\bpadding\s*:/)
     expect(sourceRule).not.toMatch(/\bbackground\s*:/)
     expect(styles).toMatch(
-      /\.df-diagram-source > code\s*\{[^}]*padding:\s*0;[^}]*background:\s*transparent;[^}]*font:\s*inherit;/
+      /\.cf-diagram-source > code\s*\{[^}]*padding:\s*0;[^}]*background:\s*transparent;[^}]*font:\s*inherit;/
     )
   })
 
   it('reserves layout space for zoom controls instead of overlaying the diagram', async () => {
     const styles = await readFile(diagramStylesUrl, 'utf8')
-    const controlsRule = styles.match(/\.df-diagram-zoom-controls\s*\{([^}]*)\}/)?.[1]
+    const controlsRule = styles.match(/\.cf-diagram-zoom-controls\s*\{([^}]*)\}/)?.[1]
 
     expect(controlsRule).toBeDefined()
     expect(controlsRule).not.toMatch(/position:\s*absolute/)

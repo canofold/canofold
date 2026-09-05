@@ -118,7 +118,7 @@ export function detectMarkdownAssets(
   if (/(?:^|\n)\s*#{2,6}\s+\S/.test(source)) behaviors.push('heading')
   if (/<(?:Markdown)?CodeBlock\b|(?:^|\n)\s*(?:`{3,}|~{3,})(?!\s*terminal\b)/i.test(source))
     behaviors.push('code-toolbar')
-  if (/<(?:Markdown)?CopySnippet\b|data-df-component=["']copy-snippet["']/i.test(source))
+  if (/<(?:Markdown)?CopySnippet\b|data-cf-component=["']copy-snippet["']/i.test(source))
     behaviors.push('copy-snippet')
   if (/<(?:Markdown)?Table\b/i.test(source) || hasGfmTable.test(source)) behaviors.push('table')
 

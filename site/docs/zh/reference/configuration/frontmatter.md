@@ -1,6 +1,6 @@
 ---
 title: Frontmatter 参考
-description: 查询 Docfuse 页面元数据字段、默认值和生效范围
+description: 查询 Canofold 页面元数据字段、默认值和生效范围
 group: 参考
 subgroup: 配置与命令
 order: 52
@@ -10,7 +10,7 @@ order: 52
 
 Frontmatter 位于 Markdown 或 MDX 文件顶部。通用页面字段适用于全部内容；`hero` 和 `features` 只用于各语言首页。
 
-未知字段可以被解析，但不影响 Docfuse 行为，也不会自动写入公开 AI 索引。`ai/pages.json` 仅保留 `title`、`description`、`createdAt`、`updatedAt`、`order`、`group`、`subgroup`、`tags` 和 `owner`。
+未知字段可以被解析，但不影响 Canofold 行为，也不会自动写入公开 AI 索引。`ai/pages.json` 仅保留 `title`、`description`、`createdAt`、`updatedAt`、`order`、`group`、`subgroup`、`tags` 和 `owner`。
 
 ## 通用页面字段
 
@@ -52,11 +52,11 @@ order: 20
 
 ### 日期字段
 
-只有在创建时间或更新时间必须在不同机器上保持一致时，才需要显式填写 `createdAt` 或 `updatedAt`。日期使用 `YYYY-MM-DD`，带时间时必须包含 `Z` 或 `+08:00` 这样的时区偏移。未填写 `updatedAt` 时，Docfuse 回退到源文件的本地修改时间；该值可能因重新检出、复制文件或 CI 构建而变化。
+只有在创建时间或更新时间必须在不同机器上保持一致时，才需要显式填写 `createdAt` 或 `updatedAt`。日期使用 `YYYY-MM-DD`，带时间时必须包含 `Z` 或 `+08:00` 这样的时区偏移。未填写 `updatedAt` 时，Canofold 回退到源文件的本地修改时间；该值可能因重新检出、复制文件或 CI 构建而变化。
 
 ## 首页字段
 
-每种语言的首页都由该语言根目录的 `index.md` 配置。默认语言使用 `docs/index.md`，其他语言使用 `docs/{locale}/index.md`。`docfuse.config.ts` 只保存站点级配置，不保存首页文案。
+每种语言的首页都由该语言根目录的 `index.md` 配置。默认语言使用 `docs/index.md`，其他语言使用 `docs/{locale}/index.md`。`canofold.config.ts` 只保存站点级配置，不保存首页文案。
 
 ```yaml
 ---
@@ -102,7 +102,7 @@ features:
 | `text` | `string` | 是 | 按钮文案 |
 | `link` | `string` | 是 | 站内绝对路径或 HTTPS URL |
 | `primary` | `boolean` | 否 | 使用主按钮样式；一个首页最多设置一个 |
-| `icon` | `string` | 否 | 使用 Docfuse 内置 Lucide 图标 |
+| `icon` | `string` | 否 | 使用 Canofold 内置 Lucide 图标 |
 
 ### 能力卡片
 
@@ -119,6 +119,6 @@ features:
 
 以 `/` 开头的图片路径映射到 `{docsDir}/public/`。例如 `/banner.png` 对应 `{docsDir}/public/banner.png`，`/feature/api.svg` 对应 `{docsDir}/public/feature/api.svg`。
 
-按钮和能力卡片也可以使用 Docfuse 内置的 Lucide 图标，不需要安装图标包。可用值为 `ai`、`box`、`code`、`file`、`file-code`、`gauge`、`globe`、`layers`、`rocket`、`search`、`sparkles` 和 `terminal`。
+按钮和能力卡片也可以使用 Canofold 内置的 Lucide 图标，不需要安装图标包。可用值为 `ai`、`box`、`code`、`file`、`file-code`、`gauge`、`globe`、`layers`、`rocket`、`search`、`sparkles` 和 `terminal`。
 
 首页字段会在内容扫描阶段校验。类型错误、未知子字段、不支持的图标或多个主按钮都会使检查和构建失败。

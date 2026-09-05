@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src", "test"],
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "vitest/globals"],
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@canofold/markdown": ["../markdown/src/index.ts"],
+      "@canofold/markdown/client": ["../markdown/src/client.ts"],
+      "@canofold/markdown/server": ["../markdown/src/server.ts"],
+      "@canofold/markdown/server/analyze": ["../markdown/src/server/analyze.ts"],
+      "@canofold/markdown/theme": ["../markdown/src/theme.ts"]
+    }
+  }
+}

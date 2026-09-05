@@ -27,7 +27,7 @@ order: 22
 [下载 Schema](./files/schema.json)
 ```
 
-相对文件随页面处理，`docfuse check` 会检查引用是否存在。
+相对文件随页面处理，`canofold check` 会检查引用是否存在。
 
 ## 公共文件
 

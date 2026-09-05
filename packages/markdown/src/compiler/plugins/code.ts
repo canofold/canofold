@@ -14,7 +14,7 @@ function mdxComponentName(name: unknown) {
 function isComponent(node: unknown, component: string) {
   if (!node || typeof node !== 'object' || !('properties' in node)) return false
   const properties = (node as Element).properties
-  return properties?.dataDfComponent === component || properties?.['data-df-component'] === component
+  return properties?.dataCfComponent === component || properties?.['data-cf-component'] === component
 }
 
 interface MdxJsxNode extends Node {
@@ -65,7 +65,7 @@ export const remarkFenceMetadata = (options: NormalizedMarkdownOptions) => {
         hProperties: {
           ...node.data?.hProperties,
           ...(meta ? { metastring: meta } : {}),
-          ...(filename ? { title: filename, dataDfFilename: filename } : {}),
+          ...(filename ? { title: filename, dataCfFilename: filename } : {}),
           ...(isTerminal ? { title: filename || options.labels.terminalTitle } : {})
         }
       }
@@ -82,13 +82,13 @@ export const rehypeFenceMetadata = () => {
         (child): child is Element => child.type === 'element' && child.tagName === 'code'
       )
       const filename = String(
-        code?.properties?.dataDfFilename ??
-          code?.properties?.['data-df-filename'] ??
+        code?.properties?.dataCfFilename ??
+          code?.properties?.['data-cf-filename'] ??
           code?.properties?.title ??
           code?.properties?.['data-title'] ??
           ''
       ).trim()
-      if (filename) node.properties = { ...node.properties, dataDfFilename: filename }
+      if (filename) node.properties = { ...node.properties, dataCfFilename: filename }
     })
   }
 }
@@ -157,14 +157,14 @@ export const rehypeRichFences = (assets: MarkdownAssetCollector, options: Normal
       if (options.features.terminals && language === 'terminal') {
         assets.markBehavior('terminal-toolbar')
         parent.children[index] = element('div', {
-          className: ['df-terminal'],
-          dataDfComponent: 'terminal',
-          dataDfBehavior: 'terminal-toolbar',
-          dataDfSlot: 'root',
-          dataDfTitle: String(code?.properties?.title ?? options.labels.terminalTitle),
-          dataDfSource: source,
-          dataDfCopyLabel: options.labels.copyTerminal,
-          dataDfCopyFailureLabel: options.labels.copyFailed
+          className: ['cf-terminal'],
+          dataCfComponent: 'terminal',
+          dataCfBehavior: 'terminal-toolbar',
+          dataCfSlot: 'root',
+          dataCfTitle: String(code?.properties?.title ?? options.labels.terminalTitle),
+          dataCfSource: source,
+          dataCfCopyLabel: options.labels.copyTerminal,
+          dataCfCopyFailureLabel: options.labels.copyFailed
         })
         return [SKIP, index]
       }
@@ -217,7 +217,7 @@ export const rehypeCodeBlocks = (
       if (node.tagName !== 'pre' || !parent || index === undefined || isComponent(parent, 'code-block'))
         return
       assets.markBehavior('code-toolbar')
-      node.properties = { ...node.properties, dataDfSlot: 'content' }
+      node.properties = { ...node.properties, dataCfSlot: 'content' }
       const code = node.children.find(
         (child): child is Element => child.type === 'element' && child.tagName === 'code'
       )
@@ -231,12 +231,12 @@ export const rehypeCodeBlocks = (
       const lang = match ? match.slice('language-'.length) : 'text'
       const parentProperties = parent.type === 'element' ? parent.properties : undefined
       const filename = String(
-        node.properties?.dataDfFilename ??
-          node.properties?.['data-df-filename'] ??
-          parentProperties?.dataDfFilename ??
-          parentProperties?.['data-df-filename'] ??
-          code?.properties?.dataDfFilename ??
-          code?.properties?.['data-df-filename'] ??
+        node.properties?.dataCfFilename ??
+          node.properties?.['data-cf-filename'] ??
+          parentProperties?.dataCfFilename ??
+          parentProperties?.['data-cf-filename'] ??
+          code?.properties?.dataCfFilename ??
+          code?.properties?.['data-cf-filename'] ??
           code?.properties?.title ??
           code?.properties?.['data-title'] ??
           ''
@@ -247,15 +247,15 @@ export const rehypeCodeBlocks = (
         type: 'element',
         tagName: 'figure',
         properties: {
-          className: ['df-code'],
-          dataDfComponent: 'code-block',
-          dataDfBehavior: 'code-toolbar',
-          dataDfSlot: 'root',
-          dataDfLanguage: lang,
-          ...(filename ? { dataDfFilename: filename } : {}),
-          dataDfSource: source,
-          dataDfCopyLabel: labels.copyCode,
-          dataDfCopyFailureLabel: labels.copyFailed
+          className: ['cf-code'],
+          dataCfComponent: 'code-block',
+          dataCfBehavior: 'code-toolbar',
+          dataCfSlot: 'root',
+          dataCfLanguage: lang,
+          ...(filename ? { dataCfFilename: filename } : {}),
+          dataCfSource: source,
+          dataCfCopyLabel: labels.copyCode,
+          dataCfCopyFailureLabel: labels.copyFailed
         },
         children: [node]
       }

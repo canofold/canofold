@@ -27,7 +27,7 @@ Every asset has one owner: a page-relative file, or a site-wide file under `docs
 [Download the schema](./files/schema.json)
 ```
 
-Relative files follow the page, and `docfuse check` validates that references exist.
+Relative files follow the page, and `canofold check` validates that references exist.
 
 ## Public files
 

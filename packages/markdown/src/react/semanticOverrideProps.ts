@@ -16,7 +16,7 @@ function childElement(children: ReactNode, tagName: string) {
     return (
       elementTag(element) === tagName ||
       (tagName === 'figcaption' &&
-        (element.props['data-df-slot'] === 'caption' || element.props.dataDfSlot === 'caption'))
+        (element.props['data-cf-slot'] === 'caption' || element.props.dataCfSlot === 'caption'))
     )
   })
 }
@@ -31,29 +31,29 @@ export function semanticOverrideProps(
   if (component === 'code-block')
     return {
       ...base,
-      source: stringProp(props, 'data-df-source', 'dataDfSource') || reactText(children),
-      language: stringProp(props, 'data-df-language', 'dataDfLanguage') || 'text',
-      copyLabel: stringProp(props, 'data-df-copy-label', 'dataDfCopyLabel') || undefined,
-      copyFailureLabel: stringProp(props, 'data-df-copy-failure-label', 'dataDfCopyFailureLabel') || undefined
+      source: stringProp(props, 'data-cf-source', 'dataCfSource') || reactText(children),
+      language: stringProp(props, 'data-cf-language', 'dataCfLanguage') || 'text',
+      copyLabel: stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') || undefined,
+      copyFailureLabel: stringProp(props, 'data-cf-copy-failure-label', 'dataCfCopyFailureLabel') || undefined
     }
   if (component === 'copy-snippet')
     return {
       ...base,
-      value: stringProp(props, 'data-df-value', 'dataDfValue') || reactText(children),
-      copyLabel: stringProp(props, 'data-df-copy-label', 'dataDfCopyLabel') || undefined,
-      copyFailureLabel: stringProp(props, 'data-df-copy-failure-label', 'dataDfCopyFailureLabel') || undefined
+      value: stringProp(props, 'data-cf-value', 'dataCfValue') || reactText(children),
+      copyLabel: stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') || undefined,
+      copyFailureLabel: stringProp(props, 'data-cf-copy-failure-label', 'dataCfCopyFailureLabel') || undefined
     }
   if (component === 'table')
     return {
       ...base,
-      tableTitle: stringProp(props, 'data-df-table-title', 'dataDfTableTitle') || undefined,
-      copyLabel: stringProp(props, 'data-df-copy-label', 'dataDfCopyLabel') || undefined,
+      tableTitle: stringProp(props, 'data-cf-table-title', 'dataCfTableTitle') || undefined,
+      copyLabel: stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') || undefined,
       copyFailureLabel:
-        stringProp(props, 'data-df-copy-failure-label', 'dataDfCopyFailureLabel') || undefined,
-      downloadLabel: stringProp(props, 'data-df-download-label', 'dataDfDownloadLabel') || undefined,
-      zoomLabel: stringProp(props, 'data-df-zoom-label', 'dataDfZoomLabel') || undefined,
-      closeLabel: stringProp(props, 'data-df-close-label', 'dataDfCloseLabel') || undefined,
-      sortLabel: stringProp(props, 'data-df-sort-label', 'dataDfSortLabel') || undefined
+        stringProp(props, 'data-cf-copy-failure-label', 'dataCfCopyFailureLabel') || undefined,
+      downloadLabel: stringProp(props, 'data-cf-download-label', 'dataCfDownloadLabel') || undefined,
+      zoomLabel: stringProp(props, 'data-cf-zoom-label', 'dataCfZoomLabel') || undefined,
+      closeLabel: stringProp(props, 'data-cf-close-label', 'dataCfCloseLabel') || undefined,
+      sortLabel: stringProp(props, 'data-cf-sort-label', 'dataCfSortLabel') || undefined
     }
   if (component === 'image') {
     const image = childElement(children, 'img')
@@ -72,29 +72,29 @@ export function semanticOverrideProps(
       loading: loading === 'eager' || loading === 'lazy' ? loading : undefined,
       srcSet: image ? stringProp(image.props, 'srcSet', 'srcset') || undefined : undefined,
       sizes: image ? stringProp(image.props, 'sizes') || undefined : undefined,
-      zoomLabel: stringProp(props, 'data-df-zoom-label', 'dataDfZoomLabel') || undefined,
-      closeLabel: stringProp(props, 'data-df-close-label', 'dataDfCloseLabel') || undefined
+      zoomLabel: stringProp(props, 'data-cf-zoom-label', 'dataCfZoomLabel') || undefined,
+      closeLabel: stringProp(props, 'data-cf-close-label', 'dataCfCloseLabel') || undefined
     }
   }
   if (component === 'terminal')
     return {
       ...base,
-      title: stringProp(props, 'data-df-title', 'dataDfTitle') || undefined,
-      source: stringProp(props, 'data-df-source', 'dataDfSource'),
-      copyLabel: stringProp(props, 'data-df-copy-label', 'dataDfCopyLabel') || undefined,
-      copyFailureLabel: stringProp(props, 'data-df-copy-failure-label', 'dataDfCopyFailureLabel') || undefined
+      title: stringProp(props, 'data-cf-title', 'dataCfTitle') || undefined,
+      source: stringProp(props, 'data-cf-source', 'dataCfSource'),
+      copyLabel: stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') || undefined,
+      copyFailureLabel: stringProp(props, 'data-cf-copy-failure-label', 'dataCfCopyFailureLabel') || undefined
     }
   if (component === 'gallery')
     return {
       ...base,
       items: resolveMarkdownGalleryItems(undefined, props.node, children),
       labels: {
-        gallery: stringProp(props, 'data-df-gallery-label', 'dataDfGalleryLabel') || undefined,
-        close: stringProp(props, 'data-df-close-label', 'dataDfCloseLabel') || undefined,
-        previous: stringProp(props, 'data-df-previous-label', 'dataDfPreviousLabel') || undefined,
-        next: stringProp(props, 'data-df-next-label', 'dataDfNextLabel') || undefined,
-        thumbnails: stringProp(props, 'data-df-thumbnails-label', 'dataDfThumbnailsLabel') || undefined,
-        image: stringProp(props, 'data-df-image-label', 'dataDfImageLabel') || undefined
+        gallery: stringProp(props, 'data-cf-gallery-label', 'dataCfGalleryLabel') || undefined,
+        close: stringProp(props, 'data-cf-close-label', 'dataCfCloseLabel') || undefined,
+        previous: stringProp(props, 'data-cf-previous-label', 'dataCfPreviousLabel') || undefined,
+        next: stringProp(props, 'data-cf-next-label', 'dataCfNextLabel') || undefined,
+        thumbnails: stringProp(props, 'data-cf-thumbnails-label', 'dataCfThumbnailsLabel') || undefined,
+        image: stringProp(props, 'data-cf-image-label', 'dataCfImageLabel') || undefined
       }
     }
   return base

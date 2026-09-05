@@ -1,6 +1,6 @@
 ---
 title: 官方插件
-description: 使用 @docfuse/plugins 启用图表、数学、链接、阅读时长和 Pagefind
+description: 使用 @canofold/plugins 启用图表、数学、链接、阅读时长和 Pagefind
 group: 指南
 subgroup: 站点能力
 order: 38
@@ -12,20 +12,20 @@ Markdown 插件是在构建期加入内容编译器的转换步骤。它接收�
 
 例如，配置 `math()` 后，源码中的 `$E = mc^2$` 会在构建时变成 KaTeX HTML；配置 `mermaid()` 后，只有包含 Mermaid 围栏的页面才会加载图表客户端。搜索 Provider 不处理单篇 Markdown，而是在全部页面完成后生成站点级索引。
 
-官方插件统一发布在 `@docfuse/plugins`：
+官方插件统一发布在 `@canofold/plugins`：
 
 :::code-group[包管理器]
 
 ```bash title="pnpm"
-pnpm add -D @docfuse/plugins
+pnpm add -D @canofold/plugins
 ```
 
 ```bash title="npm"
-npm install --save-dev @docfuse/plugins
+npm install --save-dev @canofold/plugins
 ```
 
 ```bash title="yarn"
-yarn add --dev @docfuse/plugins
+yarn add --dev @canofold/plugins
 ```
 
 :::
@@ -37,7 +37,7 @@ yarn add --dev @docfuse/plugins
 | `externalLinks()` | `markdown.plugins` | 为外链添加安全属性 | 无 |
 | `linkCard()` | `markdown.plugins` | 把独占段落的链接渲染为卡片 | 无 |
 | `readingTime()` | `markdown.plugins` | 在标题后显示阅读时长 | 无 |
-| `math()` | `markdown.plugins` | 渲染数学公式 | 独立使用 Markdown 包时导入 `@docfuse/plugins/math.css` |
+| `math()` | `markdown.plugins` | 渲染数学公式 | 独立使用 Markdown 包时导入 `@canofold/plugins/math.css` |
 | `mermaid()` | `markdown.plugins` | 渲染 Mermaid 图表 | 安装 `mermaid` |
 | `plantUml()` | `markdown.plugins` | 渲染 PlantUML 图表 | 配置可信的 `server` |
 | `kroki()` | `markdown.plugins` | 通过 Kroki 渲染 Graphviz 和 D2 | 默认使用 `https://kroki.io`，也可自托管 |
@@ -51,9 +51,9 @@ yarn add --dev @docfuse/plugins
 pnpm add -D mermaid pagefind
 ```
 
-```ts title="docfuse.config.ts"
-import { externalLinks, math, mermaid, pagefind } from '@docfuse/plugins'
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { externalLinks, math, mermaid, pagefind } from '@canofold/plugins'
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   search: {
@@ -82,7 +82,7 @@ flowchart LR
 ```
 ````
 
-`docfuse check` 会加载配置，并根据插件声明校验指令和代码围栏；它不会执行完整的页面渲染。`docfuse build` 和 `docfuse dev` 才会执行插件转换。删除配置后，对应语法不再转换，未被其他插件声明的围栏仍受未知语言策略检查。
+`canofold check` 会加载配置，并根据插件声明校验指令和代码围栏；它不会执行完整的页面渲染。`canofold build` 和 `canofold dev` 才会执行插件转换。删除配置后，对应语法不再转换，未被其他插件声明的围栏仍受未知语言策略检查。
 
 ## 运行并验证
 
@@ -140,16 +140,16 @@ pnpm docs:preview
 | Search Provider | 根据整个站点生成搜索索引 | `search.provider` |
 | Extension | 转换仓库源码、补充页面元数据或生成附加文件 | `extensions` |
 
-包管理器会安装整个 `@docfuse/plugins` 包；只有传入配置的插件会参与内容处理并影响构建结果。需要浏览器运行时的能力还会按页面内容加载资源；只有可执行的 Mermaid 围栏会启用 Mermaid，教程代码块里展示的 Mermaid 示例不会误加载运行时。
+包管理器会安装整个 `@canofold/plugins` 包；只有传入配置的插件会参与内容处理并影响构建结果。需要浏览器运行时的能力还会按页面内容加载资源；只有可执行的 Mermaid 围栏会启用 Mermaid，教程代码块里展示的 Mermaid 示例不会误加载运行时。
 
 常规配置使用包根入口。子路径入口仍是公共 API，适合只解析单项能力的库或工具。
 
 ## 编写一个最小插件
 
-自定义插件可以放在项目中，再从 `docfuse.config.ts` 导入。下面的完整示例为所有二级标题添加项目自己的 `data-section` 属性，不依赖 Docfuse 内部 class：
+自定义插件可以放在项目中，再从 `canofold.config.ts` 导入。下面的完整示例为所有二级标题添加项目自己的 `data-section` 属性，不依赖 Canofold 内部 class：
 
 ```js title="markdown/section-labels.mjs"
-import { defineMarkdownPlugin } from '@docfuse/markdown'
+import { defineMarkdownPlugin } from '@canofold/markdown'
 
 function markSections() {
   return (tree) => {
@@ -173,8 +173,8 @@ export function sectionLabels() {
 }
 ```
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 import { sectionLabels } from './markdown/section-labels.mjs'
 
 export default defineConfig({

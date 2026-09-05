@@ -24,7 +24,7 @@ export type MarkdownFileIconName =
   | 'deno'
   | 'diff'
   | 'docker'
-  | 'docfuse'
+  | 'canofold'
   | 'document'
   | 'environment'
   | 'git'
@@ -201,7 +201,7 @@ const languageIconNames: Record<string, MarkdownFileIconName> = {
 export function markdownFileIconName(filename: string, language = ''): MarkdownFileIconName {
   const normalized = filename.replace(/\\/g, '/').toLowerCase()
   const basename = normalized.split('/').pop() || ''
-  if (/^docfuse\.config\.(?:[cm]?[jt]s)$/.test(basename)) return 'docfuse'
+  if (/^canofold\.config\.(?:[cm]?[jt]s)$/.test(basename)) return 'canofold'
   if (/^(?:.*\/)?\.github\/workflows\/[^/]+\.ya?ml$/.test(normalized)) return 'github-actions'
   if (['npm', 'pnpm', 'yarn', 'bun', 'deno'].includes(basename)) {
     return basename as Extract<MarkdownFileIconName, 'npm' | 'pnpm' | 'yarn' | 'bun' | 'deno'>

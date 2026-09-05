@@ -75,15 +75,15 @@ export function MarkdownImage({
   const caption = Children.toArray(children).find((child): child is MarkdownReactElement => {
     if (!isValidElement(child)) return false
     const element = child as MarkdownReactElement
-    return elementTag(element) === 'figcaption' || element.props['data-df-slot'] === 'caption'
+    return elementTag(element) === 'figcaption' || element.props['data-cf-slot'] === 'caption'
   })
   const zoomLabel =
     directZoomLabel ||
-    stringProp(props, 'data-df-zoom-label', 'dataDfZoomLabel') ||
+    stringProp(props, 'data-cf-zoom-label', 'dataCfZoomLabel') ||
     DEFAULT_MARKDOWN_LABELS.zoomImage
   const closeLabel =
     directCloseLabel ||
-    stringProp(props, 'data-df-close-label', 'dataDfCloseLabel') ||
+    stringProp(props, 'data-cf-close-label', 'dataCfCloseLabel') ||
     DEFAULT_MARKDOWN_LABELS.closeImagePreview
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
@@ -109,18 +109,18 @@ export function MarkdownImage({
         loading={directLoading}
         srcSet={resolvedDirectSrcSet}
         sizes={directSizes}
-        data-df-element="image"
+        data-cf-element="image"
       />
     ) : null)
   const resolvedCaption =
-    caption ?? (directCaption ? <figcaption data-df-slot="caption">{directCaption}</figcaption> : null)
-  const className = mergeMarkdownClasses('df-media-frame', props.className)
+    caption ?? (directCaption ? <figcaption data-cf-slot="caption">{directCaption}</figcaption> : null)
+  const className = mergeMarkdownClasses('cf-media-frame', props.className)
   const { className: _className, ...rest } = markdownDomProps(props)
   if (!resolvedImage)
     return inner ? (
       <>{children}</>
     ) : (
-      <figure {...rest} className={className} data-df-component="image" data-df-slot="root">
+      <figure {...rest} className={className} data-cf-component="image" data-cf-slot="root">
         {children}
       </figure>
     )
@@ -128,10 +128,10 @@ export function MarkdownImage({
     <>
       <button
         ref={triggerRef}
-        className="df-media-zoom"
+        className="cf-media-zoom"
         type="button"
-        data-df-action="zoom-image"
-        data-df-slot="action"
+        data-cf-action="zoom-image"
+        data-cf-slot="action"
         aria-label={zoomLabel}
         aria-haspopup="dialog"
         title={zoomLabel}
@@ -141,19 +141,19 @@ export function MarkdownImage({
       </button>
       {resolvedCaption ? (
         Caption ? (
-          <Caption {...(resolvedCaption.props as Record<string, unknown>)} data-df-slot="caption">
+          <Caption {...(resolvedCaption.props as Record<string, unknown>)} data-cf-slot="caption">
             {resolvedCaption.props.children}
           </Caption>
         ) : (
-          <figcaption data-df-slot="caption">{resolvedCaption.props.children}</figcaption>
+          <figcaption data-cf-slot="caption">{resolvedCaption.props.children}</figcaption>
         )
       ) : null}
       {open ? (
         <MarkdownDialogPortal>
           <div
             ref={dialogRef}
-            className="df-image-lightbox"
-            data-df-slot="lightbox"
+            className="cf-image-lightbox"
+            data-cf-slot="lightbox"
             role="dialog"
             aria-modal="true"
             aria-label={zoomLabel}
@@ -161,18 +161,18 @@ export function MarkdownImage({
             onKeyDown={onDialogKeyDown}
           >
             <div
-              className="df-image-lightbox-backdrop"
-              data-df-action="close-image"
+              className="cf-image-lightbox-backdrop"
+              data-cf-action="close-image"
               aria-hidden="true"
               onClick={closeDialog}
             />
-            <div className="df-image-lightbox-card">
+            <div className="cf-image-lightbox-card">
               <button
                 ref={closeRef}
-                className="df-icon-button df-image-lightbox-close"
+                className="cf-icon-button cf-image-lightbox-close"
                 type="button"
-                data-df-action="close-image"
-                data-df-slot="close"
+                data-cf-action="close-image"
+                data-cf-slot="close"
                 aria-label={closeLabel}
                 onClick={closeDialog}
               >
@@ -191,12 +191,12 @@ export function MarkdownImage({
     <figure
       {...rest}
       className={className}
-      data-df-component="image"
-      data-df-slot="root"
-      data-df-island="image"
-      data-df-zoom-label={zoomLabel}
-      data-df-close-label={closeLabel}
-      data-df-island-data={serializeMarkdownNode(node)}
+      data-cf-component="image"
+      data-cf-slot="root"
+      data-cf-island="image"
+      data-cf-zoom-label={zoomLabel}
+      data-cf-close-label={closeLabel}
+      data-cf-island-data={serializeMarkdownNode(node)}
     >
       {content}
     </figure>

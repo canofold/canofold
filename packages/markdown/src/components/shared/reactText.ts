@@ -87,11 +87,11 @@ export function markdownDomProps(props: object, omitted: readonly string[] = [])
     Object.entries(props).filter(
       ([key]) =>
         !omittedKeys.has(key) &&
-        !key.startsWith('dataDf') &&
-        !key.startsWith('data-df-') &&
+        !key.startsWith('dataCf') &&
+        !key.startsWith('data-cf-') &&
         (MARKDOWN_DOM_PROP_NAMES.has(key) ||
           key.startsWith('aria-') ||
-          (key.startsWith('data-') && !key.startsWith('data-df-')) ||
+          (key.startsWith('data-') && !key.startsWith('data-cf-')) ||
           /^on[A-Z]/.test(key))
     )
   )

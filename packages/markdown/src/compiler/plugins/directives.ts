@@ -84,7 +84,7 @@ function summaryParagraph(node: ContainerDirective): Paragraph | undefined {
   if (!label || !isParent(label)) return undefined
   return {
     type: 'paragraph',
-    data: { hName: 'summary', hProperties: { dataDfSlot: 'summary' } },
+    data: { hName: 'summary', hProperties: { dataCfSlot: 'summary' } },
     children: label.children as PhrasingContent[]
   }
 }
@@ -100,7 +100,7 @@ function componentData(
     hName,
     hProperties: {
       ...node.data?.hProperties,
-      dataDfComponent: component,
+      dataCfComponent: component,
       ...properties
     }
   }
@@ -119,7 +119,7 @@ function intrinsicData(node: Directives, hName: string, properties: Element['pro
 
 /**
  * Keep the authoring interface small: directives describe intent and the
- * compiler owns every `df-*` class, data attribute, slot, and ARIA detail.
+ * compiler owns every `cf-*` class, data attribute, slot, and ARIA detail.
  */
 export const remarkRichDirectives = () => {
   return (tree: Root) => {
@@ -136,13 +136,13 @@ export const remarkRichDirectives = () => {
       if (node.type === 'textDirective' && node.name === 'badge') {
         const tone = directiveAttribute(node, 'tone').toLowerCase()
         componentData(node, 'span', 'badge', {
-          className: tone && BADGE_TONES.has(tone) ? [`df-badge-${tone}`] : []
+          className: tone && BADGE_TONES.has(tone) ? [`cf-badge-${tone}`] : []
         })
         return
       }
 
       if (node.type === 'textDirective' && node.name === 'copy') {
-        componentData(node, 'span', 'copy-snippet', { dataDfValue: nodeText(node).trim() })
+        componentData(node, 'span', 'copy-snippet', { dataCfValue: nodeText(node).trim() })
         return
       }
 
@@ -155,7 +155,7 @@ export const remarkRichDirectives = () => {
           preload: preload || (node.name === 'video' ? 'metadata' : 'none'),
           title: label,
           ariaLabel: label,
-          dataDfElement: node.name,
+          dataCfElement: node.name,
           ...(node.name === 'video' && directiveAttribute(node, 'poster')
             ? { poster: directiveAttribute(node, 'poster') }
             : {})
@@ -172,7 +172,7 @@ export const remarkRichDirectives = () => {
           loading: directiveAttribute(node, 'loading') || 'lazy',
           sandbox: directiveAttribute(node, 'sandbox').split(/\s+/).filter(Boolean),
           referrerPolicy: directiveAttribute(node, 'referrerpolicy') || 'no-referrer',
-          dataDfElement: 'embed',
+          dataCfElement: 'embed',
           ...(directiveAttribute(node, 'allow') ? { allow: directiveAttribute(node, 'allow') } : {}),
           ...(Object.hasOwn(attributes, 'allowfullscreen') ? { allowFullScreen: true } : {})
         })
@@ -206,7 +206,7 @@ export const remarkRichDirectives = () => {
 
       if (node.name === 'gallery') {
         componentData(node, 'div', 'gallery', {
-          ...(directiveLabel(node) ? { dataDfGalleryLabel: directiveLabel(node) } : {})
+          ...(directiveLabel(node) ? { dataCfGalleryLabel: directiveLabel(node) } : {})
         })
         node.children = body
         return
@@ -226,9 +226,9 @@ export const remarkRichDirectives = () => {
           hName: 'a',
           hProperties: {
             ...node.data?.hProperties,
-            className: ['df-link-card'],
+            className: ['cf-link-card'],
             href,
-            dataDfSlot: 'card'
+            dataCfSlot: 'card'
           }
         }
         node.children = [...(label ? [label] : []), ...body]
@@ -237,8 +237,8 @@ export const remarkRichDirectives = () => {
 
       if (node.name === 'api') {
         componentData(node, 'section', 'api', {
-          dataDfApiMethod: directiveAttribute(node, 'method').toUpperCase(),
-          dataDfApiPath: directiveAttribute(node, 'path')
+          dataCfApiMethod: directiveAttribute(node, 'method').toUpperCase(),
+          dataCfApiPath: directiveAttribute(node, 'path')
         })
         node.children = body
         return
@@ -250,7 +250,7 @@ export const remarkRichDirectives = () => {
           hName: 'div',
           hProperties: {
             ...node.data?.hProperties,
-            dataDfApiResponse: directiveLabel(node)
+            dataCfApiResponse: directiveLabel(node)
           }
         }
         node.children = body
@@ -298,7 +298,7 @@ function normalizeFileTreeList(list: Element) {
     }).trim()
     if (nested) {
       normalizeFileTreeList(nested)
-      child.properties = { ...child.properties, dataDfFileTreeBranch: '' }
+      child.properties = { ...child.properties, dataCfFileTreeBranch: '' }
       child.children = [
         element('button', { type: 'button', ariaExpanded: 'true' }, [
           { type: 'text', value: label.replace(/\/$/, '') }
@@ -306,7 +306,7 @@ function normalizeFileTreeList(list: Element) {
         nested
       ]
     } else {
-      child.properties = { ...child.properties, dataDfFileTreeFile: '' }
+      child.properties = { ...child.properties, dataCfFileTreeFile: '' }
       child.children = [{ type: 'text', value: label }]
     }
   }
@@ -346,29 +346,29 @@ function apiPath(path: string): ElementContent[] {
   const parts = path.split(/(:[A-Za-z0-9_-]+)/g).filter(Boolean)
   return parts.map((part) =>
     part.startsWith(':')
-      ? element('span', { className: ['df-api-path-param'] }, [{ type: 'text', value: part }])
+      ? element('span', { className: ['cf-api-path-param'] }, [{ type: 'text', value: part }])
       : ({ type: 'text', value: part } as Text)
   )
 }
 
 function responseTone(status: string) {
   const code = Number.parseInt(status, 10)
-  if (code >= 200 && code < 300) return 'df-badge-success'
-  if (code >= 400) return 'df-badge-danger'
+  if (code >= 200 && code < 300) return 'cf-badge-success'
+  if (code >= 400) return 'cf-badge-danger'
   return ''
 }
 
 function normalizeApi(node: Element) {
-  const method = String(node.properties.dataDfApiMethod ?? '').trim()
-  const path = String(node.properties.dataDfApiPath ?? '').trim()
-  delete node.properties.dataDfApiMethod
-  delete node.properties.dataDfApiPath
+  const method = String(node.properties.dataCfApiMethod ?? '').trim()
+  const path = String(node.properties.dataCfApiPath ?? '').trim()
+  delete node.properties.dataCfApiMethod
+  delete node.properties.dataCfApiPath
   const children: ElementContent[] = []
   if (method || path) {
     children.push(
-      element('div', { className: ['df-api-endpoint'] }, [
+      element('div', { className: ['cf-api-endpoint'] }, [
         ...(method
-          ? [element('span', { className: ['df-api-method'] }, [{ type: 'text', value: method }])]
+          ? [element('span', { className: ['cf-api-method'] }, [{ type: 'text', value: method }])]
           : []),
         ...(path ? [element('span', {}, apiPath(path))] : [])
       ])
@@ -379,13 +379,13 @@ function normalizeApi(node: Element) {
       children.push(child)
       continue
     }
-    const status = String(child.properties.dataDfApiResponse ?? '').trim()
+    const status = String(child.properties.dataCfApiResponse ?? '').trim()
     if (status) {
-      delete child.properties.dataDfApiResponse
-      addClass(child, 'df-api-response')
+      delete child.properties.dataCfApiResponse
+      addClass(child, 'cf-api-response')
       const tone = responseTone(status)
       child.children.unshift(
-        element('span', { className: ['df-badge', ...(tone ? [tone] : [])], dataDfComponent: 'badge' }, [
+        element('span', { className: ['cf-badge', ...(tone ? [tone] : [])], dataCfComponent: 'badge' }, [
           { type: 'text', value: status }
         ])
       )
@@ -393,7 +393,7 @@ function normalizeApi(node: Element) {
       continue
     }
     if (child.tagName === 'table') {
-      children.push(element('div', { className: ['df-api-params'] }, [child]))
+      children.push(element('div', { className: ['cf-api-params'] }, [child]))
       continue
     }
     children.push(child)
@@ -405,7 +405,7 @@ function normalizeApi(node: Element) {
 export const rehypeRichDirectives = () => {
   return (tree: HastRoot) => {
     visit(tree, 'element', (node) => {
-      const component = String(node.properties.dataDfComponent ?? '')
+      const component = String(node.properties.dataCfComponent ?? '')
       if (component === 'file-tree') normalizeFileTree(node)
       if (component === 'gallery') normalizeGallery(node)
       if (component === 'api') normalizeApi(node)
@@ -544,7 +544,7 @@ export function rehypeStepItem(state: State, node: StepItem): Element {
         {
           type: 'element',
           tagName: 'strong',
-          properties: { className: ['df-step-title'] },
+          properties: { className: ['cf-step-title'] },
           children: [{ type: 'text', value: node.data.stepTitle }]
         },
         ...state.all(node)
@@ -553,7 +553,7 @@ export function rehypeStepItem(state: State, node: StepItem): Element {
   return {
     type: 'element',
     tagName: 'li',
-    properties: { dataDfSlot: 'item' },
+    properties: { dataCfSlot: 'item' },
     children
   }
 }
@@ -564,9 +564,9 @@ export function rehypeStepGroup(state: State, node: StepGroup): Element {
     type: 'element',
     tagName: 'ol',
     properties: {
-      className: ['df-steps'],
-      dataDfComponent: 'steps',
-      dataDfSlot: 'root',
+      className: ['cf-steps'],
+      dataCfComponent: 'steps',
+      dataCfSlot: 'root',
       ...(label ? { ariaLabel: label } : {})
     },
     children: state.all(node)
@@ -580,10 +580,10 @@ export function rehypeTabItem(state: State, node: TabItem): Element {
     type: 'element',
     tagName: 'div',
     properties: {
-      className: ['df-tabs-content'],
+      className: ['cf-tabs-content'],
       role: 'tabpanel',
-      dataDfTabPanel: data.tabValue,
-      dataDfSlot: 'panel',
+      dataCfTabPanel: data.tabValue,
+      dataCfSlot: 'panel',
       tabIndex: 0,
       hidden: data.tabIndex !== 0
     },
@@ -605,12 +605,12 @@ export function rehypeTabGroup(state: State, node: TabGroup): Element {
       properties: {
         type: 'button',
         role: 'tab',
-        className: ['df-tabs-trigger'],
+        className: ['cf-tabs-trigger'],
         ariaSelected: active ? 'true' : 'false',
         tabIndex: active ? 0 : -1,
-        dataDfTab: itemData.tabValue,
-        ...(isCodeGroup && itemData.tabLanguage ? { dataDfLanguage: itemData.tabLanguage } : {}),
-        dataDfSlot: 'tab',
+        dataCfTab: itemData.tabValue,
+        ...(isCodeGroup && itemData.tabLanguage ? { dataCfLanguage: itemData.tabLanguage } : {}),
+        dataCfSlot: 'tab',
         title: tabLabel
       },
       children: isCodeGroup
@@ -619,9 +619,9 @@ export function rehypeTabGroup(state: State, node: TabGroup): Element {
               type: 'element',
               tagName: 'span',
               properties: {
-                className: ['df-code-file-icon'],
-                dataDfFileIcon: markdownFileIconName(tabLabel, tabLanguage),
-                dataDfFileKind: markdownFileKind(tabLabel, tabLanguage),
+                className: ['cf-code-file-icon'],
+                dataCfFileIcon: markdownFileIconName(tabLabel, tabLanguage),
+                dataCfFileKind: markdownFileKind(tabLabel, tabLanguage),
                 ariaHidden: 'true'
               },
               children: []
@@ -629,7 +629,7 @@ export function rehypeTabGroup(state: State, node: TabGroup): Element {
             {
               type: 'element',
               tagName: 'span',
-              properties: { className: ['df-code-tab-label'] },
+              properties: { className: ['cf-code-tab-label'] },
               children: [{ type: 'text', value: tabLabel }]
             }
           ]
@@ -641,20 +641,20 @@ export function rehypeTabGroup(state: State, node: TabGroup): Element {
     type: 'element',
     tagName: 'div',
     properties: {
-      className: ['df-tabs', ...(isCodeGroup ? ['df-code-group'] : [])],
-      dataDfComponent: isCodeGroup ? 'code-group' : 'tabs',
-      dataDfSlot: 'root',
-      dataDfBehavior: 'tabs'
+      className: ['cf-tabs', ...(isCodeGroup ? ['cf-code-group'] : [])],
+      dataCfComponent: isCodeGroup ? 'code-group' : 'tabs',
+      dataCfSlot: 'root',
+      dataCfBehavior: 'tabs'
     },
     children: [
       {
         type: 'element',
         tagName: 'div',
         properties: {
-          className: ['df-tabs-list'],
+          className: ['cf-tabs-list'],
           role: 'tablist',
           ariaLabel: String(data.tabGroupLabel ?? 'Tabs'),
-          dataDfSlot: 'tab-list'
+          dataCfSlot: 'tab-list'
         },
         children: triggers
       },
@@ -668,21 +668,21 @@ export const remarkCallouts = () => {
   return (tree: Root) => {
     visit(tree, (node) => {
       if (node.type !== 'containerDirective' || !CALLOUTS.has(node.name)) return
-      const className = ['df-callout', `df-callout-${node.name}`]
+      const className = ['cf-callout', `cf-callout-${node.name}`]
       const labelChild = node.children.find(
         (child): child is typeof child & Parent => Boolean(child.data?.directiveLabel) && isParent(child)
       )
       const rest = node.children.filter((child) => child !== labelChild)
       const body: CalloutPart = {
         type: 'calloutBody',
-        data: { hName: 'div', hProperties: { className: ['df-callout-body'], dataDfSlot: 'content' } },
+        data: { hName: 'div', hProperties: { className: ['cf-callout-body'], dataCfSlot: 'content' } },
         children: rest
       }
       const children: CalloutPart[] = labelChild
         ? [
             {
               type: 'calloutTitle' as const,
-              data: { hName: 'div', hProperties: { className: ['df-callout-title'], dataDfSlot: 'title' } },
+              data: { hName: 'div', hProperties: { className: ['cf-callout-title'], dataCfSlot: 'title' } },
               children: labelChild.children as RootContent[]
             },
             body
@@ -690,7 +690,7 @@ export const remarkCallouts = () => {
         : [body]
       node.data = {
         hName: 'div',
-        hProperties: { className, dataCallout: node.name, dataDfComponent: 'callout', dataDfSlot: 'root' }
+        hProperties: { className, dataCallout: node.name, dataCfComponent: 'callout', dataCfSlot: 'root' }
       }
       node.children = children
     })

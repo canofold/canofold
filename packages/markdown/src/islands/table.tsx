@@ -10,17 +10,17 @@ export function hydrate(root: HTMLElement, options?: MarkdownIslandRenderOptions
     withIslandOptions(
       <MarkdownTable
         className={root.className}
-        tableTitle={root.dataset.dfTableTitle}
-        copyLabel={root.dataset.dfCopyLabel}
-        copyFailureLabel={root.dataset.dfCopyFailureLabel}
-        downloadLabel={root.dataset.dfDownloadLabel}
-        zoomLabel={root.dataset.dfZoomLabel}
-        closeLabel={root.dataset.dfCloseLabel}
-        sortLabel={root.dataset.dfSortLabel}
-        serializedTable={root.dataset.dfTable}
+        tableTitle={root.dataset.cfTableTitle}
+        copyLabel={root.dataset.cfCopyLabel}
+        copyFailureLabel={root.dataset.cfCopyFailureLabel}
+        downloadLabel={root.dataset.cfDownloadLabel}
+        zoomLabel={root.dataset.cfZoomLabel}
+        closeLabel={root.dataset.cfCloseLabel}
+        sortLabel={root.dataset.cfSortLabel}
+        serializedTable={root.dataset.cfTable}
         inner
       >
-        {readSerializedNode(root.dataset.dfTable, options)}
+        {readSerializedNode(root.dataset.cfTable, options)}
       </MarkdownTable>,
       options
     )

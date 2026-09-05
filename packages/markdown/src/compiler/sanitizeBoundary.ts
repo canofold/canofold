@@ -3,7 +3,7 @@ import type { Options as SanitizeOptions } from 'rehype-sanitize'
 import type { Plugin } from 'unified'
 import { visit } from 'unist-util-visit'
 
-const MARKER_PROPERTY = 'dataDfCompilerBoundary'
+const MARKER_PROPERTY = 'dataCfCompilerBoundary'
 
 interface CompilerElementSnapshot {
   tagName: string
@@ -27,8 +27,8 @@ function isCompilerOwned(node: Element) {
   return (
     properties.id !== undefined ||
     properties.name !== undefined ||
-    Object.keys(properties).some((name) => name.startsWith('dataDf')) ||
-    classNames(properties).some((name) => name.startsWith('df-'))
+    Object.keys(properties).some((name) => name.startsWith('dataCf')) ||
+    classNames(properties).some((name) => name.startsWith('cf-'))
   )
 }
 
@@ -41,7 +41,7 @@ function isCompilerOwned(node: Element) {
  * temporary bridge, and only the exact compiler snapshots are restored.
  */
 export function createCompilerSanitizeBoundary(defaultSchema: SanitizeOptions): CompilerSanitizeBoundary {
-  const prefix = `df-${globalThis.crypto.randomUUID()}-`
+  const prefix = `cf-${globalThis.crypto.randomUUID()}-`
   const snapshots = new Map<string, CompilerElementSnapshot>()
   let sequence = 0
   const markerPattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\d+$`)

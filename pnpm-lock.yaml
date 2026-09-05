@@ -16,7 +16,7 @@ importers:
 
   .:
     devDependencies:
-      '@docfuse/plugins':
+      '@canofold/plugins':
         specifier: workspace:*
         version: link:packages/plugins
       '@playwright/test':
@@ -28,9 +28,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.1.11
         version: 4.1.11(vitest@4.1.11)
-      docfuse:
+      canofold:
         specifier: workspace:*
-        version: link:packages/docfuse
+        version: link:packages/canofold
       jsdom:
         specifier: 24.1.3
         version: 24.1.3
@@ -44,9 +44,9 @@ importers:
         specifier: ^4.1.11
         version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(jsdom@24.1.3)(vite@6.4.3(@types/node@22.20.0)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.4))
 
-  packages/docfuse:
+  packages/canofold:
     dependencies:
-      '@docfuse/markdown':
+      '@canofold/markdown':
         specifier: workspace:*
         version: link:../markdown
       chokidar:
@@ -201,7 +201,7 @@ importers:
 
   packages/plugins:
     dependencies:
-      '@docfuse/markdown':
+      '@canofold/markdown':
         specifier: workspace:*
         version: link:../markdown
       fflate:
@@ -235,9 +235,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.5
         version: 19.2.5(@types/react@19.2.18)
-      docfuse:
+      canofold:
         specifier: workspace:*
-        version: link:../docfuse
+        version: link:../canofold
       esbuild:
         specifier: 0.28.1
         version: 0.28.1

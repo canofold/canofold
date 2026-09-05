@@ -5,9 +5,9 @@ export function MarkdownFileIcon({ filename, language }: { filename: string; lan
   const icon = markdownFileIconName(filename, language)
   return (
     <span
-      className="df-code-file-icon"
-      data-df-file-icon={icon}
-      data-df-file-kind={kind}
+      className="cf-code-file-icon"
+      data-cf-file-icon={icon}
+      data-cf-file-kind={kind}
       aria-hidden="true"
     />
   )

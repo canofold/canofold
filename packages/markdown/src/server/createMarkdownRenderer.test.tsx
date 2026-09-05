@@ -79,8 +79,8 @@ describe('Markdown server renderer', () => {
     const result = await renderer.render('# Architecture\n\n```ts\nconst ready = true\n```')
     const html = renderToStaticMarkup(result.content)
 
-    expect(html).toContain('data-df-component="markdown"')
-    expect(html).toContain('data-df-component="code-block"')
+    expect(html).toContain('data-cf-component="markdown"')
+    expect(html).toContain('data-cf-component="code-block"')
     expect(result.assets.behaviors).toContain('code-toolbar')
     expect(result).not.toHaveProperty('document')
   })
@@ -127,9 +127,9 @@ describe('Markdown server renderer', () => {
     })
     const html = renderToStaticMarkup(result.content)
 
-    expect(html).toContain('class="df-content"')
-    expect(html).toContain('data-df-component="markdown"')
-    expect(html).toContain('data-df-element="heading"')
+    expect(html).toContain('class="cf-content"')
+    expect(html).toContain('data-cf-component="markdown"')
+    expect(html).toContain('data-cf-element="heading"')
     expect(html).toContain('data-host-badge')
     expect(html).toContain('Stable')
   })
@@ -157,33 +157,33 @@ describe('Markdown server renderer', () => {
 <MarkdownCopySnippet value="pnpm test" />`)
     const html = renderToStaticMarkup(result.content)
 
-    expect(html).toContain('data-df-component="callout"')
-    expect(html).toContain('data-df-component="tabs"')
-    expect(html).toContain('data-df-component="steps"')
-    expect(html).toContain('data-df-component="copy-snippet"')
+    expect(html).toContain('data-cf-component="callout"')
+    expect(html).toContain('data-cf-component="tabs"')
+    expect(html).toContain('data-cf-component="steps"')
+    expect(html).toContain('data-cf-component="copy-snippet"')
   })
 
   it('keeps native MDX Tabs and File Tree semantic without serialized React payloads', async () => {
     const renderer = createMarkdownRenderer()
     const result = await renderer.renderMdx(`<MarkdownTabs>
-  <div role="tablist"><button role="tab" data-df-tab="one">One</button></div>
-  <div role="tabpanel" data-df-tab-panel="one">Panel</div>
+  <div role="tablist"><button role="tab" data-cf-tab="one">One</button></div>
+  <div role="tabpanel" data-cf-tab-panel="one">Panel</div>
 </MarkdownTabs>
 <MarkdownFileTree>
-  <ul><li data-df-file-tree-file="">README.md</li></ul>
+  <ul><li data-cf-file-tree-file="">README.md</li></ul>
 </MarkdownFileTree>`)
     const html = renderToStaticMarkup(result.content)
 
-    expect(html).toContain('data-df-behavior="tabs"')
-    expect(html).toContain('data-df-behavior="file-tree"')
-    expect(html).not.toContain('data-df-island-data=')
+    expect(html).toContain('data-cf-behavior="tabs"')
+    expect(html).toContain('data-cf-behavior="file-tree"')
+    expect(html).not.toContain('data-cf-island-data=')
     expect(result.assets.behaviors).toEqual(expect.arrayContaining(['tabs', 'file-tree']))
   })
 
   it('supports custom React overrides for named Markdown components', async () => {
     const renderer = createMarkdownRenderer()
     const result = await renderer.render(
-      '<span data-df-component="copy-snippet" data-df-value="pnpm test">pnpm test</span>',
+      '<span data-cf-component="copy-snippet" data-cf-value="pnpm test">pnpm test</span>',
       {
         markdown: { html: 'trusted' },
         components: {
@@ -227,7 +227,7 @@ describe('Markdown server renderer', () => {
         '',
         '![Architecture](/architecture.png "Overview")',
         '',
-        '<span data-df-component="copy-snippet" data-df-value="pnpm install">Install</span>'
+        '<span data-cf-component="copy-snippet" data-cf-value="pnpm install">Install</span>'
       ].join('\n'),
       {
         markdown: { html: 'trusted' },

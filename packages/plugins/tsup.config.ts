@@ -22,7 +22,7 @@ export default defineConfig([
     // not create a second layer of generated shared chunks and source maps.
     splitting: false,
     sourcemap: false,
-    external: ['@docfuse/markdown', 'docfuse', 'katex', 'pagefind', 'rehype-katex', 'remark-math']
+    external: ['@canofold/markdown', 'canofold', 'katex', 'pagefind', 'rehype-katex', 'remark-math']
   },
   {
     entry: {
@@ -36,7 +36,7 @@ export default defineConfig([
     dts: false,
     clean: false,
     // Client shells stay self-contained. Large package runtimes are declared as
-    // plugin resources and copied by the Docfuse host instead of entering npm tarballs.
+    // plugin resources and copied by the Canofold host instead of entering npm tarballs.
     splitting: false,
     sourcemap: false
   }

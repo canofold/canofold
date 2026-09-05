@@ -9,7 +9,7 @@ function isDevState(value) {
   return (
     value !== null &&
     typeof value === 'object' &&
-    (value.package === 'markdown' || value.package === 'docfuse') &&
+    (value.package === 'markdown' || value.package === 'canofold') &&
     (value.status === 'building' || value.status === 'ready' || value.status === 'error') &&
     Number.isInteger(value.generation) &&
     value.generation >= 0 &&
@@ -96,7 +96,7 @@ export async function startIncrementalBuildState({
     if (status === nextStatus) return persistState()
     status = nextStatus
     await persistState()
-    log(`[docfuse:${packageName}] ${status} generation ${generation}`)
+    log(`[canofold:${packageName}] ${status} generation ${generation}`)
   }
 
   const cancelSettlement = () => {
@@ -126,7 +126,7 @@ export async function startIncrementalBuildState({
       if (status !== 'building') {
         generation += 1
         status = 'building'
-        log(`[docfuse:${packageName}] building generation ${generation}`)
+        log(`[canofold:${packageName}] building generation ${generation}`)
         void persistState().catch(onError)
       }
       activeTasks.add(task)
@@ -283,9 +283,9 @@ export function createPackageBuildScheduler({
   }
 }
 
-export function runCommand(command, args, { cwd, env = process.env } = {}) {
+export function runCommand(command, args, { cwd } = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, env, stdio: 'inherit' })
+    const child = spawn(command, args, { cwd, stdio: 'inherit' })
     child.once('error', reject)
     child.once('exit', (code, signal) => {
       if (code === 0) {
@@ -340,7 +340,7 @@ export async function startPackageBuildWatcher({
       currentStatus = status
       currentGeneration = generation
       await persistState()
-      log(`[docfuse:${packageName}] ${status} generation ${generation}`)
+      log(`[canofold:${packageName}] ${status} generation ${generation}`)
     }
   })
   await persistState()

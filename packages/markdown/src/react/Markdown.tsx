@@ -23,10 +23,10 @@ export interface MarkdownRootProps extends Omit<
 > {
   /** Render element. Defaults to `div`. */
   as?: ElementType
-  /** Stable root marker used by Docfuse Islands and host automation. */
-  'data-df-root'?: string
+  /** Stable root marker used by Canofold Islands and host automation. */
+  'data-cf-root'?: string
   /** @internal Identifies whether React or the static enhancer owns interactions. */
-  'data-df-runtime'?: 'react' | 'static'
+  'data-cf-runtime'?: 'react' | 'static'
   classNames?: MarkdownClassNames
   /** Local visual slots used by the React component map. */
   slots?: MarkdownSlots
@@ -74,7 +74,7 @@ export function MarkdownRoot({
   slots,
   urlTransform,
   children,
-  'data-df-root': rootMarker = 'markdown',
+  'data-cf-root': rootMarker = 'markdown',
   ...props
 }: MarkdownRootContentProps) {
   return createElement(MarkdownUrlTransformProvider, {
@@ -85,10 +85,10 @@ export function MarkdownRoot({
         Tag,
         {
           ...props,
-          className: cx('df-content', classNames?.root, className),
-          'data-df-root': rootMarker,
-          'data-df-runtime': props['data-df-runtime'] ?? 'react',
-          'data-df-component': 'markdown'
+          className: cx('cf-content', classNames?.root, className),
+          'data-cf-root': rootMarker,
+          'data-cf-runtime': props['data-cf-runtime'] ?? 'react',
+          'data-cf-component': 'markdown'
         },
         children
       )
@@ -221,10 +221,10 @@ export function Markdown({
 
   if (!preparedIsCurrent) {
     if (retainPrevious && state.prepared) {
-      return <MarkdownDocument document={state.prepared.document} data-df-runtime="react" {...props} />
+      return <MarkdownDocument document={state.prepared.document} data-cf-runtime="react" {...props} />
     }
     return fallback
   }
   if (!state.prepared) return fallback
-  return <MarkdownDocument document={state.prepared.document} data-df-runtime="react" {...props} />
+  return <MarkdownDocument document={state.prepared.document} data-cf-runtime="react" {...props} />
 }

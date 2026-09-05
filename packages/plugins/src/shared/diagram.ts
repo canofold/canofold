@@ -60,8 +60,8 @@ const DIAGRAM_LABELS: Record<'en' | 'zh', DiagramLabels> = {
 function labelsFromFile(file: unknown) {
   if (!file || typeof file !== 'object' || !('data' in file)) return DIAGRAM_LABELS.en
   const data = file.data
-  if (!data || typeof data !== 'object' || !('docfuseLocale' in data)) return DIAGRAM_LABELS.en
-  const locale = typeof data.docfuseLocale === 'string' ? data.docfuseLocale.toLowerCase() : ''
+  if (!data || typeof data !== 'object' || !('canofoldLocale' in data)) return DIAGRAM_LABELS.en
+  const locale = typeof data.canofoldLocale === 'string' ? data.canofoldLocale.toLowerCase() : ''
   return locale === 'zh' || locale.startsWith('zh-') ? DIAGRAM_LABELS.zh : DIAGRAM_LABELS.en
 }
 
@@ -87,7 +87,7 @@ function action(name: string, label: string, properties: Element['properties'] =
   return {
     type: 'element',
     tagName: 'button',
-    properties: { type: 'button', dataDfDiagramAction: name, ariaLabel: label, ...properties },
+    properties: { type: 'button', dataCfDiagramAction: name, ariaLabel: label, ...properties },
     children: [{ type: 'text', value: label }]
   }
 }
@@ -96,7 +96,7 @@ function zoomControl(name: 'zoom-out' | 'zoom-reset' | 'zoom-in', label: string)
   return {
     type: 'element',
     tagName: 'button',
-    properties: { type: 'button', dataDfDiagramAction: name, ariaLabel: label, title: label },
+    properties: { type: 'button', dataCfDiagramAction: name, ariaLabel: label, title: label },
     children: [{ type: 'text', value: label }]
   }
 }
@@ -116,7 +116,7 @@ export function diagramFence(options: DiagramFenceOptions) {
             type: 'element',
             tagName: 'img',
             properties: {
-              className: ['df-diagram-img'],
+              className: ['cf-diagram-img'],
               src: imageUrl,
               alt: labels.imageAlt(options.kind),
               loading: 'lazy'
@@ -126,7 +126,7 @@ export function diagramFence(options: DiagramFenceOptions) {
         : {
             type: 'element',
             tagName: 'div',
-            properties: { className: ['df-diagram-placeholder'] },
+            properties: { className: ['cf-diagram-placeholder'] },
             children: [{ type: 'text', value: labels.loadingPreview }]
           }
 
@@ -134,31 +134,31 @@ export function diagramFence(options: DiagramFenceOptions) {
         type: 'element',
         tagName: 'figure',
         properties: {
-          className: ['df-diagram-window'],
-          dataDfPluginDiagram: options.kind,
-          dataDfSource: fence.source,
-          ...(options.moduleUrl ? { dataDfModuleUrl: options.moduleUrl } : {})
+          className: ['cf-diagram-window'],
+          dataCfPluginDiagram: options.kind,
+          dataCfSource: fence.source,
+          ...(options.moduleUrl ? { dataCfModuleUrl: options.moduleUrl } : {})
         },
         children: [
           {
             type: 'element',
             tagName: 'figcaption',
-            properties: { className: ['df-diagram-toolbar'] },
+            properties: { className: ['cf-diagram-toolbar'] },
             children: [
               {
                 type: 'element',
                 tagName: 'span',
-                properties: { className: ['df-diagram-title'] },
+                properties: { className: ['cf-diagram-title'] },
                 children: [{ type: 'text', value: options.filename(fence.language) }]
               },
               {
                 type: 'element',
                 tagName: 'span',
-                properties: { className: ['df-diagram-actions'] },
+                properties: { className: ['cf-diagram-actions'] },
                 children: [
                   action('copy', labels.copy),
-                  action('source', labels.source, { dataDfDiagramPreviewLabel: labels.preview }),
-                  action('expand', labels.expand, { dataDfDiagramCloseLabel: labels.close })
+                  action('source', labels.source, { dataCfDiagramPreviewLabel: labels.preview }),
+                  action('expand', labels.expand, { dataCfDiagramCloseLabel: labels.close })
                 ]
               }
             ]
@@ -166,18 +166,18 @@ export function diagramFence(options: DiagramFenceOptions) {
           {
             type: 'element',
             tagName: 'div',
-            properties: { className: ['df-diagram-stage'] },
+            properties: { className: ['cf-diagram-stage'] },
             children: [
               {
                 type: 'element',
                 tagName: 'div',
-                properties: { className: ['df-diagram-preview'] },
+                properties: { className: ['cf-diagram-preview'] },
                 children: [preview]
               },
               {
                 type: 'element',
                 tagName: 'pre',
-                properties: { className: ['df-diagram-source'], hidden: true },
+                properties: { className: ['cf-diagram-source'], hidden: true },
                 children: [
                   {
                     type: 'element',
@@ -193,7 +193,7 @@ export function diagramFence(options: DiagramFenceOptions) {
                       type: 'element' as const,
                       tagName: 'div',
                       properties: {
-                        className: ['df-diagram-zoom-controls'],
+                        className: ['cf-diagram-zoom-controls'],
                         role: 'group',
                         ariaLabel: labels.controls
                       },

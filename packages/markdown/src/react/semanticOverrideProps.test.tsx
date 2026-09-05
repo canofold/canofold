@@ -7,9 +7,9 @@ describe('semanticOverrideProps', () => {
     const code = semanticOverrideProps(
       'code-block',
       {
-        'data-df-language': 'ts',
-        dataDfCopyLabel: 'Copy code',
-        'data-df-copy-failure-label': 'Copy failed'
+        'data-cf-language': 'ts',
+        dataCfCopyLabel: 'Copy code',
+        'data-cf-copy-failure-label': 'Copy failed'
       },
       createElement('code', null, 'const ready = true')
     )
@@ -22,7 +22,7 @@ describe('semanticOverrideProps', () => {
 
     const snippet = semanticOverrideProps(
       'copy-snippet',
-      { dataDfValue: 'pnpm test', 'data-df-copy-label': 'Copy command' },
+      { dataCfValue: 'pnpm test', 'data-cf-copy-label': 'Copy command' },
       'fallback'
     )
     expect(snippet).toMatchObject({ value: 'pnpm test', copyLabel: 'Copy command' })
@@ -30,9 +30,9 @@ describe('semanticOverrideProps', () => {
     const table = semanticOverrideProps(
       'table',
       {
-        dataDfTableTitle: 'Results',
-        'data-df-download-label': 'Download CSV',
-        dataDfSortLabel: 'Sort rows'
+        dataCfTableTitle: 'Results',
+        'data-cf-download-label': 'Download CSV',
+        dataCfSortLabel: 'Sort rows'
       },
       createElement('table')
     )
@@ -44,7 +44,7 @@ describe('semanticOverrideProps', () => {
 
     const terminal = semanticOverrideProps(
       'terminal',
-      { 'data-df-title': 'Shell', dataDfSource: 'pnpm build' },
+      { 'data-cf-title': 'Shell', dataCfSource: 'pnpm build' },
       null
     )
     expect(terminal).toMatchObject({ title: 'Shell', source: 'pnpm build' })
@@ -64,11 +64,11 @@ describe('semanticOverrideProps', () => {
         srcSet: '/cover.png 1x, /cover@2x.png 2x',
         sizes: '100vw'
       }),
-      createElement('span', { key: 'caption', 'data-df-slot': 'caption' }, 'A release cover')
+      createElement('span', { key: 'caption', 'data-cf-slot': 'caption' }, 'A release cover')
     ]
     const image = semanticOverrideProps(
       'image',
-      { dataDfZoomLabel: 'Zoom image', 'data-df-close-label': 'Close image' },
+      { dataCfZoomLabel: 'Zoom image', 'data-cf-close-label': 'Close image' },
       children
     )
 
@@ -103,10 +103,10 @@ describe('semanticOverrideProps', () => {
     const gallery = semanticOverrideProps(
       'gallery',
       {
-        dataDfGalleryLabel: 'Screenshots',
-        'data-df-previous-label': 'Previous screenshot',
-        dataDfNextLabel: 'Next screenshot',
-        'data-df-image-label': 'Screenshot'
+        dataCfGalleryLabel: 'Screenshots',
+        'data-cf-previous-label': 'Previous screenshot',
+        dataCfNextLabel: 'Next screenshot',
+        'data-cf-image-label': 'Screenshot'
       },
       createElement(
         'figure',

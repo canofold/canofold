@@ -43,33 +43,33 @@ function setupActions(figure: HTMLElement) {
   const controller = new AbortController()
   const copyTimers = new Map<HTMLButtonElement, number>()
   const dialogs = new Set<HTMLDialogElement>()
-  const source = figure.dataset.dfSource ?? ''
-  const preview = figure.querySelector<HTMLElement>('.df-diagram-preview')
-  const sourcePanel = figure.querySelector<HTMLElement>('.df-diagram-source')
-  const zoomControls = figure.querySelector<HTMLElement>('.df-diagram-zoom-controls')
-  const buttons = figure.querySelectorAll<HTMLButtonElement>('[data-df-diagram-action]')
+  const source = figure.dataset.cfSource ?? ''
+  const preview = figure.querySelector<HTMLElement>('.cf-diagram-preview')
+  const sourcePanel = figure.querySelector<HTMLElement>('.cf-diagram-source')
+  const zoomControls = figure.querySelector<HTMLElement>('.cf-diagram-zoom-controls')
+  const buttons = figure.querySelectorAll<HTMLButtonElement>('[data-cf-diagram-action]')
   const previewHidden = preview?.hidden
   const sourcePanelHidden = sourcePanel?.hidden
   const zoomControlsHidden = zoomControls?.hidden
-  const previewZoomWidth = preview?.style.getPropertyValue('--df-diagram-zoom-width') ?? ''
-  const previewZoomMaxWidth = preview?.style.getPropertyValue('--df-diagram-zoom-max-width') ?? ''
-  const previewScale = preview?.getAttribute('data-df-scale')
+  const previewZoomWidth = preview?.style.getPropertyValue('--cf-diagram-zoom-width') ?? ''
+  const previewZoomMaxWidth = preview?.style.getPropertyValue('--cf-diagram-zoom-max-width') ?? ''
+  const previewScale = preview?.getAttribute('data-cf-scale')
   let scale = 1
   const buttonStates = [...buttons].map((button) => ({
     button,
     innerHTML: button.innerHTML,
     ariaLabel: button.getAttribute('aria-label'),
     copied: button.getAttribute('data-copied'),
-    actionError: button.getAttribute('data-df-action-error'),
+    actionError: button.getAttribute('data-cf-action-error'),
     disabled: button.disabled
   }))
   const updateScale = () => {
     if (!preview) return
-    preview.style.setProperty('--df-diagram-zoom-width', `${scale * 100}%`)
-    preview.style.setProperty('--df-diagram-zoom-max-width', `${56.25 * scale}rem`)
-    preview.dataset.dfScale = String(scale)
+    preview.style.setProperty('--cf-diagram-zoom-width', `${scale * 100}%`)
+    preview.style.setProperty('--cf-diagram-zoom-max-width', `${56.25 * scale}rem`)
+    preview.dataset.cfScale = String(scale)
     for (const button of buttons) {
-      const action = button.dataset.dfDiagramAction
+      const action = button.dataset.cfDiagramAction
       if (action === 'zoom-out') button.disabled = scale <= DIAGRAM_SCALE_MIN
       if (action === 'zoom-in') button.disabled = scale >= DIAGRAM_SCALE_MAX
       if (action === 'zoom-reset') button.disabled = scale === 1
@@ -77,7 +77,7 @@ function setupActions(figure: HTMLElement) {
   }
   if (zoomControls) updateScale()
   for (const button of buttons) {
-    const action = button.dataset.dfDiagramAction as keyof typeof ICONS
+    const action = button.dataset.cfDiagramAction as keyof typeof ICONS
     button.innerHTML = ICONS[action] ?? ''
     button.addEventListener(
       'click',
@@ -105,22 +105,22 @@ function setupActions(figure: HTMLElement) {
               'aria-label',
               showingSource
                 ? (buttonStates.find((state) => state.button === button)?.ariaLabel ?? 'Show source')
-                : (button.dataset.dfDiagramPreviewLabel ?? 'Show preview')
+                : (button.dataset.cfDiagramPreviewLabel ?? 'Show preview')
             )
           } else if (action === 'expand' && preview) {
             const dialog = document.createElement('dialog')
             dialogs.add(dialog)
-            dialog.className = 'df-diagram-dialog'
+            dialog.className = 'cf-diagram-dialog'
             const close = document.createElement('button')
             close.type = 'button'
-            close.className = 'df-diagram-dialog-close'
-            close.setAttribute('aria-label', button.dataset.dfDiagramCloseLabel ?? 'Close expanded diagram')
+            close.className = 'cf-diagram-dialog-close'
+            close.setAttribute('aria-label', button.dataset.cfDiagramCloseLabel ?? 'Close expanded diagram')
             close.textContent = '×'
             close.addEventListener('click', () => dialog.close(), { signal: controller.signal })
             const expandedPreview = preview.cloneNode(true) as HTMLElement
-            expandedPreview.style.removeProperty('--df-diagram-zoom-width')
-            expandedPreview.style.removeProperty('--df-diagram-zoom-max-width')
-            delete expandedPreview.dataset.dfScale
+            expandedPreview.style.removeProperty('--cf-diagram-zoom-width')
+            expandedPreview.style.removeProperty('--cf-diagram-zoom-max-width')
+            delete expandedPreview.dataset.cfScale
             dialog.append(close, expandedPreview)
             dialog.addEventListener(
               'close',
@@ -143,8 +143,8 @@ function setupActions(figure: HTMLElement) {
             updateScale()
           }
         } catch (error) {
-          button.dataset.dfActionError = 'true'
-          console.error('[docfuse] Diagram action failed:', error)
+          button.dataset.cfActionError = 'true'
+          console.error('[canofold] Diagram action failed:', error)
         }
       },
       { signal: controller.signal }
@@ -160,12 +160,12 @@ function setupActions(figure: HTMLElement) {
     if (sourcePanel && sourcePanelHidden !== undefined) sourcePanel.hidden = sourcePanelHidden
     if (zoomControls && zoomControlsHidden !== undefined) zoomControls.hidden = zoomControlsHidden
     if (preview) {
-      if (previewZoomWidth) preview.style.setProperty('--df-diagram-zoom-width', previewZoomWidth)
-      else preview.style.removeProperty('--df-diagram-zoom-width')
-      if (previewZoomMaxWidth) preview.style.setProperty('--df-diagram-zoom-max-width', previewZoomMaxWidth)
-      else preview.style.removeProperty('--df-diagram-zoom-max-width')
-      if (previewScale == null) preview.removeAttribute('data-df-scale')
-      else preview.setAttribute('data-df-scale', previewScale)
+      if (previewZoomWidth) preview.style.setProperty('--cf-diagram-zoom-width', previewZoomWidth)
+      else preview.style.removeProperty('--cf-diagram-zoom-width')
+      if (previewZoomMaxWidth) preview.style.setProperty('--cf-diagram-zoom-max-width', previewZoomMaxWidth)
+      else preview.style.removeProperty('--cf-diagram-zoom-max-width')
+      if (previewScale == null) preview.removeAttribute('data-cf-scale')
+      else preview.setAttribute('data-cf-scale', previewScale)
     }
     buttonStates.forEach(({ button, innerHTML, ariaLabel, copied, actionError, disabled }) => {
       button.innerHTML = innerHTML
@@ -174,8 +174,8 @@ function setupActions(figure: HTMLElement) {
       else button.setAttribute('aria-label', ariaLabel)
       if (copied === null) button.removeAttribute('data-copied')
       else button.setAttribute('data-copied', copied)
-      if (actionError === null) button.removeAttribute('data-df-action-error')
-      else button.setAttribute('data-df-action-error', actionError)
+      if (actionError === null) button.removeAttribute('data-cf-action-error')
+      else button.setAttribute('data-cf-action-error', actionError)
     })
   }
 }
@@ -187,23 +187,23 @@ export function enhanceDiagrams(
 ) {
   let active = true
   let disposed = false
-  const figures = Array.from(root.querySelectorAll<HTMLElement>(`[data-df-plugin-diagram="${kind}"]`)).filter(
-    (figure) => figure.dataset.dfEnhanced !== 'true'
+  const figures = Array.from(root.querySelectorAll<HTMLElement>(`[data-cf-plugin-diagram="${kind}"]`)).filter(
+    (figure) => figure.dataset.cfEnhanced !== 'true'
   )
   const renderErrorStates = figures.map(
-    (figure) => [figure, figure.getAttribute('data-df-render-error')] as const
+    (figure) => [figure, figure.getAttribute('data-cf-render-error')] as const
   )
   const cleanups: Array<() => void> = []
   const renders: Promise<void>[] = []
   for (const figure of figures) {
-    figure.dataset.dfEnhanced = 'true'
+    figure.dataset.cfEnhanced = 'true'
     cleanups.push(setupActions(figure))
     if (render) {
       renders.push(
         render(figure).catch((error: unknown) => {
           if (!active) return
-          figure.dataset.dfRenderError = 'true'
-          console.error(`[docfuse] ${kind} render failed:`, error)
+          figure.dataset.cfRenderError = 'true'
+          console.error(`[canofold] ${kind} render failed:`, error)
         })
       )
     }
@@ -214,9 +214,9 @@ export function enhanceDiagrams(
     active = false
     cleanups.reverse().forEach((cleanup) => cleanup())
     renderErrorStates.forEach(([figure, renderError]) => {
-      delete figure.dataset.dfEnhanced
-      if (renderError === null) figure.removeAttribute('data-df-render-error')
-      else figure.setAttribute('data-df-render-error', renderError)
+      delete figure.dataset.cfEnhanced
+      if (renderError === null) figure.removeAttribute('data-cf-render-error')
+      else figure.setAttribute('data-cf-render-error', renderError)
     })
   }
   return Object.assign(dispose, {

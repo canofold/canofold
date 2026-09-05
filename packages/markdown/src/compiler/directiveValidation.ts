@@ -126,7 +126,7 @@ function unexpectedAttributes(
   }
 }
 
-/** Validate the public Docfuse directive grammar and explicitly declared plugin directives. */
+/** Validate the public Canofold directive grammar and explicitly declared plugin directives. */
 export function collectRichDirectiveIssues(
   tree: Root,
   pluginDirectiveNames: ReadonlySet<string> = new Set()

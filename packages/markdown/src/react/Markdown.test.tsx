@@ -40,11 +40,11 @@ describe('Markdown React entry', () => {
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('data-df-root="markdown"')
-    expect(html).toContain('data-df-component="markdown"')
-    expect(html).toContain('class="df-content"')
-    expect(html).toContain('<h1 data-df-element="heading" id="title">Title</h1>')
-    expect(html).toContain('<code data-df-element="inline-code">inline code</code>')
+    expect(html).toContain('data-cf-root="markdown"')
+    expect(html).toContain('data-cf-component="markdown"')
+    expect(html).toContain('class="cf-content"')
+    expect(html).toContain('<h1 data-cf-element="heading" id="title">Title</h1>')
+    expect(html).toContain('<code data-cf-element="inline-code">inline code</code>')
   })
 
   it('keeps the generated footnote label visually hidden', async () => {
@@ -53,7 +53,7 @@ describe('Markdown React entry', () => {
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('id="footnote-label" class="sr-only df-sr-only"')
+    expect(html).toContain('id="footnote-label" class="sr-only cf-sr-only"')
     expect(html).toContain('data-footnote-ref="true"')
     expect(html).toContain('data-footnote-backref=""')
   })
@@ -91,7 +91,7 @@ describe('Markdown React entry', () => {
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('class="df-content markdown-theme article-shell"')
+    expect(html).toContain('class="cf-content markdown-theme article-shell"')
   })
 
   it('renders core blocks from HAST as React elements', async () => {
@@ -123,18 +123,18 @@ describe('Markdown React entry', () => {
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('class="df-table-window"')
-    expect(html).toContain('data-df-component="table"')
-    expect(html).toContain('data-df-component="callout"')
-    expect(html).toContain('class="lucide lucide-circle-check df-callout-icon"')
-    expect(html).toContain('class="df-code"')
-    expect(html).toContain('data-df-component="code-block"')
+    expect(html).toContain('class="cf-table-window"')
+    expect(html).toContain('data-cf-component="table"')
+    expect(html).toContain('data-cf-component="callout"')
+    expect(html).toContain('class="lucide lucide-circle-check cf-callout-icon"')
+    expect(html).toContain('class="cf-code"')
+    expect(html).toContain('data-cf-component="code-block"')
     expect(html).toContain('class="language-ts"')
     expect(html).toContain('>const</span>')
-    expect(html).toContain('class="df-tabs"')
-    expect(html).toContain('data-df-component="tabs"')
+    expect(html).toContain('class="cf-tabs"')
+    expect(html).toContain('data-cf-component="tabs"')
     expect(html).toContain('Use pnpm.')
-    expect(html).toContain('data-df-root="markdown"')
+    expect(html).toContain('data-cf-root="markdown"')
   })
 
   it('applies element classNames without replacing stable contracts', async () => {
@@ -148,9 +148,9 @@ describe('Markdown React entry', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('class="doc-heading"')
-    expect(html).toContain('data-df-element="heading"')
+    expect(html).toContain('data-cf-element="heading"')
     expect(html).toContain('class="doc-paragraph"')
-    expect(html).toContain('data-df-element="paragraph"')
+    expect(html).toContain('data-cf-element="paragraph"')
   })
 
   it('appends component className without removing required base classes', () => {
@@ -175,10 +175,10 @@ describe('Markdown React entry', () => {
       </>
     )
 
-    expect(html).toContain('class="df-code brand-code"')
-    expect(html).toContain('class="df-terminal brand-terminal"')
-    expect(html).toContain('class="df-media-frame brand-image"')
-    expect(html).toContain('class="df-table-window brand-table"')
+    expect(html).toContain('class="cf-code brand-code"')
+    expect(html).toContain('class="cf-terminal brand-terminal"')
+    expect(html).toContain('class="cf-media-frame brand-image"')
+    expect(html).toContain('class="cf-table-window brand-table"')
   })
 
   it('maps supported semantic elements to stable React customization hooks', async () => {
@@ -213,17 +213,17 @@ describe('Markdown React entry', () => {
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('data-df-element="link"')
-    expect(html).toContain('data-df-element="list-item"')
-    expect(html).toContain('data-df-element="strong"')
-    expect(html).toContain('data-df-element="emphasis"')
-    expect(html).toContain('data-df-element="strikethrough"')
-    expect(html).toContain('data-df-element="inline-code"')
-    expect(html).toContain('data-df-element="horizontal-rule"')
-    expect(html).toContain('data-df-element="table-header"')
-    expect(html).toContain('data-df-element="table-cell"')
-    expect(html).toContain('data-df-element="task-checkbox"')
-    expect(html).toContain('data-df-element="definition-list"')
+    expect(html).toContain('data-cf-element="link"')
+    expect(html).toContain('data-cf-element="list-item"')
+    expect(html).toContain('data-cf-element="strong"')
+    expect(html).toContain('data-cf-element="emphasis"')
+    expect(html).toContain('data-cf-element="strikethrough"')
+    expect(html).toContain('data-cf-element="inline-code"')
+    expect(html).toContain('data-cf-element="horizontal-rule"')
+    expect(html).toContain('data-cf-element="table-header"')
+    expect(html).toContain('data-cf-element="table-cell"')
+    expect(html).toContain('data-cf-element="task-checkbox"')
+    expect(html).toContain('data-cf-element="definition-list"')
   })
 
   it('applies React slots to compiler-generated icons and image captions', async () => {
@@ -256,7 +256,7 @@ describe('Markdown React entry', () => {
     const html = renderToStaticMarkup(element)
 
     expect(html).toContain('data-custom-link="true"')
-    expect(html).toContain('data-df-element="link"')
+    expect(html).toContain('data-cf-element="link"')
     expect(html).toContain('class="brand-link"')
     expect(html).toContain('>Docs</a>')
   })
@@ -274,7 +274,7 @@ describe('Markdown React entry', () => {
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('data-df-component="callout"')
+    expect(html).toContain('data-cf-component="callout"')
     expect(html).toContain('data-custom-div="true"')
   })
 
@@ -311,7 +311,7 @@ describe('Markdown React entry', () => {
 
     expect(html).toContain('data-custom-table="true"')
     expect(html).toContain('<table')
-    expect(html).toContain('data-df-component="table"')
+    expect(html).toContain('data-cf-component="table"')
   })
 
   it('keeps Terminal in the structured React document path', async () => {
@@ -320,65 +320,65 @@ describe('Markdown React entry', () => {
     })
 
     const html = renderToStaticMarkup(element)
-    expect(html).toContain('class="df-terminal"')
+    expect(html).toContain('class="cf-terminal"')
   })
 
   it('keeps trusted author HTML in the structured React document path', async () => {
     const element = await Markdown({
       source: [
-        '<div class="df-callout df-callout-tip" data-df-component="callout"><p>Trusted callout</p></div>',
-        '<div class="df-image-gallery" data-df-component="gallery"><figure><img src="gallery.png" alt="Gallery" /></figure></div>',
-        '<div class="df-file-tree" data-df-component="file-tree"><ul><li>docs</li></ul></div>',
-        '<div class="df-card-grid" data-df-component="card-grid"><a href="/guide">Guide</a></div>',
-        '<div class="df-api-block" data-df-component="api"><code>GET /api/docs</code></div>',
-        '<section class="df-api-block" data-df-component="api"><code>GET /api/section</code></section>',
-        '<section class="df-image-gallery" data-df-component="gallery"><figure><img src="section-gallery.png" alt="Section gallery" /></figure></section>',
-        '<div data-df-component="card-grid"><a href="/data-attribute">Data attribute</a></div>',
-        '<aside class="df-aside" data-df-component="aside">Side note</aside>',
-        '<span class="df-badge" data-df-component="badge">Beta</span>',
-        '<span data-df-component="copy-snippet" data-df-value="pnpm add docfuse">pnpm add docfuse</span>'
+        '<div class="cf-callout cf-callout-tip" data-cf-component="callout"><p>Trusted callout</p></div>',
+        '<div class="cf-image-gallery" data-cf-component="gallery"><figure><img src="gallery.png" alt="Gallery" /></figure></div>',
+        '<div class="cf-file-tree" data-cf-component="file-tree"><ul><li>docs</li></ul></div>',
+        '<div class="cf-card-grid" data-cf-component="card-grid"><a href="/guide">Guide</a></div>',
+        '<div class="cf-api-block" data-cf-component="api"><code>GET /api/docs</code></div>',
+        '<section class="cf-api-block" data-cf-component="api"><code>GET /api/section</code></section>',
+        '<section class="cf-image-gallery" data-cf-component="gallery"><figure><img src="section-gallery.png" alt="Section gallery" /></figure></section>',
+        '<div data-cf-component="card-grid"><a href="/data-attribute">Data attribute</a></div>',
+        '<aside class="cf-aside" data-cf-component="aside">Side note</aside>',
+        '<span class="cf-badge" data-cf-component="badge">Beta</span>',
+        '<span data-cf-component="copy-snippet" data-cf-value="pnpm add canofold">pnpm add canofold</span>'
       ].join('\n'),
       options: { html: 'trusted' }
     })
 
     const html = renderToStaticMarkup(element)
-    expect(html).toContain('class="df-callout df-callout-tip"')
-    expect(html).toContain('data-df-component="callout"')
-    expect(html).toContain('data-df-component="gallery"')
-    expect(html).toContain('data-df-component="file-tree"')
-    expect(html).toContain('data-df-component="card-grid"')
-    expect(html).toContain('data-df-component="api"')
+    expect(html).toContain('class="cf-callout cf-callout-tip"')
+    expect(html).toContain('data-cf-component="callout"')
+    expect(html).toContain('data-cf-component="gallery"')
+    expect(html).toContain('data-cf-component="file-tree"')
+    expect(html).toContain('data-cf-component="card-grid"')
+    expect(html).toContain('data-cf-component="api"')
     expect(html).toContain('GET /api/section')
-    expect(html).toContain('data-df-component="gallery"')
+    expect(html).toContain('data-cf-component="gallery"')
     expect(html).toContain('Data attribute')
-    expect(html).toContain('data-df-component="aside"')
-    expect(html).toContain('data-df-component="badge"')
-    expect(html).toContain('data-df-component="copy-snippet"')
-    expect(html).toContain('data-df-behavior="copy-snippet"')
-    expect(html).toContain('data-df-action="copy-snippet"')
+    expect(html).toContain('data-cf-component="aside"')
+    expect(html).toContain('data-cf-component="badge"')
+    expect(html).toContain('data-cf-component="copy-snippet"')
+    expect(html).toContain('data-cf-behavior="copy-snippet"')
+    expect(html).toContain('data-cf-action="copy-snippet"')
     expect(html).toContain('Trusted callout')
   })
 
   it('does not infer component behavior from visual classes', async () => {
     const element = await Markdown({
-      source: '<div class="df-image-gallery">Visual class only</div>',
+      source: '<div class="cf-image-gallery">Visual class only</div>',
       options: { html: 'trusted' }
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('class="df-image-gallery"')
-    expect(html).not.toContain('data-df-component="gallery"')
-    expect(html).not.toContain('data-df-island="gallery"')
+    expect(html).toContain('class="cf-image-gallery"')
+    expect(html).not.toContain('data-cf-component="gallery"')
+    expect(html).not.toContain('data-cf-island="gallery"')
   })
 
   it('treats inherited object names as ordinary data instead of registered components', async () => {
     const element = await Markdown({
-      source: '<div data-df-component="toString">Plain content</div>',
+      source: '<div data-cf-component="toString">Plain content</div>',
       options: { html: 'trusted' }
     })
     const html = renderToStaticMarkup(element)
 
-    expect(html).toContain('data-df-component="toString"')
+    expect(html).toContain('data-cf-component="toString"')
     expect(html).toContain('Plain content')
   })
 
@@ -407,21 +407,21 @@ describe('Markdown React entry', () => {
       </>
     )
 
-    expect(html).toContain('class="df-file-tree" data-df-component="file-tree"')
-    expect(html).toContain('data-df-slot="root"')
-    expect(html).toContain('class="df-image-gallery" data-df-component="gallery"')
+    expect(html).toContain('class="cf-file-tree" data-cf-component="file-tree"')
+    expect(html).toContain('data-cf-slot="root"')
+    expect(html).toContain('class="cf-image-gallery" data-cf-component="gallery"')
     expect(html).toContain('role="group"')
-    expect(html).toContain('data-df-slot="item"')
-    expect(html).toContain('class="df-card-grid" data-df-component="card-grid"')
-    expect(html).toContain('data-df-slot="card"')
-    expect(html).toContain('class="df-api-block" data-df-component="api"')
-    expect(html).toContain('class="df-aside" data-df-component="aside"')
-    expect(html).toContain('class="df-badge" data-df-component="badge"')
+    expect(html).toContain('data-cf-slot="item"')
+    expect(html).toContain('class="cf-card-grid" data-cf-component="card-grid"')
+    expect(html).toContain('data-cf-slot="card"')
+    expect(html).toContain('class="cf-api-block" data-cf-component="api"')
+    expect(html).toContain('class="cf-aside" data-cf-component="aside"')
+    expect(html).toContain('class="cf-badge" data-cf-component="badge"')
     expect(html).toContain(
-      '<details data-df-component="details" data-df-slot="root" data-df-behavior="details"'
+      '<details data-cf-component="details" data-cf-slot="root" data-cf-behavior="details"'
     )
-    expect(html).toContain('class="lucide lucide-chevron-down df-details-chevron"')
-    expect(html).toContain('<div class="df-details-content" data-df-slot="content">')
+    expect(html).toContain('class="lucide lucide-chevron-down cf-details-chevron"')
+    expect(html).toContain('<div class="cf-details-content" data-cf-slot="content">')
   })
 
   it('does not discard non-image children passed to a gallery', () => {
@@ -435,7 +435,7 @@ describe('Markdown React entry', () => {
     )
 
     expect(html).toContain('Context that must remain visible.')
-    expect(html).toContain('data-df-action="open-gallery"')
+    expect(html).toContain('data-cf-action="open-gallery"')
   })
 
   it('keeps the default class and root slot contract for core React composites', () => {
@@ -469,13 +469,13 @@ describe('Markdown React entry', () => {
       </>
     )
 
-    expect(html).toContain('class="df-callout" data-df-component="callout" data-df-slot="root"')
-    expect(html).toContain('class="df-tabs" data-df-component="tabs" data-df-slot="root"')
-    expect(html).toContain('class="df-steps" data-df-component="steps" data-df-slot="root"')
-    expect(html).toContain('class="df-code" data-df-component="code-block" data-df-slot="root"')
-    expect(html).toContain('class="df-table-window" data-df-component="table" data-df-slot="root"')
-    expect(html).toContain('class="df-media-frame" data-df-component="image" data-df-slot="root"')
-    expect(html).toContain('class="df-terminal" data-df-component="terminal" data-df-slot="root"')
+    expect(html).toContain('class="cf-callout" data-cf-component="callout" data-cf-slot="root"')
+    expect(html).toContain('class="cf-tabs" data-cf-component="tabs" data-cf-slot="root"')
+    expect(html).toContain('class="cf-steps" data-cf-component="steps" data-cf-slot="root"')
+    expect(html).toContain('class="cf-code" data-cf-component="code-block" data-cf-slot="root"')
+    expect(html).toContain('class="cf-table-window" data-cf-component="table" data-cf-slot="root"')
+    expect(html).toContain('class="cf-media-frame" data-cf-component="image" data-cf-slot="root"')
+    expect(html).toContain('class="cf-terminal" data-cf-component="terminal" data-cf-slot="root"')
   })
 
   it('does not leak component-only props to host DOM elements', () => {
@@ -485,7 +485,7 @@ describe('Markdown React entry', () => {
         <MarkdownCardGrid
           {...({
             node: { type: 'element' },
-            dataDfFoo: 'internal',
+            dataCfFoo: 'internal',
             customThing: 'invalid'
           } as MarkdownCompositeProps)}
         />
@@ -496,7 +496,7 @@ describe('Markdown React entry', () => {
     expect(html).not.toMatch(/\slanguage=/)
     expect(html).not.toMatch(/\scopyLabel=/)
     expect(html).not.toMatch(/\sdownloadLabel=/)
-    expect(html).not.toMatch(/\sdataDfFoo=/)
+    expect(html).not.toMatch(/\sdataCfFoo=/)
     expect(html).not.toMatch(/\scustomThing=/)
   })
 })

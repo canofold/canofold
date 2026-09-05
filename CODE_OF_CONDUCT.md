@@ -1,6 +1,6 @@
 # Code of Conduct
 
-Docfuse contributors are expected to keep project spaces welcoming, technical, and respectful.
+Canofold contributors are expected to keep project spaces welcoming, technical, and respectful.
 
 - Discuss ideas and code without attacking people.
 - Assume good intent, ask for evidence, and make room for different experience levels and backgrounds.

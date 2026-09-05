@@ -15,7 +15,7 @@ order: 34
 下面的示例把中文作为默认语言，当前文档放在 `docs/`，旧版放在 `versions/v1/`：
 
 :::file-tree
-- docfuse.config.ts
+- canofold.config.ts
 - docs/
   - index.md
   - en/
@@ -29,8 +29,8 @@ order: 34
 
 当前中文首页映射到 `/`，当前英文首页映射到 `/en/`；v1 的两个首页分别映射到 `/v1/` 和 `/v1/en/`。
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   versions: {
@@ -57,7 +57,7 @@ export default defineConfig({
 
 ## 页面切换
 
-切换版本时，Docfuse 先查找目标版本中相同相对路径的页面。如果不存在，则返回目标版本当前语言的首页。历史版本删除页面或调整目录后，可以通过 redirects 保留常用入口。
+切换版本时，Canofold 先查找目标版本中相同相对路径的页面。如果不存在，则返回目标版本当前语言的首页。历史版本删除页面或调整目录后，可以通过 redirects 保留常用入口。
 
 ## 搜索和 AI 输出
 
@@ -65,8 +65,8 @@ export default defineConfig({
 
 AI 产物默认只包含 `versions.current`。需要把历史版本写入独立分区时，设置 `ai.versions: 'all'`：
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   ai: {

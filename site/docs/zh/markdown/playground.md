@@ -1,6 +1,6 @@
 ---
 title: Playground
-description: 对照查看 Markdown 源码和 @docfuse/markdown 的渲染效果
+description: 对照查看 Markdown 源码和 @canofold/markdown 的渲染效果
 group: Markdown SDK
 order: 83
 layout: playground
@@ -28,7 +28,7 @@ layout: playground
 
 状态可以使用 :badge[默认]、:badge[Beta]{tone="accent"}、:badge[已发布]{tone="success"}、:badge[待确认]{tone="warning"} 和 :badge[有风险]{tone="danger"}。
 
-[普通链接](/guide/introduction/getting-started/) 保留下划线和清晰的 hover 状态；自动链接也遵循相同规则：https://docfuse.dev 。
+[普通链接](/guide/introduction/getting-started/) 保留下划线和清晰的 hover 状态；自动链接也遵循相同规则：https://canofold.dev 。
 
 [引用式链接][guide] 与普通链接使用同一视觉规则。反斜杠转义后的 \*星号\* 保持为文字，HTML 实体 `&copy;` 解码为 &copy;。这一行末尾改用显式 `<br />`，<br />
 因此这里是一个明确的 `br` 硬换行。
@@ -78,11 +78,11 @@ layout: playground
 
 ## 代码与终端
 
-行内代码适合短标识符，例如 `DocfuseConfig`。需要直接复制的短命令使用 :copy[pnpm add @docfuse/markdown]。代码块使用 Shiki 高亮、语言标签、行号、复制按钮；长行自动换行，不出现横向滚动条。
+行内代码适合短标识符，例如 `CanofoldConfig`。需要直接复制的短命令使用 :copy[pnpm add @canofold/markdown]。代码块使用 Shiki 高亮、语言标签、行号、复制按钮；长行自动换行，不出现横向滚动条。
 
-```ts title="docfuse.config.ts"
+```ts title="canofold.config.ts"
 export default {
-  title: 'Docfuse',
+  title: 'Canofold',
   i18n: { defaultLocale: 'zh', locales: ['zh'] },
   search: { enabled: true }
 }
@@ -92,9 +92,9 @@ export default {
 
 代码围栏可以同时声明文件名和一个或多个高亮行，适合把读者注意力落在本次讲解涉及的代码上：
 
-```ts title="docfuse.config.ts" {2,4-5}
+```ts title="canofold.config.ts" {2,4-5}
 export default {
-  title: 'Docfuse',
+  title: 'Canofold',
   i18n: { defaultLocale: 'zh', locales: ['zh'] },
   search: { enabled: true },
   theme: { darkMode: true }
@@ -107,7 +107,7 @@ export default {
 
 ```ts
 const oldName = 'docs' // [!code --]
-const newName = 'docfuse' // [!code ++]
+const newName = 'canofold' // [!code ++]
 ```
 
 highlight、focus、word、error 和 warning 继续使用同一代码块结构，只改变需要强调的行：
@@ -131,7 +131,7 @@ pnpm docs:preview
 
 ```json
 {
-  "title": "Docfuse",
+  "title": "Canofold",
   "search": { "enabled": true },
   "theme": { "baseColor": "paper" }
 }
@@ -144,16 +144,16 @@ pnpm docs:preview
 :::code-group[项目文件]
 
 ```json title="package.json"
-{ "scripts": { "docs:dev": "docfuse dev" } }
+{ "scripts": { "docs:dev": "canofold dev" } }
 ```
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
-export default defineConfig({ title: 'Docfuse' })
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
+export default defineConfig({ title: 'Canofold' })
 ```
 
 ```markdown title="README.md"
-# Docfuse
+# Canofold
 Build and publish the documentation site.
 ```
 
@@ -194,7 +194,7 @@ fn main() { println!("build complete"); }
 :::code-group[配置与交付]
 
 ```dotenv title=".env.example"
-DOCFUSE_ORIGIN=https://docs.example.com
+CANOFOLD_ORIGIN=https://docs.example.com
 ```
 
 ```scss title="theme.scss"
@@ -208,7 +208,7 @@ create table documents (id integer primary key, slug text not null);
 
 ```dockerfile title="Dockerfile"
 FROM nginx:alpine
-COPY .docfuse/dist /usr/share/nginx/html
+COPY .canofold/dist /usr/share/nginx/html
 ```
 
 ```nginx title="docs.conf"
@@ -225,7 +225,7 @@ location / { try_files $uri $uri/ =404; }
 长代码行在块内自动换行，不会把正文画布撑宽：
 
 ```ts title="long-line.ts"
-const summary = 'Docfuse keeps Markdown, MDX, React components, search, localization, versioning, static output, and machine-readable artifacts in one build workflow.'
+const summary = 'Canofold keeps Markdown, MDX, React components, search, localization, versioning, static output, and machine-readable artifacts in one build workflow.'
 ```
 
 ### Code Group / 代码组选项卡
@@ -235,15 +235,15 @@ const summary = 'Docfuse keeps Markdown, MDX, React components, search, localiza
 :::code-group[包管理器]
 
 ```bash title="pnpm"
-pnpm add @docfuse/markdown
+pnpm add @canofold/markdown
 ```
 
 ```bash title="npm"
-npm install @docfuse/markdown
+npm install @canofold/markdown
 ```
 
 ```bash title="yarn"
-yarn add @docfuse/markdown
+yarn add @canofold/markdown
 ```
 
 :::
@@ -254,13 +254,13 @@ Terminal 使用 `terminal` fenced code，`title` 可配置顶部标签：
 
 ```terminal title="Terminal"
 $ pnpm docs:build
-[docfuse] Built .docfuse/dist
+[canofold] Built .canofold/dist
 ```
 
 失败输出也必须保持完整上下文，便于读者直接定位命令、文件和退出状态：
 
 ```terminal title="Build failed"
-$ pnpm exec docfuse check
+$ pnpm exec canofold check
 ✗ docs/guide/setup.md: broken internal link /guide/install/
 Command failed with exit code 1
 ```
@@ -297,7 +297,7 @@ Command failed with exit code 1
 
 ::::steps[发布流程]
 :::step[安装渲染器]
-添加 `@docfuse/markdown` 并保留默认 token。
+添加 `@canofold/markdown` 并保留默认 token。
 :::
 :::step[准备内容]
 把 Markdown 放入文档目录并补全 frontmatter。
@@ -322,7 +322,7 @@ Command failed with exit code 1
 
 独占一行的 HTTP(S) 链接在启用 `linkCard()` 后转换为链接卡片：
 
-[Docfuse GitHub 仓库](https://github.com/jiangxinlei/docfuse)
+[Canofold GitHub 仓库](https://github.com/canofold/canofold)
 
 ### File Tree / 文件树
 
@@ -336,7 +336,7 @@ Command failed with exit code 1
     - usage.md
 - public/
   - logo.svg
-- docfuse.config.ts
+- canofold.config.ts
 - package.json
 :::
 
@@ -367,7 +367,7 @@ Command failed with exit code 1
 
 独占一行且带受支持扩展名的链接会显示文件类型、文件名和下载入口。以下地址只用于展示文件块外观，接入站点时请换成真实文件地址：
 
-[Docfuse API 参考](https://assets.example.com/docfuse-api.pdf)
+[Canofold API 参考](https://assets.example.com/canofold-api.pdf)
 
 [发布检查表](https://assets.example.com/release-checklist.docx)
 
@@ -393,7 +393,7 @@ Command failed with exit code 1
 
 ::audio[霸王龙音效演示]{src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"}
 
-::embed[Docfuse 入门页面]{src="/guide/introduction/what-is-docfuse/"}
+::embed[Canofold 入门页面]{src="/guide/introduction/what-is-canofold/"}
 
 这些指令生成原生媒体元素，并统一处理可访问标签、默认加载策略和 iframe 权限边界。
 
@@ -417,15 +417,15 @@ Markdown --> Browser: 生成页面
 ```
 
 ```dot
-digraph Docfuse {
+digraph Canofold {
   Markdown -> HTML
   HTML -> Browser
 }
 ```
 
 ```d2
-Markdown -> Docfuse: render
-Docfuse -> Browser: static HTML
+Markdown -> Canofold: render
+Canofold -> Browser: static HTML
 ```
 
 行内数学公式 $E = mc^2$ 跟随正文节奏。展示公式拥有独立的横向溢出边界：

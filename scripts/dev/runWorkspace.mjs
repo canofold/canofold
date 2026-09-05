@@ -13,7 +13,7 @@ async function main() {
   let closing = false
   let exitCode = 0
   let supervisor
-  const workspaceLock = acquireWorkspaceLock(join(repoRoot, '.docfuse-dev/workspace.lock'))
+  const workspaceLock = acquireWorkspaceLock(join(repoRoot, '.canofold-dev/workspace.lock'))
 
   const close = async (code = exitCode) => {
     if (closing) return

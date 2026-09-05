@@ -1,6 +1,6 @@
 ---
 title: Site configuration reference
-description: Look up docfuse.config fields, defaults, accepted values, and related guides
+description: Look up canofold.config fields, defaults, accepted values, and related guides
 group: Reference
 subgroup: Configuration and CLI
 order: 51
@@ -8,17 +8,17 @@ order: 51
 
 # Site configuration reference
 
-Docfuse loads one `docfuse.config.ts`, `.mts`, `.cts`, `.js`, `.mjs`, or `.cjs` from the project root. Multiple variants are ambiguous, and unknown fields or invalid values fail validation.
+Canofold loads one `canofold.config.ts`, `.mts`, `.cts`, `.js`, `.mjs`, or `.cjs` from the project root. Multiple variants are ambiguous, and unknown fields or invalid values fail validation.
 
 ```ts
-import { defineConfig } from 'docfuse'
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   title: 'Acme Docs',
   description: 'Acme platform documentation',
   siteUrl: 'https://docs.acme.com',
   basePath: '/',
-  requiredVersion: '^0.1.0'
+  requiredVersion: '^0.2.0'
 })
 ```
 
@@ -28,7 +28,7 @@ export default defineConfig({
 
 | Field | Default | Purpose |
 |---|---|---|
-| `title` | `Docfuse` | Site name and default browser title |
+| `title` | `Canofold` | Site name and default browser title |
 | `description` | `Technical documentation` | Site description used when a page has no description |
 | `siteUrl` | unset | HTTP(S) origin used by canonical URLs, `hreflang`, and the sitemap; no path, query, or hash |
 | `basePath` | `/` | Subpath deployment prefix, beginning and ending with `/` |
@@ -36,7 +36,7 @@ export default defineConfig({
 | `github` | unset | HTTP(S) URL for the header GitHub link |
 | `requiredVersion` | unset | Semver range that the running CLI must satisfy |
 | `docsDir` | `docs` | Content directory for a single-version site; cannot be combined with `versions` |
-| `outputDir` | `.docfuse/dist` | Static site output directory |
+| `outputDir` | `.canofold/dist` | Static site output directory |
 | `styles` | `[]` | Project CSS files loaded after the default stylesheet |
 | `layout.header` | `true` | Render brand, top navigation, search entry, and locale/version controls |
 
@@ -54,7 +54,7 @@ Keep `siteUrl` as the origin and express a deployment subdirectory with `basePat
 | `markdown.labels` | built-in by locale | Override accessible labels for Markdown interactions |
 | `markdown.plugins` | `[]` | Trusted build-time Markdown plugins, applied in array order |
 
-The standalone `<Markdown>` component defaults to `html: 'strip'`, unlike the Docfuse site default. See [Markdown](/en/markdown/) for integration and [Official plugins](/en/guide/site/plugins/) for plugin setup.
+The standalone `<Markdown>` component defaults to `html: 'strip'`, unlike the Canofold site default. See [Markdown](/en/markdown/) for integration and [Official plugins](/en/guide/site/plugins/) for plugin setup.
 
 ## Theme and search
 
@@ -62,7 +62,7 @@ The standalone `<Markdown>` component defaults to `html: 'strip'`, unlike the Do
 |---|---|---|
 | `theme.logo` / `logoDark` | unset | Light and dark brand images; `logoDark` requires `logo` and `darkMode: true` |
 | `theme.favicon` | built-in icon | Site favicon |
-| `theme.accentColor` | `docfuse` | Preset name or valid CSS color |
+| `theme.accentColor` | `canofold` | Preset name or valid CSS color |
 | `theme.baseColor` | `paper` | `paper`, `neutral`, `slate`, `zinc`, or `stone` |
 | `theme.darkMode` | `false` | Generate the dark theme and its switch |
 | `theme.radius` | `8` | Site shortcut for small, medium, and large radii |

@@ -1,6 +1,6 @@
 import type { LanguageInput, ThemeRegistration } from '@shikijs/types'
-import docfuseDarkTheme from '../themes/docfuse-dark.json'
-import docfuseLightTheme from '../themes/docfuse-light.json'
+import canofoldDarkTheme from '../themes/canofold-dark.json'
+import canofoldLightTheme from '../themes/canofold-light.json'
 import { DEFAULT_MARKDOWN_LABELS } from './defaultLabels'
 import { normalizeMarkdownPlugins } from './plugins'
 import type {
@@ -13,8 +13,8 @@ import type {
 } from './types'
 
 const DEFAULT_CODE_THEMES = {
-  light: docfuseLightTheme as ThemeRegistration,
-  dark: docfuseDarkTheme as ThemeRegistration
+  light: canofoldLightTheme as ThemeRegistration,
+  dark: canofoldDarkTheme as ThemeRegistration
 }
 
 function normalizeCodeLanguages(languages: NonNullable<RenderMarkdownOptions['code']>['languages']) {

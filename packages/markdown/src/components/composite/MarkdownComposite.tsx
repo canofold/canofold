@@ -53,8 +53,8 @@ function withComponent(props: MarkdownCompositeProps, kind: MarkdownCompositeKin
   return {
     ...cleanProps,
     ...(baseClass ? { className: mergeMarkdownClasses(baseClass, props.className) } : {}),
-    'data-df-component': kind,
-    'data-df-slot': 'root'
+    'data-cf-component': kind,
+    'data-cf-slot': 'root'
   }
 }
 
@@ -75,22 +75,22 @@ export function MarkdownCallout({ children, ...props }: MarkdownCompositeProps) 
   const content = Children.map(children, (child) => {
     if (!isValidElement(child)) return child
     const element = child as ReactElement<Record<string, unknown>>
-    const isTitle = element.props['data-df-slot'] === 'title' || element.props.dataDfSlot === 'title'
+    const isTitle = element.props['data-cf-slot'] === 'title' || element.props.dataCfSlot === 'title'
     if (!isTitle) return child
     return cloneElement(element, {
       children: (
         <>
-          <Icon className="df-callout-icon" size={17} strokeWidth={2} aria-hidden="true" />
+          <Icon className="cf-callout-icon" size={17} strokeWidth={2} aria-hidden="true" />
           {element.props.children as ReactNode}
         </>
       )
     })
   })
-  return createElement('div', withComponent(props, 'callout', 'df-callout'), content)
+  return createElement('div', withComponent(props, 'callout', 'cf-callout'), content)
 }
 
 export function MarkdownSteps({ children, ...props }: MarkdownCompositeProps) {
-  return createElement('ol', withComponent(props, 'steps', 'df-steps'), children)
+  return createElement('ol', withComponent(props, 'steps', 'cf-steps'), children)
 }
 
 function splitDetailsChildren(children: ReactNode) {
@@ -132,7 +132,7 @@ export function MarkdownDetails({ children, onToggle, ...props }: InternalMarkdo
           children: (
             <>
               {summaryElement.props.children as ReactNode}
-              <ChevronDown className="df-details-chevron" size={17} strokeWidth={2} aria-hidden="true" />
+              <ChevronDown className="cf-details-chevron" size={17} strokeWidth={2} aria-hidden="true" />
             </>
           ),
           onClick: (event: React.MouseEvent<HTMLElement>) => {
@@ -154,11 +154,11 @@ export function MarkdownDetails({ children, onToggle, ...props }: InternalMarkdo
       {enhancedSummary}
       <div
         ref={contentRef}
-        className="df-details-content"
-        data-df-slot="content"
+        className="cf-details-content"
+        data-cf-slot="content"
         inert={enhanced && !open ? true : undefined}
       >
-        <div className="df-details-content-inner">
+        <div className="cf-details-content-inner">
           {content.map((child, index) => (
             <Fragment key={isValidElement(child) && child.key !== null ? child.key : `details-${index}`}>
               {child}
@@ -172,8 +172,8 @@ export function MarkdownDetails({ children, onToggle, ...props }: InternalMarkdo
   return (
     <details
       {...withComponent(props as MarkdownCompositeProps, 'details')}
-      data-df-behavior="details"
-      data-df-enhanced={enhanced ? 'true' : undefined}
+      data-cf-behavior="details"
+      data-cf-enhanced={enhanced ? 'true' : undefined}
       onToggle={(event) => {
         setOpen(event.currentTarget.open)
         onToggle?.(event)
@@ -187,7 +187,7 @@ export function MarkdownDetails({ children, onToggle, ...props }: InternalMarkdo
 function slotChildren(children: ReactNode, slot: string) {
   return Children.map(children, (child) => {
     if (!isValidElement(child)) return child
-    return cloneElement(child as ReactElement<Record<string, unknown>>, { 'data-df-slot': slot })
+    return cloneElement(child as ReactElement<Record<string, unknown>>, { 'data-cf-slot': slot })
   })
 }
 
@@ -197,23 +197,23 @@ export { MarkdownTabs } from './MarkdownTabs'
 export { MarkdownFileTree } from './MarkdownFileTree'
 
 export function MarkdownCardGrid({ children, ...props }: MarkdownCompositeProps) {
-  return <div {...withComponent(props, 'card-grid', 'df-card-grid')}>{slotChildren(children, 'card')}</div>
+  return <div {...withComponent(props, 'card-grid', 'cf-card-grid')}>{slotChildren(children, 'card')}</div>
 }
 
 export function MarkdownApiBlock({ children, ...props }: MarkdownCompositeProps) {
   return (
-    <section {...withComponent(props, 'api', 'df-api-block')}>{slotChildren(children, 'section')}</section>
+    <section {...withComponent(props, 'api', 'cf-api-block')}>{slotChildren(children, 'section')}</section>
   )
 }
 
 export function MarkdownAside({ children, ...props }: MarkdownCompositeProps) {
-  return <aside {...withComponent(props, 'aside', 'df-aside')}>{children}</aside>
+  return <aside {...withComponent(props, 'aside', 'cf-aside')}>{children}</aside>
 }
 
 export function MarkdownBadge({ children, ...props }: MarkdownCompositeProps) {
-  const componentProps = withComponent(props, 'badge', 'df-badge')
+  const componentProps = withComponent(props, 'badge', 'cf-badge')
   return (
-    <span {...componentProps} data-df-slot="label">
+    <span {...componentProps} data-cf-slot="label">
       {children}
     </span>
   )

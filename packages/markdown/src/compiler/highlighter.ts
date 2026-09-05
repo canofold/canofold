@@ -28,12 +28,12 @@ type LanguageLoader = () => Promise<LanguageModule>
 
 function transformerFenceMetadata(): ShikiTransformer {
   return {
-    name: 'docfuse:fence-metadata',
+    name: 'canofold:fence-metadata',
     pre(node) {
       const meta = String(this.options.meta?.__raw ?? '')
       const match = meta.match(/(?:title|filename|label)\s*=\s*["']([^"']+)["']|\[([^\]]+)\]/i)
       const filename = match?.[1]?.trim() || match?.[2]?.trim()
-      if (filename) node.properties.dataDfFilename = filename
+      if (filename) node.properties.dataCfFilename = filename
       return node
     }
   }
@@ -41,7 +41,7 @@ function transformerFenceMetadata(): ShikiTransformer {
 
 function transformerCollapseCodeNewlines(): ShikiTransformer {
   return {
-    name: 'docfuse:collapse-code-newlines',
+    name: 'canofold:collapse-code-newlines',
     code(node) {
       node.children = node.children.filter((child) => !(child.type === 'text' && /^\n+$/.test(child.value)))
       return node
@@ -253,7 +253,7 @@ function reportUnknownLanguages(
     if (warnedLanguages.has(language)) continue
     warnedLanguages.add(language)
     console.warn(
-      `[docfuse/markdown] Unsupported code language "${language}"; rendering it as ${options.fallbackLanguage}.`
+      `[canofold/markdown] Unsupported code language "${language}"; rendering it as ${options.fallbackLanguage}.`
     )
   }
 }

@@ -83,23 +83,23 @@ export async function loadMermaidModule(
 
 async function resolveMermaid(figure: HTMLElement) {
   const moduleUrl =
-    figure.dataset.dfModuleUrl?.trim() || new URL('./mermaid/mermaid.esm.min.mjs', import.meta.url).href
+    figure.dataset.cfModuleUrl?.trim() || new URL('./mermaid/mermaid.esm.min.mjs', import.meta.url).href
   return loadMermaidModule(moduleUrl)
 }
 
 async function renderMermaid(figure: HTMLElement) {
-  const preview = figure.querySelector<HTMLElement>('.df-diagram-preview')
+  const preview = figure.querySelector<HTMLElement>('.cf-diagram-preview')
   if (!preview) return
   const revision = (renderRevisions.get(figure) ?? 0) + 1
   renderRevisions.set(figure, revision)
-  const isCurrent = () => figure.dataset.dfEnhanced === 'true' && renderRevisions.get(figure) === revision
+  const isCurrent = () => figure.dataset.cfEnhanced === 'true' && renderRevisions.get(figure) === revision
   const mermaidApi = await resolveMermaid(figure)
   if (!isCurrent()) return
-  const surface = resolveThemeColor(figure, '--df-diagram-surface', '#ffffff')
-  const foreground = resolveThemeColor(figure, '--df-diagram-foreground', '#1d1d1f')
-  const accent = resolveThemeColor(figure, '--df-diagram-accent', '#0071e3')
-  const muted = resolveThemeColor(figure, '--df-diagram-muted', '#6e6e73')
-  const line = resolveThemeColor(figure, '--df-diagram-line', '#d2d2d7')
+  const surface = resolveThemeColor(figure, '--cf-diagram-surface', '#ffffff')
+  const foreground = resolveThemeColor(figure, '--cf-diagram-foreground', '#1d1d1f')
+  const accent = resolveThemeColor(figure, '--cf-diagram-accent', '#0071e3')
+  const muted = resolveThemeColor(figure, '--cf-diagram-muted', '#6e6e73')
+  const line = resolveThemeColor(figure, '--cf-diagram-line', '#d2d2d7')
 
   const result = await queueMermaidRender(mermaidApi, async () => {
     if (!isCurrent()) return undefined
@@ -130,11 +130,11 @@ async function renderMermaid(figure: HTMLElement) {
         signalTextColor: foreground
       }
     })
-    return mermaidApi.render(`df-mermaid-${++sequence}`, figure.dataset.dfSource ?? '')
+    return mermaidApi.render(`cf-mermaid-${++sequence}`, figure.dataset.cfSource ?? '')
   })
   if (!result || !isCurrent()) return
   preview.innerHTML = result.svg
-  delete figure.dataset.dfRenderError
+  delete figure.dataset.cfRenderError
 }
 
 export function enhance(root: ParentNode = document) {
@@ -147,11 +147,11 @@ export function enhance(root: ParentNode = document) {
     if (scheduledFrame !== undefined) return
     scheduledFrame = requestAnimationFrame(() => {
       scheduledFrame = undefined
-      const figures = root.querySelectorAll<HTMLElement>('[data-df-plugin-diagram="mermaid"]')
+      const figures = root.querySelectorAll<HTMLElement>('[data-cf-plugin-diagram="mermaid"]')
       for (const figure of figures) {
         void renderMermaid(figure).catch((error: unknown) => {
-          figure.dataset.dfRenderError = 'true'
-          console.error('[docfuse] Mermaid render failed:', error)
+          figure.dataset.cfRenderError = 'true'
+          console.error('[canofold] Mermaid render failed:', error)
         })
       }
     })

@@ -48,8 +48,8 @@ describe('MDX asset detection', () => {
     expect(
       detectMarkdownAssets(
         [
-          '<div data-df-component="gallery">Gallery</div>',
-          '<div className="df-image-gallery">Gallery</div>',
+          '<div data-cf-component="gallery">Gallery</div>',
+          '<div className="cf-image-gallery">Gallery</div>',
           '<div className={cx(ready && "mermaid")}>flowchart LR</div>'
         ].join('\n')
       )

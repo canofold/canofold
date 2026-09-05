@@ -1,6 +1,6 @@
 ---
 title: 参考
-description: 查询 Docfuse 配置、API、命令和构建产物
+description: 查询 Canofold 配置、API、命令和构建产物
 group: 参考
 order: 50
 sidebar: false

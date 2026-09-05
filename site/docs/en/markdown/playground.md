@@ -1,6 +1,6 @@
 ---
 title: Playground
-description: Compare Markdown source with the rendered @docfuse/markdown output
+description: Compare Markdown source with the rendered @canofold/markdown output
 group: Markdown SDK
 order: 83
 layout: playground
@@ -26,7 +26,7 @@ Body text supports **strong**, _emphasis_, ~~deletion~~, <mark>highlight</mark>,
 
 Statuses use :badge[Default], :badge[Beta]{tone="accent"}, :badge[Released]{tone="success"}, :badge[Review]{tone="warning"}, and :badge[Risk]{tone="danger"}.
 
-[A normal link](/en/guide/introduction/getting-started/) and an autolink <https://docfuse.dev> keep the same visual and keyboard contract.
+[A normal link](/en/guide/introduction/getting-started/) and an autolink <https://canofold.dev> keep the same visual and keyboard contract.
 
 ---
 
@@ -71,11 +71,11 @@ Reserve danger for security, data loss, or destructive operations.
 
 ## Code and terminal
 
-Copy a short command directly: :copy[pnpm add @docfuse/markdown].
+Copy a short command directly: :copy[pnpm add @canofold/markdown].
 
-```ts title="docfuse.config.ts"
+```ts title="canofold.config.ts"
 export default {
-  title: 'Docfuse',
+  title: 'Canofold',
   search: { enabled: true }
 }
 ```
@@ -84,9 +84,9 @@ export default {
 
 Fence metadata can combine a filename with one or more highlighted lines:
 
-```ts title="docfuse.config.ts" {2,4-5}
+```ts title="canofold.config.ts" {2,4-5}
 export default {
-  title: 'Docfuse',
+  title: 'Canofold',
   i18n: { defaultLocale: 'en', locales: ['en'] },
   search: { enabled: true },
   theme: { darkMode: true }
@@ -99,7 +99,7 @@ Line markers demonstrate highlight, diff, focus, word, error, and warning states
 
 ```ts
 const oldName = 'docs' // [!code --]
-const newName = 'docfuse' // [!code ++]
+const newName = 'canofold' // [!code ++]
 const searchable = true // [!code highlight]
 const result = buildSite(config) // [!code focus]
 const output = resolveOutput(config) // [!code word:resolveOutput]
@@ -118,7 +118,7 @@ pnpm docs:preview
 
 ```json
 {
-  "title": "Docfuse",
+  "title": "Canofold",
   "search": { "enabled": true }
 }
 ```
@@ -130,16 +130,16 @@ The code-block title selects the filename and file icon; the fence language sele
 :::code-group[Project files]
 
 ```json title="package.json"
-{ "scripts": { "docs:dev": "docfuse dev" } }
+{ "scripts": { "docs:dev": "canofold dev" } }
 ```
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
-export default defineConfig({ title: 'Docfuse' })
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
+export default defineConfig({ title: 'Canofold' })
 ```
 
 ```markdown title="README.md"
-# Docfuse
+# Canofold
 Build and publish the documentation site.
 ```
 
@@ -180,7 +180,7 @@ fn main() { println!("build complete"); }
 :::code-group[Configuration and delivery]
 
 ```dotenv title=".env.example"
-DOCFUSE_ORIGIN=https://docs.example.com
+CANOFOLD_ORIGIN=https://docs.example.com
 ```
 
 ```scss title="theme.scss"
@@ -194,7 +194,7 @@ create table documents (id integer primary key, slug text not null);
 
 ```dockerfile title="Dockerfile"
 FROM nginx:alpine
-COPY .docfuse/dist /usr/share/nginx/html
+COPY .canofold/dist /usr/share/nginx/html
 ```
 
 ```nginx title="docs.conf"
@@ -211,7 +211,7 @@ location / { try_files $uri $uri/ =404; }
 Long lines wrap inside the code block instead of widening the content canvas:
 
 ```ts title="long-line.ts"
-const summary = 'Docfuse keeps Markdown, MDX, React components, search, localization, versioning, static output, and machine-readable artifacts in one build workflow.'
+const summary = 'Canofold keeps Markdown, MDX, React components, search, localization, versioning, static output, and machine-readable artifacts in one build workflow.'
 ```
 
 ### Code Group
@@ -219,15 +219,15 @@ const summary = 'Docfuse keeps Markdown, MDX, React components, search, localiza
 :::code-group[Package manager]
 
 ```bash title="pnpm"
-pnpm add @docfuse/markdown
+pnpm add @canofold/markdown
 ```
 
 ```bash title="npm"
-npm install @docfuse/markdown
+npm install @canofold/markdown
 ```
 
 ```bash title="yarn"
-yarn add @docfuse/markdown
+yarn add @canofold/markdown
 ```
 
 :::
@@ -242,7 +242,7 @@ $ pnpm docs:build
 Failure output keeps the command, source location, and exit state together:
 
 ```terminal title="Build failed"
-$ pnpm exec docfuse check
+$ pnpm exec canofold check
 ✗ docs/guide/setup.md: broken internal link /guide/install/
 Command failed with exit code 1
 ```
@@ -304,7 +304,7 @@ Exact props, types, and public entries.
 
 With `linkCard()` enabled, a standalone HTTP(S) link becomes a link card:
 
-[Docfuse on GitHub](https://github.com/jiangxinlei/docfuse)
+[Canofold on GitHub](https://github.com/canofold/canofold)
 
 ### File Tree
 
@@ -318,7 +318,7 @@ With `linkCard()` enabled, a standalone HTTP(S) link becomes a link card:
     - usage.md
 - public/
   - logo.svg
-- docfuse.config.ts
+- canofold.config.ts
 - package.json
 :::
 
@@ -349,7 +349,7 @@ API timestamps use UTC. Convert them to the reader's time zone before display.
 
 Standalone links with supported document extensions become file blocks. The URLs below only demonstrate the file-block appearance; replace them with real file URLs in your site:
 
-[Docfuse API reference](https://assets.example.com/docfuse-api.pdf)
+[Canofold API reference](https://assets.example.com/canofold-api.pdf)
 
 [Release checklist](https://assets.example.com/release-checklist.docx)
 
@@ -375,7 +375,7 @@ Standalone links with supported document extensions become file blocks. The URLs
 
 ::audio[Tyrannosaurus sound demo]{src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"}
 
-::embed[Docfuse introduction]{src="/en/guide/introduction/what-is-docfuse/"}
+::embed[Canofold introduction]{src="/en/guide/introduction/what-is-canofold/"}
 
 These directives generate native media elements and apply accessible labels, loading defaults, and iframe permission boundaries.
 
@@ -399,15 +399,15 @@ Markdown --> Browser: generate page
 ```
 
 ```dot
-digraph Docfuse {
+digraph Canofold {
   Markdown -> HTML
   HTML -> Browser
 }
 ```
 
 ```d2
-Markdown -> Docfuse: render
-Docfuse -> Browser: static HTML
+Markdown -> Canofold: render
+Canofold -> Browser: static HTML
 ```
 
 Inline math $E = mc^2$ follows prose. Display math owns its overflow boundary:

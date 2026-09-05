@@ -1,4 +1,4 @@
-import { createMarkdownRenderer } from '@docfuse/markdown/server'
+import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { hasMathSyntax, math } from './index'
@@ -6,8 +6,10 @@ import { hasMathSyntax, math } from './index'
 describe('math plugin', () => {
   it('activates only for prose math syntax', () => {
     expect(hasMathSyntax('Inline $E = mc^2$ formula.')).toBe(true)
+    expect(hasMathSyntax('Inline $a \\$ b$ formula.')).toBe(true)
     expect(hasMathSyntax('```math\nE = mc^2\n```')).toBe(true)
     expect(hasMathSyntax('Escaped \\$5 and `const price = "$5"`')).toBe(false)
+    expect(hasMathSyntax('Escaped display opener \\$$')).toBe(false)
     expect(hasMathSyntax('```ts\nconst value = "$x$"\n```')).toBe(false)
     expect(
       hasMathSyntax(['````markdown', '```ts', 'const value = true', '```', '$not_math$', '````'].join('\n'))

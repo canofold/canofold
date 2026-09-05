@@ -12,7 +12,7 @@ import { packageManagerInvocationFor } from '../lib/packageManager.mjs'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const packageRoot = join(repoRoot, 'packages/markdown')
-const statePath = join(repoRoot, '.docfuse-dev/markdown.json')
+const statePath = join(repoRoot, '.canofold-dev/markdown.json')
 const require = createRequire(join(packageRoot, 'package.json'))
 const viteRoot = dirname(require.resolve('vite/package.json'))
 const viteModule = await import(pathToFileURL(join(viteRoot, 'dist/node/index.js')).href)
@@ -20,9 +20,9 @@ const viteBuild = packageFunction(viteModule, 'build')
 const stateController = await startIncrementalBuildState({
   packageName: 'markdown',
   statePath,
-  workspaceId: process.env.DOCFUSE_DEV_WORKSPACE_ID,
+  workspaceId: process.env.CANOFOLD_DEV_WORKSPACE_ID,
   settleMs: 500,
-  onError: (error) => console.error('[docfuse:markdown]', error)
+  onError: (error) => console.error('[canofold:markdown]', error)
 })
 
 function connectViteWatcher(watcher, task) {

@@ -11,7 +11,7 @@ export function MarkdownCopyButton({
   value,
   label,
   action,
-  className = 'df-block-button',
+  className = 'cf-block-button',
   icon = 'copy',
   failureLabel = DEFAULT_MARKDOWN_LABELS.copyFailed
 }: {
@@ -33,13 +33,13 @@ export function MarkdownCopyButton({
 
   return (
     <button
-      className={`${className}${status === 'success' ? ' df-action-success' : ''}${
-        status === 'error' ? ' df-action-error' : ''
+      className={`${className}${status === 'success' ? ' cf-action-success' : ''}${
+        status === 'error' ? ' cf-action-error' : ''
       }`}
       type="button"
-      data-df-action={action}
-      data-df-copied={status === 'success' ? 'true' : undefined}
-      data-df-copy-error={status === 'error' ? 'true' : undefined}
+      data-cf-action={action}
+      data-cf-copied={status === 'success' ? 'true' : undefined}
+      data-cf-copy-error={status === 'error' ? 'true' : undefined}
       aria-label={feedbackLabel}
       title={feedbackLabel}
       onClick={async () => {
@@ -50,13 +50,13 @@ export function MarkdownCopyButton({
         }
       }}
     >
-      <span className="df-action-icon df-action-icon-copy" aria-hidden="true">
+      <span className="cf-action-icon cf-action-icon-copy" aria-hidden="true">
         <MarkdownIcon name={icon} />
       </span>
-      <span className="df-action-icon df-action-icon-success" aria-hidden="true">
+      <span className="cf-action-icon cf-action-icon-success" aria-hidden="true">
         <Check size={16} strokeWidth={2} aria-hidden="true" />
       </span>
-      <span className="df-sr-only" aria-live="polite" aria-atomic="true">
+      <span className="cf-sr-only" aria-live="polite" aria-atomic="true">
         {status === 'idle' ? '' : feedbackLabel}
       </span>
     </button>
@@ -68,7 +68,7 @@ export function MarkdownDownloadButton({
   filename,
   label,
   action,
-  className = 'df-block-button',
+  className = 'cf-block-button',
   contentType = 'text/plain;charset=utf-8'
 }: {
   value: string
@@ -91,7 +91,7 @@ export function MarkdownDownloadButton({
       className={className}
       href={downloadUrl ?? '#'}
       download={filename}
-      data-df-action={action}
+      data-cf-action={action}
       aria-disabled={downloadUrl ? undefined : 'true'}
       aria-label={label}
       title={label}

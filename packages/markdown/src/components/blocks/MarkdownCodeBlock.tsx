@@ -35,21 +35,21 @@ export function MarkdownCodeBlock({
   ...inputProps
 }: MarkdownCodeBlockProps) {
   const props = inputProps as Record<string, unknown>
-  const source = directSource ?? (stringProp(props, 'data-df-source', 'dataDfSource') || codeSource(children))
-  const language = directLanguage ?? (stringProp(props, 'data-df-language', 'dataDfLanguage') || 'text')
-  const filename = directFilename ?? (stringProp(props, 'data-df-filename', 'dataDfFilename') || undefined)
+  const source = directSource ?? (stringProp(props, 'data-cf-source', 'dataCfSource') || codeSource(children))
+  const language = directLanguage ?? (stringProp(props, 'data-cf-language', 'dataCfLanguage') || 'text')
+  const filename = directFilename ?? (stringProp(props, 'data-cf-filename', 'dataCfFilename') || undefined)
   const copyLabel =
     directCopyLabel ??
-    (stringProp(props, 'data-df-copy-label', 'dataDfCopyLabel') || DEFAULT_MARKDOWN_LABELS.copyCode)
+    (stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') || DEFAULT_MARKDOWN_LABELS.copyCode)
   const copyFailureLabel =
     directCopyFailureLabel ??
-    (stringProp(props, 'data-df-copy-failure-label', 'dataDfCopyFailureLabel') ||
+    (stringProp(props, 'data-cf-copy-failure-label', 'dataCfCopyFailureLabel') ||
       DEFAULT_MARKDOWN_LABELS.copyFailed)
-  const className = mergeMarkdownClasses('df-code', props.className)
+  const className = mergeMarkdownClasses('cf-code', props.className)
   const { className: _className, ...rest } = markdownDomProps(props)
 
   return (
-    <figure {...rest} className={className} data-df-component="code-block" data-df-slot="root">
+    <figure {...rest} className={className} data-cf-component="code-block" data-cf-slot="root">
       <MarkdownCodeToolbar
         source={source}
         language={language}
@@ -77,19 +77,19 @@ function MarkdownCodeToolbar({
   copyFailureLabel?: string
 }) {
   const title = filename ? (
-    <span className="df-code-file" data-df-slot="title" data-df-language={language}>
+    <span className="cf-code-file" data-cf-slot="title" data-cf-language={language}>
       <MarkdownFileIcon filename={filename} language={language} />
-      <span className="df-code-file-name">{filename}</span>
+      <span className="cf-code-file-name">{filename}</span>
     </span>
   ) : (
-    <span className="df-code-lang" data-df-slot="title">
+    <span className="cf-code-lang" data-cf-slot="title">
       {language}
     </span>
   )
   const content = (
     <>
       {title}
-      <div className="df-block-actions" data-df-slot="actions">
+      <div className="cf-block-actions" data-cf-slot="actions">
         <MarkdownCopyButton
           value={source}
           label={copyLabel}
@@ -101,13 +101,13 @@ function MarkdownCodeToolbar({
   )
   return (
     <div
-      className="df-code-bar"
-      data-df-slot="toolbar"
-      data-df-behavior="code-toolbar"
-      data-df-language={language}
-      data-df-filename={filename}
-      data-df-copy-label={copyLabel}
-      data-df-copy-failure-label={copyFailureLabel}
+      className="cf-code-bar"
+      data-cf-slot="toolbar"
+      data-cf-behavior="code-toolbar"
+      data-cf-language={language}
+      data-cf-filename={filename}
+      data-cf-copy-label={copyLabel}
+      data-cf-copy-failure-label={copyFailureLabel}
     >
       {content}
     </div>

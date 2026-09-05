@@ -24,18 +24,18 @@ function terminalLines(source: string) {
       const status = prompt ? null : line.match(/^(\s*)([✓✔✕✖!→•])(\s*)/)
       const content = prompt ? (
         <>
-          <span className="df-terminal-prompt">{`${prompt[1]}${prompt[2]}`}</span>
+          <span className="cf-terminal-prompt">{`${prompt[1]}${prompt[2]}`}</span>
           {prompt[3] || ' '}
           {line.slice(prompt[0].length)}
         </>
       ) : status ? (
         <>
-          <span className="df-terminal-status">{`${status[1]}${status[2]}`}</span>
+          <span className="cf-terminal-status">{`${status[1]}${status[2]}`}</span>
           {status[3] || ' '}
           {line.slice(status[0].length)}
         </>
       ) : (
-        <span className="df-terminal-output">{line}</span>
+        <span className="cf-terminal-output">{line}</span>
       )
       return (
         <span key={`${index}-${line}`}>
@@ -60,27 +60,27 @@ export function MarkdownTerminal({
 }: InternalMarkdownTerminalProps) {
   const props = inputProps as Record<string, unknown>
   const title =
-    directTitle || stringProp(props, 'data-df-title', 'dataDfTitle') || DEFAULT_MARKDOWN_LABELS.terminalTitle
-  const source = directSource ?? stringProp(props, 'data-df-source', 'dataDfSource')
+    directTitle || stringProp(props, 'data-cf-title', 'dataCfTitle') || DEFAULT_MARKDOWN_LABELS.terminalTitle
+  const source = directSource ?? stringProp(props, 'data-cf-source', 'dataCfSource')
   const copyLabel =
     directCopyLabel ||
-    stringProp(props, 'data-df-copy-label', 'dataDfCopyLabel') ||
+    stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') ||
     DEFAULT_MARKDOWN_LABELS.copyTerminal
   const copyFailureLabel =
     directCopyFailureLabel ||
-    stringProp(props, 'data-df-copy-failure-label', 'dataDfCopyFailureLabel') ||
+    stringProp(props, 'data-cf-copy-failure-label', 'dataCfCopyFailureLabel') ||
     DEFAULT_MARKDOWN_LABELS.copyFailed
-  const className = mergeMarkdownClasses('df-terminal', props.className)
+  const className = mergeMarkdownClasses('cf-terminal', props.className)
   const { className: _className, ...rest } = markdownDomProps(props)
   return (
-    <div {...rest} className={className} data-df-component="terminal" data-df-slot="root">
+    <div {...rest} className={className} data-cf-component="terminal" data-cf-slot="root">
       <MarkdownTerminalToolbar
         title={title}
         source={source}
         copyLabel={copyLabel}
         copyFailureLabel={copyFailureLabel}
       />
-      <pre data-df-slot="content">{terminalLines(source)}</pre>
+      <pre data-cf-slot="content">{terminalLines(source)}</pre>
     </div>
   )
 }
@@ -106,7 +106,7 @@ function MarkdownTerminalToolbar({
         value={source}
         label={copyLabel}
         action="copy-terminal"
-        className="df-copy-snippet-button"
+        className="cf-copy-snippet-button"
         failureLabel={copyFailureLabel}
       />
     </>
@@ -114,12 +114,12 @@ function MarkdownTerminalToolbar({
   if (inner) return content
   return (
     <div
-      className="df-terminal-head"
-      data-df-slot="toolbar"
-      data-df-behavior="terminal-toolbar"
-      data-df-title={title}
-      data-df-copy-label={copyLabel}
-      data-df-copy-failure-label={copyFailureLabel}
+      className="cf-terminal-head"
+      data-cf-slot="toolbar"
+      data-cf-behavior="terminal-toolbar"
+      data-cf-title={title}
+      data-cf-copy-label={copyLabel}
+      data-cf-copy-failure-label={copyFailureLabel}
     >
       {content}
     </div>

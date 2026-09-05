@@ -6,10 +6,10 @@
     "types": ["node", "vitest/globals"],
     "ignoreDeprecations": "6.0",
     "paths": {
-      "@docfuse/markdown": ["../markdown/src/index.ts"],
-      "@docfuse/markdown/server": ["../markdown/src/server.ts"],
-      "@docfuse/markdown/*": ["../markdown/src/*"],
-      "docfuse": ["../docfuse/src/index.ts"]
+      "@canofold/markdown": ["../markdown/src/index.ts"],
+      "@canofold/markdown/server": ["../markdown/src/server.ts"],
+      "@canofold/markdown/*": ["../markdown/src/*"],
+      "canofold": ["../canofold/src/index.ts"]
     }
   }
 }

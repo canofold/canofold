@@ -1,6 +1,6 @@
 ---
 title: AI 友好输出
-description: 了解 Docfuse 生成的 llms.txt、Markdown 原文、页面索引、摘要和代码示例数据
+description: 了解 Canofold 生成的 llms.txt、Markdown 原文、页面索引、摘要和代码示例数据
 group: 参考
 subgroup: 产物与质量
 order: 72
@@ -8,12 +8,12 @@ order: 72
 
 # AI 友好输出
 
-Docfuse 在构建站点时同时生成机器可读文件。这些文件不会调用外部模型，也不需要 API Key。
+Canofold 在构建站点时同时生成机器可读文件。这些文件不会调用外部模型，也不需要 API Key。
 
 ## 产物清单
 
 :::file-tree
-- .docfuse/
+- .canofold/
   - dist/
     - llms.txt
     - llms-full.txt
@@ -52,7 +52,7 @@ Docfuse 在构建站点时同时生成机器可读文件。这些文件不会调
 
 ## 摘要如何生成
 
-Docfuse 不会为摘要发起网络请求。生成顺序是：
+Canofold 不会为摘要发起网络请求。生成顺序是：
 
 1. 使用 Frontmatter `description`。
 2. 如果没有 `description`，使用正文的第一个非标题、非代码段落。

@@ -5,7 +5,7 @@ import { JSDOM } from 'jsdom'
 import { filesUnder } from './lib/files.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
-const outputRoot = resolve(process.argv[2] ?? join(workspace, 'site/.docfuse/dist'))
+const outputRoot = resolve(process.argv[2] ?? join(workspace, 'site/.canofold/dist'))
 const failures = []
 
 function routeFor(path) {
@@ -45,12 +45,12 @@ const pages = new Map()
 for (const path of htmlFiles) {
   const route = routeFor(path)
   const html = await readFile(path, 'utf8')
-  const document = new JSDOM(html, { url: `https://docfuse.invalid${route}` }).window.document
+  const document = new JSDOM(html, { url: `https://canofold.invalid${route}` }).window.document
   pages.set(route, { document, path })
 }
 
 for (const [route, { document }] of pages) {
-  if (!document.querySelector('[data-docfuse-page-root]')) continue
+  if (!document.querySelector('[data-canofold-page-root]')) continue
   const fail = (message) => failures.push(`${route}: ${message}`)
 
   if (!document.documentElement.lang.trim()) fail('html[lang] is required')
@@ -65,8 +65,8 @@ for (const [route, { document }] of pages) {
   if (document.querySelectorAll('h1').length !== 1) {
     fail(`expected exactly one h1, found ${document.querySelectorAll('h1').length}`)
   }
-  const skipLink = document.querySelector('a.df-skip-link[href="#docfuse-main"]')
-  if (!skipLink || !document.getElementById('docfuse-main'))
+  const skipLink = document.querySelector('a.cf-skip-link[href="#canofold-main"]')
+  if (!skipLink || !document.getElementById('canofold-main'))
     fail('skip-to-content link and target are required')
 
   const ids = new Set()
@@ -97,7 +97,7 @@ for (const [route, { document }] of pages) {
     }
     if (/^(?:https?:|mailto:|tel:|data:)/i.test(href)) continue
 
-    const target = new URL(href, `https://docfuse.invalid${route}`)
+    const target = new URL(href, `https://canofold.invalid${route}`)
     const targetRoute = target.pathname.endsWith('/')
       ? target.pathname
       : target.pathname.endsWith('.html')

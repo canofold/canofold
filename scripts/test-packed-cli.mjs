@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { execPnpmSync } from './lib/packageManager.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
-const temporaryRoot = await mkdtemp(join(tmpdir(), 'docfuse-packed-cli-'))
+const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-packed-cli-'))
 const packsRoot = join(temporaryRoot, 'packs')
 const consumerRoot = join(temporaryRoot, 'consumer')
 const modulesState = await readFile(join(workspace, 'node_modules/.modules.yaml'), 'utf8')
@@ -62,7 +62,7 @@ async function assertExists(relativePath) {
 
 try {
   const markdownPackage = await pack(join(workspace, 'packages/markdown'))
-  const docfusePackage = await pack(join(workspace, 'packages/docfuse'))
+  const canofoldPackage = await pack(join(workspace, 'packages/canofold'))
   const pluginsPackage = await pack(join(workspace, 'packages/plugins'))
   await mkdir(consumerRoot)
 
@@ -70,14 +70,14 @@ try {
     'package.json',
     `${JSON.stringify(
       {
-        name: 'docfuse-packed-consumer',
+        name: 'canofold-packed-consumer',
         private: true,
         type: 'module',
         dependencies: {
           [markdownPackage.manifest.name]:
             `file:${portableRelativePath(consumerRoot, markdownPackage.tarball)}`,
-          [docfusePackage.manifest.name]:
-            `file:${portableRelativePath(consumerRoot, docfusePackage.tarball)}`,
+          [canofoldPackage.manifest.name]:
+            `file:${portableRelativePath(consumerRoot, canofoldPackage.tarball)}`,
           [pluginsPackage.manifest.name]:
             `file:${portableRelativePath(consumerRoot, pluginsPackage.tarball)}`,
           pagefind: pluginsPackage.manifest.peerDependencies.pagefind
@@ -92,24 +92,24 @@ try {
     `packages: []
 overrides:
   '${markdownPackage.manifest.name}@${markdownPackage.manifest.version}': file:${portableRelativePath(consumerRoot, markdownPackage.tarball)}
-  '${docfusePackage.manifest.name}@${docfusePackage.manifest.version}': file:${portableRelativePath(consumerRoot, docfusePackage.tarball)}
+  '${canofoldPackage.manifest.name}@${canofoldPackage.manifest.version}': file:${portableRelativePath(consumerRoot, canofoldPackage.tarball)}
 `
   )
 
   runPnpm(['install', '--prefer-offline', '--ignore-scripts', '--store-dir', workspaceStore])
-  runPnpm(['exec', 'docfuse', 'init', '--locale', 'en'])
-  await assertExists('docfuse.config.ts')
+  runPnpm(['exec', 'canofold', 'init', '--locale', 'en'])
+  await assertExists('canofold.config.ts')
   await assertExists('docs/index.md')
 
   await write(
-    'docfuse.config.mts',
-    `import { pagefind } from '@docfuse/plugins/pagefind'
-import type { DocfuseConfigInput } from 'docfuse'
+    'canofold.config.mts',
+    `import { pagefind } from '@canofold/plugins/pagefind'
+import type { CanofoldConfigInput } from 'canofold'
 
 export default {
   title: 'Packed RC',
   description: 'Packed release candidate fixture',
-  requiredVersion: '${docfusePackage.manifest.version}',
+  requiredVersion: '${canofoldPackage.manifest.version}',
   search: { provider: pagefind() },
   extensions: [{ resolve: './release-extension.ts', options: { marker: 'packed' } }],
   i18n: { defaultLocale: 'en', locales: ['en', 'zh'] },
@@ -131,13 +131,13 @@ export default {
     llmsFullOverflow: 'manifest',
     versions: 'all'
   }
-} satisfies DocfuseConfigInput
+} satisfies CanofoldConfigInput
 `
   )
-  await rm(join(consumerRoot, 'docfuse.config.ts'))
+  await rm(join(consumerRoot, 'canofold.config.ts'))
   await write(
     'release-extension.ts',
-    `import { defineExtension } from 'docfuse'
+    `import { defineExtension } from 'canofold'
 
 export default defineExtension((options) => ({
   apiVersion: 1,
@@ -175,56 +175,56 @@ export default defineExtension((options) => ({
   )
   await write('versions/v0/zh/index.md', `---\ntitle: 历史首页\n---\n\n# 历史首页\n\n历史版本。\n`)
 
-  runPnpm(['exec', 'docfuse', 'check'])
-  const cleanBuild = runPnpm(['exec', 'docfuse', 'build', '--no-cache'])
+  runPnpm(['exec', 'canofold', 'check'])
+  const cleanBuild = runPnpm(['exec', 'canofold', 'build', '--no-cache'])
   assert.match(cleanBuild, /Built .+\(clean: forced\)/)
 
   for (const output of [
-    '.docfuse/dist/index.html',
-    '.docfuse/dist/guide/platform/internals/cache/index.html',
-    '.docfuse/dist/zh/index.html',
-    '.docfuse/dist/v0/index.html',
-    '.docfuse/dist/v0/zh/index.html',
-    '.docfuse/dist/pagefind/pagefind.js',
-    '.docfuse/dist/pagefind/pagefind-worker.js',
-    '.docfuse/dist/ai/manifest.json',
-    '.docfuse/dist/llms-full.txt',
-    '.docfuse/dist/extensions/release-audit/result.json'
+    '.canofold/dist/index.html',
+    '.canofold/dist/guide/platform/internals/cache/index.html',
+    '.canofold/dist/zh/index.html',
+    '.canofold/dist/v0/index.html',
+    '.canofold/dist/v0/zh/index.html',
+    '.canofold/dist/pagefind/pagefind.js',
+    '.canofold/dist/pagefind/pagefind-worker.js',
+    '.canofold/dist/ai/manifest.json',
+    '.canofold/dist/llms-full.txt',
+    '.canofold/dist/extensions/release-audit/result.json'
   ]) {
     await assertExists(output)
   }
 
-  await assert.rejects(access(join(consumerRoot, '.docfuse/dist/pagefind/pagefind-ui.js')))
-  const homeHtml = await readFile(join(consumerRoot, '.docfuse/dist/index.html'), 'utf8')
+  await assert.rejects(access(join(consumerRoot, '.canofold/dist/pagefind/pagefind-ui.js')))
+  const homeHtml = await readFile(join(consumerRoot, '.canofold/dist/index.html'), 'utf8')
   assert.match(homeHtml, /Extension transformed/)
-  assert.match(homeHtml, /href="#docfuse-main"/)
+  assert.match(homeHtml, /href="#canofold-main"/)
   assert.match(
-    await readFile(join(consumerRoot, '.docfuse/dist/llms-full.txt'), 'utf8'),
+    await readFile(join(consumerRoot, '.canofold/dist/llms-full.txt'), 'utf8'),
     /ai\/manifest\.json/
   )
 
   const extensionOutput = JSON.parse(
-    await readFile(join(consumerRoot, '.docfuse/dist/extensions/release-audit/result.json'), 'utf8')
+    await readFile(join(consumerRoot, '.canofold/dist/extensions/release-audit/result.json'), 'utf8')
   )
   assert.equal(extensionOutput.marker, 'packed')
   assert.equal(extensionOutput.pages, 6)
 
-  const cachedBuild = runPnpm(['exec', 'docfuse', 'build'])
+  const cachedBuild = runPnpm(['exec', 'canofold', 'build'])
   assert.match(cachedBuild, /\(cache hit\)/)
 
   run('node', [
     '--input-type=module',
     '-e',
-    `const api = await import('docfuse');
+    `const api = await import('canofold');
      for (const name of ['defineConfig', 'defineExtension', 'defineSearchProvider']) {
        if (typeof api[name] !== 'function') process.exit(1);
      }
-     if (typeof api.DOCFUSE_EXTENSION_API_VERSION !== 'number') process.exit(2);
-     if (api.docfuseVersion !== ${JSON.stringify(docfusePackage.manifest.version)}) process.exit(3);`
+     if (typeof api.CANOFOLD_EXTENSION_API_VERSION !== 'number') process.exit(2);
+     if (api.canofoldVersion !== ${JSON.stringify(canofoldPackage.manifest.version)}) process.exit(3);`
   ])
 
   console.log(
-    `Packed CLI smoke passed: docfuse@${docfusePackage.manifest.version}, ${extensionOutput.pages} pages, Pagefind, AI shards, extension host, cache hit`
+    `Packed CLI smoke passed: canofold@${canofoldPackage.manifest.version}, ${extensionOutput.pages} pages, Pagefind, AI shards, extension host, cache hit`
   )
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true })

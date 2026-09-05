@@ -2,7 +2,7 @@ import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:f
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import type { SearchProviderContext } from 'docfuse'
+import type { SearchProviderContext } from 'canofold'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { pagefind, writePagefindIndex } from './index'
 
@@ -86,9 +86,9 @@ describe('pagefind', () => {
   })
 
   it('builds a searchable chunked index and removes unused Pagefind UI files', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'docfuse-pagefind-plugin-'))
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-pagefind-plugin-'))
     onTestFinished(() => rm(cwd, { recursive: true, force: true }))
-    const outputRoot = join(cwd, '.docfuse/dist')
+    const outputRoot = join(cwd, '.canofold/dist')
     await mkdir(outputRoot, { recursive: true })
     await writeFile(
       join(outputRoot, 'index.html'),

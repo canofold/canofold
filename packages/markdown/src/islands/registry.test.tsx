@@ -39,7 +39,7 @@ async function Markdown({
   ...props
 }: MarkdownProps) {
   const prepared = await prepareMarkdown(source, options)
-  return <MarkdownDocument document={prepared.document} data-df-runtime="static" {...props} />
+  return <MarkdownDocument document={prepared.document} data-cf-runtime="static" {...props} />
 }
 
 describe('Markdown React Islands', () => {
@@ -59,14 +59,14 @@ describe('Markdown React Islands', () => {
     document.body.append(container)
 
     await act(async () => enhance(container))
-    const table = container.querySelector('[data-df-island="table"]') as HTMLElement
-    expect(table.dataset.dfTable).toBeTruthy()
+    const table = container.querySelector('[data-cf-island="table"]') as HTMLElement
+    expect(table.dataset.cfTable).toBeTruthy()
 
     await act(async () => {
-      ;(table.querySelector('[data-df-action="sort-table"]') as HTMLButtonElement).click()
+      ;(table.querySelector('[data-cf-action="sort-table"]') as HTMLButtonElement).click()
     })
     expect(
-      Array.from(table.querySelectorAll('[data-df-slot="content"] tbody tr td:first-child')).map(
+      Array.from(table.querySelectorAll('[data-cf-slot="content"] tbody tr td:first-child')).map(
         (cell) => cell.textContent
       )
     ).toEqual(['2', '10'])
@@ -75,7 +75,7 @@ describe('Markdown React Islands', () => {
   it('hydrates the gallery lightbox and keeps navigation inside one gallery', async () => {
     const element = await Markdown({
       source:
-        '<div class="df-image-gallery" data-df-component="gallery"><figure><img src="one.png" alt="One" /></figure><figure><img src="two.png" alt="Two" /></figure></div>',
+        '<div class="cf-image-gallery" data-cf-component="gallery"><figure><img src="one.png" alt="One" /></figure><figure><img src="two.png" alt="Two" /></figure></div>',
       options: { html: 'trusted' }
     })
     const container = document.createElement('div')
@@ -83,16 +83,16 @@ describe('Markdown React Islands', () => {
     document.body.append(container)
 
     await act(async () => enhance(container))
-    const gallery = container.querySelector('[data-df-island="gallery"]') as HTMLElement
+    const gallery = container.querySelector('[data-cf-island="gallery"]') as HTMLElement
     await act(async () =>
-      (gallery.querySelector('[data-df-action="open-gallery"]') as HTMLButtonElement).click()
+      (gallery.querySelector('[data-cf-action="open-gallery"]') as HTMLButtonElement).click()
     )
-    expect(document.body.querySelector('[data-df-slot="lightbox"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-cf-slot="lightbox"]')).not.toBeNull()
 
     await act(async () =>
-      (document.body.querySelector('[data-df-action="next-gallery-image"]') as HTMLButtonElement).click()
+      (document.body.querySelector('[data-cf-action="next-gallery-image"]') as HTMLButtonElement).click()
     )
-    expect(document.body.querySelector('[data-df-gallery-count]')?.textContent).toBe('2 / 2')
+    expect(document.body.querySelector('[data-cf-gallery-count]')?.textContent).toBe('2 / 2')
   })
 
   it('hydrates Tabs, Details, and File Tree React components from semantic island data', async () => {
@@ -109,7 +109,7 @@ describe('Markdown React Islands', () => {
         '',
         '<details open><summary>More</summary><p>Details content</p></details>',
         '',
-        '<div class="df-file-tree" data-df-component="file-tree"><ul><li class="df-file-tree-branch" data-df-file-tree-branch><button type="button" data-df-action="toggle-file-tree" data-df-file-tree-toggle aria-expanded="true">docs</button><ul><li>README.md</li></ul></li></ul></div>'
+        '<div class="cf-file-tree" data-cf-component="file-tree"><ul><li class="cf-file-tree-branch" data-cf-file-tree-branch><button type="button" data-cf-action="toggle-file-tree" data-cf-file-tree-toggle aria-expanded="true">docs</button><ul><li>README.md</li></ul></li></ul></div>'
       ].join('\n'),
       options: { html: 'trusted' }
     })
@@ -118,23 +118,23 @@ describe('Markdown React Islands', () => {
     document.body.append(container)
 
     await act(async () => enhance(container))
-    const npm = container.querySelector('[data-df-tab^="npm-"]') as HTMLButtonElement
+    const npm = container.querySelector('[data-cf-tab^="npm-"]') as HTMLButtonElement
     await act(async () => npm.click())
     expect(npm.getAttribute('aria-selected')).toBe('true')
-    expect(container.querySelector('[data-df-tab-panel^="pnpm-"]')?.hasAttribute('hidden')).toBe(true)
+    expect(container.querySelector('[data-cf-tab-panel^="pnpm-"]')?.hasAttribute('hidden')).toBe(true)
 
-    const folder = container.querySelector('[data-df-file-tree-toggle]') as HTMLButtonElement
+    const folder = container.querySelector('[data-cf-file-tree-toggle]') as HTMLButtonElement
     await act(async () => folder.click())
     expect(folder.getAttribute('aria-expanded')).toBe('false')
-    const children = container.querySelector('[data-df-file-tree-branch] > .df-file-tree-children')
-    expect(children?.getAttribute('data-df-state')).toBe('collapsed')
+    const children = container.querySelector('[data-cf-file-tree-branch] > .cf-file-tree-children')
+    expect(children?.getAttribute('data-cf-state')).toBe('collapsed')
     expect(children?.getAttribute('aria-hidden')).toBe('true')
     expect(children?.hasAttribute('inert')).toBe(true)
 
     const details = container.querySelector('details') as HTMLDetailsElement
     const summary = details.querySelector('summary') as HTMLElement
-    const disclosure = details.querySelector('.df-details-content') as HTMLElement
-    expect(details.dataset.dfEnhanced).toBe('true')
+    const disclosure = details.querySelector('.cf-details-content') as HTMLElement
+    expect(details.dataset.cfEnhanced).toBe('true')
     expect(disclosure.hasAttribute('inert')).toBe(false)
     await act(async () => summary.click())
     expect(details.open).toBe(false)
@@ -174,7 +174,7 @@ describe('Markdown React Islands', () => {
     await act(async () => enhance(container, ['details', 'tabs']))
 
     expect(warning).not.toHaveBeenCalled()
-    expect(container.querySelector('details')?.dataset.dfEnhanced).toBe('true')
+    expect(container.querySelector('details')?.dataset.cfEnhanced).toBe('true')
     expect(container.querySelector('[role="tab"]')?.getAttribute('aria-selected')).toBe('true')
     warning.mockRestore()
   })
@@ -183,14 +183,14 @@ describe('Markdown React Islands', () => {
     const renderer = createMarkdownRenderer()
     const rendered = await renderer.renderMdx(`<MarkdownTabs>
   <div role="tablist">
-    <button role="tab" data-df-tab="one">One</button>
-    <button role="tab" data-df-tab="two">Two</button>
+    <button role="tab" data-cf-tab="one">One</button>
+    <button role="tab" data-cf-tab="two">Two</button>
   </div>
-  <div role="tabpanel" data-df-tab-panel="one">First</div>
-  <div role="tabpanel" data-df-tab-panel="two">Second</div>
+  <div role="tabpanel" data-cf-tab-panel="one">First</div>
+  <div role="tabpanel" data-cf-tab-panel="two">Second</div>
 </MarkdownTabs>
 <MarkdownFileTree>
-  <ul><li data-df-file-tree-branch=""><button type="button">docs</button><ul><li data-df-file-tree-file="">README.md</li></ul></li></ul>
+  <ul><li data-cf-file-tree-branch=""><button type="button">docs</button><ul><li data-cf-file-tree-file="">README.md</li></ul></li></ul>
 </MarkdownFileTree>`)
     const container = document.createElement('div')
     container.innerHTML = renderToStaticMarkup(rendered.content)
@@ -199,13 +199,13 @@ describe('Markdown React Islands', () => {
 
     await act(async () => enhance(container, ['tabs', 'file-tree']))
     await act(async () => {
-      ;(container.querySelector('[data-df-tab="two"]') as HTMLButtonElement).click()
-      ;(container.querySelector('[data-df-file-tree-branch] > button') as HTMLButtonElement).click()
+      ;(container.querySelector('[data-cf-tab="two"]') as HTMLButtonElement).click()
+      ;(container.querySelector('[data-cf-file-tree-branch] > button') as HTMLButtonElement).click()
     })
 
-    expect(container.querySelector('[data-df-tab-panel="two"]')?.hasAttribute('hidden')).toBe(false)
-    const children = container.querySelector('[data-df-file-tree-branch] > .df-file-tree-children')
-    expect(children?.getAttribute('data-df-state')).toBe('collapsed')
+    expect(container.querySelector('[data-cf-tab-panel="two"]')?.hasAttribute('hidden')).toBe(false)
+    const children = container.querySelector('[data-cf-file-tree-branch] > .cf-file-tree-children')
+    expect(children?.getAttribute('data-cf-state')).toBe('collapsed')
     expect(children?.getAttribute('aria-hidden')).toBe('true')
     expect(children?.hasAttribute('inert')).toBe(true)
     expect(warning).not.toHaveBeenCalled()
@@ -215,7 +215,7 @@ describe('Markdown React Islands', () => {
   it('hydrates only the interaction types requested by the static host', async () => {
     const element = await Markdown({
       source: [
-        '<div data-df-component="gallery"><figure><img src="one.png" alt="One" /></figure></div>',
+        '<div data-cf-component="gallery"><figure><img src="one.png" alt="One" /></figure></div>',
         '',
         '| Value |',
         '| --- |',
@@ -229,14 +229,14 @@ describe('Markdown React Islands', () => {
 
     await act(async () => enhance(container, ['gallery']))
 
-    const gallery = container.querySelector('[data-df-island="gallery"]') as HTMLElement
+    const gallery = container.querySelector('[data-cf-island="gallery"]') as HTMLElement
     await act(async () =>
-      (gallery.querySelector('[data-df-action="open-gallery"]') as HTMLButtonElement).click()
+      (gallery.querySelector('[data-cf-action="open-gallery"]') as HTMLButtonElement).click()
     )
-    expect(document.body.querySelector('[data-df-slot="lightbox"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-cf-slot="lightbox"]')).not.toBeNull()
 
-    const table = container.querySelector('[data-df-island="table"]') as HTMLElement
-    ;(table.querySelector('[data-df-action="sort-table"]') as HTMLButtonElement).click()
+    const table = container.querySelector('[data-cf-island="table"]') as HTMLElement
+    ;(table.querySelector('[data-cf-action="sort-table"]') as HTMLButtonElement).click()
     expect(table.querySelector('tbody td')?.textContent).toBe('One')
   })
 
@@ -272,8 +272,8 @@ describe('Markdown React Islands', () => {
     container.innerHTML = staticHtml
     await act(async () => enhance(container, ['table']))
 
-    const table = container.querySelector('[data-df-island="table"]') as HTMLElement
-    expect(table.querySelector('[data-df-action="sort-table"]')).not.toBeNull()
+    const table = container.querySelector('[data-cf-island="table"]') as HTMLElement
+    expect(table.querySelector('[data-cf-action="sort-table"]')).not.toBeNull()
   })
 
   it('hydrates heading, image, terminal, and copy-snippet interactions', async () => {
@@ -292,7 +292,7 @@ describe('Markdown React Islands', () => {
         '$ pnpm build',
         '~~~',
         '',
-        '<span data-df-component="copy-snippet" data-df-value="pnpm install">pnpm install</span>'
+        '<span data-cf-component="copy-snippet" data-cf-value="pnpm install">pnpm install</span>'
       ].join('\n'),
       options: { html: 'trusted' }
     })
@@ -303,18 +303,18 @@ describe('Markdown React Islands', () => {
     await act(async () => enhance(container, ['heading', 'image', 'terminal-toolbar', 'copy-snippet']))
 
     await act(async () => {
-      ;(container.querySelector('[data-df-action="copy-section-link"]') as HTMLButtonElement).click()
-      ;(container.querySelector('[data-df-action="copy-terminal"]') as HTMLButtonElement).click()
-      ;(container.querySelector('[data-df-action="copy-snippet"]') as HTMLButtonElement).click()
+      ;(container.querySelector('[data-cf-action="copy-section-link"]') as HTMLButtonElement).click()
+      ;(container.querySelector('[data-cf-action="copy-terminal"]') as HTMLButtonElement).click()
+      ;(container.querySelector('[data-cf-action="copy-snippet"]') as HTMLButtonElement).click()
     })
     expect(copied[0]).toContain('#install')
     expect(copied).toContain('$ pnpm build')
     expect(copied).toContain('pnpm install')
 
     await act(async () => {
-      ;(container.querySelector('[data-df-action="zoom-image"]') as HTMLButtonElement).click()
+      ;(container.querySelector('[data-cf-action="zoom-image"]') as HTMLButtonElement).click()
     })
-    expect(document.body.querySelector('.df-image-lightbox[role="dialog"]')).not.toBeNull()
+    expect(document.body.querySelector('.cf-image-lightbox[role="dialog"]')).not.toBeNull()
   })
 
   it('preserves rich image captions during hydration', async () => {
@@ -341,7 +341,7 @@ describe('Markdown React Islands', () => {
 
     await act(async () => Promise.all([enhance(container, ['table']), enhance(container, ['table'])]))
 
-    expect(container.querySelectorAll('[data-df-action="sort-table"]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-cf-action="sort-table"]')).toHaveLength(1)
     expect(warning).not.toHaveBeenCalled()
     warning.mockRestore()
   })
@@ -356,14 +356,14 @@ describe('Markdown React Islands', () => {
     const second = await act(async () => enhance(container, ['table']))
     await act(async () => first.dispose())
 
-    const table = container.querySelector('[data-df-island="table"]') as HTMLElement
+    const table = container.querySelector('[data-cf-island="table"]') as HTMLElement
     await act(async () => {
-      ;(table.querySelector('[data-df-action="sort-table"]') as HTMLButtonElement).click()
+      ;(table.querySelector('[data-cf-action="sort-table"]') as HTMLButtonElement).click()
     })
     expect(table.querySelector('tbody td')?.textContent).toBe('One')
 
     await act(async () => second.dispose())
-    expect(table.querySelector('[data-df-action="sort-table"]')).toBeNull()
+    expect(table.querySelector('[data-cf-action="sort-table"]')).toBeNull()
   })
 
   it('does not hydrate an island after its pending navigation boundary was unmounted', async () => {
@@ -378,7 +378,7 @@ describe('Markdown React Islands', () => {
       await enhancement.ready
     })
 
-    ;(container.querySelector('[data-df-action="sort-table"]') as HTMLButtonElement).click()
+    ;(container.querySelector('[data-cf-action="sort-table"]') as HTMLButtonElement).click()
     expect(container.querySelector('tbody td')?.textContent).toBe('Two')
   })
 
@@ -390,7 +390,7 @@ describe('Markdown React Islands', () => {
 
     const enhancement = enhanceMarkdown(container, { behaviors: ['table'] })
     await act(async () => enhancement.ready)
-    expect(container.querySelector('[data-df-action="sort-table"]')).not.toBeNull()
+    expect(container.querySelector('[data-cf-action="sort-table"]')).not.toBeNull()
     await act(async () => enhancement.dispose())
   })
 })

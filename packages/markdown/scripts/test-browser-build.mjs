@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const consumerRoot = await mkdtemp(join(tmpdir(), 'docfuse-markdown-browser-'))
+const consumerRoot = await mkdtemp(join(tmpdir(), 'canofold-markdown-browser-'))
 const entry = join(consumerRoot, 'entry.js')
 
 await writeFile(
@@ -13,7 +13,7 @@ await writeFile(
   [
     `import { Markdown } from ${JSON.stringify(join(packageRoot, 'dist/index.js'))}`,
     `import { enhanceMarkdown } from ${JSON.stringify(join(packageRoot, 'dist/client/index.js'))}`,
-    "globalThis.__DOCFUSE_BROWSER_CONSUMER__ = { Markdown, enhanceMarkdown, source: '# Browser consumer' }"
+    "globalThis.__CANOFOLD_BROWSER_CONSUMER__ = { Markdown, enhanceMarkdown, source: '# Browser consumer' }"
   ].join('\n')
 )
 

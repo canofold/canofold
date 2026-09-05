@@ -1,6 +1,6 @@
 ---
 title: Theme customization
-description: Configure Docfuse logos, colors, typography, and project styles
+description: Configure Canofold logos, colors, typography, and project styles
 group: Guide
 subgroup: Site capabilities
 order: 36
@@ -14,8 +14,8 @@ Start with theme configuration. Load project CSS only when the configuration doe
 
 Put images in `docs/public/` and reference them with site-absolute paths:
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   theme: {
@@ -23,7 +23,7 @@ export default defineConfig({
     logoDark: '/logo-dark.svg',
     favicon: '/favicon.svg',
     baseColor: 'paper',
-    accentColor: 'docfuse',
+    accentColor: 'canofold',
     darkMode: true,
     radius: 8
   }
@@ -38,8 +38,8 @@ export default defineConfig({
 
 `accentColor` controls links, buttons, focus states, and other primary interactions. Use a preset or any valid CSS color:
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   theme: {
@@ -49,7 +49,7 @@ export default defineConfig({
 })
 ```
 
-The site shell and `@docfuse/markdown` share these semantic colors:
+The site shell and `@canofold/markdown` share these semantic colors:
 
 | Role | Theme tokens | Used for |
 |---|---|---|
@@ -60,12 +60,12 @@ The site shell and `@docfuse/markdown` share these semantic colors:
 | Warning | `warning`, `warningDeep` | `warning` callouts and states that need review |
 | Danger | `danger`, `dangerDeep` | `danger` callouts, errors, and destructive states |
 
-The default info color uses the same blue anchor as Docfuse's default primary color. `accentColor` changes primary interactions only; status colors stay stable so their meaning does not shift with the brand color. Override a status token only when needed.
+The default info color uses the same blue anchor as Canofold's default primary color. `accentColor` changes primary interactions only; status colors stay stable so their meaning does not shift with the brand color. Override a status token only when needed.
 
 Override only semantic colors that need to differ from the preset:
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   theme: {
@@ -87,8 +87,8 @@ export default defineConfig({
 
 ## Typography and layout
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   theme: {
@@ -109,16 +109,16 @@ export default defineConfig({
 })
 ```
 
-Use `rem` for font sizes and major layout dimensions, and unitless values for body line height. Docfuse respects `prefers-reduced-motion`.
+Use `rem` for font sizes and major layout dimensions, and unitless values for body line height. Canofold respects `prefers-reduced-motion`.
 
 ## Project CSS
 
-```ts title="docfuse.config.ts"
-import { defineConfig } from 'docfuse'
+```ts title="canofold.config.ts"
+import { defineConfig } from 'canofold'
 
 export default defineConfig({
   styles: ['./docs/brand.css']
 })
 ```
 
-Project CSS loads after defaults and theme variables. Prefer theme tokens, `classNames`, and project-owned classes. Use a semantic attribute as a selector only when the public API documents it; do not depend on internal `.df-*` classes or exact layout structure.
+Project CSS loads after defaults and theme variables. Prefer theme tokens, `classNames`, and project-owned classes. Use a semantic attribute as a selector only when the public API documents it; do not depend on internal `.cf-*` classes or exact layout structure.

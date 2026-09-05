@@ -5,7 +5,7 @@ import type { MarkdownIslandRenderOptions } from './options'
 
 function readItems(root: HTMLElement): MarkdownGalleryItem[] {
   try {
-    const value = JSON.parse(root.dataset.dfGalleryItems ?? '[]')
+    const value = JSON.parse(root.dataset.cfGalleryItems ?? '[]')
     return Array.isArray(value)
       ? value.filter((item): item is MarkdownGalleryItem =>
           Boolean(
@@ -30,12 +30,12 @@ export function hydrate(root: HTMLElement, options?: MarkdownIslandRenderOptions
         className={root.className || undefined}
         role={root.getAttribute('role') === 'region' ? 'region' : 'group'}
         labels={{
-          gallery: root.dataset.dfGalleryLabel,
-          close: root.dataset.dfCloseLabel,
-          previous: root.dataset.dfPreviousLabel,
-          next: root.dataset.dfNextLabel,
-          thumbnails: root.dataset.dfThumbnailsLabel,
-          image: root.dataset.dfImageLabel
+          gallery: root.dataset.cfGalleryLabel,
+          close: root.dataset.cfCloseLabel,
+          previous: root.dataset.cfPreviousLabel,
+          next: root.dataset.cfNextLabel,
+          thumbnails: root.dataset.cfThumbnailsLabel,
+          image: root.dataset.cfImageLabel
         }}
         inner
       />,

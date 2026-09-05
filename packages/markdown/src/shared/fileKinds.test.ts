@@ -11,7 +11,7 @@ describe('markdownFileKind', () => {
   })
 
   it('recognizes config names, source extensions, and language fallbacks', () => {
-    expect(markdownFileKind('docfuse.config.ts', 'ts')).toBe('config')
+    expect(markdownFileKind('canofold.config.ts', 'ts')).toBe('config')
     expect(markdownFileKind('StatusBadge.tsx')).toBe('typescript')
     expect(markdownFileKind('schema.sql')).toBe('database')
     expect(markdownFileKind('Dockerfile', 'dockerfile')).toBe('container')
@@ -24,7 +24,7 @@ describe('markdownFileKind', () => {
   })
 
   it('uses distinct Material-style icons for common configuration files', () => {
-    expect(markdownFileIconName('docfuse.config.ts')).toBe('docfuse')
+    expect(markdownFileIconName('canofold.config.ts')).toBe('canofold')
     expect(markdownFileIconName('.gitignore')).toBe('git')
     expect(markdownFileIconName('.env.production')).toBe('environment')
     expect(markdownFileIconName('tsconfig.json')).toBe('typescript')

@@ -1,20 +1,20 @@
 {
-  "name": "@docfuse/plugins",
-  "version": "0.1.2",
-  "description": "Official plugins and providers for Docfuse and @docfuse/markdown.",
+  "name": "@canofold/plugins",
+  "version": "0.2.0",
+  "description": "Official plugins and providers for Canofold and @canofold/markdown.",
   "license": "MIT",
-  "author": "Docfuse Contributors",
-  "homepage": "https://docfuse.dev",
+  "author": "Canofold Contributors",
+  "homepage": "https://canofold.dev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jiangxinlei/docfuse.git",
+    "url": "git+https://github.com/canofold/canofold.git",
     "directory": "packages/plugins"
   },
   "bugs": {
-    "url": "https://github.com/jiangxinlei/docfuse/issues"
+    "url": "https://github.com/canofold/canofold/issues"
   },
   "keywords": [
-    "docfuse",
+    "canofold",
     "markdown",
     "plugin",
     "remark",
@@ -85,7 +85,7 @@
     "test": "vitest run --root ../.. packages/plugins"
   },
   "dependencies": {
-    "@docfuse/markdown": "workspace:*",
+    "@canofold/markdown": "workspace:*",
     "fflate": "^0.8.3",
     "katex": "^0.18.4",
     "rehype-katex": "^7.0.1",
@@ -110,7 +110,7 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
-    "docfuse": "workspace:*",
+    "canofold": "workspace:*",
     "esbuild": "^0.28.2",
     "mermaid": "^11.17.2",
     "pagefind": "^1.5.2",

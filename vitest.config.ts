@@ -5,24 +5,24 @@ import { defineConfig } from 'vitest/config'
 
 const repoRoot = fileURLToPath(new URL('.', import.meta.url))
 const fromRoot = (path: string) => resolve(repoRoot, path)
-const docfusePackage = JSON.parse(
-  readFileSync(new URL('./packages/docfuse/package.json', import.meta.url), 'utf8')
+const canofoldPackage = JSON.parse(
+  readFileSync(new URL('./packages/canofold/package.json', import.meta.url), 'utf8')
 ) as { version: string }
 
 export default defineConfig({
   define: {
-    __DOCFUSE_VERSION__: JSON.stringify(docfusePackage.version)
+    __CANOFOLD_VERSION__: JSON.stringify(canofoldPackage.version)
   },
   resolve: {
     alias: [
       {
-        find: /^@docfuse\/markdown\/server\/analyze$/,
+        find: /^@canofold\/markdown\/server\/analyze$/,
         replacement: fromRoot('packages/markdown/src/server/analyze.ts')
       },
-      { find: /^@docfuse\/markdown\/client$/, replacement: fromRoot('packages/markdown/src/client.ts') },
-      { find: /^@docfuse\/markdown\/theme$/, replacement: fromRoot('packages/markdown/src/theme.ts') },
-      { find: /^@docfuse\/markdown\/server$/, replacement: fromRoot('packages/markdown/src/server.ts') },
-      { find: /^@docfuse\/markdown$/, replacement: fromRoot('packages/markdown/src/index.ts') }
+      { find: /^@canofold\/markdown\/client$/, replacement: fromRoot('packages/markdown/src/client.ts') },
+      { find: /^@canofold\/markdown\/theme$/, replacement: fromRoot('packages/markdown/src/theme.ts') },
+      { find: /^@canofold\/markdown\/server$/, replacement: fromRoot('packages/markdown/src/server.ts') },
+      { find: /^@canofold\/markdown$/, replacement: fromRoot('packages/markdown/src/index.ts') }
     ]
   },
   test: {
@@ -34,11 +34,11 @@ export default defineConfig({
       provider: 'v8',
       include: [
         'packages/markdown/src/**/*.{ts,tsx}',
-        'packages/docfuse/src/**/*.{ts,tsx}',
+        'packages/canofold/src/**/*.{ts,tsx}',
         'packages/plugins/src/**/*.{ts,tsx}'
       ],
       // cli.ts is a shebang-only process adapter exercised by the child-process smoke test.
-      exclude: ['**/*.test.{ts,tsx}', 'packages/docfuse/src/cli.ts'],
+      exclude: ['**/*.test.{ts,tsx}', 'packages/canofold/src/cli.ts'],
       reporter: ['text', 'html', 'json-summary'],
       reportsDirectory: 'coverage',
       skipFull: true,
@@ -49,43 +49,43 @@ export default defineConfig({
         branches: 81.56,
         functions: 92.87,
         lines: 92.46,
-        'packages/docfuse/src/extensions/host.ts': {
+        'packages/canofold/src/extensions/host.ts': {
           statements: 94.11,
           branches: 88.88,
           functions: 100,
           lines: 96.69
         },
-        'packages/docfuse/src/render/playgroundClient.tsx': {
+        'packages/canofold/src/render/playgroundClient.tsx': {
           statements: 88.3,
           branches: 64.13,
           functions: 96.87,
           lines: 92.05
         },
-        'packages/docfuse/src/server/staticServer.ts': {
+        'packages/canofold/src/server/staticServer.ts': {
           statements: 88.51,
           branches: 78.57,
           functions: 92.85,
           lines: 90.44
         },
-        'packages/docfuse/src/build/cache.ts': {
+        'packages/canofold/src/build/cache.ts': {
           statements: 72.66,
           branches: 73.26,
           functions: 84.61,
           lines: 79.33
         },
-        'packages/docfuse/src/build/state.ts': {
+        'packages/canofold/src/build/state.ts': {
           statements: 94.59,
           branches: 82.22,
           functions: 96.66,
           lines: 93.54
         },
-        'packages/docfuse/src/config/publicResource.ts': {
+        'packages/canofold/src/config/publicResource.ts': {
           statements: 80,
           branches: 80,
           functions: 100,
           lines: 80
         },
-        'packages/docfuse/src/render/renderMdx.tsx': {
+        'packages/canofold/src/render/renderMdx.tsx': {
           statements: 53.57,
           branches: 15.38,
           functions: 77.77,
