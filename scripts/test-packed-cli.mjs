@@ -104,6 +104,12 @@ overrides:
   ]) {
     await assertExists(declaration)
   }
+  for (const packageName of ['@canofold/markdown', 'canofold']) {
+    const manifest = JSON.parse(
+      await readFile(join(consumerRoot, 'node_modules', packageName, 'package.json'), 'utf8')
+    )
+    assert.equal(manifest.dependencies['lucide-react'], '1.34.0')
+  }
   runPnpm(['exec', 'canofold', 'init', '--locale', 'en'])
   await assertExists('canofold.config.ts')
   await assertExists('docs/index.md')
