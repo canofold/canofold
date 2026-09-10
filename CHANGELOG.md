@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 - 2026-09-11
+
+- Include generated TypeScript declaration files in the published packages so external TypeScript projects can consume `canofold` without source-path aliases.
+- Verify that packed release artifacts include the public declaration files before publishing.
+
 ## 0.2.0 - 2026-09-05
 
 - Ship the CLI, configuration file, generated output directory, environment variables, DOM/CSS prefixes, and package names as Canofold.

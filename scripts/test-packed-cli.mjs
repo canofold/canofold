@@ -97,6 +97,13 @@ overrides:
   )
 
   runPnpm(['install', '--prefer-offline', '--ignore-scripts', '--store-dir', workspaceStore])
+  for (const declaration of [
+    'node_modules/@canofold/markdown/dist/index.d.ts',
+    'node_modules/canofold/dist/index.d.ts',
+    'node_modules/@canofold/plugins/dist/index.d.ts'
+  ]) {
+    await assertExists(declaration)
+  }
   runPnpm(['exec', 'canofold', 'init', '--locale', 'en'])
   await assertExists('canofold.config.ts')
   await assertExists('docs/index.md')
