@@ -109,7 +109,7 @@
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
+    "@types/react-dom": "^19.2.7",
     "canofold": "workspace:*",
     "esbuild": "^0.28.2",
     "mermaid": "^11.17.2",
