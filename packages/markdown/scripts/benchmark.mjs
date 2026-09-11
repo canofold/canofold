@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import { resolve } from 'node:path'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -14,7 +14,6 @@ if (!existsSync(entry)) {
 const { createMarkdownRenderer } = await import(entry)
 const requestedPageCount = Number(process.env.CANOFOLD_MARKDOWN_BENCHMARK_PAGES ?? 100)
 const pageCount = Number.isFinite(requestedPageCount) ? Math.max(1, Math.floor(requestedPageCount)) : 100
-const showcaseFixture = readFileSync(resolve('site/docs/zh/markdown/playground.md'), 'utf8')
 
 const technicalCorpus = [
   `# TypeScript API
@@ -39,8 +38,8 @@ export function Status({ ready }: { ready: boolean }) {
   `# Deployment
 
 \`\`\`bash
-pnpm run build:site
-pnpm run preview:site
+pnpm exec canofold build
+pnpm exec canofold preview
 \`\`\`
 
 \`\`\`nginx
@@ -86,7 +85,17 @@ Author -> Canofold: Markdown
 Canofold -> Browser: Static HTML
 @enduml
 \`\`\``,
-  showcaseFixture
+  `# Accessibility and interaction
+
+:::tip Build once
+Static highlighting belongs to the build path.
+:::
+
+<details>
+  <summary>Rendering contract</summary>
+
+  Markdown remains portable across static and interactive hosts.
+</details>`
 ]
 
 function memorySnapshot() {

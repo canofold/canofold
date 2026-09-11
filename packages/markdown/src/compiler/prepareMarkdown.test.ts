@@ -421,9 +421,12 @@ describe('renderPreparedHtml', () => {
 
   it('renders terminal fences as copyable dark output blocks', async () => {
     const result = await renderPreparedResult(
-      ['```terminal title="Build output"', '$ pnpm run build:site', '✓ Built 42 pages in 1.8s', '```'].join(
-        '\n'
-      )
+      [
+        '```terminal title="Build output"',
+        '$ pnpm exec canofold build',
+        '✓ Built 42 pages in 1.8s',
+        '```'
+      ].join('\n')
     )
 
     expect(result.html).toContain('class="cf-terminal"')
@@ -431,7 +434,7 @@ describe('renderPreparedHtml', () => {
     expect(result.html).toContain('>Build output<')
     expect(result.html).toContain('class="cf-copy-snippet-button"')
     expect(result.html).toContain('aria-label="Copy terminal output"')
-    expect(result.html).toContain('class="cf-terminal-prompt">$</span> pnpm run build:site')
+    expect(result.html).toContain('class="cf-terminal-prompt">$</span> pnpm exec canofold build')
     expect(result.html).toContain('class="cf-terminal-status">✓</span> Built 42 pages in 1.8s')
   })
 

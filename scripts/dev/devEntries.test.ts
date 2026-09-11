@@ -13,8 +13,7 @@ describe('workspace development entrypoints', () => {
       build({
         entryPoints: [
           join(repoRoot, 'scripts/dev/watchMarkdown.mjs'),
-          join(repoRoot, 'scripts/dev/watchCanofold.mjs'),
-          join(repoRoot, 'scripts/dev/runLinkedSite.mjs')
+          join(repoRoot, 'scripts/dev/watchCanofold.mjs')
         ],
         bundle: true,
         format: 'esm',

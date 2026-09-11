@@ -41,10 +41,7 @@ test('Markdown package stays independent from Canofold and framework adapters', 
 })
 
 test('TypeScript source imports use bundler-native extensionless specifiers', async () => {
-  const entries = [
-    ...(await sourceText(join(root, 'packages'))),
-    ...(await sourceText(join(root, 'site')))
-  ].filter(([file]) => /\.tsx?$/.test(file))
+  const entries = (await sourceText(join(root, 'packages'))).filter(([file]) => /\.tsx?$/.test(file))
   const relativeJavaScriptImport = /(?:from\s+|import\s*\(\s*)['"]\.\.?\/[^'"]+\.js['"]/
 
   for (const [file, source] of entries) {
@@ -140,49 +137,22 @@ test('Markdown interactions use stable action attributes instead of visual class
   assert.doesNotMatch(source, /from ['"].*\/(?:runtime|enhancer)(?:\.js)?['"]/)
 })
 
-test('public React component documentation matches the source type contract', async () => {
-  const componentMap = await readFile(join(root, 'packages/markdown/src/react/componentMap.tsx'), 'utf8')
-  const contract = componentMap.match(/export interface MarkdownNamedComponentProps \{([\s\S]*?)\n\}/)
-  assert.ok(contract, 'MarkdownNamedComponentProps must remain a readable source contract')
-  const expected = [...contract[1].matchAll(/^  ([A-Z][A-Za-z0-9]*):/gm)].map((match) => match[1])
-
-  for (const path of [
-    'site/docs/zh/reference/api/react-markdown.md',
-    'site/docs/en/reference/api/react-markdown.md'
-  ]) {
-    const documentation = await readFile(join(root, path), 'utf8')
-    const componentLine = documentation.split('\n').find((line) => line.startsWith('`components`'))
-    assert.ok(componentLine, `${path} must document the named component contract on one line`)
-    const documented = [...componentLine.matchAll(/`([A-Z][A-Za-z0-9]*)`/g)].map((match) => match[1])
-    assert.deepEqual(documented, expected, `${path} named component list drifted from its source type`)
-  }
-})
-
-test('public and maintainer documentation matches the three-package contract', async () => {
+test('maintainer documentation matches the three-package contract', async () => {
   const packageManifests = await Promise.all(
     ['canofold', 'markdown', 'plugins'].map((name) =>
       readFile(join(root, 'packages', name, 'package.json'), 'utf8').then(JSON.parse)
     )
   )
   const contributing = await readFile(join(root, 'CONTRIBUTING.md'), 'utf8')
-  const publicReferences = await Promise.all(
-    ['site/docs/zh/reference/api/public-api.md', 'site/docs/en/reference/api/public-api.md'].map((path) =>
-      readFile(join(root, path), 'utf8')
-    )
+  assert.doesNotMatch(
+    contributing,
+    /publishes two packages|packs both packages|publish both packages|both published tarballs|两个 npm Tarball|只发布[^\n]*两个包/
   )
-  for (const source of [contributing, ...publicReferences]) {
-    assert.doesNotMatch(
-      source,
-      /publishes two packages|packs both packages|publish both packages|both published tarballs|两个 npm Tarball|只发布[^\n]*两个包/
-    )
-  }
   assert.match(contributing, /`@canofold\/plugins`[^\n]*Markdown plugins and search providers/)
   assert.doesNotMatch(contributing, /`@canofold\/plugins`[^\n]*site-extension/)
   assert.match(contributing, /pnpm test:release/)
-  for (const source of publicReferences) {
-    for (const manifest of packageManifests) {
-      assert.ok(source.includes(`\`${manifest.name}\``), `public API reference must include ${manifest.name}`)
-    }
+  for (const manifest of packageManifests) {
+    assert.ok(contributing.includes(`\`${manifest.name}\``), `CONTRIBUTING.md must include ${manifest.name}`)
   }
 })
 
@@ -298,10 +268,6 @@ test('Canofold shell publishes only the canonical site-shell stylesheet', async 
   assert.doesNotMatch(source, /\.cf-sidebar-open\b/)
   assert.doesNotMatch(source, /\.cf-outline-link-active\b/)
   assert.doesNotMatch(source, /body\[data-canofold-sidebar-open\]/)
-})
-
-test('the retired showcase stylesheet stays deleted', async () => {
-  await assert.rejects(() => access(join(root, 'site/docs/showcase.css')))
 })
 
 test('workspace styles do not reference undefined Canofold custom properties', async () => {
@@ -454,32 +420,21 @@ test('Canofold typechecks every public Markdown code entry from source', async (
   }
 })
 
-test('Markdown benchmark uses the current default-locale fixture', async () => {
+test('Markdown benchmark uses a self-contained representative corpus', async () => {
   const rootPackage = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
   const benchmark = await readFile(join(root, 'packages/markdown/scripts/benchmark.mjs'), 'utf8')
-  const fixture = join(root, 'site/docs/zh/markdown/playground.md')
 
   assert.equal(
     rootPackage.scripts['benchmark:markdown'],
     'pnpm --filter @canofold/markdown build && node packages/markdown/scripts/benchmark.mjs'
   )
-  assert.match(benchmark, /site\/docs\/zh\/markdown\/playground\.md/)
-  await access(fixture)
+  assert.match(benchmark, /const technicalCorpus = \[/)
+  assert.doesNotMatch(benchmark, /site\/docs/)
 })
 
-test('CI and public documentation use the supported Node.js runtime', async () => {
+test('CI uses the supported Node.js runtime', async () => {
   const canofoldPackage = JSON.parse(await readFile(join(root, 'packages/canofold/package.json'), 'utf8'))
   const workflow = await readFile(join(root, '.github/workflows/ci.yml'), 'utf8')
-  const publicGuides = await Promise.all(
-    [
-      'README.md',
-      'README.zh-CN.md',
-      'site/docs/zh/guide/introduction/getting-started.md',
-      'site/docs/en/guide/introduction/getting-started.md',
-      'site/docs/zh/guide/delivery/deployment.md',
-      'site/docs/en/guide/delivery/deployment.md'
-    ].map((path) => readFile(join(root, path), 'utf8'))
-  )
 
   assert.equal(canofoldPackage.engines.node, '>=22')
   const setupNodeSteps = workflow.match(/uses:\s*actions\/setup-node@/g)?.length ?? 0
@@ -487,7 +442,4 @@ test('CI and public documentation use the supported Node.js runtime', async () =
   assert.ok(setupNodeSteps >= 3, 'release, platform, and React jobs must all configure Node.js')
   assert.equal(node22Steps, setupNodeSteps)
   assert.doesNotMatch(workflow, /node-version:\s*20/)
-  for (const guide of publicGuides) {
-    assert.doesNotMatch(guide, /Node(?:\.js)?:?\s*20(?:\+| or later| 或更高版本)?/i)
-  }
 })
