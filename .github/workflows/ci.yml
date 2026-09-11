@@ -36,39 +36,6 @@ jobs:
       - name: Release checks
         run: pnpm test:release
 
-  browser-e2e:
-    name: Browser E2E
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.9.0
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run browser E2E tests
-        run: pnpm test:e2e
-
-      - name: Upload Playwright report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
-
   platform-smoke:
     name: Packed CLI (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

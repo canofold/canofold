@@ -7,7 +7,7 @@ dist/
 *.tsbuildinfo
 *.tgz
 
-# Canofold generated artifacts at any depth, including `site/.canofold`.
+# Canofold generated artifacts at any depth.
 .canofold/
 .canofold-dev/
 

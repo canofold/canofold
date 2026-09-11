@@ -38,21 +38,18 @@ describe('pipePrefixedOutput', () => {
 })
 
 describe('workspaceProcessConfigs', () => {
-  it('enables the inspector only for debug sessions and forwards the site port', () => {
+  it('enables the inspector only for debug sessions', () => {
     const regular = workspaceProcessConfigs({
       env: { CANOFOLD_DEV_INSPECT: '9999' },
-      port: '34567',
       workspaceId: 'regular-workspace'
     })
     const debug = workspaceProcessConfigs({
       debug: true,
       env: {},
-      port: '34567',
       workspaceId: 'debug-workspace'
     })
 
-    expect(regular).toHaveLength(3)
-    expect(regular.every((config) => config.env.PORT === '34567')).toBe(true)
+    expect(regular).toHaveLength(2)
     expect(regular.every((config) => config.env.CANOFOLD_DEV_WORKSPACE_ID === 'regular-workspace')).toBe(true)
     expect(regular.every((config) => config.env.CANOFOLD_DEV_INSPECT === undefined)).toBe(true)
     expect(debug.every((config) => config.env.CANOFOLD_DEV_INSPECT === '9230')).toBe(true)
@@ -76,7 +73,7 @@ describe('createWorkspaceSupervisor', () => {
       onUnexpectedExit
     })
 
-    expect(spawnProcess).toHaveBeenCalledTimes(3)
+    expect(spawnProcess).toHaveBeenCalledTimes(2)
     await supervisor.close()
     expect(children.every((child) => child.kill.mock.calls[0]?.[0] === 'SIGTERM')).toBe(true)
     expect(onUnexpectedExit).not.toHaveBeenCalled()

@@ -96,14 +96,12 @@ export function createWorkspaceSupervisor({
 
 export function workspaceProcessConfigs({
   debug = false,
-  port = process.env.PORT,
   env = process.env,
   workspaceId = randomUUID()
 } = {}) {
   const sharedEnv = { ...env, CANOFOLD_DEV_WORKSPACE_ID: workspaceId }
   if (debug) sharedEnv.CANOFOLD_DEV_INSPECT = env.CANOFOLD_DEV_INSPECT || '9230'
   else delete sharedEnv.CANOFOLD_DEV_INSPECT
-  if (port) sharedEnv.PORT = port
   return [
     {
       name: 'markdown',
@@ -116,13 +114,6 @@ export function workspaceProcessConfigs({
       name: 'canofold',
       command: process.execPath,
       args: [join(repoRoot, 'scripts/dev/watchCanofold.mjs')],
-      cwd: repoRoot,
-      env: sharedEnv
-    },
-    {
-      name: 'site',
-      command: process.execPath,
-      args: [join(repoRoot, 'scripts/dev/runLinkedSite.mjs')],
       cwd: repoRoot,
       env: sharedEnv
     }
