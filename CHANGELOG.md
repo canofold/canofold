@@ -5,6 +5,7 @@
 - Include generated TypeScript declaration files in the published packages so external TypeScript projects can consume `canofold` without source-path aliases.
 - Verify that packed release artifacts include the public declaration files before publishing.
 - Pin the tested `lucide-react` runtime version so independent installations retain correct React hydration.
+- Update the transitive `js-yaml` dependency to address a high-severity denial-of-service vulnerability.
 
 ## 0.2.0 - 2026-09-05
 
