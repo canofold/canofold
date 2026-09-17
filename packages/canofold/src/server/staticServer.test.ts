@@ -167,6 +167,24 @@ describe('resolveRequestPath', () => {
     }
   })
 
+  it('rejects a request whose resolved file is a symlink outside the static root', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-static-server-symlink-'))
+    const root = join(cwd, 'site')
+    await mkdir(root)
+    await writeFile(join(cwd, 'secret.txt'), 'secret')
+    await symlink(join(cwd, 'secret.txt'), join(root, 'secret.txt'))
+    const server = await startStaticServer({ root, port: 0 })
+
+    try {
+      const response = await requestStaticServer(server.port, '/secret.txt')
+      expect(response.status).toBe(403)
+      expect(response.body).toBe('Forbidden')
+    } finally {
+      await server.close()
+      await rm(cwd, { recursive: true, force: true })
+    }
+  })
+
   it('maps requests under basePath and reads the generated 404 page', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-static-base-'))
     await writeFile(join(cwd, '404.html'), '<html><body>Custom missing</body></html>')
@@ -221,6 +239,58 @@ describe('resolveRequestPath', () => {
       expect(forbidden.status).toBe(403)
       expect(forbidden.body).toBe('Forbidden')
     } finally {
+      await server.close()
+      await rm(cwd, { recursive: true, force: true })
+    }
+  })
+
+  it('mounts framework middleware on the same HTTP server and closes it', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-static-middleware-'))
+    await writeFile(join(cwd, 'index.html'), '<html><body>Home</body></html>')
+    const close = vi.fn(async () => undefined)
+    const server = await startStaticServer({
+      root: cwd,
+      port: 0,
+      configureServer: async () => ({
+        middleware(request, response, next) {
+          if (request.url !== '/virtual.js') {
+            next()
+            return
+          }
+          response.statusCode = 200
+          response.setHeader('content-type', 'text/javascript')
+          response.end('export const mounted = true')
+        },
+        close
+      })
+    })
+
+    expect((await requestStaticServer(server.port, '/virtual.js')).body).toBe('export const mounted = true')
+    expect((await requestStaticServer(server.port, '/')).body).toContain('Home')
+    await server.close()
+    expect(close).toHaveBeenCalledOnce()
+  })
+
+  it('reports a synchronously thrown framework middleware error', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-static-middleware-error-'))
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const server = await startStaticServer({
+      root: cwd,
+      port: 0,
+      configureServer: () => ({
+        middleware() {
+          throw new Error('middleware failed')
+        }
+      })
+    })
+
+    try {
+      const response = await requestStaticServer(server.port, '/')
+      expect(response.status).toBe(500)
+      expect(response.body).toBe('Internal server error')
+      expect(errorLog).toHaveBeenCalledWith('[canofold] Mounted development server error:', expect.any(Error))
+    } finally {
+      errorLog.mockRestore()
       await server.close()
       await rm(cwd, { recursive: true, force: true })
     }

@@ -5,10 +5,12 @@ import { routeOutputPathFor } from '../content/routes'
 import type { ContentGraph } from '../content/types'
 import { searchProviderClient } from '../search'
 import { portablePathKey } from '../utils/paths'
+import { BUILT_IN_BRAND_OUTPUT_PATHS } from '../brand'
 
 const INTERNAL_OUTPUT_PATHS = new Set(['.benchmark.json'])
 export const RESERVED_OUTPUT_DIRECTORIES = [
   'assets/canofold-markdown',
+  'assets/canofold-demos',
   'assets/canofold-playground',
   'assets/canofold-plugins',
   'assets/fonts',
@@ -51,6 +53,7 @@ function plannedOutputPaths(config: CanofoldConfig, graph: ContentGraph) {
     '.benchmark.json',
     '404.html',
     'assets/canofold.css',
+    ...BUILT_IN_BRAND_OUTPUT_PATHS,
     'robots.txt',
     'ai/pages.json',
     'ai/manifest.json',

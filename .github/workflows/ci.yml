@@ -92,3 +92,31 @@ jobs:
         run: node scripts/test-react-consumer.mjs
         env:
           REACT_VERSION: ${{ matrix.react }}
+
+  vite-compatibility:
+    name: Vite ${{ matrix.vite }} compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        vite: ['7.0.0', '8.0.0']
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.9.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pack, install, and build a component-docs consumer
+        run: pnpm test:packed-cli
+        env:
+          VITE_VERSION: ${{ matrix.vite }}

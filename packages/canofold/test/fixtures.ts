@@ -41,6 +41,7 @@ export function createMockPage(overrides: Partial<DocPage> = {}): DocPage {
     headings: [{ level: 1, text: 'Guide', slug: 'guide' }],
     searchText: 'Guide',
     codeExamples: [],
+    demos: [],
     lastUpdated: '2026-07-23T00:00:00.000Z',
     frontmatter: {},
     ...overrides

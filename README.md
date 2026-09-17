@@ -10,6 +10,7 @@ Canofold is a static-first, minimally invasive, and extensible knowledge and doc
 |---|---|
 | `canofold` | You want to build and publish a complete documentation site |
 | `@canofold/markdown` | You want to render Canofold Markdown inside a React application |
+| `@canofold/vite` | You want live component demos powered by an existing Vite project |
 | `@canofold/plugins` | You need official Markdown plugins or the Pagefind search provider |
 
 ## Quick start

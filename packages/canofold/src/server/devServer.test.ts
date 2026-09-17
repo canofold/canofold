@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BuildResult } from '../commands/build'
+import type { CanofoldDemoDevContext } from '../demos/types'
 import { createMockConfig, createMockGraph, createMockPage } from '../../test/fixtures'
 
 const mocks = vi.hoisted(() => ({
@@ -105,6 +106,73 @@ describe('createBuildScheduler', () => {
 })
 
 describe('startDevServer', () => {
+  it('restarts the mounted demo engine only when its development identity changes', async () => {
+    let onFileEvent: ((eventName: string, path: string) => void) | undefined
+    const watcher = {
+      on: vi.fn((eventName: string, listener: (...arguments_: unknown[]) => void) => {
+        if (eventName === 'all') {
+          onFileEvent = listener as (eventName: string, path: string) => void
+        }
+        return watcher
+      }),
+      close: vi.fn(async () => undefined)
+    }
+    const firstRuntime = {
+      update: vi.fn(async () => undefined),
+      close: vi.fn(async () => undefined)
+    }
+    const secondRuntime = {
+      update: vi.fn(async () => undefined),
+      close: vi.fn(async () => undefined)
+    }
+    const firstStartDev = vi.fn(async (_context: CanofoldDemoDevContext) => firstRuntime)
+    const secondStartDev = vi.fn(async (_context: CanofoldDemoDevContext) => secondRuntime)
+    const prepare = vi.fn(async () => ({ clientUrl: '/demo.js', demos: {} }))
+    const resultWithEngine = (cacheKey: string, startDev: typeof firstStartDev): BuildResult =>
+      buildResult({
+        config: createMockConfig({
+          demos: { engine: { id: 'fixture', version: '1', cacheKey, prepare, startDev } }
+        }),
+        demoManifest: { clientUrl: '/demo.js', demos: {} }
+      })
+
+    mocks.watch.mockReturnValue(watcher)
+    mocks.startStaticServer.mockImplementation(async (options) => {
+      const mounted = await options.configureServer?.({} as never)
+      return {
+        port: 3333,
+        reload: vi.fn(),
+        sendBuildError: vi.fn(),
+        sendBuildOk: vi.fn(),
+        close: vi.fn(async () => mounted?.close?.())
+      }
+    })
+    mocks.runBuild
+      .mockResolvedValueOnce(resultWithEngine('first', firstStartDev))
+      .mockResolvedValueOnce(resultWithEngine('second', secondStartDev))
+      .mockResolvedValueOnce(resultWithEngine('second', secondStartDev))
+
+    const server = await startDevServer({ cwd: '/project', port: 3333 })
+    expect(firstStartDev).toHaveBeenCalledOnce()
+    const firstContext = firstStartDev.mock.calls[0]?.[0]
+    expect(firstContext?.shouldIgnorePath('/project/.canofold/dist/index.html')).toBe(true)
+    expect(firstContext?.shouldIgnorePath('/project/.dist.tmp-build/index.html')).toBe(true)
+    expect(firstContext?.shouldIgnorePath('/project/src/button.tsx')).toBe(false)
+
+    onFileEvent?.('change', 'canofold.config.ts')
+    await wait(120)
+    expect(secondStartDev).toHaveBeenCalledOnce()
+    expect(firstRuntime.close).toHaveBeenCalledOnce()
+
+    onFileEvent?.('change', 'docs/guide.md')
+    await wait(120)
+    expect(secondStartDev).toHaveBeenCalledOnce()
+    expect(secondRuntime.update).toHaveBeenCalledOnce()
+
+    await server.close()
+    expect(secondRuntime.close).toHaveBeenCalledOnce()
+  })
+
   it('restores the complete changed-file batch after a failed build', async () => {
     let onFileEvent: ((eventName: string, path: string) => void) | undefined
     let onWatcherError: ((error: unknown) => void) | undefined

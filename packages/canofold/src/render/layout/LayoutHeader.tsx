@@ -246,7 +246,7 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
         </div>
       </div>
       {!home ? (
-        <div className="cf-progress" aria-hidden="true">
+        <div className="cf-route-progress" aria-hidden="true">
           <span data-canofold-progress="" />
         </div>
       ) : null}

@@ -10,6 +10,7 @@ const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-packed-cli-'))
 const packsRoot = join(temporaryRoot, 'packs')
 const consumerRoot = join(temporaryRoot, 'consumer')
+const viteVersion = process.env.VITE_VERSION
 const modulesState = await readFile(join(workspace, 'node_modules/.modules.yaml'), 'utf8')
 const workspaceStore =
   modulesState.match(/^\s*["']?storeDir["']?:\s*["']([^"']+)["'],?\s*$/m)?.[1] ??
@@ -63,6 +64,7 @@ async function assertExists(relativePath) {
 try {
   const markdownPackage = await pack(join(workspace, 'packages/markdown'))
   const canofoldPackage = await pack(join(workspace, 'packages/canofold'))
+  const vitePackage = await pack(join(workspace, 'packages/vite'))
   const pluginsPackage = await pack(join(workspace, 'packages/plugins'))
   await mkdir(consumerRoot)
 
@@ -78,9 +80,13 @@ try {
             `file:${portableRelativePath(consumerRoot, markdownPackage.tarball)}`,
           [canofoldPackage.manifest.name]:
             `file:${portableRelativePath(consumerRoot, canofoldPackage.tarball)}`,
+          [vitePackage.manifest.name]: `file:${portableRelativePath(consumerRoot, vitePackage.tarball)}`,
           [pluginsPackage.manifest.name]:
             `file:${portableRelativePath(consumerRoot, pluginsPackage.tarball)}`,
-          pagefind: pluginsPackage.manifest.peerDependencies.pagefind
+          pagefind: pluginsPackage.manifest.peerDependencies.pagefind,
+          react: canofoldPackage.manifest.dependencies.react,
+          'react-dom': canofoldPackage.manifest.dependencies['react-dom'],
+          vite: viteVersion ?? vitePackage.manifest.peerDependencies.vite.split(' || ')[0].replace('^', '')
         }
       },
       null,
@@ -93,13 +99,21 @@ try {
 overrides:
   '${markdownPackage.manifest.name}@${markdownPackage.manifest.version}': file:${portableRelativePath(consumerRoot, markdownPackage.tarball)}
   '${canofoldPackage.manifest.name}@${canofoldPackage.manifest.version}': file:${portableRelativePath(consumerRoot, canofoldPackage.tarball)}
+  '${vitePackage.manifest.name}@${vitePackage.manifest.version}': file:${portableRelativePath(consumerRoot, vitePackage.tarball)}
 `
   )
 
   runPnpm(['install', '--prefer-offline', '--ignore-scripts', '--store-dir', workspaceStore])
+  if (viteVersion) {
+    const installedVite = JSON.parse(
+      await readFile(join(consumerRoot, 'node_modules/vite/package.json'), 'utf8')
+    )
+    assert.equal(installedVite.version, viteVersion)
+  }
   for (const declaration of [
     'node_modules/@canofold/markdown/dist/index.d.ts',
     'node_modules/canofold/dist/index.d.ts',
+    'node_modules/@canofold/vite/dist/index.d.ts',
     'node_modules/@canofold/plugins/dist/index.d.ts'
   ]) {
     await assertExists(declaration)
@@ -117,12 +131,14 @@ overrides:
   await write(
     'canofold.config.mts',
     `import { pagefind } from '@canofold/plugins/pagefind'
+import { vite } from '@canofold/vite'
 import type { CanofoldConfigInput } from 'canofold'
 
 export default {
   title: 'Packed RC',
   description: 'Packed release candidate fixture',
   requiredVersion: '${canofoldPackage.manifest.version}',
+  demos: { engine: vite({ configFile: false }) },
   search: { provider: pagefind() },
   extensions: [{ resolve: './release-extension.ts', options: { marker: 'packed' } }],
   i18n: { defaultLocale: 'en', locales: ['en', 'zh'] },
@@ -172,8 +188,18 @@ export default defineExtension((options) => ({
   const longText = `${'Bounded AI output. '.repeat(1400)}\n`
   await write(
     'docs/index.md',
-    `---\ntitle: Packed home\ndescription: Release candidate home\n---\n\n# Packed home\n\nPACKED_TOKEN\n\n${longText}`
+    `---\ntitle: Packed home\ndescription: Release candidate home\n---\n\n# Packed home\n\nPACKED_TOKEN\n\n::demo[Packed button]{src="/src/button.demo.tsx"}\n\n${longText}`
   )
+  await write(
+    'src/button.demo.tsx',
+    `import './button.css'
+
+export default function PackedButtonDemo() {
+  return <button className="packed-button">Packed demo</button>
+}
+`
+  )
+  await write('src/button.css', '.packed-button { color: rgb(1 2 3); }\n')
   await write(
     'docs/guide/platform/internals/cache/index.md',
     `---\ntitle: Deep cache page\ngroup: Guide\n---\n\n# Deep cache page\n\nThe recursive sidebar supports this depth.\n`
@@ -200,6 +226,11 @@ export default defineExtension((options) => ({
     '.canofold/dist/v0/zh/index.html',
     '.canofold/dist/pagefind/pagefind.js',
     '.canofold/dist/pagefind/pagefind-worker.js',
+    '.canofold/dist/assets/canofold-brand/logo-light.webp',
+    '.canofold/dist/assets/canofold-brand/logo-dark.webp',
+    '.canofold/dist/assets/canofold-brand/favicon.webp',
+    '.canofold/dist/assets/canofold-demos/index.js',
+    '.canofold/dist/assets/canofold-demos/styles.css',
     '.canofold/dist/ai/manifest.json',
     '.canofold/dist/llms-full.txt',
     '.canofold/dist/extensions/release-audit/result.json'
@@ -210,7 +241,13 @@ export default defineExtension((options) => ({
   await assert.rejects(access(join(consumerRoot, '.canofold/dist/pagefind/pagefind-ui.js')))
   const homeHtml = await readFile(join(consumerRoot, '.canofold/dist/index.html'), 'utf8')
   assert.match(homeHtml, /Extension transformed/)
+  assert.match(homeHtml, /data-cf-component="demo"/)
+  assert.match(homeHtml, /PackedButtonDemo/)
   assert.match(homeHtml, /href="#canofold-main"/)
+  assert.match(
+    await readFile(join(consumerRoot, '.canofold/dist/assets/canofold-demos/styles.css'), 'utf8'),
+    /packed-button/
+  )
   assert.match(
     await readFile(join(consumerRoot, '.canofold/dist/llms-full.txt'), 'utf8'),
     /ai\/manifest\.json/

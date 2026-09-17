@@ -7,7 +7,7 @@ import { LayoutDocument } from './layout/LayoutDocument'
 import { LayoutHeader } from './layout/LayoutHeader'
 import { createLayoutModel } from './layout/model'
 import { LayoutOverlays } from './layout/LayoutOverlays'
-import { DEFAULT_FAVICON } from './layoutContent'
+import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
 import { noFlashScript, outlineScript, shellScript } from './shellScripts'
 
 export function Layout({
@@ -17,6 +17,8 @@ export function Layout({
   home = false,
   markdownAssets,
   rawSource,
+  demoClientUrl,
+  demoStyleUrls = [],
   children
 }: {
   config: CanofoldConfig
@@ -25,6 +27,8 @@ export function Layout({
   home?: boolean
   markdownAssets: MarkdownAssets
   rawSource: string
+  demoClientUrl?: string
+  demoStyleUrls?: string[]
   children: ReactNode
 }) {
   const model = createLayoutModel({ config, graph, page, home, assets: markdownAssets, rawSource })
@@ -33,7 +37,7 @@ export function Layout({
     publicPathFor(config, `/assets/canofold-plugins/${asset.id}.js`)
   )
   const canonicalUrl = siteUrlFor(config, page.routePath)
-  const faviconPath = publicPathFor(config, config.theme.favicon ?? DEFAULT_FAVICON)
+  const faviconPath = publicPathFor(config, config.theme.favicon ?? DEFAULT_BRAND_ASSET_PATHS.favicon)
   const documentClassName = [
     config.layout.header ? undefined : 'cf-header-hidden',
     page.frontmatter.layout === 'playground' ? 'cf-playground-page' : undefined
@@ -93,6 +97,9 @@ export function Layout({
             data-canofold-page-head=""
           />
         ))}
+        {demoStyleUrls.map((url) => (
+          <link key={url} rel="stylesheet" href={url} />
+        ))}
         {config.theme.darkMode ? <script dangerouslySetInnerHTML={{ __html: noFlashScript }} /> : null}
       </head>
       <body>
@@ -110,6 +117,7 @@ export function Layout({
           data-canofold-playground-client-url={
             isPlayground ? publicPathFor(config, '/assets/canofold-playground/index.js') : undefined
           }
+          data-canofold-demo-client-url={demoClientUrl}
         >
           <a className="cf-skip-link" href="#canofold-main">
             {model.labels.skipToContent}
@@ -133,6 +141,7 @@ export function Layout({
         {isPlayground ? (
           <script type="module" src={publicPathFor(config, '/assets/canofold-playground/index.js')} />
         ) : null}
+        {demoClientUrl ? <script type="module" src={demoClientUrl} /> : null}
         <script dangerouslySetInnerHTML={{ __html: shellScript }} />
         <script dangerouslySetInnerHTML={{ __html: outlineScript }} />
         {config.search.enabled ? (

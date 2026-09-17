@@ -21,6 +21,12 @@ const packages = [
     fileCountBudget: 45
   },
   {
+    name: '@canofold/vite',
+    root: join(workspace, 'packages/vite'),
+    compressedBudget: 32 * 1024,
+    fileCountBudget: 12
+  },
+  {
     name: '@canofold/plugins',
     root: join(workspace, 'packages/plugins'),
     compressedBudget: 400 * 1024,

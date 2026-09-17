@@ -15,6 +15,7 @@ import type {
   PhrasingContent,
   Text
 } from 'mdast'
+import type { Directives } from 'mdast-util-directive'
 import type { Node, Parent } from 'unist'
 import { normalizeCallouts } from './plugins/directives'
 import { collectRichDirectiveIssues, type MarkdownDirectiveIssue } from './directiveValidation'
@@ -33,6 +34,17 @@ export interface MarkdownCodeExample {
   code: string
 }
 
+export interface MarkdownDirective {
+  name: string
+  type: 'containerDirective' | 'leafDirective' | 'textDirective'
+  label: string
+  attributes: Record<string, string>
+  line?: number
+  column?: number
+  offset?: number
+  endOffset?: number
+}
+
 export interface MarkdownAnalysis {
   text: string
   headings: MarkdownHeading[]
@@ -40,6 +52,7 @@ export interface MarkdownAnalysis {
   links: string[]
   images: string[]
   missingCodeBlockLanguages: number
+  directives: MarkdownDirective[]
   directiveIssues: MarkdownDirectiveIssue[]
 }
 
@@ -68,6 +81,7 @@ export function analyzeMarkdown(source: string, options: AnalyzeMarkdownOptions 
   const codeExamples: MarkdownCodeExample[] = []
   const links: string[] = []
   const images: string[] = []
+  const directives: MarkdownDirective[] = []
   let missingCodeBlockLanguages = 0
   const definitions = new Map<string, string>()
 
@@ -108,6 +122,31 @@ export function analyzeMarkdown(source: string, options: AnalyzeMarkdownOptions 
       const url = definitions.get(image.identifier.toLowerCase())
       if (url) images.push(url)
     }
+    if (
+      node.type === 'containerDirective' ||
+      node.type === 'leafDirective' ||
+      node.type === 'textDirective'
+    ) {
+      const directive = node as Directives
+      directives.push({
+        name: directive.name,
+        type: directive.type,
+        label: nodeText(directive).replace(/\s+/g, ' ').trim(),
+        attributes: Object.fromEntries(
+          Object.entries(directive.attributes ?? {}).flatMap(([name, value]) =>
+            typeof value === 'string' ? [[name, value]] : []
+          )
+        ),
+        ...(directive.position?.start.line === undefined ? {} : { line: directive.position.start.line }),
+        ...(directive.position?.start.column === undefined
+          ? {}
+          : { column: directive.position.start.column }),
+        ...(directive.position?.start.offset === undefined
+          ? {}
+          : { offset: directive.position.start.offset }),
+        ...(directive.position?.end.offset === undefined ? {} : { endOffset: directive.position.end.offset })
+      })
+    }
   })
 
   const activePlugins = activeMarkdownPlugins(normalizeMarkdownPlugins(options.plugins), {
@@ -122,6 +161,7 @@ export function analyzeMarkdown(source: string, options: AnalyzeMarkdownOptions 
     links,
     images,
     missingCodeBlockLanguages,
+    directives,
     directiveIssues: collectRichDirectiveIssues(tree, markdownPluginDirectiveNames(activePlugins)).map(
       ({ message, line, column }) => ({
         message,

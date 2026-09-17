@@ -2,6 +2,26 @@ import { describe, expect, it } from 'vitest'
 import { analyzeMarkdown } from './analyze'
 
 describe('analyzeMarkdown', () => {
+  it('returns declared directive metadata for host integrations', () => {
+    const result = analyzeMarkdown('::demo[Basic usage]{src="/src/demo/basic.tsx" sandbox="iframe"}', {
+      plugins: [{ name: 'demo-host', directiveNames: ['demo'] }]
+    })
+
+    expect(result.directives).toEqual([
+      {
+        name: 'demo',
+        type: 'leafDirective',
+        label: 'Basic usage',
+        attributes: { src: '/src/demo/basic.tsx', sandbox: 'iframe' },
+        line: 1,
+        column: 1,
+        offset: 0,
+        endOffset: 63
+      }
+    ])
+    expect(result.directiveIssues).toEqual([])
+  })
+
   it('extracts headings, search text, and code examples from the parser tree', () => {
     const result = analyzeMarkdown(`# API
 

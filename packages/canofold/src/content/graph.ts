@@ -3,6 +3,7 @@ import matter from 'gray-matter'
 import { join, posix } from 'node:path'
 import type { CanofoldConfig, CanofoldNavigationItem, CanofoldVersionItem } from '../config/types'
 import type { ExtensionHost } from '../extensions/host'
+import { demoDirectivePlugin, demoReferencesForPage } from '../demos/references'
 import { portablePathKey, resolveProjectPath } from '../utils/paths'
 import { isMarkdownIndexName, isMdxPath } from './fileKinds'
 import { frontmatterSchema } from './frontmatter'
@@ -227,7 +228,9 @@ async function scanVersionPages(
     const data = frontmatterSchema.parse(parsed.data)
     const status = data.status ?? 'published'
     if (status === 'draft') continue
-    const analysis = analyzeMarkdown(parsed.content)
+    const analysis = analyzeMarkdown(parsed.content, {
+      plugins: [...config.markdown.plugins, demoDirectivePlugin]
+    })
     const order =
       typeof data.order === 'number' && Number.isFinite(data.order) ? data.order : Number.MAX_SAFE_INTEGER
     const relativePath = file.path.replace(/\\/g, '/')
@@ -255,9 +258,11 @@ async function scanVersionPages(
       headings: analysis.headings,
       searchText: analysis.text,
       codeExamples: analysis.codeExamples,
+      demos: [],
       lastUpdated: data.updatedAt ?? new Date(file.mtimeMs).toISOString(),
       frontmatter: data
     }
+    page.demos = demoReferencesForPage(page, analysis.directives)
     pages.push(extensions ? await extensions.extendPage(page) : page)
   }
   return pages

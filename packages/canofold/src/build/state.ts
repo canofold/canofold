@@ -13,6 +13,7 @@ import { resolveProjectPath } from '../utils/paths'
 import { detectMarkdownAssets } from '@canofold/markdown/server/analyze'
 import { fingerprint, fingerprintBytes } from './fingerprint'
 import { BUILD_MANIFEST_SCHEMA_VERSION, type BuildManifest } from './types'
+import type { CanofoldDemoManifest } from '../demos/types'
 
 const SUPPORT_FILE_CONCURRENCY = 16
 
@@ -138,6 +139,7 @@ function serializablePage(page: DocPage) {
     headings: page.headings,
     searchText: page.searchText,
     codeExamples: page.codeExamples,
+    demos: page.demos,
     lastUpdated: page.lastUpdated,
     ...(page.previous ? { previous: page.previous } : {}),
     ...(page.next ? { next: page.next } : {}),
@@ -160,6 +162,16 @@ function serializableConfig(config: CanofoldConfig) {
   const provider = config.search.provider
   return {
     ...config,
+    demos: {
+      setup: config.demos.setup ?? null,
+      engine: config.demos.engine
+        ? {
+            id: config.demos.engine.id,
+            version: config.demos.engine.version ?? '',
+            cacheKey: config.demos.engine.cacheKey ?? null
+          }
+        : null
+    },
     markdown: {
       ...config.markdown,
       plugins: config.markdown.plugins.map((plugin) => ({
@@ -187,20 +199,36 @@ export async function createBuildManifest(
   cwd: string,
   config: CanofoldConfig,
   graph: ContentGraph,
-  extensionFingerprint = fingerprint({ extensions: [] })
+  extensionFingerprint = fingerprint({ extensions: [] }),
+  demoManifest?: CanofoldDemoManifest,
+  demoDelivery: 'build' | 'dev' = 'build'
 ): Promise<BuildManifest> {
   const dependenciesByPage = new Map<string, Array<{ path: string; fingerprint: string }>>()
   await mapConcurrent(graph.pages, SUPPORT_FILE_CONCURRENCY, async (page) => {
-    if (!isMdxPath(page.relativePath)) return
-    const imports = prepareMdxSource(page.body).imports
-    const paths = await localComponentDependencyPaths(imports, page.sourcePath, cwd)
+    const paths = isMdxPath(page.relativePath)
+      ? await localComponentDependencyPaths(prepareMdxSource(page.body).imports, page.sourcePath, cwd)
+      : []
     const dependencies = await mapConcurrent(paths, SUPPORT_FILE_CONCURRENCY, async (path) => ({
       path: portablePath(cwd, path),
       fingerprint: fingerprintBytes(await readFile(path))
     }))
+    for (const reference of page.demos) {
+      const demo = demoManifest?.demos[reference.id]
+      if (!demo) continue
+      const demoDependencies = demo.dependencyPaths?.length ? demo.dependencyPaths : [demo.modulePath]
+      dependencies.push(
+        ...(await mapConcurrent(demoDependencies, SUPPORT_FILE_CONCURRENCY, async (path) => ({
+          path: portablePath(cwd, path),
+          fingerprint: fingerprintBytes(await readFile(path))
+        })))
+      )
+    }
+    if (dependencies.length === 0) return
     dependenciesByPage.set(
       buildPageKey(page),
-      dependencies.sort((a, b) => a.path.localeCompare(b.path))
+      [...new Map(dependencies.map((dependency) => [dependency.path, dependency])).values()].sort((a, b) =>
+        a.path.localeCompare(b.path)
+      )
     )
   })
   const pageDependencyPaths = new Set(
@@ -222,7 +250,16 @@ export async function createBuildManifest(
         ).math
     ),
     playground: graph.pages.some((page) => page.frontmatter.layout === 'playground'),
-    support: await supportFingerprint(cwd, config, pageDependencyPaths)
+    support: await supportFingerprint(cwd, config, pageDependencyPaths),
+    demoDelivery: demoManifest ? demoDelivery : null,
+    demoRuntime: demoManifest
+      ? {
+          clientUrl: demoManifest.clientUrl,
+          styleUrls: demoManifest.styleUrls ?? [],
+          outputPaths: demoManifest.outputPaths ?? []
+        }
+      : null,
+    demoEngineDependencies: await fingerprintExistingFiles(demoManifest?.dependencyPaths ?? [])
   })
   const pages = Object.fromEntries(
     graph.pages.map((page) => [

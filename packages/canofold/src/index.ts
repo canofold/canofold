@@ -4,6 +4,17 @@ export { defineConfig } from './config/define'
 export { defineSearchProvider, type SearchProvider, type SearchProviderContext } from './search'
 
 export type { CanofoldConfigInput, CanofoldExtensionDescriptor, CanofoldJsonValue } from './config/types'
+export type {
+  CanofoldDemoCacheValue,
+  CanofoldDemoDevContext,
+  CanofoldDemoDevRuntime,
+  CanofoldDemoEngine,
+  CanofoldDemoManifest,
+  CanofoldDemoPrepareContext,
+  CanofoldDemoReference,
+  CanofoldPreparedDemo,
+  CanofoldDemoSandbox
+} from './demos/types'
 export {
   CANOFOLD_EXTENSION_API_VERSION,
   defineExtension,

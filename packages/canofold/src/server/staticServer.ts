@@ -1,4 +1,4 @@
-import { createServer } from 'node:http'
+import { createServer, type IncomingMessage, type Server as HttpServer, type ServerResponse } from 'node:http'
 import { readFile, realpath } from 'node:fs/promises'
 import { extname, isAbsolute, join, normalize, relative, resolve, sep } from 'node:path'
 import { isInside } from '../utils/paths'
@@ -42,6 +42,11 @@ export interface DevReloadUpdate {
   type: 'update'
   mode: 'page' | 'full'
   routes: string[]
+}
+
+export interface StaticServerMiddleware {
+  middleware(request: IncomingMessage, response: ServerResponse, next: (error?: unknown) => void): void
+  close?(): void | Promise<void>
 }
 
 export function closeReloadClients(clients: Set<ReloadClient>) {
@@ -177,15 +182,20 @@ export async function startStaticServer({
   root,
   port,
   liveReload = false,
-  basePath = '/'
+  basePath = '/',
+  configureServer
 }: {
   root: string | (() => string)
   port: number
   liveReload?: boolean
   basePath?: string | (() => string)
+  /** Mount another development tool on the same HTTP server before static files. */
+  configureServer?: (
+    server: HttpServer
+  ) => StaticServerMiddleware | undefined | Promise<StaticServerMiddleware | undefined>
 }) {
   const reloadClients = new Set<ReloadClient>()
-  const server = createServer(async (request, response) => {
+  const staticHandler = async (request: IncomingMessage, response: ServerResponse) => {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       response.writeHead(405, { allow: 'GET, HEAD' })
       response.end('Method not allowed')
@@ -292,7 +302,29 @@ export async function startStaticServer({
         sendInternalError(error)
       }
     }
+  }
+  let mounted: StaticServerMiddleware | undefined
+  const server = createServer((request, response) => {
+    const next = (error?: unknown) => {
+      if (error) {
+        logError('Mounted development server error:', error)
+        response.statusCode = 500
+        response.end('Internal server error')
+        return
+      }
+      void staticHandler(request, response)
+    }
+    if (!mounted) {
+      next()
+      return
+    }
+    try {
+      mounted.middleware(request, response, next)
+    } catch (error) {
+      next(error)
+    }
   })
+  mounted = await configureServer?.(server)
 
   await new Promise<void>((resolveListen, rejectListen) => {
     const onError = (error: Error) => rejectListen(error)
@@ -322,10 +354,11 @@ export async function startStaticServer({
     sendBuildOk: () => {
       writeReloadClients(reloadClients, formatServerSentEvent('build-ok'))
     },
-    close: () => {
+    close: async () => {
       if (heartbeatTimer) clearInterval(heartbeatTimer)
       closeReloadClients(reloadClients)
-      return new Promise<void>((resolveClose, reject) =>
+      await mounted?.close?.()
+      await new Promise<void>((resolveClose, reject) =>
         server.close((error) => (error ? reject(error) : resolveClose()))
       )
     }

@@ -13,7 +13,7 @@
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "build": "pnpm --filter @canofold/markdown build && pnpm --filter canofold build && pnpm --filter @canofold/plugins build",
+    "build": "pnpm --filter @canofold/markdown build && pnpm --filter canofold build && pnpm --filter @canofold/vite build && pnpm --filter @canofold/plugins build",
     "dev": "node scripts/dev/runWorkspace.mjs",
     "dev:debug": "node scripts/dev/runWorkspace.mjs --debug",
     "test": "pnpm build && vitest run",
@@ -25,7 +25,7 @@
     "test:watch": "vitest",
     "format": "prettier --write \"**/*.{ts,tsx,mts,cts,js,mjs,cjs,json,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,mts,cts,js,mjs,cjs,json,css}\"",
-    "typecheck": "pnpm --filter @canofold/markdown typecheck && pnpm --filter canofold typecheck && pnpm --filter @canofold/plugins typecheck",
+    "typecheck": "pnpm --filter @canofold/markdown typecheck && pnpm --filter canofold typecheck && pnpm --filter @canofold/vite typecheck && pnpm --filter @canofold/plugins typecheck",
     "report:bundles": "node scripts/bundle-report.mjs",
     "report:package": "node scripts/package-report.mjs",
     "audit:dependencies": "pnpm audit --prod --audit-level high",

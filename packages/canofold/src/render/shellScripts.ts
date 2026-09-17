@@ -34,6 +34,7 @@ export const shellScript = `window.__canofoldBootstrapShell = () => {
     window.__canofoldSearchDispose?.()
     window.__canofoldMarkdownDispose?.()
     window.__canofoldOutlineDispose?.()
+    window.__canofoldDemoDispose?.()
     window.__canofoldShellDispose?.()
   }
 
@@ -48,6 +49,12 @@ export const shellScript = `window.__canofoldBootstrapShell = () => {
       const loadModule = window.__canofoldLoadPageModule || ((url) => import(url))
       await loadModule(pageModule)
       window.__canofoldBootstrapPlayground?.()
+    }
+    const demoModule = pageRoot?.getAttribute('data-canofold-demo-client-url')
+    if (demoModule) {
+      const loadModule = window.__canofoldLoadPageModule || ((url) => import(url))
+      await loadModule(demoModule)
+      await window.__canofoldBootstrapDemos?.()
     }
   }
 

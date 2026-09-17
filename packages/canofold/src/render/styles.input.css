@@ -349,7 +349,7 @@ a {
   display: none;
 }
 
-.cf-progress {
+.cf-route-progress {
   position: absolute;
   inset: auto 0 0;
   height: 2px;
@@ -357,7 +357,7 @@ a {
   background: transparent;
 }
 
-.cf-progress > span {
+.cf-route-progress > span {
   display: block;
   width: 100%;
   height: 100%;
@@ -497,7 +497,7 @@ a {
   overflow: hidden;
 }
 
-.cf-playground-page .cf-progress {
+.cf-playground-page .cf-route-progress {
   display: none;
 }
 
@@ -853,6 +853,232 @@ a {
 
 .cf-header-hidden .cf-home {
   padding-top: 0;
+}
+
+.cf-home > .cf-content {
+  max-width: 72.5rem;
+  margin-inline: auto;
+  background: transparent;
+}
+
+/* Component demos */
+.cf-content .cf-demo {
+  --cf-demo-border: color-mix(in oklab, var(--cf-ink) 10%, var(--cf-border));
+  overflow: hidden;
+  margin: 1.5rem 0;
+  border: 1px solid var(--cf-demo-border);
+  border-radius: var(--cf-radius-lg);
+  background: var(--cf-surface);
+}
+
+.cf-content .cf-demo[data-cf-demo-sandbox='iframe'] .cf-demo-preview {
+  padding: 0;
+}
+
+.cf-content .cf-demo-preview {
+  display: grid;
+  min-height: 8rem;
+  place-items: center;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  background:
+    linear-gradient(45deg, var(--cf-surface-soft) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--cf-surface-soft) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--cf-surface-soft) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--cf-surface-soft) 75%);
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-size: 16px 16px;
+}
+
+.cf-demo-frame {
+  display: block;
+  width: 100%;
+  min-height: 12rem;
+  border: 0;
+  background: transparent;
+}
+
+.cf-demo-error,
+.cf-demo-preview[data-cf-demo-error] {
+  color: var(--cf-danger, #dc2626);
+  font-size: 0.9375rem;
+}
+
+.cf-content .cf-demo-details {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 1.65rem 1.5rem 1.15rem;
+  border-top: 1px solid var(--cf-demo-border);
+  background: var(--cf-surface);
+  text-align: left;
+}
+
+.cf-demo-title {
+  position: absolute;
+  top: 0;
+  left: 1.25rem;
+  padding: 0 0.5rem;
+  color: var(--cf-ink);
+  background: var(--cf-surface);
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.5;
+  transform: translateY(-50%);
+}
+
+.cf-demo-description {
+  margin: 0;
+  color: var(--cf-ink-body);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.cf-content .cf-demo-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  min-height: 3rem;
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border-top: 1px dashed var(--cf-demo-border);
+  background: var(--cf-surface);
+}
+
+.cf-content .cf-demo-action {
+  position: relative;
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--cf-radius-sm);
+  color: color-mix(in oklab, var(--cf-ink-secondary) 72%, transparent);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.cf-content .cf-demo-action:hover,
+.cf-content .cf-demo-action:focus-visible,
+.cf-content .cf-demo-source-toggle[aria-expanded='true'] {
+  color: var(--cf-ink-secondary);
+  background: transparent;
+  text-decoration: none;
+}
+
+.cf-content .cf-demo-action:focus-visible {
+  outline: 2px solid var(--cf-accent-500);
+  outline-offset: 2px;
+}
+
+.cf-demo-action::before,
+.cf-demo-tooltip {
+  position: absolute;
+  left: 50%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.cf-demo-action::before {
+  bottom: calc(100% + 0.32rem);
+  width: 0.55rem;
+  height: 0.55rem;
+  background: #202124;
+  content: '';
+  transform: translate(-50%, 0.2rem) rotate(45deg);
+}
+
+.cf-demo-tooltip {
+  bottom: calc(100% + 0.58rem);
+  max-width: 14rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.45rem;
+  color: #fff;
+  background: #202124;
+  box-shadow: 0 0.4rem 1rem rgb(0 0 0 / 20%);
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1.25;
+  white-space: nowrap;
+  transform: translate(-50%, 0.2rem);
+}
+
+.cf-demo-action:hover::before,
+.cf-demo-action:hover .cf-demo-tooltip,
+.cf-demo-action:focus-visible::before,
+.cf-demo-action:focus-visible .cf-demo-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0) rotate(45deg);
+}
+
+.cf-demo-action:hover .cf-demo-tooltip,
+.cf-demo-action:focus-visible .cf-demo-tooltip {
+  transform: translate(-50%, 0);
+}
+
+.cf-demo-action-icon {
+  --cf-demo-action-icon: none;
+
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  background: currentColor;
+  -webkit-mask: var(--cf-demo-action-icon) center / contain no-repeat;
+  mask: var(--cf-demo-action-icon) center / contain no-repeat;
+}
+
+.cf-demo-open-icon {
+  --cf-demo-action-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6'/%3E%3Cpath d='M10 14 21 3'/%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3C/svg%3E");
+}
+
+.cf-demo-source-icon {
+  --cf-demo-action-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m16 18 6-6-6-6'/%3E%3Cpath d='m8 6-6 6 6 6'/%3E%3C/svg%3E");
+}
+
+.cf-demo-source-toggle[aria-expanded='true'] .cf-demo-source-icon {
+  --cf-demo-action-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 16 4-4-4-4'/%3E%3Cpath d='m6 8-4 4 4 4'/%3E%3Cpath d='m14.5 4-5 16'/%3E%3C/svg%3E");
+}
+
+.cf-demo-source[hidden] {
+  display: none;
+}
+
+.cf-content .cf-demo-source > .cf-code {
+  margin: 0;
+  border-width: 1px 0 0;
+  border-radius: 0;
+}
+
+html[data-cf-demo-standalone],
+html[data-cf-demo-standalone] body {
+  min-height: 100%;
+}
+
+html[data-cf-demo-standalone] body {
+  display: grid;
+  box-sizing: border-box;
+  margin: 0;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  place-items: center;
+  background: var(--cf-canvas);
+}
+
+.cf-demo-standalone {
+  width: min(100%, 72rem);
 }
 
 .cf-hero {

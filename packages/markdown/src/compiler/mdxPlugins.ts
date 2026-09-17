@@ -7,7 +7,11 @@ import type { MarkdownHandlers } from './pluginPlan'
 import { createSyntaxHighlighterPlugin } from './highlighter'
 import { detectMarkdownSyntax } from './syntaxFeatures'
 import type { MarkdownCompilerContext } from './prepareMarkdown'
-import { activeMarkdownPlugins, markdownPluginFenceLanguages } from './plugins'
+import {
+  activeMarkdownPlugins,
+  markdownPluginFenceLanguages,
+  markdownPluginHighlightLanguages
+} from './plugins'
 
 interface MarkdownMdxPlugins {
   remarkPlugins: PluggableList
@@ -30,7 +34,14 @@ export async function createMarkdownMdxPlugins(
   const activePlugins = activeMarkdownPlugins(normalized.plugins, { source: resolvedSource, mode: 'mdx' })
   const pluginFenceLanguages = markdownPluginFenceLanguages(activePlugins)
   const activeOptions = { ...normalized, plugins: activePlugins }
-  const syntax = detectMarkdownSyntax(resolvedSource, pluginFenceLanguages)
+  const detectedSyntax = detectMarkdownSyntax(resolvedSource, pluginFenceLanguages)
+  const codeLanguages = [
+    ...new Set([...detectedSyntax.codeLanguages, ...markdownPluginHighlightLanguages(activePlugins)])
+  ]
+  const syntax = {
+    highlightedCode: codeLanguages.length > 0,
+    codeLanguages
+  }
   activePlugins.forEach((plugin) => assets.markPluginAssets(plugin))
   const syntaxHighlighter = syntax.highlightedCode
     ? await createSyntaxHighlighterPlugin(

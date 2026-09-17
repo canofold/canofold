@@ -105,6 +105,12 @@ export interface MarkdownPlugin {
    */
   fenceLanguages?: readonly string[]
   /**
+   * Code languages introduced by this plugin's transforms. The compiler loads
+   * these grammars before the plugin runs so generated code blocks use the
+   * same Shiki pipeline as authored Markdown fences.
+   */
+  highlightLanguages?: readonly string[]
+  /**
    * Directive names owned by this plugin. Undeclared directive names are
    * rejected so author typos cannot silently degrade to generic HTML.
    */

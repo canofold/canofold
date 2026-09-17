@@ -9,6 +9,7 @@ import type {
 import { z } from 'zod'
 import { assertRoutePath, canonicalRoutePath } from '../content/routes'
 import type { SearchProvider } from '../search/types'
+import type { CanofoldDemoEngine } from '../demos/types'
 import { THEME_BASE_COLORS } from './constants'
 import { publicResourceSchema } from './publicResource'
 import {
@@ -334,6 +335,19 @@ const searchSchema = z
   })
   .strict()
 
+const demoEngineSchema = z.custom<CanofoldDemoEngine>(
+  (value) =>
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    typeof (value as { id?: unknown }).id === 'string' &&
+    (value as { id: string }).id.trim().length > 0 &&
+    typeof (value as { prepare?: unknown }).prepare === 'function' &&
+    ((value as { startDev?: unknown }).startDev === undefined ||
+      typeof (value as { startDev?: unknown }).startDev === 'function'),
+  'demos.engine must be a Canofold demo engine object'
+)
+
 const jsonValueSchema: z.ZodType<CanofoldJsonValue> = z.lazy(() =>
   z.union([
     z.string(),
@@ -384,6 +398,13 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
     docsDir: z.string().optional(),
     outputDir: z.string().optional(),
     styles: z.array(z.string().min(1)).optional(),
+    demos: z
+      .object({
+        engine: demoEngineSchema.optional(),
+        setup: z.string().min(1).optional()
+      })
+      .strict()
+      .optional(),
     layout: z
       .object({
         header: z.boolean().optional()

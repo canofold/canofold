@@ -20,7 +20,9 @@ import { detectMarkdownAssets } from '@canofold/markdown/server/analyze'
 import { buildCssCached, markdownFileIconsDir, mathFontsDir } from './buildCss'
 import { HomeHero } from './HomeHero'
 import { Layout } from './Layout'
-import { DEFAULT_FAVICON, markdownLabelsFor, notFoundContentFor } from './layoutContent'
+import { markdownLabelsFor, notFoundContentFor } from './layoutContent'
+import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
+import { copyBuiltInBrandAssets } from './brandAssets'
 import { renderMdxResult } from './renderMdx'
 import { buildSearchBundle } from './searchBundle'
 import { noFlashScript } from './shellScripts'
@@ -29,6 +31,9 @@ import { generatedOutputPaths } from '../output/plan'
 import { mapConcurrent } from '../utils/concurrency'
 import { createBasePathUrlTransform } from './transformUrls'
 import { buildPlaygroundBundle } from './playgroundBundle'
+import type { CanofoldDemoManifest } from '../demos/types'
+import { createDemoMarkdownPlugin } from '../demos/markdown'
+import { demoLabelsFor } from '../demos/labels'
 import {
   collectPageAssets,
   collectPublicAssets,
@@ -91,7 +96,7 @@ function render404Page(config: CanofoldConfig, graph: ContentGraph): string {
   const defaultLocale = graph.defaultLocale
   const content = notFoundContentFor(defaultLocale, config.i18n.messages)
   const title = escapeHtml(config.title)
-  const favicon = escapeHtml(publicPathFor(config, config.theme.favicon ?? DEFAULT_FAVICON))
+  const favicon = escapeHtml(publicPathFor(config, config.theme.favicon ?? DEFAULT_BRAND_ASSET_PATHS.favicon))
   const stylesheet = escapeHtml(publicPathFor(config, '/assets/canofold.css'))
   const currentVersion = graph.versions.find((version) => version.id === graph.currentVersion)
   const defaultHome = publicPathFor(
@@ -131,7 +136,8 @@ export async function renderSite({
   pages = graph.pages,
   previousPages = [],
   renderer = createMarkdownRenderer(),
-  writeSharedAssets = true
+  writeSharedAssets = true,
+  demoManifest
 }: {
   cwd: string
   config: CanofoldConfig
@@ -144,6 +150,8 @@ export async function renderSite({
   renderer?: MarkdownRenderer
   /** Shared shell assets are stable during a single-page dev rebuild. */
   writeSharedAssets?: boolean
+  /** Prepared browser modules for pages that declare component demos. */
+  demoManifest?: CanofoldDemoManifest
 }) {
   const outputRoot = resolveOutputRoot(cwd, config.outputDir)
   const generatedPaths = generatedOutputPaths(config, graph)
@@ -165,6 +173,7 @@ export async function renderSite({
       buildCssCached({ math: needsMath }),
       readCustomStyles(cwd, config.styles)
     ])
+    await copyBuiltInBrandAssets(outputRoot)
     await writeFile(
       join(outputRoot, 'assets/canofold.css'),
       `${css}\n${buildThemeVariables(config)}\n${customStyles}\n`
@@ -223,8 +232,17 @@ export async function renderSite({
     const isHome = page.routePath === localeRootPath(page.locale, graph.defaultLocale, page.versionBase)
     let markdownContent: ReactNode | undefined
     let markdownAssets = emptyMarkdownAssets
+    const demoLabels = demoLabelsFor(page.locale)
+    const demoPlugin =
+      page.demos.length > 0 && demoManifest
+        ? createDemoMarkdownPlugin({ page, manifest: demoManifest, labels: demoLabels })
+        : undefined
+    if (page.demos.length > 0 && !demoManifest) {
+      throw new Error(`No prepared demo manifest is available for ${page.sourceRelativePath}`)
+    }
     const markdownOptions = {
       ...config.markdown,
+      plugins: demoPlugin ? [...config.markdown.plugins, demoPlugin] : config.markdown.plugins,
       locale: page.locale,
       labels: {
         ...markdownLabelsFor(page.locale, config.i18n.messages),
@@ -288,6 +306,8 @@ export async function renderSite({
           home={isHome}
           markdownAssets={markdownAssets}
           rawSource={rawSource}
+          demoClientUrl={page.demos.length > 0 ? demoManifest?.clientUrl : undefined}
+          demoStyleUrls={page.demos.length > 0 ? demoManifest?.styleUrls : undefined}
         >
           {content}
         </Layout>

@@ -4,7 +4,11 @@ import { createMarkdownAssetCollector } from './assets'
 import { normalizeOptions } from './normalizeOptions'
 import { createSyntaxHighlighterPlugin } from './highlighter'
 import { detectMarkdownSyntax } from './syntaxFeatures'
-import { activeMarkdownPlugins, markdownPluginFenceLanguages } from './plugins'
+import {
+  activeMarkdownPlugins,
+  markdownPluginFenceLanguages,
+  markdownPluginHighlightLanguages
+} from './plugins'
 import type { PreparedMarkdown, RenderMarkdownOptions } from './types'
 
 export type { MarkdownAssets } from './assets'
@@ -43,7 +47,14 @@ export async function prepareMarkdown(
   const activePlugins = activeMarkdownPlugins(resolvedOptions.plugins, { source, mode: 'markdown' })
   const pluginFenceLanguages = markdownPluginFenceLanguages(activePlugins)
   const activeOptions = { ...resolvedOptions, plugins: activePlugins }
-  const syntax = detectMarkdownSyntax(source, pluginFenceLanguages)
+  const detectedSyntax = detectMarkdownSyntax(source, pluginFenceLanguages)
+  const codeLanguages = [
+    ...new Set([...detectedSyntax.codeLanguages, ...markdownPluginHighlightLanguages(activePlugins)])
+  ]
+  const syntax = {
+    highlightedCode: codeLanguages.length > 0,
+    codeLanguages
+  }
   activePlugins.forEach((plugin) => assets.markPluginAssets(plugin))
   // Keep raw HTML parsing and sanitization out of the strip-only path. The
   // modules are cached by the ESM loader after their first use.

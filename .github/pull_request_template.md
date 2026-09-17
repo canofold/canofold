@@ -6,6 +6,7 @@
 
 - [ ] `@canofold/markdown`
 - [ ] `canofold`
+- [ ] `@canofold/vite`
 - [ ] `@canofold/plugins`
 - [ ] Documentation or tooling
 

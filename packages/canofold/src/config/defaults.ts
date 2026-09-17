@@ -1,4 +1,5 @@
 import type { CanofoldConfig } from './types'
+import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
 
 export const defaultConfig: CanofoldConfig = {
   title: 'Canofold',
@@ -7,6 +8,7 @@ export const defaultConfig: CanofoldConfig = {
   docsDir: 'docs',
   outputDir: '.canofold/dist',
   styles: [],
+  demos: {},
   layout: {
     header: true
   },
@@ -24,6 +26,9 @@ export const defaultConfig: CanofoldConfig = {
     baseColor: 'paper',
     sidebarWidth: '17.5rem',
     outlineWidth: '18.75rem',
+    logo: DEFAULT_BRAND_ASSET_PATHS.logo,
+    logoDark: DEFAULT_BRAND_ASSET_PATHS.logoDark,
+    favicon: DEFAULT_BRAND_ASSET_PATHS.favicon,
     tokens: {}
   },
   search: {

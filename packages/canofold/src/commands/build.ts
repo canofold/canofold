@@ -36,6 +36,8 @@ import { buildPageKey, createBuildManifest } from '../build/state'
 import type { BuildMode, PageBuildState } from '../build/types'
 import { resolveSafeOutputRoot } from '../build/safety'
 import { loadExtensionHost, type ExtensionHost } from '../extensions/host'
+import { prepareDemoManifest } from '../demos/prepare'
+import type { CanofoldDemoManifest } from '../demos/types'
 
 export interface BuildOptions {
   cwd: string
@@ -45,6 +47,8 @@ export interface BuildOptions {
   noCache?: boolean
   /** Force a clean build because a caller observed an event outside the incremental contract. */
   forceClean?: boolean
+  /** @internal The dev server requests browser modules without emitting a production bundle. */
+  demoMode?: 'build' | 'dev'
 }
 
 export interface BuildResult {
@@ -57,6 +61,7 @@ export interface BuildResult {
   /** True only when exactly one existing route changed without renaming or deleting outputs. */
   partialReload: boolean
   reason: string
+  demoManifest?: CanofoldDemoManifest
 }
 
 export function versionSatisfies(version: string, range: string) {
@@ -79,7 +84,8 @@ async function writeBuildOutputs({
   previousPages,
   renderer,
   writeSharedAssets,
-  extensions
+  extensions,
+  demoManifest
 }: {
   cwd: string
   config: CanofoldConfig
@@ -89,8 +95,18 @@ async function writeBuildOutputs({
   renderer: MarkdownRenderer
   writeSharedAssets: boolean
   extensions: ExtensionHost
+  demoManifest?: CanofoldDemoManifest
 }) {
-  await renderSite({ cwd, config, graph, pages, previousPages, renderer, writeSharedAssets })
+  await renderSite({
+    cwd,
+    config,
+    graph,
+    pages,
+    previousPages,
+    renderer,
+    writeSharedAssets,
+    demoManifest
+  })
   await writeSearchIndexes(cwd, config, graph)
   await writeSitemap(cwd, config, graph)
   await writeRobots(cwd, config)
@@ -168,7 +184,20 @@ async function runBuildLocked(
     config.extensions
   )
   const graph = await buildContentGraph(options.cwd, config, extensions)
-  const currentManifest = await createBuildManifest(options.cwd, config, graph, extensions.fingerprint)
+  const analyzedDemoManifest = await prepareDemoManifest({
+    cwd: options.cwd,
+    config,
+    graph,
+    mode: options.demoMode === 'dev' ? 'dev' : 'analyze'
+  })
+  const currentManifest = await createBuildManifest(
+    options.cwd,
+    config,
+    graph,
+    extensions.fingerprint,
+    analyzedDemoManifest,
+    options.demoMode === 'dev' ? 'dev' : 'build'
+  )
   const previousManifest = options.noCache ? undefined : await readBuildManifest(cacheRoot)
   const outputExists = await pathExists(outputRoot)
   const outputValid =
@@ -194,7 +223,8 @@ async function runBuildLocked(
       mode: plan.mode,
       changedPages: [],
       partialReload: false,
-      reason: plan.reason
+      reason: plan.reason,
+      ...(analyzedDemoManifest ? { demoManifest: analyzedDemoManifest } : {})
     }
   }
 
@@ -211,8 +241,18 @@ async function runBuildLocked(
   }
   await mkdir(dirname(temporaryRoot), { recursive: true })
   try {
+    let demoManifest: CanofoldDemoManifest | undefined
     if (plan.mode === 'incremental') {
       await copyBuildOutputs(outputRoot, temporaryRoot, previousManifest?.outputs ?? {})
+      demoManifest =
+        options.demoMode === 'dev'
+          ? analyzedDemoManifest
+          : await prepareDemoManifest({
+              cwd: options.cwd,
+              config: temporaryConfig,
+              graph,
+              mode: 'build'
+            })
       await writeBuildOutputs({
         cwd: options.cwd,
         config: temporaryConfig,
@@ -221,7 +261,8 @@ async function runBuildLocked(
         previousPages: previousManifest ? Object.values(previousManifest.pages) : [],
         renderer,
         writeSharedAssets: false,
-        extensions
+        extensions,
+        demoManifest
       })
       const removedPages = plan.removedPageKeys.flatMap((key) => {
         const page = previousManifest?.pages[key]
@@ -234,6 +275,15 @@ async function runBuildLocked(
         Object.values(currentManifest.pages)
       )
     } else {
+      demoManifest =
+        options.demoMode === 'dev'
+          ? analyzedDemoManifest
+          : await prepareDemoManifest({
+              cwd: options.cwd,
+              config: temporaryConfig,
+              graph,
+              mode: 'build'
+            })
       renderer.clear()
       await writeBuildOutputs({
         cwd: options.cwd,
@@ -242,7 +292,8 @@ async function runBuildLocked(
         pages: graph.pages,
         renderer,
         writeSharedAssets: true,
-        extensions
+        extensions,
+        demoManifest
       })
     }
     await assertBuildLockOwned()
@@ -274,7 +325,8 @@ async function runBuildLocked(
         previousManifest?.pages[plan.changedPageKeys[0] ?? '']?.outputPath ===
         currentManifest.pages[plan.changedPageKeys[0] ?? '']?.outputPath
       ),
-    reason: plan.reason
+    reason: plan.reason,
+    ...(analyzedDemoManifest ? { demoManifest: analyzedDemoManifest } : {})
   }
 }
 
