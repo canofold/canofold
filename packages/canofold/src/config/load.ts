@@ -47,6 +47,9 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
     layout: {
       header: input.layout?.header ?? base.layout.header
     },
+    seo: {
+      robots: input.seo?.robots ?? base.seo.robots
+    },
     markdown: {
       html: input.markdown?.html ?? base.markdown.html,
       code: {

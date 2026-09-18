@@ -12,6 +12,9 @@ export const defaultConfig: CanofoldConfig = {
   layout: {
     header: true
   },
+  seo: {
+    robots: 'allow'
+  },
   markdown: {
     html: 'sanitize',
     code: {},

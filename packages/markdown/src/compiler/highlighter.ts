@@ -21,6 +21,7 @@ import { bundledThemes, type BundledTheme } from 'shiki/themes'
 import type { Pluggable, Transformer } from 'unified'
 import { visit } from 'unist-util-visit'
 import type { NormalizedMarkdownOptions } from './normalizeOptions'
+import { parseFenceMetadata } from './fenceMetadata'
 import { stableJson } from './stableJson'
 
 type LanguageModule = { default: LanguageInput }
@@ -31,9 +32,9 @@ function transformerFenceMetadata(): ShikiTransformer {
     name: 'canofold:fence-metadata',
     pre(node) {
       const meta = String(this.options.meta?.__raw ?? '')
-      const match = meta.match(/(?:title|filename|label)\s*=\s*["']([^"']+)["']|\[([^\]]+)\]/i)
-      const filename = match?.[1]?.trim() || match?.[2]?.trim()
+      const { filename, overflow } = parseFenceMetadata(meta)
       if (filename) node.properties.dataCfFilename = filename
+      if (overflow) node.properties.dataCfCodeOverflow = overflow
       return node
     }
   }

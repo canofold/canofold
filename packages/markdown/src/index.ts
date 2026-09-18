@@ -15,6 +15,7 @@ export type {
 export type { MarkdownUrlProperty, MarkdownUrlTransform } from './react/urlTransform'
 export { defineMarkdownPlugin } from './compiler/plugins'
 export type {
+  MarkdownCodeOverflow,
   MarkdownCodeOptions,
   MarkdownFeatureOptions,
   MarkdownHtmlPolicy,

@@ -7,6 +7,7 @@ import type {
   MarkdownFeatureOptions,
   MarkdownHtmlPolicy,
   MarkdownLabels,
+  MarkdownCodeOverflow,
   MarkdownPlugin,
   MarkdownUnknownLanguagePolicy,
   RenderMarkdownOptions
@@ -39,6 +40,7 @@ export interface NormalizedMarkdownOptions {
     dark: string | ThemeRegistration
   }
   fallbackLanguage: string
+  codeOverflow: MarkdownCodeOverflow
   codeLanguages: Readonly<Record<string, LanguageInput>>
   unknownLanguage: MarkdownUnknownLanguagePolicy
   features: Required<MarkdownFeatureOptions>
@@ -54,6 +56,7 @@ export function normalizeOptions(options: RenderMarkdownOptions = {}): Normalize
       dark: options.code?.themes?.dark ?? DEFAULT_CODE_THEMES.dark
     },
     fallbackLanguage: options.code?.fallbackLanguage?.trim().toLowerCase() || 'text',
+    codeOverflow: options.code?.overflow ?? 'wrap',
     codeLanguages: normalizeCodeLanguages(options.code?.languages),
     unknownLanguage: options.code?.unknownLanguage ?? 'warn',
     features: {

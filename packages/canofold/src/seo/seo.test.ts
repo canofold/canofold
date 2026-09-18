@@ -49,6 +49,21 @@ describe('SEO writers', () => {
     expect(await readFile(join(cwd, '.canofold/dist/robots.txt'), 'utf8')).not.toContain('Sitemap:')
   })
 
+  it('can disallow crawling without advertising a sitemap', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-seo-'))
+    await mkdir(join(cwd, '.canofold/dist'), { recursive: true })
+    const config = createMockConfig({
+      siteUrl: 'https://private.example.com',
+      seo: { robots: 'disallow' }
+    })
+
+    await writeRobots(cwd, config)
+
+    expect(await readFile(join(cwd, '.canofold/dist/robots.txt'), 'utf8')).toBe(
+      'User-agent: *\nDisallow: /\n'
+    )
+  })
+
   it('escapes sitemap XML values', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-seo-'))
     await mkdir(join(cwd, '.canofold/dist'), { recursive: true })

@@ -8,9 +8,10 @@ function percentile(values, ratio) {
   return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * ratio))] ?? 0
 }
 
-export async function benchmarkPagefind(pagefindRoot, iterations = 100) {
+export async function withPagefind(pagefindRoot, action) {
   const originalDocument = globalThis.document
   const originalFetch = globalThis.fetch
+  let pagefind
   Object.assign(globalThis, {
     document: {
       currentScript: null,
@@ -28,11 +29,20 @@ export async function benchmarkPagefind(pagefindRoot, iterations = 100) {
   }
 
   try {
-    const pagefind = await import(
+    pagefind = await import(
       `${pathToFileURL(join(pagefindRoot, 'pagefind.js')).href}?benchmark=${Date.now()}`
     )
     await pagefind.options({ baseUrl: '/' })
     await pagefind.init()
+    return await action(pagefind)
+  } finally {
+    await pagefind?.destroy()
+    Object.assign(globalThis, { document: originalDocument, fetch: originalFetch })
+  }
+}
+
+export async function benchmarkPagefind(pagefindRoot, iterations = 100) {
+  return withPagefind(pagefindRoot, async (pagefind) => {
     const filters = { version: 'current', locale: 'zh' }
     const runQuery = async (query) => {
       const started = performance.now()
@@ -45,9 +55,6 @@ export async function benchmarkPagefind(pagefindRoot, iterations = 100) {
     for (let index = 0; index < iterations; index += 1) {
       timings.push(await runQuery(`enterprise topic ${index % 25}`))
     }
-    await pagefind.destroy()
     return { coldMs, p95Ms: percentile(timings, 0.95) }
-  } finally {
-    Object.assign(globalThis, { document: originalDocument, fetch: originalFetch })
-  }
+  })
 }

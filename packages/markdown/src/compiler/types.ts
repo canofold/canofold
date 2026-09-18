@@ -5,6 +5,7 @@ import type { PluggableList } from 'unified'
 
 export type MarkdownHtmlPolicy = 'trusted' | 'sanitize' | 'strip'
 export type MarkdownUnknownLanguagePolicy = 'warn' | 'error' | 'plain-text'
+export type MarkdownCodeOverflow = 'wrap' | 'scroll'
 export type MarkdownPluginCacheValue =
   string | number | boolean | null | MarkdownPluginCacheValue[] | { [key: string]: MarkdownPluginCacheValue }
 
@@ -23,6 +24,8 @@ export interface MarkdownCodeOptions {
     dark?: string
   }
   fallbackLanguage?: string
+  /** Default long-line behavior. Individual fences may override it with `wrap` or `scroll` metadata. */
+  overflow?: MarkdownCodeOverflow
   /**
    * Additional fence-language loaders keyed by the label authors use after
    * the opening fence. Built-in technical-document languages remain enabled.

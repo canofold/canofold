@@ -139,6 +139,8 @@ export default {
   description: 'Packed release candidate fixture',
   requiredVersion: '${canofoldPackage.manifest.version}',
   demos: { engine: vite({ configFile: false }) },
+  seo: { robots: 'disallow' },
+  markdown: { code: { overflow: 'scroll' } },
   search: { provider: pagefind() },
   extensions: [{ resolve: './release-extension.ts', options: { marker: 'packed' } }],
   i18n: { defaultLocale: 'en', locales: ['en', 'zh'] },
@@ -188,7 +190,7 @@ export default defineExtension((options) => ({
   const longText = `${'Bounded AI output. '.repeat(1400)}\n`
   await write(
     'docs/index.md',
-    `---\ntitle: Packed home\ndescription: Release candidate home\n---\n\n# Packed home\n\nPACKED_TOKEN\n\n::demo[Packed button]{src="/src/button.demo.tsx"}\n\n${longText}`
+    `---\ntitle: Packed home\ndescription: Release candidate home\n---\n\n# Packed home\n\nPACKED_TOKEN\n\n::demo[Packed button]{src="/src/button.demo.tsx"}\n\n::demo[Packed iframe]{src="/src/button.demo.tsx" sandbox="iframe"}\n\n\`\`\`ts\nconst packedReleaseCandidate = 'a deliberately long code line used to verify configured horizontal scrolling'\n\`\`\`\n\n${longText}`
   )
   await write(
     'src/button.demo.tsx',
@@ -242,11 +244,19 @@ export default function PackedButtonDemo() {
   const homeHtml = await readFile(join(consumerRoot, '.canofold/dist/index.html'), 'utf8')
   assert.match(homeHtml, /Extension transformed/)
   assert.match(homeHtml, /data-cf-component="demo"/)
+  assert.match(homeHtml, /data-cf-demo-sandbox="iframe"/)
+  assert.match(homeHtml, /data-cf-code-overflow="scroll"/)
   assert.match(homeHtml, /PackedButtonDemo/)
   assert.match(homeHtml, /href="#canofold-main"/)
   assert.match(
     await readFile(join(consumerRoot, '.canofold/dist/assets/canofold-demos/styles.css'), 'utf8'),
     /packed-button/
+  )
+  const siteCss = await readFile(join(consumerRoot, '.canofold/dist/assets/canofold.css'), 'utf8')
+  assert.doesNotMatch(siteCss, /\.cf-content \.cf-demo-preview\{[^}]*linear-gradient/)
+  assert.equal(
+    await readFile(join(consumerRoot, '.canofold/dist/robots.txt'), 'utf8'),
+    'User-agent: *\nDisallow: /\n'
   )
   assert.match(
     await readFile(join(consumerRoot, '.canofold/dist/llms-full.txt'), 'utf8'),

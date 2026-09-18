@@ -121,6 +121,25 @@ describe('renderPreparedHtml', () => {
     expect(html).toContain('class="line highlighted"')
   })
 
+  it('supports a site code-overflow default and one-fence overrides', async () => {
+    const wrappedByDefault = await renderPreparedHtml(['```ts', 'const value = true', '```'].join('\n'))
+    const scrolledByDefault = await renderPreparedHtml(['```ts', 'const value = true', '```'].join('\n'), {
+      code: { overflow: 'scroll' }
+    })
+    const scrolledFence = await renderPreparedHtml(
+      ['```ts scroll title="wide.ts"', 'const value = true', '```'].join('\n')
+    )
+    const wrappedFence = await renderPreparedHtml(['```ts wrap', 'const value = true', '```'].join('\n'), {
+      code: { overflow: 'scroll' }
+    })
+
+    expect(wrappedByDefault).not.toContain('data-cf-code-overflow')
+    expect(scrolledByDefault).toContain('data-cf-code-overflow="scroll"')
+    expect(scrolledFence).toContain('data-cf-code-overflow="scroll"')
+    expect(scrolledFence).toContain('data-cf-filename="wide.ts"')
+    expect(wrappedFence).toContain('data-cf-code-overflow="wrap"')
+  })
+
   it('renders every documented Shiki line annotation', async () => {
     const html = await renderPreparedHtml(
       [

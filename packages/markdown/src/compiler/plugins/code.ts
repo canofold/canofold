@@ -4,6 +4,7 @@ import type { Root as MdastRoot } from 'mdast'
 import type { Node } from 'unist'
 import type { MarkdownAssetCollector } from '../assets'
 import type { NormalizedMarkdownOptions } from '../normalizeOptions'
+import { parseFenceMetadata } from '../fenceMetadata'
 
 function mdxComponentName(name: unknown) {
   return String(name ?? '')
@@ -56,16 +57,16 @@ export const remarkFenceMetadata = (options: NormalizedMarkdownOptions) => {
     visit(tree, 'code', (node) => {
       const language = String(node.lang ?? '').toLowerCase()
       const meta = String(node.meta ?? '')
-      const match = meta.match(/(?:title|filename|label)\s*=\s*["']([^"']+)["']|\[([^\]]+)\]/i)
-      const filename = match?.[1]?.trim() || match?.[2]?.trim()
+      const { filename, overflow } = parseFenceMetadata(meta)
       const isTerminal = options.features.terminals && language === 'terminal'
-      if (!meta && !filename && !isTerminal) return
+      if (!meta && !filename && !overflow && !isTerminal) return
       node.data = {
         ...node.data,
         hProperties: {
           ...node.data?.hProperties,
           ...(meta ? { metastring: meta } : {}),
           ...(filename ? { title: filename, dataCfFilename: filename } : {}),
+          ...(overflow ? { dataCfCodeOverflow: overflow } : {}),
           ...(isTerminal ? { title: filename || options.labels.terminalTitle } : {})
         }
       }
@@ -209,7 +210,7 @@ export const remarkMdxRichBlocks = (assets: MarkdownAssetCollector, options: Nor
 /** Wrap each highlighted code block with a file/language label and copy action. */
 export const rehypeCodeBlocks = (
   assets: MarkdownAssetCollector,
-  labels: NormalizedMarkdownOptions['labels'],
+  options: Pick<NormalizedMarkdownOptions, 'labels' | 'codeOverflow'>,
   excludedLanguages: ReadonlySet<string> = new Set()
 ) => {
   return (tree: HastRoot) => {
@@ -241,6 +242,15 @@ export const rehypeCodeBlocks = (
           code?.properties?.['data-title'] ??
           ''
       ).trim()
+      const authoredOverflow = String(
+        node.properties?.dataCfCodeOverflow ??
+          node.properties?.['data-cf-code-overflow'] ??
+          code?.properties?.dataCfCodeOverflow ??
+          code?.properties?.['data-cf-code-overflow'] ??
+          ''
+      ).trim()
+      const overflow =
+        authoredOverflow === 'wrap' || authoredOverflow === 'scroll' ? authoredOverflow : options.codeOverflow
       const source = codeSource(code, node)
       ensureCodeLines(code, source)
       const figure: Element = {
@@ -253,9 +263,10 @@ export const rehypeCodeBlocks = (
           dataCfSlot: 'root',
           dataCfLanguage: lang,
           ...(filename ? { dataCfFilename: filename } : {}),
+          ...(overflow === 'scroll' || authoredOverflow === 'wrap' ? { dataCfCodeOverflow: overflow } : {}),
           dataCfSource: source,
-          dataCfCopyLabel: labels.copyCode,
-          dataCfCopyFailureLabel: labels.copyFailed
+          dataCfCopyLabel: options.labels.copyCode,
+          dataCfCopyFailureLabel: options.labels.copyFailed
         },
         children: [node]
       }

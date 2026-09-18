@@ -880,17 +880,7 @@ a {
   min-height: 8rem;
   place-items: center;
   padding: clamp(1.5rem, 4vw, 3rem);
-  background:
-    linear-gradient(45deg, var(--cf-surface-soft) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--cf-surface-soft) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--cf-surface-soft) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--cf-surface-soft) 75%);
-  background-position:
-    0 0,
-    0 8px,
-    8px -8px,
-    -8px 0;
-  background-size: 16px 16px;
+  background: transparent;
 }
 
 .cf-demo-frame {

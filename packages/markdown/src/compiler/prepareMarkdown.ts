@@ -13,6 +13,7 @@ import type { PreparedMarkdown, RenderMarkdownOptions } from './types'
 
 export type { MarkdownAssets } from './assets'
 export type {
+  MarkdownCodeOverflow,
   MarkdownCodeOptions,
   MarkdownFeatureOptions,
   MarkdownHtmlPolicy,

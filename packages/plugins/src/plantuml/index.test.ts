@@ -1,10 +1,11 @@
 import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { plantUml } from './index'
 
 describe('plantUml plugin', () => {
   it('owns both PlantUML fence labels and produces a server URL', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const plugin = plantUml({ server: 'https://plantuml.example/svg/' })
     const result = await createMarkdownRenderer().render('```puml\nAlice -> Bob: hello\n```', {
       markdown: { plugins: [plugin] }
@@ -17,9 +18,14 @@ describe('plantUml plugin', () => {
     expect(html).toContain('<pre class="cf-diagram-source"')
     expect(html).toContain('class="cf-diagram-zoom-controls"')
     expect(html).toContain('Alice -&gt; Bob: hello')
+    expect(warning).toHaveBeenCalledWith(
+      '[canofold/plugins] PlantUML sends diagram source to its configured external service. Use a trusted self-hosted service for private content.'
+    )
+    warning.mockRestore()
   })
 
   it('keeps source-only output when no server is configured', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const result = await createMarkdownRenderer().render('```plantuml\nA -> B\n```', {
       markdown: { plugins: [plantUml()] }
     })
@@ -28,6 +34,8 @@ describe('plantUml plugin', () => {
     expect(html).toContain('data-cf-plugin-diagram="plantuml"')
     expect(html).not.toContain('src="https://plantuml.example/')
     expect(html).not.toContain('class="cf-diagram-zoom-controls"')
+    expect(warning).not.toHaveBeenCalled()
+    warning.mockRestore()
   })
 
   it('localizes generated image alternative text', async () => {

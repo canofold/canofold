@@ -2,6 +2,7 @@ import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import { deflateSync, strToU8 } from 'fflate'
 
 import { diagramFence } from '../shared/diagram'
+import { externalDiagramServiceGate } from '../shared/externalDiagramService'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
 const PLUGIN_VERSION = '3'
@@ -44,6 +45,11 @@ function encodePlantUml(source: string) {
 /** Enable PlantUML fenced code blocks as an opt-in official plugin. */
 export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
   const server = options.server === false ? '' : stripTrailingSlashes(options.server?.trim() ?? '')
+  const hasPlantUmlFence = ({ source }: { source: string }) =>
+    hasMarkdownFenceLanguage(source, new Set(['plantuml', 'puml']))
+  const appliesTo = server
+    ? externalDiagramServiceGate({ plugin: 'PlantUML', appliesTo: hasPlantUmlFence })
+    : hasPlantUmlFence
 
   return defineMarkdownPlugin({
     name: 'plantuml',
@@ -55,7 +61,7 @@ export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
       options: { server: server || false }
     },
     fenceLanguages: ['plantuml', 'puml'],
-    appliesTo: ({ source }) => hasMarkdownFenceLanguage(source, new Set(['plantuml', 'puml'])),
+    appliesTo,
     assets: {
       clients: [{ id: 'plantuml', module: '@canofold/plugins/client/plantuml' }],
       styles: [{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }]

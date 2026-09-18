@@ -4,6 +4,16 @@ import { defaultConfig } from '../config/defaults'
 import { buildThemeVariables } from './theme'
 
 describe('buildThemeVariables', () => {
+  it('uses a clean transparent surface for component demo previews', async () => {
+    const css = await readFile(new URL('./styles.input.css', import.meta.url), 'utf8')
+    const previewRule = css.match(/\.cf-content \.cf-demo-preview\s*\{([^}]*)\}/)?.[1] ?? ''
+
+    expect(previewRule).toContain('background: transparent')
+    expect(previewRule).not.toContain('linear-gradient')
+    expect(previewRule).not.toContain('background-size')
+    expect(previewRule).not.toContain('background-position')
+  })
+
   it('keeps sticky navigation scroll positions independent from content reflow', async () => {
     const css = await readFile(new URL('./styles.input.css', import.meta.url), 'utf8')
 

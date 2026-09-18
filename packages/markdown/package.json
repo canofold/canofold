@@ -1,6 +1,6 @@
 {
   "name": "@canofold/markdown",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "An interactive, themeable Markdown renderer for knowledge and documentation sites.",
   "license": "MIT",
   "author": "Canofold Contributors",
