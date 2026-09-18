@@ -6,6 +6,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 *.tgz
+release-packages/
 
 # Canofold generated artifacts at any depth.
 .canofold/

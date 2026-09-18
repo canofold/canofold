@@ -126,6 +126,7 @@ describe('pagefind', () => {
           headings: [],
           searchText: '零停机发布与回滚策略',
           codeExamples: [],
+          demos: [],
           lastUpdated: new Date().toISOString(),
           frontmatter: {}
         }

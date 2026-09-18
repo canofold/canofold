@@ -137,9 +137,9 @@ test('Markdown interactions use stable action attributes instead of visual class
   assert.doesNotMatch(source, /from ['"].*\/(?:runtime|enhancer)(?:\.js)?['"]/)
 })
 
-test('maintainer documentation matches the three-package contract', async () => {
+test('maintainer documentation matches the publishable-package contract', async () => {
   const packageManifests = await Promise.all(
-    ['canofold', 'markdown', 'plugins'].map((name) =>
+    ['canofold', 'markdown', 'vite', 'plugins'].map((name) =>
       readFile(join(root, 'packages', name, 'package.json'), 'utf8').then(JSON.parse)
     )
   )
@@ -162,7 +162,7 @@ test('release workflow stages existing packages through OIDC', async () => {
     (match) => match[1]
   )
 
-  assert.equal(archives.length, 3, 'release workflow must stage all three package archives')
+  assert.equal(archives.length, 4, 'release workflow must stage all four package archives')
   for (const archive of archives) {
     assert.match(
       archive,
@@ -316,7 +316,7 @@ test('Markdown React components do not construct or mutate component UI through 
   }
 })
 
-test('workspace exposes one core package, one renderer package, and one official plugin package', async () => {
+test('workspace exposes core, renderer, Vite engine, and official plugin packages', async () => {
   const packageDirectories = []
   for (const entry of await readdir(join(root, 'packages'), { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
@@ -328,15 +328,17 @@ test('workspace exposes one core package, one renderer package, and one official
     }
   }
 
-  assert.deepEqual(packageDirectories.sort(), ['canofold', 'markdown', 'plugins'])
+  assert.deepEqual(packageDirectories.sort(), ['canofold', 'markdown', 'plugins', 'vite'])
 
   const rootPackage = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
   const canofoldPackage = JSON.parse(await readFile(join(root, 'packages/canofold/package.json'), 'utf8'))
   const markdownPackage = JSON.parse(await readFile(join(root, 'packages/markdown/package.json'), 'utf8'))
+  const vitePackage = JSON.parse(await readFile(join(root, 'packages/vite/package.json'), 'utf8'))
   const pluginsPackage = JSON.parse(await readFile(join(root, 'packages/plugins/package.json'), 'utf8'))
 
   assert.equal(canofoldPackage.name, 'canofold')
   assert.equal(markdownPackage.name, '@canofold/markdown')
+  assert.equal(vitePackage.name, '@canofold/vite')
   assert.equal(pluginsPackage.name, '@canofold/plugins')
   assert.doesNotMatch(rootPackage.scripts.build, /@canofold\/(?:react-markdown|vue-markdown|cli)/)
   assert.doesNotMatch(rootPackage.scripts.typecheck, /@canofold\/(?:react-markdown|vue-markdown|cli)/)
@@ -353,7 +355,9 @@ test('workspace exposes one core package, one renderer package, and one official
     pagefind: { optional: true }
   })
 
-  assert.deepEqual(Object.keys(canofoldPackage.exports), ['.'])
+  assert.deepEqual(Object.keys(canofoldPackage.exports), ['.', './demo-engine'])
+  assert.equal(vitePackage.peerDependencies.canofold, '^0.3.0')
+  assert.match(vitePackage.peerDependencies.vite, /\^6\.4\.0/)
   assert.deepEqual(Object.keys(markdownPackage.exports), [
     '.',
     './client',

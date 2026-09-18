@@ -1,5 +1,6 @@
 import type { MarkdownCodeExample, MarkdownHeading } from '@canofold/markdown/server/analyze'
 import type { CanofoldFrontmatter } from './frontmatter'
+import type { CanofoldDemoReference } from '../demos/types'
 
 interface PageLink {
   title: string
@@ -63,6 +64,7 @@ export interface DocPage {
   headings: MarkdownHeading[]
   searchText: string
   codeExamples: MarkdownCodeExample[]
+  demos: CanofoldDemoReference[]
   lastUpdated: string
   previous?: PageLink
   next?: PageLink

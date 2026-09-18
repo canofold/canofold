@@ -94,7 +94,7 @@ describe('browser shell scripts', () => {
   })
 
   it('writes scroll progress to the fill element', () => {
-    document.body.innerHTML = '<div class="cf-progress"><span data-canofold-progress></span></div>'
+    document.body.innerHTML = '<div class="cf-route-progress"><span data-canofold-progress></span></div>'
     Object.defineProperty(document.documentElement, 'scrollHeight', {
       configurable: true,
       value: 2000

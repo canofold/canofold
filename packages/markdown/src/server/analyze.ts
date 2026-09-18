@@ -6,6 +6,7 @@ export type {
   AnalyzeMarkdownOptions,
   MarkdownAnalysis,
   MarkdownCodeExample,
+  MarkdownDirective,
   MarkdownHeading
 } from '../compiler/analyze'
 export type { MdxImportBinding, MdxImportDeclaration, MdxModuleBoundary } from '../compiler/mdxModules'

@@ -10,6 +10,7 @@ const expectedVersion = tag.slice(1)
 const packageFiles = [
   'packages/markdown/package.json',
   'packages/canofold/package.json',
+  'packages/vite/package.json',
   'packages/plugins/package.json'
 ]
 

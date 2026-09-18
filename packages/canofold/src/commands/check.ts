@@ -15,6 +15,8 @@ import { buildContentGraph } from '../content/graph'
 import { resolveProjectPath } from '../utils/paths'
 import { generatedPublicPaths } from '../output/plan'
 import { loadExtensionHost } from '../extensions/host'
+import { demoDirectivePlugin } from '../demos/references'
+import { prepareDemoManifest } from '../demos/prepare'
 
 async function collectFiles(root: string) {
   const files = new Set<string>()
@@ -48,6 +50,7 @@ export async function runCheck({ cwd }: { cwd: string }) {
     rm(temporaryRoot, { recursive: true, force: true })
   )
   const graph = await buildContentGraph(cwd, config, extensions)
+  await prepareDemoManifest({ cwd, config, graph, mode: 'analyze' })
   const knownGeneratedPaths = new Set([
     ...generatedPublicPaths(config, graph),
     ...extensions.publicOutputPaths
@@ -82,7 +85,10 @@ export async function runCheck({ cwd }: { cwd: string }) {
   const issues = [
     ...graph.pages.flatMap((page) => [
       ...checkCodeBlockLanguages(page.body).map((issue) => ({ ...issue, page: page.relativePath })),
-      ...checkRichDirectiveSyntax(page.body, bodyLineOffset(page), config.markdown.plugins).map((issue) => ({
+      ...checkRichDirectiveSyntax(page.body, bodyLineOffset(page), [
+        ...config.markdown.plugins,
+        demoDirectivePlugin
+      ]).map((issue) => ({
         ...issue,
         page: page.relativePath
       })),

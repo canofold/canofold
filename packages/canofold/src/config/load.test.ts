@@ -18,6 +18,40 @@ describe('loadConfig', () => {
     expect(config.i18n.locales).toEqual(['zh'])
     expect(config.extensions).toEqual([])
     expect(config.markdown.html).toBe('sanitize')
+    expect(config.theme).toMatchObject({
+      logo: '/assets/canofold-brand/logo-light.webp',
+      logoDark: '/assets/canofold-brand/logo-dark.webp',
+      favicon: '/assets/canofold-brand/favicon.webp'
+    })
+  })
+
+  it('does not combine a custom light logo with the built-in dark logo', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { theme: { logo: '/product.svg', darkMode: true } }`
+    )
+
+    const config = await loadConfig(cwd)
+
+    expect(config.theme.logo).toBe('/product.svg')
+    expect(config.theme.logoDark).toBeUndefined()
+    expect(config.theme.favicon).toBe('/assets/canofold-brand/favicon.webp')
+  })
+
+  it('validates the component demo engine lifecycle', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { demos: { engine: { id: '', prepare: async () => ({ clientUrl: '', demos: {} }) } } }`
+    )
+    await expect(loadConfig(cwd)).rejects.toThrow('demos.engine')
+
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { demos: { engine: { id: 'fixture', prepare: async () => ({ clientUrl: '', demos: {} }), startDev: true } } }`
+    )
+    await expect(loadConfig(cwd)).rejects.toThrow('demos.engine')
   })
 
   it('can disable the site header for embedded documentation', async () => {

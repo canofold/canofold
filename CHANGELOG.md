@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 - 2026-09-18
+
+- Add a component Demo Engine contract to Canofold and publish `@canofold/vite` as the official Vite integration.
+- Render interactive component examples from ordinary Markdown while using one demo source for both the live preview and displayed code.
+- Run Vite middleware and HMR inside the Canofold development server so component libraries use one command and one port.
+- Follow the Vite module graph for component CSS and build dependencies instead of listing every component stylesheet in `styles`.
+- Add titled and described Demo cards with collapsed highlighted source, standalone previews, and optional iframe isolation for trusted project-local examples.
+- Use the official Canofold light/dark logos and favicon as built-in defaults, and keep authored home-page content on the landing canvas.
+
 ## 0.2.1 - 2026-09-11
 
 - Include generated TypeScript declaration files in the published packages so external TypeScript projects can consume `canofold` without source-path aliases.

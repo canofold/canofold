@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src"],
+  "include": ["src", "vite.config.ts", "vite.client.config.ts", "vite.shared.ts", "vite.shared.test.ts"],
   "compilerOptions": {
     "noEmit": true,
     "types": ["node", "vitest/globals"],

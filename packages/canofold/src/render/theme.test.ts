@@ -21,6 +21,7 @@ describe('buildThemeVariables', () => {
     expect(css).not.toContain('.cf-header-home.cf-header-scrolled')
     expect(homeHeaderRule).not.toContain('display: none')
     expect(css).toMatch(/\.cf-home\s*\{[^}]*padding: var\(--cf-header-height\) 0 0;/s)
+    expect(css).toMatch(/\.cf-home > \.cf-content\s*\{[^}]*background: transparent;/s)
     expect(css).toMatch(
       /@media \(max-width: 52\.5rem\)[\s\S]*\.cf-sidebar-primary-nav\s*\{[^}]*display: grid;/s
     )
@@ -48,6 +49,19 @@ describe('buildThemeVariables', () => {
     expect(primaryHoverRule).not.toContain('transform')
     expect(secondaryHoverRule).not.toContain('transform')
     expect(css).not.toContain('.cf-feature:hover')
+  })
+
+  it('gives component demos details, icon actions, tooltips, and a distinct expanded state', async () => {
+    const css = await readFile(new URL('./styles.input.css', import.meta.url), 'utf8')
+
+    expect(css).toMatch(/\.cf-content \.cf-demo-details\s*\{[^}]*background: var\(--cf-surface\);/s)
+    expect(css).toMatch(/\.cf-content \.cf-demo-toolbar\s*\{[^}]*justify-content: center;/s)
+    expect(css).toMatch(/\.cf-demo-tooltip\s*\{[^}]*background: #202124;/s)
+    expect(css).toMatch(/\.cf-demo-action-icon\s*\{[^}]*mask: var\(--cf-demo-action-icon\)/s)
+    expect(css).toMatch(/\.cf-demo-open-icon\s*\{[^}]*--cf-demo-action-icon: url/s)
+    expect(css).toMatch(/\.cf-demo-source-toggle\[aria-expanded='true'\]\s*\{/s)
+    expect(css).toMatch(/\.cf-demo-source-toggle\[aria-expanded='true'\] \.cf-demo-source-icon\s*\{/s)
+    expect(css).toMatch(/\.cf-demo-action:focus-visible\s*\{[^}]*outline:/s)
   })
 
   it('keeps the home visual bounded and gives dark mode its own surface treatment', async () => {

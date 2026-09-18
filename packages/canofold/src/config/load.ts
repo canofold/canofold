@@ -35,11 +35,15 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
         items: [{ id: 'current', label: 'Current', docsDir, base: '/' }]
       }
   const currentDocsDir = versions.items.find((item) => item.id === versions.current)?.docsDir ?? docsDir
-  return {
+  const config: CanofoldConfig = {
     ...base,
     ...input,
     docsDir: currentDocsDir,
     styles: input.styles ? [...input.styles] : base.styles,
+    demos: {
+      engine: input.demos?.engine ?? base.demos.engine,
+      setup: input.demos?.setup ?? base.demos.setup
+    },
     layout: {
       header: input.layout?.header ?? base.layout.header
     },
@@ -116,6 +120,10 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
     },
     ai: { ...base.ai, ...input.ai }
   }
+  // A custom light logo without a matching dark logo should be reused in both themes,
+  // not paired with Canofold's built-in dark logo.
+  if (input.theme?.logo && !input.theme.logoDark) delete config.theme.logoDark
+  return config
 }
 
 function assertI18nConfig(config: CanofoldConfig) {
@@ -231,7 +239,7 @@ export async function loadConfig(cwd: string): Promise<CanofoldConfig> {
       // Keep official plugins package-relative. They may resolve optional
       // binaries or assets from import.meta.url and stop working when inlined.
       // Other config helpers remain bundled so reloads bypass Node's cache.
-      external: ['@canofold/plugins'],
+      external: ['@canofold/plugins', '@canofold/vite'],
       write: false,
       sourcemap: 'inline'
     })

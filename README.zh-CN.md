@@ -10,6 +10,7 @@ Canofold 是一个静态优先、低侵入、可扩展的知识文档平台。�
 |---|---|
 | `canofold` | 构建并发布完整文档站点 |
 | `@canofold/markdown` | 在 React 应用中渲染 Canofold Markdown |
+| `@canofold/vite` | 在已有 Vite 项目中运行实时组件示例 |
 | `@canofold/plugins` | 使用官方 Markdown 插件或 Pagefind 搜索 Provider |
 
 ## 快速开始

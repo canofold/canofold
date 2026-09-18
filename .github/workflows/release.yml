@@ -56,6 +56,7 @@ jobs:
           mkdir release-packages
           pnpm --filter @canofold/markdown pack --pack-destination release-packages
           pnpm --filter canofold pack --pack-destination release-packages
+          pnpm --filter @canofold/vite pack --pack-destination release-packages
           pnpm --filter @canofold/plugins pack --pack-destination release-packages
 
       - name: Stage packages in dependency order
@@ -73,12 +74,13 @@ jobs:
 
           stage_if_missing "@canofold/markdown" "./release-packages/canofold-markdown-${version}.tgz"
           stage_if_missing "canofold" "./release-packages/canofold-${version}.tgz"
+          stage_if_missing "@canofold/vite" "./release-packages/canofold-vite-${version}.tgz"
           stage_if_missing "@canofold/plugins" "./release-packages/canofold-plugins-${version}.tgz"
 
       - name: Wait for npm 2FA approval
         run: |
           version="${GITHUB_REF_NAME#v}"
-          packages=("@canofold/markdown" "canofold" "@canofold/plugins")
+          packages=("@canofold/markdown" "canofold" "@canofold/vite" "@canofold/plugins")
 
           for attempt in $(seq 1 120); do
             pending=()

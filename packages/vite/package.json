@@ -1,0 +1,63 @@
+{
+  "name": "@canofold/vite",
+  "version": "0.3.0",
+  "description": "Official Vite demo engine for interactive Canofold component documentation.",
+  "license": "MIT",
+  "author": "Canofold Contributors",
+  "homepage": "https://canofold.dev/guide/writing/component-demos/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canofold/canofold.git",
+    "directory": "packages/vite"
+  },
+  "bugs": {
+    "url": "https://github.com/canofold/canofold/issues"
+  },
+  "keywords": [
+    "canofold",
+    "vite",
+    "documentation",
+    "components",
+    "demos"
+  ],
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --root ../.. packages/vite"
+  },
+  "peerDependencies": {
+    "canofold": "^0.3.0",
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0",
+    "vite": "^6.4.0 || ^7.0.0 || ^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "canofold": "workspace:*",
+    "tsup": "^8.3.5",
+    "typescript": "^6.0.3",
+    "vite": "^6.4.3",
+    "vitest": "^4.1.11"
+  }
+}

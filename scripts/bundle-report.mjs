@@ -35,7 +35,7 @@ const canofoldBudgets = {
 }
 // Stale-lock recovery is part of the production build path; keep the complete
 // CLI graph bounded after accounting for that ownership check.
-const canofoldJavaScriptBudget = 62 * 1024
+const canofoldJavaScriptBudget = 64 * 1024
 const canofoldBrowserEntries = new Set(['playground-client.js'])
 const pluginDist = join(process.cwd(), 'packages/plugins/dist')
 const pluginClientBudgets = {

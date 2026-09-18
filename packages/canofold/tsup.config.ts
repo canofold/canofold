@@ -9,6 +9,7 @@ export default defineConfig({
   entry: {
     cli: 'src/cli.ts',
     index: 'src/index.ts',
+    'demo-engine': 'src/demos/types.ts',
     'playground-client': 'src/render/playgroundClient.tsx',
     'search-client': 'src/render/searchClientRuntime.ts'
   },

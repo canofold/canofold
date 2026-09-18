@@ -81,6 +81,7 @@ describe('quality checks', () => {
           headings: [],
           searchText: '',
           codeExamples: [],
+          demos: [],
           lastUpdated: new Date().toISOString(),
           frontmatter: {}
         }
@@ -199,6 +200,7 @@ describe('quality checks', () => {
         headings,
         searchText: 'Intro Other',
         codeExamples: [],
+        demos: [],
         lastUpdated: new Date().toISOString(),
         frontmatter: {}
       })
@@ -235,6 +237,7 @@ describe('quality checks', () => {
       headings: [],
       searchText: '',
       codeExamples: [],
+      demos: [],
       lastUpdated: new Date().toISOString(),
       frontmatter: {}
     }

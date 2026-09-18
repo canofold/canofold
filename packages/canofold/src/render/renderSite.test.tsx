@@ -67,6 +67,14 @@ describe('renderSite', () => {
     expect(html).toContain('class="cf-home"')
     expect(html).toContain('Static documentation.')
     expect(html).not.toContain('class="cf-content"')
+    expect(html).toContain('src="/assets/canofold-brand/logo-light.webp"')
+    expect(html).toContain('src="/assets/canofold-brand/logo-dark.webp"')
+    expect(html).toContain('href="/assets/canofold-brand/favicon.webp"')
+    await Promise.all([
+      access(join(cwd, '.canofold/dist/assets/canofold-brand/logo-light.webp')),
+      access(join(cwd, '.canofold/dist/assets/canofold-brand/logo-dark.webp')),
+      access(join(cwd, '.canofold/dist/assets/canofold-brand/favicon.webp'))
+    ])
   })
 
   it('renders a playground from one Markdown source without the document footer or outline', async () => {
@@ -122,6 +130,16 @@ describe('renderSite', () => {
 
     await expect(renderSite({ cwd, config: defaultConfig, graph })).rejects.toThrow(
       'Static asset conflicts with generated output: assets/canofold.css'
+    )
+  })
+
+  it('reserves the built-in brand asset locations', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-brand-collision-'))
+    await mkdir(join(cwd, 'docs/public/assets/canofold-brand'), { recursive: true })
+    await writeFile(join(cwd, 'docs/public/assets/canofold-brand/logo-light.webp'), 'overwrite')
+
+    await expect(renderSite({ cwd, config: defaultConfig, graph: createMockGraph() })).rejects.toThrow(
+      'Static asset conflicts with generated output: assets/canofold-brand/logo-light.webp'
     )
   })
 
@@ -620,7 +638,7 @@ describe('renderSite', () => {
     expect(html).toContain('AUTHORED HOME BODY')
     expect(html).toContain('class="cf-home" tabindex="-1" data-pagefind-body=""')
     expect(html).toContain('<header class="cf-header cf-header-home">')
-    expect(html).not.toContain('class="cf-progress"')
+    expect(html).not.toContain('class="cf-route-progress"')
     expect(html).toContain('data-cf-root="markdown"')
     expect(html).toContain('aria-label="メインナビゲーション"')
     expect(html).toContain('>ガイド</a>')

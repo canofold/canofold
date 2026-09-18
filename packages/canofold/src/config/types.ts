@@ -7,6 +7,7 @@ import type {
 } from '@canofold/markdown'
 import type { MarkdownThemeInput } from '@canofold/markdown/theme'
 import type { SearchProvider } from '../search/types'
+import type { CanofoldDemoEngine } from '../demos/types'
 import { CANOFOLD_MARKDOWN_ELEMENT_GROUP_IDS, THEME_BASE_COLORS } from './constants'
 
 export type ThemeBaseColor = (typeof THEME_BASE_COLORS)[number]
@@ -122,6 +123,11 @@ export interface CanofoldConfigInput {
   docsDir?: string
   outputDir?: string
   styles?: string[]
+  demos?: {
+    engine?: CanofoldDemoEngine
+    /** Optional project module that wraps every interactive demo with shared providers. */
+    setup?: string
+  }
   layout?: {
     header?: boolean
   }
@@ -196,6 +202,10 @@ export interface CanofoldConfig {
   docsDir: string
   outputDir: string
   styles: string[]
+  demos: {
+    engine?: CanofoldDemoEngine
+    setup?: string
+  }
   layout: {
     header: boolean
   }

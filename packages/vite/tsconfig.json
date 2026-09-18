@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src", "tsup.config.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "canofold/demo-engine": ["../canofold/src/demos/types.ts"]
+    }
+  }
+}
