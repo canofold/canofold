@@ -1,6 +1,9 @@
+import { createHash } from 'node:crypto'
 import { realpathSync } from 'node:fs'
-import { readFile, writeFile } from 'node:fs/promises'
+import { access, readFile, readdir } from 'node:fs/promises'
 import { extname, isAbsolute, join, relative, resolve, sep } from 'node:path'
+import type { Server as HttpServer } from 'node:http'
+import { fileURLToPath } from 'node:url'
 import type {
   CanofoldDemoDevContext,
   CanofoldDemoEngine,
@@ -24,6 +27,30 @@ import { demoRuntimeSource } from './runtime'
 
 const PUBLIC_CLIENT_ID = 'virtual:canofold-demo-client'
 const RESOLVED_CLIENT_ID = `\0${PUBLIC_CLIENT_ID}`
+const PUBLIC_MARKDOWN_CLIENT_ID = 'virtual:canofold-markdown-client'
+const RESOLVED_MARKDOWN_CLIENT_ID = `\0${PUBLIC_MARKDOWN_CLIENT_ID}`
+const PACKAGE_MODULE_PATH = fileURLToPath(import.meta.url)
+const PROJECT_METADATA_FILES = [
+  'package.json',
+  'pnpm-lock.yaml',
+  'package-lock.json',
+  'yarn.lock',
+  'bun.lock',
+  'bun.lockb'
+] as const
+
+interface DevSession {
+  key: string
+  environmentSignature: string
+  server: ViteDevServer
+  plugin: Plugin
+  state: {
+    demos: CanofoldPreparedDemo[]
+    setup?: string
+  }
+}
+
+const devSessions = new WeakMap<HttpServer, DevSession>()
 
 export interface CanofoldViteOptions {
   /** Project root passed to Vite. Defaults to the Canofold project root. */
@@ -61,6 +88,22 @@ function canonicalPath(path: string) {
   } catch {
     return resolve(path)
   }
+}
+
+async function projectMetadataPaths(projectRoot: string) {
+  const candidates = PROJECT_METADATA_FILES.map((file) => join(projectRoot, file))
+  const existing = await Promise.all(
+    candidates.map(async (path) => {
+      try {
+        await access(path)
+        return canonicalPath(path)
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
+        throw error
+      }
+    })
+  )
+  return existing.filter((path): path is string => Boolean(path))
 }
 
 function isProjectSource(cwd: string, path: string) {
@@ -163,34 +206,87 @@ async function resolvedSetup(server: ViteDevServer, setup: string | undefined, c
   }
 }
 
+function hasPackageAlias(config: InlineConfig, packageName: string) {
+  const alias = config.resolve?.alias
+  if (!alias) return false
+  if (!Array.isArray(alias)) return Object.hasOwn(alias, packageName)
+  return alias.some(({ find }) =>
+    typeof find === 'string' ? find === packageName : new RegExp(find.source, find.flags).test(packageName)
+  )
+}
+
+function singleLibraryEntry(config: InlineConfig) {
+  const library = config.build?.lib
+  if (!library) return undefined
+  const { entry } = library
+  if (typeof entry === 'string') return entry
+  if (Array.isArray(entry)) return entry.length === 1 ? entry[0] : undefined
+  const entries = Object.values(entry)
+  return entries.length === 1 ? entries[0] : undefined
+}
+
+async function inferredPackageAlias(config: InlineConfig, projectRoot: string) {
+  const entry = singleLibraryEntry(config)
+  if (!entry) return undefined
+  try {
+    const manifest = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8')) as {
+      name?: unknown
+    }
+    if (typeof manifest.name !== 'string' || manifest.name.length === 0) return undefined
+    if (hasPackageAlias(config, manifest.name)) return undefined
+    return {
+      find: new RegExp(`^${manifest.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+      replacement: canonicalPath(resolve(projectRoot, entry))
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
+    throw error
+  }
+}
+
 function virtualClientPlugin({
+  projectRoot,
   getDemos,
-  getSetup,
-  styleUrls = []
+  getSetup
 }: {
+  projectRoot: string
   getDemos: () => readonly CanofoldPreparedDemo[]
   getSetup: () => string | undefined
-  styleUrls?: readonly string[]
 }): Plugin {
   return {
     name: 'canofold-demo-client',
     enforce: 'post',
-    resolveId(id) {
-      return id === PUBLIC_CLIENT_ID ? RESOLVED_CLIENT_ID : undefined
+    async config(config) {
+      const alias = await inferredPackageAlias(config, projectRoot)
+      return alias ? { resolve: { alias: [alias] } } : undefined
     },
-    load(id) {
+    resolveId(id) {
+      if (id === PUBLIC_CLIENT_ID) return RESOLVED_CLIENT_ID
+      if (id === PUBLIC_MARKDOWN_CLIENT_ID) return RESOLVED_MARKDOWN_CLIENT_ID
+      return undefined
+    },
+    async load(id) {
+      if (id === RESOLVED_MARKDOWN_CLIENT_ID) {
+        const markdownClient = await this.resolve('@canofold/markdown/client', PACKAGE_MODULE_PATH, {
+          skipSelf: true
+        })
+        if (!markdownClient || markdownClient.external) {
+          throw new Error('@canofold/vite could not resolve its @canofold/markdown client dependency')
+        }
+        return `export { enhanceMarkdown } from ${JSON.stringify(normalizePath(markdownClient.id))};`
+      }
       if (id !== RESOLVED_CLIENT_ID) return undefined
       const entries: string[] = []
       const registry: string[] = []
-      getDemos().forEach((demo, index) => {
-        const binding = `CanofoldDemo${index}`
-        entries.push(`import * as ${binding} from ${JSON.stringify(normalizePath(demo.modulePath))};`)
-        registry.push(`[${JSON.stringify(demo.id)}, ${binding}]`)
+      getDemos().forEach((demo) => {
+        registry.push(
+          `[${JSON.stringify(demo.id)}, () => import(${JSON.stringify(normalizePath(demo.modulePath))})]`
+        )
       })
       entries.push(`const CANOFOLD_DEMO_REGISTRY = [${registry.join(',')}];`)
       const setup = getSetup()
       const setupImport = setup ? `import CanofoldDemoSetup from ${JSON.stringify(setup)};` : undefined
-      return demoRuntimeSource(entries, setupImport, styleUrls)
+      return demoRuntimeSource(entries, setupImport, PUBLIC_MARKDOWN_CLIENT_ID)
     }
   }
 }
@@ -209,6 +305,9 @@ function inlineConfig(
     base: basePath,
     appType: 'custom' as const,
     plugins: Array.isArray(plugins) ? plugins : [plugins],
+    // The dev server ships native ESM to the current browser. Avoid asking
+    // esbuild to lower dependency syntax that its transformer cannot lower.
+    optimizeDeps: { esbuildOptions: { target: 'esnext' } },
     resolve: { dedupe: ['react', 'react-dom'] }
   }
 }
@@ -222,16 +321,22 @@ function demoBuildOptions(context: CanofoldDemoPrepareContext): BuildOptions {
     outDir: join(context.outputRoot, 'assets/canofold-demos'),
     emptyOutDir: true,
     copyPublicDir: false,
-    cssCodeSplit: false,
+    cssCodeSplit: true,
     rollupOptions: {
       external: () => false,
-      input: PUBLIC_CLIENT_ID,
+      // Canofold loads both browser entries with dynamic import() and consumes
+      // their named exports. Vite's application default may otherwise remove
+      // entry exports that are not referenced inside the bundle.
+      preserveEntrySignatures: 'strict',
+      input: {
+        index: PUBLIC_CLIENT_ID,
+        markdown: PUBLIC_MARKDOWN_CLIENT_ID
+      },
       output: {
         format: 'es',
-        inlineDynamicImports: true,
-        entryFileNames: 'index.js',
-        assetFileNames: (asset) =>
-          asset.names?.some((name) => name.endsWith('.css')) ? 'styles.css' : '[name][extname]'
+        entryFileNames: '[name].js',
+        chunkFileNames: 'chunks/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]'
       }
     }
   }
@@ -253,7 +358,11 @@ async function isolatedBuildConfig(
           configFile,
           root
         )
-  const sharedConfig = { ...(loaded?.config ?? {}) }
+  let sharedConfig = { ...(loaded?.config ?? {}) }
+  const packageAlias = await inferredPackageAlias(sharedConfig, root)
+  if (packageAlias) {
+    sharedConfig = mergeConfig(sharedConfig, { resolve: { alias: [packageAlias] } })
+  }
   delete sharedConfig.build
   delete sharedConfig.server
   delete sharedConfig.preview
@@ -266,19 +375,24 @@ async function isolatedBuildConfig(
     esbuild: {
       jsxDev: false
     },
-    build
+    build: {
+      // Markdown browser modules are published as ES2022. Keep that baseline
+      // when a component project does not declare its own Vite target.
+      target: loaded?.config.build?.target ?? 'es2022',
+      ...build
+    }
   }
   return mergeConfig(sharedConfig, engineConfig) as InlineConfig
 }
 
 async function prepareDemos(context: CanofoldDemoPrepareContext, options: CanofoldViteOptions) {
+  const projectRoot = canonicalPath(options.root ? resolve(context.cwd, options.root) : context.cwd)
   let demos: CanofoldPreparedDemo[] = []
   let setup: string | undefined
   const plugin = virtualClientPlugin({
+    projectRoot,
     getDemos: () => demos,
-    getSetup: () => setup,
-    styleUrls:
-      context.mode === 'build' ? [baseUrl(context.basePath, '/assets/canofold-demos/styles.css')] : []
+    getSetup: () => setup
   })
   const server = await createViteServer({
     ...inlineConfig(context.cwd, context.basePath, options, plugin),
@@ -298,6 +412,7 @@ async function prepareDemos(context: CanofoldDemoPrepareContext, options: Canofo
       dependencyPaths: [
         ...new Set([
           ...server.config.configFileDependencies.map((path) => canonicalPath(path)),
+          ...(await projectMetadataPaths(projectRoot)),
           ...(resolved?.dependencyPaths ?? [])
         ])
       ],
@@ -306,6 +421,133 @@ async function prepareDemos(context: CanofoldDemoPrepareContext, options: Canofo
   } finally {
     await server.close()
   }
+}
+
+function devSessionKey(context: CanofoldDemoPrepareContext, options: CanofoldViteOptions) {
+  return JSON.stringify({
+    cwd: canonicalPath(context.cwd),
+    outputRoot: canonicalPath(context.outputRoot),
+    basePath: context.basePath,
+    root: options.root ?? null,
+    configFile: options.configFile ?? null
+  })
+}
+
+async function configDependencySignature(paths: readonly string[]) {
+  const hash = createHash('sha256')
+  for (const path of [...paths].map(canonicalPath).sort()) {
+    hash.update(path)
+    try {
+      hash.update(await readFile(path))
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+      hash.update('\0missing')
+    }
+  }
+  return hash.digest('hex')
+}
+
+async function devEnvironmentSignature(server: ViteDevServer, projectRoot: string) {
+  return configDependencySignature([
+    ...server.config.configFileDependencies,
+    ...(await projectMetadataPaths(projectRoot))
+  ])
+}
+
+function isGeneratedPath(context: CanofoldDemoPrepareContext, path: string) {
+  const projectRelative = relative(canonicalPath(context.cwd), canonicalPath(path))
+  const outputRelative = relative(canonicalPath(context.outputRoot), canonicalPath(path))
+  return (
+    projectRelative
+      .split(sep)
+      .some((segment) => segment === 'node_modules' || segment === '.git' || segment === '.canofold') ||
+    (outputRelative !== '..' && !outputRelative.startsWith(`..${sep}`) && !isAbsolute(outputRelative))
+  )
+}
+
+async function prepareDevDemos(context: CanofoldDemoPrepareContext, options: CanofoldViteOptions) {
+  if (!context.server) {
+    throw new Error('@canofold/vite requires the shared Canofold HTTP server in dev mode')
+  }
+  const key = devSessionKey(context, options)
+  const projectRoot = canonicalPath(options.root ? resolve(context.cwd, options.root) : context.cwd)
+  let session = devSessions.get(context.server)
+  const environmentChanged =
+    session?.key === key &&
+    (await devEnvironmentSignature(session.server, projectRoot)) !== session.environmentSignature
+  if (environmentChanged && session) {
+    await session.server.restart(true)
+    session.environmentSignature = await devEnvironmentSignature(session.server, projectRoot)
+  }
+  if (session?.key !== key) {
+    if (session) await session.server.close()
+    const state: DevSession['state'] = { demos: [] }
+    const plugin = virtualClientPlugin({
+      projectRoot,
+      getDemos: () => state.demos,
+      getSetup: () => state.setup
+    })
+    const server = await createViteServer({
+      ...inlineConfig(context.cwd, context.basePath, options, plugin),
+      server: {
+        middlewareMode: true,
+        hmr: { server: context.server },
+        watch: { ignored: (path) => isGeneratedPath(context, path) }
+      }
+    })
+    session = {
+      key,
+      environmentSignature: await devEnvironmentSignature(server, projectRoot),
+      server,
+      plugin,
+      state
+    }
+    devSessions.set(context.server, session)
+  }
+
+  const wasInitialized = session.state.demos.length > 0 || session.state.setup !== undefined
+  const previousSignature = JSON.stringify([
+    session.state.demos.map((demo) => [demo.id, demo.modulePath]),
+    session.state.setup
+  ])
+  const demos = await Promise.all(
+    context.demos.map((reference) => resolveDemo(session.server, reference, context.cwd))
+  )
+  const setup = await resolvedSetup(session.server, context.setup, context.cwd)
+  session.state.demos = demos
+  session.state.setup = setup?.id
+  const nextSignature = JSON.stringify([
+    session.state.demos.map((demo) => [demo.id, demo.modulePath]),
+    session.state.setup
+  ])
+  if (wasInitialized && previousSignature !== nextSignature) {
+    const module = session.server.moduleGraph.getModuleById(RESOLVED_CLIENT_ID)
+    if (module) session.server.moduleGraph.invalidateModule(module)
+    session.server.ws.send({ type: 'full-reload' })
+  }
+  return {
+    demos,
+    setup: session.state.setup,
+    dependencyPaths: [
+      ...new Set([
+        ...session.server.config.configFileDependencies.map((path) => canonicalPath(path)),
+        ...(await projectMetadataPaths(projectRoot)),
+        ...(setup?.dependencyPaths ?? [])
+      ])
+    ],
+    plugin: session.plugin
+  }
+}
+
+async function outputPathsUnder(root: string, prefix: string): Promise<string[]> {
+  const entries = await readdir(root, { withFileTypes: true })
+  const paths = await Promise.all(
+    entries.map(async (entry) => {
+      const relativePath = `${prefix}/${entry.name}`
+      return entry.isDirectory() ? outputPathsUnder(join(root, entry.name), relativePath) : [relativePath]
+    })
+  )
+  return paths.flat().sort()
 }
 
 export function vite(options: CanofoldViteOptions = {}): CanofoldDemoEngine {
@@ -317,70 +559,57 @@ export function vite(options: CanofoldViteOptions = {}): CanofoldDemoEngine {
       configFile: options.configFile ?? null
     },
     async prepare(context) {
-      const prepared = await prepareDemos(context, options)
+      const prepared =
+        context.mode === 'dev'
+          ? await prepareDevDemos(context, options)
+          : await prepareDemos(context, options)
       if (context.mode === 'build') {
         const build = demoBuildOptions(context)
         await viteBuild(await isolatedBuildConfig(context, options, prepared.plugin, build))
-        await writeFile(join(context.outputRoot, 'assets/canofold-demos/styles.css'), '', {
-          flag: 'a'
-        })
       }
+      const clientUrl =
+        context.mode === 'build'
+          ? baseUrl(context.basePath, '/assets/canofold-demos/index.js')
+          : baseUrl(context.basePath, `/@id/__x00__${PUBLIC_CLIENT_ID}`)
+      const markdownClientUrl =
+        context.mode === 'build'
+          ? baseUrl(context.basePath, '/assets/canofold-demos/markdown.js')
+          : baseUrl(context.basePath, `/@id/__x00__${PUBLIC_MARKDOWN_CLIENT_ID}`)
       return {
-        clientUrl:
-          context.mode === 'build'
-            ? baseUrl(context.basePath, '/assets/canofold-demos/index.js')
-            : baseUrl(context.basePath, `/@id/__x00__${PUBLIC_CLIENT_ID}`),
-        ...(context.mode === 'build'
-          ? { styleUrls: [baseUrl(context.basePath, '/assets/canofold-demos/styles.css')] }
-          : {}),
+        clientUrl,
+        markdownClientUrl,
         demos: Object.fromEntries(prepared.demos.map((demo) => [demo.id, demo])),
         dependencyPaths: prepared.dependencyPaths,
         ...(context.mode === 'build'
           ? {
-              outputPaths: ['assets/canofold-demos/index.js', 'assets/canofold-demos/styles.css']
+              outputPaths: await outputPathsUnder(
+                join(context.outputRoot, 'assets/canofold-demos'),
+                'assets/canofold-demos'
+              )
             }
           : {})
       }
     },
     async startDev(context: CanofoldDemoDevContext) {
-      const currentDemos = () => context.getDemos()
-      let setup: string | undefined
-      const plugin = virtualClientPlugin({ getDemos: currentDemos, getSetup: () => setup })
-      const server = await createViteServer({
-        ...inlineConfig(context.cwd, context.basePath, options, plugin),
-        server: {
-          middlewareMode: true,
-          hmr: { server: context.server },
-          watch: { ignored: (path) => context.shouldIgnorePath(path) }
-        }
-      })
-      setup = (await resolvedSetup(server, context.setup, context.cwd))?.id
-      let demoSignature = JSON.stringify(
-        currentDemos().map((demo) => [demo.id, normalizePath(demo.modulePath)])
-      )
+      const session = devSessions.get(context.server)
+      if (!session) {
+        throw new Error('@canofold/vite dev session was not prepared on the shared HTTP server')
+      }
+      const { server } = session
       return {
         middleware(request, response, next) {
           server.middlewares(request, response, next)
         },
         handlesFile(path) {
           const absolutePath = canonicalPath(path)
-          const isEntry = currentDemos().some((demo) => canonicalPath(demo.modulePath) === absolutePath)
-          if (isEntry || (setup && canonicalPath(filePathFromResolvedId(setup)) === absolutePath)) {
-            return false
-          }
           return Boolean(server.moduleGraph.getModulesByFile(absolutePath)?.size)
         },
-        update() {
-          const nextSignature = JSON.stringify(
-            currentDemos().map((demo) => [demo.id, normalizePath(demo.modulePath)])
-          )
-          if (nextSignature === demoSignature) return
-          demoSignature = nextSignature
-          const module = server.moduleGraph.getModuleById(RESOLVED_CLIENT_ID)
-          if (module) server.moduleGraph.invalidateModule(module)
-          server.ws.send({ type: 'full-reload' })
-        },
-        close: () => server.close()
+        async close() {
+          if (devSessions.get(context.server) === session) {
+            devSessions.delete(context.server)
+          }
+          await server.close()
+        }
       }
     }
   }

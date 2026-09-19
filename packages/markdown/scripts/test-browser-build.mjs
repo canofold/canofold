@@ -12,7 +12,7 @@ await writeFile(
   entry,
   [
     `import { Markdown } from ${JSON.stringify(join(packageRoot, 'dist/index.js'))}`,
-    `import { enhanceMarkdown } from ${JSON.stringify(join(packageRoot, 'dist/client/index.js'))}`,
+    `import { enhanceMarkdown } from ${JSON.stringify(join(packageRoot, 'dist/client/bundler.js'))}`,
     "globalThis.__CANOFOLD_BROWSER_CONSUMER__ = { Markdown, enhanceMarkdown, source: '# Browser consumer' }"
   ].join('\n')
 )
@@ -45,6 +45,9 @@ if (nodeBuiltinImports.length || nodeBuiltinSyntax) {
   )
 }
 if (!code.includes('Browser consumer')) throw new Error('Browser consumer entry was not bundled')
+if (code.includes('react-runtime-')) {
+  throw new Error('Bundler consumers must use the host React graph, not the standalone runtime chunk')
+}
 
 const clientTypes = await readFile(join(packageRoot, 'dist/client.d.ts'), 'utf8')
 if (/\b(?:components|slots|hydrateMarkdownIslands)\b/.test(clientTypes))

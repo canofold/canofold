@@ -1,3 +1,4 @@
+import type { Server as HttpServer } from 'node:http'
 import type { CanofoldConfig } from '../config/types'
 import type { ContentGraph } from '../content/types'
 import { resolveOutputRoot } from '../utils/paths'
@@ -7,12 +8,14 @@ export async function prepareDemoManifest({
   cwd,
   config,
   graph,
-  mode
+  mode,
+  server
 }: {
   cwd: string
   config: CanofoldConfig
   graph: ContentGraph
   mode: 'analyze' | 'build' | 'dev'
+  server?: HttpServer
 }): Promise<CanofoldDemoManifest | undefined> {
   const demos = graph.pages.flatMap((page) => page.demos)
   if (demos.length === 0) {
@@ -32,6 +35,7 @@ export async function prepareDemoManifest({
     outputRoot: resolveOutputRoot(cwd, config.outputDir),
     basePath: config.basePath,
     mode,
+    server,
     setup: config.demos.setup,
     demos
   })

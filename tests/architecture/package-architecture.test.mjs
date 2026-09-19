@@ -367,6 +367,8 @@ test('workspace exposes core, renderer, Vite engine, and official plugin package
     './base.css',
     './theme.css'
   ])
+  assert.equal(markdownPackage.exports['./client'].import, './dist/client/bundler.js')
+  assert.equal(markdownPackage.exports['./client'].default, './dist/client/index.js')
   for (const retiredExport of [
     './components',
     './islands',

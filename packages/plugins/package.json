@@ -1,6 +1,6 @@
 {
   "name": "@canofold/plugins",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Official plugins and providers for Canofold and @canofold/markdown.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -108,14 +108,14 @@
     "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "canofold": "workspace:*",
     "esbuild": "^0.28.2",
     "mermaid": "^11.17.2",
     "pagefind": "^1.5.2",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tsup": "^8.3.5",
     "typescript": "^6.0.3"
   }

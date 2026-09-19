@@ -912,7 +912,7 @@ a {
   position: absolute;
   top: 0;
   left: 1.25rem;
-  padding: 0 0.5rem;
+  padding: 0 0 0.3rem;
   color: var(--cf-ink);
   background: var(--cf-surface);
   font-size: 1rem;

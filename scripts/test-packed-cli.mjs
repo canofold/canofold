@@ -4,6 +4,7 @@ import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:f
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { gzipSync } from 'node:zlib'
 import { execPnpmSync } from './lib/packageManager.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
@@ -11,6 +12,9 @@ const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-packed-cli-'))
 const packsRoot = join(temporaryRoot, 'packs')
 const consumerRoot = join(temporaryRoot, 'consumer')
 const viteVersion = process.env.VITE_VERSION
+const reactVersion = process.env.REACT_VERSION
+const markdownEntryBudget = 8 * 1024
+const demoEntryBudget = 80 * 1024
 const modulesState = await readFile(join(workspace, 'node_modules/.modules.yaml'), 'utf8')
 const workspaceStore =
   modulesState.match(/^\s*["']?storeDir["']?:\s*["']([^"']+)["'],?\s*$/m)?.[1] ??
@@ -38,6 +42,11 @@ function portableRelativePath(from, to) {
   return relative(from, to).split(sep).join('/')
 }
 
+async function gzipFiles(root, files) {
+  const sources = await Promise.all(files.map((file) => readFile(join(root, file))))
+  return sources.reduce((total, source) => total + gzipSync(source).byteLength, 0)
+}
+
 async function pack(packageRoot) {
   const packageManifest = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'))
   const destination = join(packsRoot, packageManifest.name.replaceAll('/', '-'))
@@ -59,6 +68,18 @@ async function write(relativePath, contents) {
 
 async function assertExists(relativePath) {
   await access(join(consumerRoot, relativePath))
+}
+
+async function filesUnder(directory) {
+  const entries = await readdir(directory, { withFileTypes: true })
+  return (
+    await Promise.all(
+      entries.map((entry) => {
+        const path = join(directory, entry.name)
+        return entry.isDirectory() ? filesUnder(path) : [path]
+      })
+    )
+  ).flat()
 }
 
 try {
@@ -84,8 +105,8 @@ try {
           [pluginsPackage.manifest.name]:
             `file:${portableRelativePath(consumerRoot, pluginsPackage.tarball)}`,
           pagefind: pluginsPackage.manifest.peerDependencies.pagefind,
-          react: canofoldPackage.manifest.dependencies.react,
-          'react-dom': canofoldPackage.manifest.dependencies['react-dom'],
+          react: reactVersion ?? canofoldPackage.manifest.dependencies.react,
+          'react-dom': reactVersion ?? canofoldPackage.manifest.dependencies['react-dom'],
           vite: viteVersion ?? vitePackage.manifest.peerDependencies.vite.split(' || ')[0].replace('^', '')
         }
       },
@@ -140,7 +161,7 @@ export default {
   title: 'Packed RC',
   description: 'Packed release candidate fixture',
   requiredVersion: '${canofoldPackage.manifest.version}',
-  demos: { engine: vite({ configFile: false }) },
+  demos: { engine: vite() },
   seo: { robots: 'disallow' },
   markdown: { code: { overflow: 'scroll' } },
   search: { provider: pagefind() },
@@ -165,6 +186,78 @@ export default {
     versions: 'all'
   }
 } satisfies CanofoldConfigInput
+`
+  )
+  await write(
+    'vite.config.mts',
+    `function packageRoots(bundle, packageName) {
+  const escapedName = packageName.replace('/', '\\/')
+  const pattern = new RegExp('^(.*\\/node_modules\\/(?:\\.pnpm\\/[^/]+\\/node_modules\\/)?' + escapedName + ')(?:\\/|$)')
+  const roots = new Set()
+  for (const output of Object.values(bundle)) {
+    if (output.type !== 'chunk') continue
+    for (const id of Object.keys(output.modules)) {
+      const match = id.replace(/^\\0/, '').replaceAll('\\\\', '/').match(pattern)
+      if (match) roots.add(match[1])
+    }
+  }
+  return [...roots]
+}
+
+function packageRootsForEntry(bundle, entryFile, packageName) {
+  const escapedName = packageName.replace('/', '\\/')
+  const pattern = new RegExp('^(.*\\/node_modules\\/(?:\\.pnpm\\/[^/]+\\/node_modules\\/)?' + escapedName + ')(?:\\/|$)')
+  const roots = new Set()
+  const visited = new Set()
+  const visit = (fileName) => {
+    if (visited.has(fileName)) return
+    visited.add(fileName)
+    const output = bundle[fileName]
+    if (!output || output.type !== 'chunk') return
+    for (const id of Object.keys(output.modules)) {
+      const match = id.replace(/^\\0/, '').replaceAll('\\\\', '/').match(pattern)
+      if (match) roots.add(match[1])
+    }
+    output.imports.forEach(visit)
+  }
+  visit(entryFile)
+  return [...roots]
+}
+
+function staticEntryFiles(bundle, entryFile) {
+  const files = new Set()
+  const visit = (fileName) => {
+    if (files.has(fileName)) return
+    files.add(fileName)
+    const output = bundle[fileName]
+    if (!output || output.type !== 'chunk') return
+    output.imports.forEach(visit)
+  }
+  visit(entryFile)
+  return [...files]
+}
+
+export default {
+  plugins: [{
+    name: 'runtime-ownership-report',
+    generateBundle(_options, bundle) {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'runtime-ownership.json',
+        source: JSON.stringify({
+          react: packageRoots(bundle, 'react'),
+          reactDom: packageRoots(bundle, 'react-dom'),
+          markdownReact: packageRootsForEntry(bundle, 'markdown.js', 'react'),
+          markdownReactDom: packageRootsForEntry(bundle, 'markdown.js', 'react-dom'),
+          demoReact: packageRootsForEntry(bundle, 'index.js', 'react'),
+          demoReactDom: packageRootsForEntry(bundle, 'index.js', 'react-dom'),
+          markdownFiles: staticEntryFiles(bundle, 'markdown.js'),
+          demoFiles: staticEntryFiles(bundle, 'index.js')
+        })
+      })
+    }
+  }]
+}
 `
   )
   await rm(join(consumerRoot, 'canofold.config.ts'))
@@ -206,7 +299,7 @@ export default function PackedButtonDemo() {
   await write('src/button.css', '.packed-button { color: rgb(1 2 3); }\n')
   await write(
     'docs/guide/platform/internals/cache/index.md',
-    `---\ntitle: Deep cache page\ngroup: Guide\n---\n\n# Deep cache page\n\nThe recursive sidebar supports this depth.\n`
+    `---\ntitle: Deep cache page\ngroup: Guide\n---\n\n# Deep cache page\n\nThe recursive sidebar supports this depth.\n\n| Mode | Owner |\n| --- | --- |\n| Markdown | Vite |\n`
   )
   await write(
     'docs/zh/index.md',
@@ -234,7 +327,7 @@ export default function PackedButtonDemo() {
     '.canofold/dist/assets/canofold-brand/logo-dark.webp',
     '.canofold/dist/assets/canofold-brand/favicon.webp',
     '.canofold/dist/assets/canofold-demos/index.js',
-    '.canofold/dist/assets/canofold-demos/styles.css',
+    '.canofold/dist/assets/canofold-demos/markdown.js',
     '.canofold/dist/ai/manifest.json',
     '.canofold/dist/llms-full.txt',
     '.canofold/dist/extensions/release-audit/result.json'
@@ -250,10 +343,53 @@ export default function PackedButtonDemo() {
   assert.match(homeHtml, /data-cf-code-overflow="scroll"/)
   assert.match(homeHtml, /PackedButtonDemo/)
   assert.match(homeHtml, /href="#canofold-main"/)
-  assert.match(
-    await readFile(join(consumerRoot, '.canofold/dist/assets/canofold-demos/styles.css'), 'utf8'),
-    /packed-button/
+  assert.match(homeHtml, /data-markdown-client-url="\/assets\/canofold-demos\/index\.js"/)
+  const markdownOnlyHtml = await readFile(
+    join(consumerRoot, '.canofold/dist/guide/platform/internals/cache/index.html'),
+    'utf8'
   )
+  assert.match(markdownOnlyHtml, /data-markdown-client-url="\/assets\/canofold-demos\/markdown\.js"/)
+  assert.doesNotMatch(markdownOnlyHtml, /data-canofold-demo-client-url=/)
+  const demoRoot = join(consumerRoot, '.canofold/dist/assets/canofold-demos')
+  const demoFiles = await filesUnder(demoRoot)
+  const demoJavaScript = await Promise.all(
+    demoFiles.filter((path) => path.endsWith('.js')).map((path) => readFile(path, 'utf8'))
+  )
+  const demoCss = await Promise.all(
+    demoFiles.filter((path) => path.endsWith('.css')).map((path) => readFile(path, 'utf8'))
+  )
+  const demoEntry = await readFile(join(demoRoot, 'index.js'), 'utf8')
+  const runtimeOwnership = JSON.parse(await readFile(join(demoRoot, 'runtime-ownership.json'), 'utf8'))
+  assert.ok(demoCss.some((source) => /packed-button/.test(source)))
+  assert.doesNotMatch(demoEntry, /Packed demo/)
+  assert.ok(demoJavaScript.some((source) => /Packed demo/.test(source)))
+  assert.deepEqual(
+    [runtimeOwnership.react.length, runtimeOwnership.reactDom.length],
+    [1, 1],
+    `Vite component output must resolve one React and React DOM package root: ${JSON.stringify(runtimeOwnership)}`
+  )
+  assert.deepEqual(
+    [runtimeOwnership.markdownReact.length, runtimeOwnership.markdownReactDom.length],
+    [0, 0],
+    `Markdown-only entry must not statically load React: ${JSON.stringify(runtimeOwnership)}`
+  )
+  assert.deepEqual(
+    [runtimeOwnership.demoReact.length, runtimeOwnership.demoReactDom.length],
+    [1, 1],
+    `Demo entry must resolve one React and React DOM package root: ${JSON.stringify(runtimeOwnership)}`
+  )
+  const markdownEntryBytes = await gzipFiles(demoRoot, runtimeOwnership.markdownFiles)
+  const demoEntryBytes = await gzipFiles(demoRoot, runtimeOwnership.demoFiles)
+  assert.ok(
+    markdownEntryBytes <= markdownEntryBudget,
+    `Markdown entry is ${markdownEntryBytes} gzip bytes; budget is ${markdownEntryBudget}`
+  )
+  assert.ok(
+    demoEntryBytes <= demoEntryBudget,
+    `Demo entry is ${demoEntryBytes} gzip bytes; budget is ${demoEntryBudget}`
+  )
+  await assert.rejects(access(join(demoRoot, 'styles.css')))
+  await assert.rejects(access(join(consumerRoot, '.canofold/dist/assets/canofold-markdown')))
   const siteCss = await readFile(join(consumerRoot, '.canofold/dist/assets/canofold.css'), 'utf8')
   assert.doesNotMatch(siteCss, /\.cf-content \.cf-demo-preview\{[^}]*linear-gradient/)
   assert.equal(
@@ -286,7 +422,7 @@ export default function PackedButtonDemo() {
   ])
 
   console.log(
-    `Packed CLI smoke passed: canofold@${canofoldPackage.manifest.version}, ${extensionOutput.pages} pages, Pagefind, AI shards, extension host, cache hit`
+    `Packed CLI smoke passed: canofold@${canofoldPackage.manifest.version}, ${extensionOutput.pages} pages, Markdown ${(markdownEntryBytes / 1024).toFixed(2)} KiB gzip, Demo ${(demoEntryBytes / 1024).toFixed(2)} KiB gzip, Pagefind, AI shards, extension host, cache hit`
   )
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true })

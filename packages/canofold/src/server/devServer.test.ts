@@ -153,6 +153,9 @@ describe('startDevServer', () => {
       .mockResolvedValueOnce(resultWithEngine('second', secondStartDev))
 
     const server = await startDevServer({ cwd: '/project', port: 3333 })
+    const sharedServer = mocks.runBuild.mock.calls[0]?.[0].demoServer
+    expect(sharedServer).toBeDefined()
+    expect(mocks.startStaticServer.mock.calls[0]?.[0].server).toBe(sharedServer)
     expect(firstStartDev).toHaveBeenCalledOnce()
     const firstContext = firstStartDev.mock.calls[0]?.[0]
     expect(firstContext?.shouldIgnorePath('/project/.canofold/dist/index.html')).toBe(true)
@@ -166,6 +169,8 @@ describe('startDevServer', () => {
 
     onFileEvent?.('change', 'docs/guide.md')
     await wait(120)
+    expect(mocks.runBuild.mock.calls[1]?.[0].demoServer).toBe(sharedServer)
+    expect(mocks.runBuild.mock.calls[2]?.[0].demoServer).toBe(sharedServer)
     expect(secondStartDev).toHaveBeenCalledOnce()
     expect(secondRuntime.update).toHaveBeenCalledOnce()
 

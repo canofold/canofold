@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import type { Server as HttpServer } from 'node:http'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { writeAiOutputs } from '../ai/writeAiOutputs'
 import { loadConfig } from '../config/load'
@@ -49,6 +50,8 @@ export interface BuildOptions {
   forceClean?: boolean
   /** @internal The dev server requests browser modules without emitting a production bundle. */
   demoMode?: 'build' | 'dev'
+  /** @internal Shared listener used by browser tooling during development. */
+  demoServer?: HttpServer
 }
 
 export interface BuildResult {
@@ -188,7 +191,8 @@ async function runBuildLocked(
     cwd: options.cwd,
     config,
     graph,
-    mode: options.demoMode === 'dev' ? 'dev' : 'analyze'
+    mode: options.demoMode === 'dev' ? 'dev' : 'analyze',
+    server: options.demoServer
   })
   const currentManifest = await createBuildManifest(
     options.cwd,
@@ -251,7 +255,8 @@ async function runBuildLocked(
               cwd: options.cwd,
               config: temporaryConfig,
               graph,
-              mode: 'build'
+              mode: 'build',
+              server: options.demoServer
             })
       await writeBuildOutputs({
         cwd: options.cwd,
@@ -282,7 +287,8 @@ async function runBuildLocked(
               cwd: options.cwd,
               config: temporaryConfig,
               graph,
-              mode: 'build'
+              mode: 'build',
+              server: options.demoServer
             })
       renderer.clear()
       await writeBuildOutputs({

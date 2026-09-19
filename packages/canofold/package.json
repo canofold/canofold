@@ -1,6 +1,6 @@
 {
   "name": "canofold",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A static-first, minimally invasive knowledge and documentation platform for Markdown, MDX, search, and AI-ready output.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -53,7 +53,8 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsup && node -e \"const fs=require('node:fs');fs.copyFileSync('src/render/styles.input.css','dist/styles.input.css');fs.cpSync('src/assets/brand','dist/brand',{recursive:true})\"",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "pnpm --dir ../.. build && vitest run --root ../.."
   },
@@ -63,14 +64,14 @@
     "esbuild": "^0.28.2",
     "gray-matter": "^4.0.3",
     "lucide-react": "1.46.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "semver": "^7.8.5",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/semver": "^7.8.0",
     "tsup": "^8.3.5",
     "typescript": "^6.0.3"
