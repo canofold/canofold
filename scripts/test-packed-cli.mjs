@@ -361,6 +361,10 @@ export default function PackedButtonDemo() {
   const demoEntry = await readFile(join(demoRoot, 'index.js'), 'utf8')
   const runtimeOwnership = JSON.parse(await readFile(join(demoRoot, 'runtime-ownership.json'), 'utf8'))
   assert.ok(demoCss.some((source) => /packed-button/.test(source)))
+  assert.ok(
+    !demoJavaScript.some((source) => /function\(\w\)\{return"\/"\+\w\}/.test(source)),
+    'Demo preload URLs must stay below /assets/canofold-demos/'
+  )
   assert.doesNotMatch(demoEntry, /Packed demo/)
   assert.ok(demoJavaScript.some((source) => /Packed demo/.test(source)))
   assert.deepEqual(
