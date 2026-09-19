@@ -11,6 +11,11 @@ updates:
     patterns:
       - '*'
     multi-ecosystem-group: dependency-updates
+    allow:
+      - dependency-name: '*'
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-patch
     groups:
       security-updates:
         applies-to: security-updates
@@ -21,3 +26,13 @@ updates:
     patterns:
       - '*'
     multi-ecosystem-group: dependency-updates
+    allow:
+      - dependency-name: '*'
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-patch
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - '*'
