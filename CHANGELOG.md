@@ -10,6 +10,7 @@
 - Replace custom workspace process supervision, polling, lock, and heartbeat scripts with pnpm, Vite, tsup, TypeScript, and Tailwind watch modes.
 - Add structural runtime-ownership and bundle-budget checks so duplicated React cannot be hidden by increasing a size limit.
 - Resolve the Markdown browser client from `@canofold/vite`'s own dependency boundary so strict package managers do not require projects to install an undeclared transitive package.
+- Escape project-controlled identifiers and module paths before generating the virtual Vite client source.
 - Tighten Demo title spacing without changing the card structure or interaction model.
 
 ## 0.3.1 - 2026-09-19

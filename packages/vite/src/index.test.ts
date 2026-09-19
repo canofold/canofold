@@ -221,6 +221,50 @@ describe('@canofold/vite', () => {
     expect(await readFile(join(outputRoot, cssPath!), 'utf8')).toContain('.fixture-demo')
   })
 
+  it('escapes project paths before generating the virtual demo client', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-safe-source-'))
+    const outputRoot = join(cwd, '.canofold/dist')
+    const demoDirectory = join(cwd, 'src<', 'script>')
+    await mkdir(demoDirectory, { recursive: true })
+    await linkNodeModules(cwd)
+    await writeFile(join(demoDirectory, 'demo.tsx'), 'export default function Demo() { return null }')
+    await writeFile(
+      join(cwd, 'vite.config.ts'),
+      `export default {
+  plugins: [{
+    name: 'assert-safe-generated-source',
+    transform(code, id) {
+      if (id.includes('virtual:canofold-demo-client') && code.includes('</script>')) {
+        throw new Error('Virtual demo client contains an unsafe script boundary')
+      }
+    }
+  }]
+}`
+    )
+
+    await expect(
+      vite().prepare({
+        cwd,
+        outputRoot,
+        basePath: '/',
+        mode: 'build',
+        demos: [
+          {
+            id: 'safe-source',
+            specifier: '/src</script>/demo.tsx',
+            sandbox: 'inline',
+            pageSourcePath: join(cwd, 'docs/button.md'),
+            pageSourceRelativePath: 'docs/button.md',
+            routePath: '/button/',
+            locale: 'en'
+          }
+        ]
+      })
+    ).resolves.toMatchObject({
+      clientUrl: '/assets/canofold-demos/index.js'
+    })
+  })
+
   it('reports a missing demo through Vite resolution', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-engine-'))
     await linkNodeModules(cwd)

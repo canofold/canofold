@@ -59,6 +59,13 @@ export interface CanofoldViteOptions {
   configFile?: string | false
 }
 
+function jsonForJavaScript(value: string) {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
+}
+
 function baseUrl(basePath: string, path: string) {
   const prefix = basePath === '/' ? '' : basePath.replace(/\/$/, '')
   return `${prefix}/${path.replace(/^\//, '')}`
@@ -273,19 +280,19 @@ function virtualClientPlugin({
         if (!markdownClient || markdownClient.external) {
           throw new Error('@canofold/vite could not resolve its @canofold/markdown client dependency')
         }
-        return `export { enhanceMarkdown } from ${JSON.stringify(normalizePath(markdownClient.id))};`
+        return `export { enhanceMarkdown } from ${jsonForJavaScript(normalizePath(markdownClient.id))};`
       }
       if (id !== RESOLVED_CLIENT_ID) return undefined
       const entries: string[] = []
       const registry: string[] = []
       getDemos().forEach((demo) => {
         registry.push(
-          `[${JSON.stringify(demo.id)}, () => import(${JSON.stringify(normalizePath(demo.modulePath))})]`
+          `[${jsonForJavaScript(demo.id)}, () => import(${jsonForJavaScript(normalizePath(demo.modulePath))})]`
         )
       })
       entries.push(`const CANOFOLD_DEMO_REGISTRY = [${registry.join(',')}];`)
       const setup = getSetup()
-      const setupImport = setup ? `import CanofoldDemoSetup from ${JSON.stringify(setup)};` : undefined
+      const setupImport = setup ? `import CanofoldDemoSetup from ${jsonForJavaScript(setup)};` : undefined
       return demoRuntimeSource(entries, setupImport, PUBLIC_MARKDOWN_CLIENT_ID)
     }
   }
