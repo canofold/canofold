@@ -39,6 +39,7 @@
     "@types/node": "^22.10.0",
     "@vitest/coverage-v8": "4.1.11",
     "canofold": "workspace:*",
+    "esbuild": "^0.28.2",
     "prettier": "3.9.6",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"
