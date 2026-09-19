@@ -3,6 +3,11 @@ import type { LanguageInput } from '@shikijs/types'
 import { normalizeOptions } from './normalizeOptions'
 
 describe('normalizeOptions', () => {
+  it('keeps wrapping as the compatible code overflow default', () => {
+    expect(normalizeOptions().codeOverflow).toBe('wrap')
+    expect(normalizeOptions({ code: { overflow: 'scroll' } }).codeOverflow).toBe('scroll')
+  })
+
   it('preserves an already normalized language map for highlighter cache identity', () => {
     const languages = {
       custom: (() => Promise.resolve({ default: [] })) as LanguageInput

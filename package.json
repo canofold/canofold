@@ -30,14 +30,16 @@
     "report:package": "node scripts/package-report.mjs",
     "audit:dependencies": "pnpm audit --prod --audit-level high",
     "benchmark:markdown": "pnpm --filter @canofold/markdown build && node packages/markdown/scripts/benchmark.mjs",
+    "benchmark:search-quality": "pnpm build && node scripts/benchmark-search-quality.mjs",
     "benchmark:enterprise": "pnpm build && node scripts/benchmark-enterprise.mjs",
-    "test:release": "pnpm format:check && pnpm typecheck && pnpm audit:dependencies && pnpm build && pnpm exec vitest run --coverage && node --test tests/architecture/*.test.mjs && pnpm --filter @canofold/markdown test:browser && pnpm --filter @canofold/plugins test:browser && node scripts/test-packed-cli.mjs && pnpm report:bundles && pnpm report:package && node scripts/benchmark-enterprise.mjs"
+    "test:release": "pnpm format:check && pnpm typecheck && pnpm audit:dependencies && pnpm build && pnpm exec vitest run --coverage && node --test tests/architecture/*.test.mjs && pnpm --filter @canofold/markdown test:browser && pnpm --filter @canofold/plugins test:browser && node scripts/test-packed-cli.mjs && pnpm report:bundles && pnpm report:package && node scripts/benchmark-search-quality.mjs && node scripts/benchmark-enterprise.mjs"
   },
   "devDependencies": {
     "@canofold/plugins": "workspace:*",
     "@types/node": "^22.10.0",
     "@vitest/coverage-v8": "4.1.11",
     "canofold": "workspace:*",
+    "esbuild": "^0.28.2",
     "prettier": "3.9.6",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"

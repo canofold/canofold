@@ -5,6 +5,19 @@ const tokensUrl = new URL('../tokens.css', import.meta.url)
 const stylesUrl = new URL('../styles.css', import.meta.url)
 
 describe('Markdown CSS entrypoints', () => {
+  it('keeps wrapping by default and scopes horizontal scrolling to opted-in code blocks', async () => {
+    const styles = await readFile(stylesUrl, 'utf8')
+    const scrollRule =
+      styles.match(/\.cf-code\[data-cf-code-overflow='scroll'\] > pre,[\s\S]*?\{([\s\S]*?)\}/)?.[1] ?? ''
+
+    expect(styles).toContain('white-space: pre-wrap')
+    expect(scrollRule).toContain('overflow-x: auto')
+    expect(scrollRule).toContain('white-space: pre')
+    expect(scrollRule).toContain('word-break: normal')
+    expect(styles).toContain(".cf-code[data-cf-code-overflow='scroll'] pre code")
+    expect(styles).toContain('min-width: 100%')
+  })
+
   it('ships the shared palette and a borderless, compact geometry contract', async () => {
     const [tokens, styles] = await Promise.all([readFile(tokensUrl, 'utf8'), readFile(stylesUrl, 'utf8')])
 

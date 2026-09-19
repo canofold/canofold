@@ -356,7 +356,7 @@ test('workspace exposes core, renderer, Vite engine, and official plugin package
   })
 
   assert.deepEqual(Object.keys(canofoldPackage.exports), ['.', './demo-engine'])
-  assert.equal(vitePackage.peerDependencies.canofold, '^0.3.0')
+  assert.equal(vitePackage.peerDependencies.canofold, `^${canofoldPackage.version}`)
   assert.match(vitePackage.peerDependencies.vite, /\^6\.4\.0/)
   assert.deepEqual(Object.keys(markdownPackage.exports), [
     '.',

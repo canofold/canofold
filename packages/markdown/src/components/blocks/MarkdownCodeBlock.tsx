@@ -1,5 +1,6 @@
 import { type HTMLAttributes, type ReactNode } from 'react'
 import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels'
+import type { MarkdownCodeOverflow } from '../../compiler/types'
 import { MarkdownCopyButton } from '../shared/MarkdownActions'
 import { MarkdownFileIcon } from '../shared/MarkdownFileIcon'
 import {
@@ -15,6 +16,7 @@ export interface MarkdownCodeBlockProps extends Omit<HTMLAttributes<HTMLElement>
   children?: ReactNode
   language?: string
   filename?: string
+  overflow?: MarkdownCodeOverflow
   source?: string
   copyLabel?: string
   copyFailureLabel?: string
@@ -30,6 +32,7 @@ export function MarkdownCodeBlock({
   source: directSource,
   language: directLanguage,
   filename: directFilename,
+  overflow: directOverflow,
   copyLabel: directCopyLabel,
   copyFailureLabel: directCopyFailureLabel,
   ...inputProps
@@ -38,6 +41,10 @@ export function MarkdownCodeBlock({
   const source = directSource ?? (stringProp(props, 'data-cf-source', 'dataCfSource') || codeSource(children))
   const language = directLanguage ?? (stringProp(props, 'data-cf-language', 'dataCfLanguage') || 'text')
   const filename = directFilename ?? (stringProp(props, 'data-cf-filename', 'dataCfFilename') || undefined)
+  const inheritedOverflow = stringProp(props, 'data-cf-code-overflow', 'dataCfCodeOverflow')
+  const overflow =
+    directOverflow ??
+    (inheritedOverflow === 'wrap' || inheritedOverflow === 'scroll' ? inheritedOverflow : undefined)
   const copyLabel =
     directCopyLabel ??
     (stringProp(props, 'data-cf-copy-label', 'dataCfCopyLabel') || DEFAULT_MARKDOWN_LABELS.copyCode)
@@ -49,7 +56,13 @@ export function MarkdownCodeBlock({
   const { className: _className, ...rest } = markdownDomProps(props)
 
   return (
-    <figure {...rest} className={className} data-cf-component="code-block" data-cf-slot="root">
+    <figure
+      {...rest}
+      className={className}
+      data-cf-component="code-block"
+      data-cf-slot="root"
+      data-cf-code-overflow={overflow}
+    >
       <MarkdownCodeToolbar
         source={source}
         language={language}

@@ -1,6 +1,6 @@
 {
   "name": "@canofold/plugins",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Official plugins and providers for Canofold and @canofold/markdown.",
   "license": "MIT",
   "author": "Canofold Contributors",

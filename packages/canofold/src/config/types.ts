@@ -131,9 +131,12 @@ export interface CanofoldConfigInput {
   layout?: {
     header?: boolean
   }
+  seo?: {
+    robots?: 'allow' | 'disallow'
+  }
   markdown?: {
     html?: MarkdownHtmlPolicy
-    code?: Pick<MarkdownCodeOptions, 'themes' | 'fallbackLanguage' | 'unknownLanguage'>
+    code?: Pick<MarkdownCodeOptions, 'themes' | 'fallbackLanguage' | 'overflow' | 'unknownLanguage'>
     features?: MarkdownFeatureOptions
     labels?: Partial<MarkdownLabels>
     /**
@@ -208,6 +211,9 @@ export interface CanofoldConfig {
   }
   layout: {
     header: boolean
+  }
+  seo: {
+    robots: 'allow' | 'disallow'
   }
   markdown: {
     html: MarkdownHtmlPolicy

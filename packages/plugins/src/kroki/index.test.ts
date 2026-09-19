@@ -24,16 +24,21 @@ describe('kroki plugin', () => {
     expect(inflateSync(compressed).toString()).toBe(`${source}\n`)
   })
 
-  it('turns Graphviz fences into Kroki images without an unsupported-language warning', async () => {
+  it('turns Graphviz fences into Kroki images and warns once about the external service', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    const html = await render('```dot\ndigraph G { a -> b }\n```')
+    const plugin = kroki()
+    const html = await render('```dot\ndigraph G { a -> b }\n```', plugin)
+    await render('```d2\na -> b\n```', plugin)
 
     expect(html).toContain('data-cf-plugin-diagram="kroki"')
     expect(html).toContain('src="https://kroki.io/graphviz/svg/')
     expect(html).toContain('class="cf-diagram-img"')
     expect(html).toContain('class="cf-diagram-zoom-controls"')
     expect(html).not.toContain('data-cf-component="code-block"')
-    expect(warning).not.toHaveBeenCalled()
+    expect(warning).toHaveBeenCalledOnce()
+    expect(warning).toHaveBeenCalledWith(
+      '[canofold/plugins] Kroki sends diagram source to its configured external service. Use a trusted self-hosted service for private content.'
+    )
     warning.mockRestore()
   })
 
@@ -47,10 +52,13 @@ describe('kroki plugin', () => {
   })
 
   it('leaves unrelated fences alone', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const html = await render('```ts\nconst ready = true\n```')
 
     expect(html).toContain('data-cf-component="code-block"')
     expect(html).not.toContain('kroki-diagram')
+    expect(warning).not.toHaveBeenCalled()
+    warning.mockRestore()
   })
 
   it('does not activate for Kroki source shown inside a longer Markdown fence', () => {

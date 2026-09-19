@@ -1,4 +1,4 @@
-import { tokenize } from '../search/tokenize'
+import { queryCompactIndex, type CompactSearchIndex } from '../search/queryCompact'
 import {
   createPagefindSearchDocument,
   highlightSearchText,
@@ -9,17 +9,6 @@ import {
 
 const SEARCH_RESULT_LIMIT = 8
 const PAGEFIND_CANDIDATE_LIMIT = 32
-const EXACT_TEXT_MATCH_SCORE = 2
-
-interface CompactSearchDocument extends SearchResultDocument {
-  tags?: string[]
-}
-
-interface CompactSearchIndex {
-  docs: CompactSearchDocument[]
-  postings: Record<string, number[] | undefined>
-}
-
 interface PagefindResult {
   data(): Promise<PagefindResultData>
 }
@@ -99,28 +88,7 @@ export function bootstrapSearch() {
         })
       }
       const index = await indexPromise
-      const queryTokens = tokenize(query)
-      const lower = query.toLowerCase()
-      const scores = new Map<number, number>()
-      queryTokens.forEach((token) => {
-        ;(index.postings[token] || []).forEach((documentId) => {
-          scores.set(documentId, (scores.get(documentId) || 0) + 1)
-        })
-      })
-      return Array.from(scores, ([documentId, tokenScore]) => {
-        const doc = index.docs[documentId]
-        if (!doc) return undefined
-        const haystack = [doc.title, doc.description, ...(doc.tags || []), doc.excerpt]
-          .join(' ')
-          .toLowerCase()
-        const textScore = haystack.includes(lower) ? EXACT_TEXT_MATCH_SCORE : 0
-        return { doc, score: tokenScore + textScore }
-      })
-        .filter((item): item is { doc: CompactSearchDocument; score: number } => Boolean(item))
-        .filter((item) => item.score > 0)
-        .sort((left, right) => right.score - left.score)
-        .slice(0, SEARCH_RESULT_LIMIT)
-        .map((item) => item.doc)
+      return queryCompactIndex(query, index, SEARCH_RESULT_LIMIT)
     }
 
     async function loadPagefind() {

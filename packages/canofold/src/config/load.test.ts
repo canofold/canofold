@@ -18,6 +18,8 @@ describe('loadConfig', () => {
     expect(config.i18n.locales).toEqual(['zh'])
     expect(config.extensions).toEqual([])
     expect(config.markdown.html).toBe('sanitize')
+    expect(config.markdown.code.overflow).toBeUndefined()
+    expect(config.seo).toEqual({ robots: 'allow' })
     expect(config.theme).toMatchObject({
       logo: '/assets/canofold-brand/logo-light.webp',
       logoDark: '/assets/canofold-brand/logo-dark.webp',
@@ -61,6 +63,29 @@ describe('loadConfig', () => {
     const config = await loadConfig(cwd)
 
     expect(config.layout).toEqual({ header: false })
+  })
+
+  it('loads code overflow and robots crawler policy', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { markdown: { code: { overflow: 'scroll' } }, seo: { robots: 'disallow' } }`
+    )
+
+    const config = await loadConfig(cwd)
+
+    expect(config.markdown.code.overflow).toBe('scroll')
+    expect(config.seo).toEqual({ robots: 'disallow' })
+  })
+
+  it('rejects unsupported code overflow and robots policy values', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { markdown: { code: { overflow: 'clip' } }, seo: { robots: 'private' } }`
+    )
+
+    await expect(loadConfig(cwd)).rejects.toThrow()
   })
 
   it('loads canofold.config.ts and merges defaults', async () => {

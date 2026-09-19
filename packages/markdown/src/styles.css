@@ -760,6 +760,31 @@ html.dark .cf-code > pre.shiki span,
   white-space: pre-wrap;
 }
 
+.cf-code[data-cf-code-overflow='scroll'] > pre,
+.cf-code[data-cf-code-overflow='scroll'] pre {
+  overflow-x: auto;
+  overflow-wrap: normal;
+  scrollbar-color: var(--cf-accent-300) transparent;
+  scrollbar-width: thin;
+  white-space: pre;
+  word-break: normal;
+}
+
+.cf-code[data-cf-code-overflow='scroll'] pre code {
+  width: max-content;
+  min-width: 100%;
+}
+
+.cf-code[data-cf-code-overflow='scroll'] .line,
+.cf-code[data-cf-code-overflow='scroll'] .diff {
+  width: 100%;
+  max-width: none;
+  min-width: max-content;
+  overflow-wrap: normal;
+  white-space: pre;
+  word-break: normal;
+}
+
 .cf-code .line::before {
   position: absolute;
   inset-inline-start: 0;

@@ -137,6 +137,7 @@ const markdownCodeSchema = z
       .strict()
       .optional(),
     fallbackLanguage: z.string().min(1).optional(),
+    overflow: z.enum(['wrap', 'scroll']).optional(),
     unknownLanguage: z.enum(['warn', 'error', 'plain-text']).optional()
   })
   .strict()
@@ -408,6 +409,12 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
     layout: z
       .object({
         header: z.boolean().optional()
+      })
+      .strict()
+      .optional(),
+    seo: z
+      .object({
+        robots: z.enum(['allow', 'disallow']).optional()
       })
       .strict()
       .optional(),

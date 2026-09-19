@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1 - 2026-09-19
+
+- Add compatible site-level and per-fence code overflow controls while retaining wrapped code as the default.
+- Remove the checkerboard from component Demo previews and keep inline and iframe examples on the site surface.
+- Add an explicit allow/disallow `robots.txt` policy and document that crawler rules are not access control.
+- Warn when active Kroki or externally rendered PlantUML diagrams send source to a configured service.
+- Add a reproducible Chinese search-quality benchmark for compact search and Pagefind, covering exact, cross-section, colloquial, noisy, and no-result queries without changing compact ranking.
+- Expand packed release verification across code scrolling, inline and iframe Demos, Vite CSS, clean production styling, and robots output.
+- Correct and extend the bilingual CLI, configuration, search, Markdown, plugin, build-output, and security documentation.
+
 ## 0.3.0 - 2026-09-18
 
 - Add a component Demo Engine contract to Canofold and publish `@canofold/vite` as the official Vite integration.

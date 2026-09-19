@@ -85,8 +85,7 @@ export function createMarkdownPluginPlan(
     rehypePlugins.push([rehypeDocumentBlocks, assets, options.labels])
   }
   if (features.tables) rehypePlugins.push([rehypeTables, assets, options.labels])
-  if (features.codeBlocks)
-    rehypePlugins.push([rehypeCodeBlocks, assets, options.labels, pluginFenceLanguages])
+  if (features.codeBlocks) rehypePlugins.push([rehypeCodeBlocks, assets, options, pluginFenceLanguages])
 
   // Rehype plugins see the final semantic HTML.
   for (const plugin of options.plugins) {
