@@ -87,7 +87,7 @@
   "dependencies": {
     "@canofold/markdown": "workspace:*",
     "fflate": "^0.8.3",
-    "katex": "^0.18.4",
+    "katex": "^0.18.7",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "unist-util-visit": "^5.1.0"
@@ -107,7 +107,7 @@
   "devDependencies": {
     "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
-    "@types/node": "^22.10.0",
+    "@types/node": "^22.20.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "canofold": "workspace:*",
