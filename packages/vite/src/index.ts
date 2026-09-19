@@ -375,6 +375,10 @@ async function isolatedBuildConfig(
   delete sharedConfig.preview
   const engineConfig = {
     ...inlineConfig(context.cwd, context.basePath, { ...options, configFile: false }, plugin),
+    // The demo bundle is emitted below the site's own asset directory. Vite 8
+    // resolves preload dependencies from `base`, so using the site root here
+    // would incorrectly request demo chunks from `/chunks` and `/assets`.
+    base: baseUrl(context.basePath, '/assets/canofold-demos/'),
     mode: 'production',
     define: {
       'process.env.NODE_ENV': JSON.stringify('production')

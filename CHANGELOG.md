@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3 - 2026-09-19
+
+- Keep Vite 8 Demo chunks and CSS below the generated `assets/canofold-demos` directory so production previews load the same component examples that work during development.
+- Verify packed component-documentation consumers reject Demo preload URLs that escape the generated Demo asset directory.
+
 ## 0.3.2 - 2026-09-19
 
 - Give direct Markdown SDK consumers, standalone static sites, and Vite component documentation an explicit React runtime owner while preserving the existing public client entry.

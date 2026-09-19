@@ -172,15 +172,27 @@ describe('@canofold/vite', () => {
   it('builds the same demo source and its imported CSS into a browser bundle', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-engine-'))
     const outputRoot = join(cwd, '.canofold/dist')
+    const baseKey = `__canofoldViteBuildBase${Date.now()}`
     await mkdir(join(cwd, 'src'), { recursive: true })
     await linkNodeModules(cwd)
+    await writeFile(
+      join(cwd, 'vite.config.ts'),
+      `export default {
+  plugins: [{ name: 'capture-demo-base', configResolved(config) {
+    globalThis.${baseKey} = config.base
+  } }]
+}`
+    )
+    onTestFinished(() => {
+      delete (globalThis as Record<string, unknown>)[baseKey]
+    })
     await writeFile(join(cwd, 'src/demo.css'), '.fixture-demo { color: rgb(1 2 3); }')
     await writeFile(
       join(cwd, 'src/demo.tsx'),
       `import './demo.css'; export default function Demo() { return <button className="fixture-demo">Demo</button> }`
     )
 
-    const manifest = await vite({ configFile: false }).prepare({
+    const manifest = await vite().prepare({
       cwd,
       outputRoot,
       basePath: '/docs/',
@@ -202,6 +214,7 @@ describe('@canofold/vite', () => {
     expect(manifest.clientUrl).toBe('/docs/assets/canofold-demos/index.js')
     expect(manifest.markdownClientUrl).toBe('/docs/assets/canofold-demos/markdown.js')
     expect(manifest.styleUrls).toBeUndefined()
+    expect((globalThis as Record<string, unknown>)[baseKey]).toBe('/docs/assets/canofold-demos/')
     expect(manifest.demos['fixture-demo']).toMatchObject({
       title: 'Basic usage',
       source: `import './demo.css'; export default function Demo() { return <button className="fixture-demo">Demo</button> }`,
