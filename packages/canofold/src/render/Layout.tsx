@@ -17,6 +17,7 @@ export function Layout({
   home = false,
   markdownAssets,
   rawSource,
+  markdownClientUrl,
   demoClientUrl,
   demoStyleUrls = [],
   children
@@ -27,6 +28,7 @@ export function Layout({
   home?: boolean
   markdownAssets: MarkdownAssets
   rawSource: string
+  markdownClientUrl?: string
   demoClientUrl?: string
   demoStyleUrls?: string[]
   children: ReactNode
@@ -109,7 +111,9 @@ export function Layout({
           data-canofold-page-root=""
           data-markdown-behaviors={hasMarkdownBehaviors ? JSON.stringify(model.assets.behaviors) : undefined}
           data-markdown-client-url={
-            hasMarkdownBehaviors ? publicPathFor(config, '/assets/canofold-markdown/index.js') : undefined
+            hasMarkdownBehaviors
+              ? (markdownClientUrl ?? publicPathFor(config, '/assets/canofold-markdown/index.js'))
+              : undefined
           }
           data-markdown-plugin-clients={
             pluginClientUrls.length > 0 ? JSON.stringify(pluginClientUrls) : undefined

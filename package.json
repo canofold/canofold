@@ -14,8 +14,7 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "build": "pnpm --filter @canofold/markdown build && pnpm --filter canofold build && pnpm --filter @canofold/vite build && pnpm --filter @canofold/plugins build",
-    "dev": "node scripts/dev/runWorkspace.mjs",
-    "dev:debug": "node scripts/dev/runWorkspace.mjs --debug",
+    "dev": "pnpm --parallel --stream --filter @canofold/markdown --filter canofold run dev",
     "test": "pnpm build && vitest run",
     "test:coverage": "pnpm build && vitest run --coverage",
     "test:architecture": "pnpm build && node --test tests/architecture/*.test.mjs",
@@ -32,7 +31,7 @@
     "benchmark:markdown": "pnpm --filter @canofold/markdown build && node packages/markdown/scripts/benchmark.mjs",
     "benchmark:search-quality": "pnpm build && node scripts/benchmark-search-quality.mjs",
     "benchmark:enterprise": "pnpm build && node scripts/benchmark-enterprise.mjs",
-    "test:release": "pnpm format:check && pnpm typecheck && pnpm audit:dependencies && pnpm build && pnpm exec vitest run --coverage && node --test tests/architecture/*.test.mjs && pnpm --filter @canofold/markdown test:browser && pnpm --filter @canofold/plugins test:browser && node scripts/test-packed-cli.mjs && pnpm report:bundles && pnpm report:package && node scripts/benchmark-search-quality.mjs && node scripts/benchmark-enterprise.mjs"
+    "test:release": "pnpm format:check && pnpm typecheck && pnpm audit:dependencies && pnpm build && pnpm exec vitest run --coverage && node --test tests/architecture/*.test.mjs && pnpm --filter @canofold/markdown test:browser && pnpm --filter @canofold/plugins test:browser && node scripts/test-react-consumer.mjs && node scripts/test-packed-cli.mjs && pnpm report:bundles && pnpm report:package && node scripts/benchmark-search-quality.mjs && node scripts/benchmark-enterprise.mjs"
   },
   "devDependencies": {
     "@canofold/plugins": "workspace:*",

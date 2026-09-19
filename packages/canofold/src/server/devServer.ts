@@ -8,7 +8,7 @@ import { isInside, resolveOutputRoot } from '../utils/paths'
 import { publicPathFor } from '../seo/urls'
 import { logError } from '../utils/logger'
 import type { CanofoldDemoDevRuntime } from '../demos/types'
-import type { Server as HttpServer } from 'node:http'
+import { createServer } from 'node:http'
 
 interface BuildScheduler {
   schedule(): void
@@ -97,10 +97,10 @@ export function createBuildScheduler<Update = void>({
 
 export async function startDevServer({ cwd, port }: { cwd: string; port: number }) {
   const renderer = createMarkdownRenderer()
-  let buildState = await runBuild({ cwd, renderer, demoMode: 'dev' })
+  const httpServer = createServer()
+  let buildState = await runBuild({ cwd, renderer, demoMode: 'dev', demoServer: httpServer })
   let demoRuntime: CanofoldDemoDevRuntime | undefined
   let demoRuntimeKey: string | undefined
-  let httpServer: HttpServer | undefined
 
   const runtimeKeyForCurrentBuild = () => {
     const engine = buildState.config.demos.engine
@@ -117,7 +117,7 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
 
   const createDemoRuntime = async () => {
     const engine = buildState.config.demos.engine
-    if (!buildState.demoManifest || !engine?.startDev || !httpServer) return undefined
+    if (!buildState.demoManifest || !engine?.startDev) return undefined
     return engine.startDev({
       cwd,
       basePath: buildState.config.basePath,
@@ -144,10 +144,10 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
   const server = await startStaticServer({
     root: () => resolveOutputRoot(cwd, buildState.config.outputDir),
     port,
+    server: httpServer,
     liveReload: true,
     basePath: () => buildState.config.basePath,
-    configureServer: async (serverInstance) => {
-      httpServer = serverInstance
+    configureServer: async () => {
       demoRuntime = await createDemoRuntime()
       demoRuntimeKey = runtimeKeyForCurrentBuild()
       return {
@@ -172,7 +172,8 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
       buildState = await runBuild({
         cwd,
         renderer,
-        demoMode: 'dev'
+        demoMode: 'dev',
+        demoServer: httpServer
       })
       await refreshDemoRuntime()
       const routes = buildState.changedPages.flatMap((key) => {

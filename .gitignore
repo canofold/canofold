@@ -10,7 +10,6 @@ release-packages/
 
 # Canofold generated artifacts at any depth.
 .canofold/
-.canofold-dev/
 
 # Local environment files
 .env

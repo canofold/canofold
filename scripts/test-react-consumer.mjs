@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,7 +7,9 @@ import { execPnpmSync } from './lib/packageManager.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const packageRoot = join(workspace, 'packages/markdown')
-const versions = process.env.REACT_VERSION ? [process.env.REACT_VERSION] : ['18.2.0', '18.3.1', '19.2.0']
+const versions = process.env.REACT_VERSION
+  ? [process.env.REACT_VERSION]
+  : ['18.2.0', '18.3.1', '19.2.0', '19.3.0']
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-react-matrix-'))
 
 function run(command, args, cwd) {
@@ -36,7 +38,8 @@ try {
           dependencies: {
             '@canofold/markdown': `file:${tarball}`,
             react: version,
-            'react-dom': version
+            'react-dom': version,
+            vite: '6.4.3'
           }
         },
         null,
@@ -86,9 +89,57 @@ if (!fallback.includes('Preparing')) throw new Error('Markdown browser entry cou
 console.log('React ' + React.version + ' consumer passed')
 `
     )
+    await writeFile(
+      join(consumerRoot, 'browser-entry.js'),
+      `import React from 'react'
+import { enhanceMarkdown } from '@canofold/markdown/client'
+globalThis.__CANOFOLD_REACT_CONSUMER__ = { React, enhanceMarkdown }
+`
+    )
+    await writeFile(
+      join(consumerRoot, 'vite.config.js'),
+      `function packageRoots(bundle, packageName) {
+  const escapedName = packageName.replace('/', '\\/')
+  const pattern = new RegExp('^(.*\\/node_modules\\/(?:\\.pnpm\\/[^/]+\\/node_modules\\/)?' + escapedName + ')(?:\\/|$)')
+  const roots = new Set()
+  for (const output of Object.values(bundle)) {
+    if (output.type !== 'chunk') continue
+    for (const id of Object.keys(output.modules)) {
+      const match = id.replace(/^\\0/, '').replaceAll('\\\\', '/').match(pattern)
+      if (match) roots.add(match[1])
+    }
+  }
+  return [...roots]
+}
+
+export default {
+  plugins: [{
+    name: 'runtime-ownership-report',
+    generateBundle(_options, bundle) {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'runtime-ownership.json',
+        source: JSON.stringify({
+          react: packageRoots(bundle, 'react'),
+          reactDom: packageRoots(bundle, 'react-dom')
+        })
+      })
+    }
+  }],
+  build: { target: 'es2022', rollupOptions: { input: 'browser-entry.js' } }
+}
+`
+    )
 
     runPnpm(['install', '--ignore-scripts', '--no-frozen-lockfile'], consumerRoot)
     run('node', ['test.mjs'], consumerRoot)
+    runPnpm(['exec', 'vite', 'build'], consumerRoot)
+    const ownership = JSON.parse(await readFile(join(consumerRoot, 'dist/runtime-ownership.json'), 'utf8'))
+    if (ownership.react.length !== 1 || ownership.reactDom.length !== 1) {
+      throw new Error(
+        `React ${version} browser consumer expected one React and React DOM package root, received ${JSON.stringify(ownership)}`
+      )
+    }
   }
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true })

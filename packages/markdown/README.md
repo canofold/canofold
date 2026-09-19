@@ -29,6 +29,8 @@ export function Article({ source }: { source: string }) {
 - `@canofold/markdown/theme` provides the shared theme contract.
 - `@canofold/markdown/base.css` and `@canofold/markdown/theme.css` provide the public style layers.
 
+When `@canofold/markdown/client` is imported by Vite or another bundler, React and React DOM remain host-provided peer dependencies instead of hiding another bundled React copy. When the Canofold CLI emits a standalone static site that has no host bundler, it automatically selects a self-contained local browser asset. Both modes use the same public entry and require no user-managed alias, import map, or runtime path.
+
 Optional syntax such as formulas is supplied by `@canofold/plugins`:
 
 ```bash

@@ -32,6 +32,8 @@ export interface CanofoldPreparedDemo extends CanofoldDemoReference {
 
 export interface CanofoldDemoManifest {
   clientUrl: string
+  /** Optional Markdown browser entry emitted by the same module graph as demos. */
+  markdownClientUrl?: string
   styleUrls?: string[]
   demos: Record<string, CanofoldPreparedDemo>
   /** Paths relative to the site output root, used by output safety and caching. */
@@ -45,6 +47,8 @@ export interface CanofoldDemoPrepareContext {
   outputRoot: string
   basePath: string
   mode: 'analyze' | 'build' | 'dev'
+  /** Shared HTTP server used by the single long-lived Vite session in dev mode. */
+  server?: HttpServer
   setup?: string
   demos: readonly CanofoldDemoReference[]
 }

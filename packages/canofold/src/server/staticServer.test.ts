@@ -1,5 +1,5 @@
 import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises'
-import { request } from 'node:http'
+import { createServer, request } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
@@ -269,6 +269,30 @@ describe('resolveRequestPath', () => {
     expect((await requestStaticServer(server.port, '/')).body).toContain('Home')
     await server.close()
     expect(close).toHaveBeenCalledOnce()
+  })
+
+  it('reuses a provided HTTP server for middleware, HMR upgrades, and static files', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-static-shared-server-'))
+    await writeFile(join(cwd, 'index.html'), '<html><body>Shared</body></html>')
+    const sharedServer = createServer()
+    let configuredServer: typeof sharedServer | undefined
+    const server = await startStaticServer({
+      root: cwd,
+      port: 0,
+      server: sharedServer,
+      configureServer(server) {
+        configuredServer = server
+        return undefined
+      }
+    })
+
+    try {
+      expect(configuredServer).toBe(sharedServer)
+      expect((await requestStaticServer(server.port, '/')).body).toContain('Shared')
+    } finally {
+      await server.close()
+      await rm(cwd, { recursive: true, force: true })
+    }
   })
 
   it('reports a synchronously thrown framework middleware error', async () => {

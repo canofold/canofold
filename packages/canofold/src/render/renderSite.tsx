@@ -306,6 +306,9 @@ export async function renderSite({
           home={isHome}
           markdownAssets={markdownAssets}
           rawSource={rawSource}
+          markdownClientUrl={
+            page.demos.length > 0 ? demoManifest?.clientUrl : demoManifest?.markdownClientUrl
+          }
           demoClientUrl={page.demos.length > 0 ? demoManifest?.clientUrl : undefined}
           demoStyleUrls={page.demos.length > 0 ? demoManifest?.styleUrls : undefined}
         >
@@ -321,7 +324,7 @@ export async function renderSite({
     await writeFile(markdownPath, rawSource)
   })
 
-  if (markdownBehaviors.size > 0) {
+  if (markdownBehaviors.size > 0 && !demoManifest?.markdownClientUrl) {
     await copyMarkdownClient(outputRoot)
   } else {
     await rm(join(outputRoot, 'assets/canofold-markdown'), { recursive: true, force: true })

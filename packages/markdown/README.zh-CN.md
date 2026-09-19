@@ -29,6 +29,8 @@ export function Article({ source }: { source: string }) {
 - `@canofold/markdown/theme` 提供共享主题契约。
 - `@canofold/markdown/base.css` 和 `@canofold/markdown/theme.css` 是公开样式入口。
 
+在 Vite 等 bundler 中导入 `@canofold/markdown/client` 时，React 与 React DOM 继续由宿主应用的 peer dependency 提供，不会隐藏内置另一份 React。Canofold CLI 生成不依赖 bundler 的独立静态站点时，会自动选择自包含的本地浏览器资源；两种消费方式使用同一个公开入口，不需要用户配置 alias、import map 或运行时路径。
+
 数学公式等可选语法由 `@canofold/plugins` 提供：
 
 ```bash

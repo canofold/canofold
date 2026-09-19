@@ -68,6 +68,7 @@ test('published JavaScript entry points expose only the documented runtime API',
       ['externalLinks', 'kroki', 'linkCard', 'math', 'mermaid', 'pagefind', 'plantUml', 'readingTime']
     ],
     ['packages/markdown/dist/index.js', ['Markdown', 'defineMarkdownPlugin']],
+    ['packages/markdown/dist/client/bundler.js', ['enhanceMarkdown']],
     ['packages/markdown/dist/client/index.js', ['enhanceMarkdown']],
     ['packages/markdown/dist/server.js', ['createMarkdownRenderer', 'defineMarkdownPlugin']],
     [

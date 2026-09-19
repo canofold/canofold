@@ -16,21 +16,6 @@ updates:
         update-types:
           - version-update:semver-minor
           - version-update:semver-patch
-    # React 19.3 exceeds the current browser bundle budgets. Keep this upgrade
-    # out of routine update PRs until the runtime-size regression is resolved.
-    ignore:
-      - dependency-name: react
-        versions:
-          - 19.3.x
-      - dependency-name: react-dom
-        versions:
-          - 19.3.x
-      - dependency-name: '@types/react'
-        versions:
-          - 19.3.x
-      - dependency-name: '@types/react-dom'
-        versions:
-          - 19.3.x
     groups:
       security-updates:
         applies-to: security-updates

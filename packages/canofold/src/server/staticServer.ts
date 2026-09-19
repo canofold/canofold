@@ -181,12 +181,15 @@ export async function readGeneratedNotFound(root: string) {
 export async function startStaticServer({
   root,
   port,
+  server: providedServer,
   liveReload = false,
   basePath = '/',
   configureServer
 }: {
   root: string | (() => string)
   port: number
+  /** Existing unbound server, shared with middleware that owns HMR upgrades. */
+  server?: HttpServer
   liveReload?: boolean
   basePath?: string | (() => string)
   /** Mount another development tool on the same HTTP server before static files. */
@@ -304,7 +307,8 @@ export async function startStaticServer({
     }
   }
   let mounted: StaticServerMiddleware | undefined
-  const server = createServer((request, response) => {
+  const server = providedServer ?? createServer()
+  const requestHandler = (request: IncomingMessage, response: ServerResponse) => {
     const next = (error?: unknown) => {
       if (error) {
         logError('Mounted development server error:', error)
@@ -323,8 +327,9 @@ export async function startStaticServer({
     } catch (error) {
       next(error)
     }
-  })
+  }
   mounted = await configureServer?.(server)
+  server.on('request', requestHandler)
 
   await new Promise<void>((resolveListen, rejectListen) => {
     const onError = (error: Error) => rejectListen(error)
@@ -358,6 +363,7 @@ export async function startStaticServer({
       if (heartbeatTimer) clearInterval(heartbeatTimer)
       closeReloadClients(reloadClients)
       await mounted?.close?.()
+      server.off('request', requestHandler)
       await new Promise<void>((resolveClose, reject) =>
         server.close((error) => (error ? reject(error) : resolveClose()))
       )

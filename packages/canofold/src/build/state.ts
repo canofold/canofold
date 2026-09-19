@@ -255,6 +255,7 @@ export async function createBuildManifest(
     demoRuntime: demoManifest
       ? {
           clientUrl: demoManifest.clientUrl,
+          markdownClientUrl: demoManifest.markdownClientUrl ?? null,
           styleUrls: demoManifest.styleUrls ?? [],
           outputPaths: demoManifest.outputPaths ?? []
         }

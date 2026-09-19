@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.2 - 2026-09-19
+
+- Give direct Markdown SDK consumers, standalone static sites, and Vite component documentation an explicit React runtime owner while preserving the existing public client entry.
+- Use one long-lived Vite server and module graph for component development, HMR, Markdown browser enhancement, and Demo resolution on the shared Canofold port; restart that same mounted server when Vite configuration or project dependency metadata changes.
+- Split production Demo modules and their CSS on demand instead of statically bundling every Demo and disabling CSS code splitting.
+- Keep Markdown-only pages on a lightweight entry from the same Vite graph so native enhancements do not statically load React.
+- Verify final browser graphs against React 18.2, 18.3, 19.2, and 19.3, and upgrade the workspace runtime and types to React 19.3.
+- Replace custom workspace process supervision, polling, lock, and heartbeat scripts with pnpm, Vite, tsup, TypeScript, and Tailwind watch modes.
+- Add structural runtime-ownership and bundle-budget checks so duplicated React cannot be hidden by increasing a size limit.
+- Resolve the Markdown browser client from `@canofold/vite`'s own dependency boundary so strict package managers do not require projects to install an undeclared transitive package.
+- Escape project-controlled identifiers and module paths before generating the virtual Vite client source.
+- Tighten Demo title spacing without changing the card structure or interaction model.
+
 ## 0.3.1 - 2026-09-19
 
 - Add compatible site-level and per-fence code overflow controls while retaining wrapped code as the default.

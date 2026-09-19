@@ -6,6 +6,7 @@ import { moduleGraph } from './lib/moduleGraph.mjs'
 
 const dist = join(process.cwd(), 'packages/markdown/dist')
 const budgets = {
+  'client/bundler.js': 5 * 1024,
   'client/index.js': 5 * 1024,
   'server.js': 3 * 1024,
   'server/analyze.js': 7 * 1024,
@@ -21,12 +22,16 @@ const syncBudgets = {
   // This entry shares the directive-analysis chunk with the server renderer.
   // The graph budget includes parent-directory imports from nested entries.
   'server/analyze.js': 14 * 1024,
+  'client/bundler.js': 6 * 1024,
   'client/index.js': 5 * 1024
 }
 const asyncBudgets = {
-  'client/index.js': 108 * 1024
+  'client/index.js': 120 * 1024
 }
-const reactRuntimeBudget = 72 * 1024
+// React 19.3 is larger than 19.2, but the standalone build must still emit
+// exactly one bounded runtime. Bundler consumers use client/bundler.js and
+// therefore do not pay this self-contained runtime cost.
+const reactRuntimeBudget = 84 * 1024
 const canofoldDist = join(process.cwd(), 'packages/canofold/dist')
 const canofoldBudgets = {
   'cli.js': 3 * 1024,
@@ -75,6 +80,12 @@ for (const file of files) {
 const reactRuntimeChunks = rows.filter((row) => /^client\/chunks\/react-runtime-[^/]+\.js$/.test(row.file))
 if (reactRuntimeChunks.length !== 1) {
   failures.push(`expected one shared client React runtime chunk, found ${reactRuntimeChunks.length}`)
+}
+
+const bundlerGraph = await moduleGraph(dist, 'client/bundler.js')
+const bundlerSource = (await Promise.all([...bundlerGraph].map((path) => readFile(path, 'utf8')))).join('\n')
+if (/react\.production|minified React error|__SECRET_INTERNALS_DO_NOT_USE/.test(bundlerSource)) {
+  failures.push('client/bundler.js appears to contain a bundled React runtime')
 }
 
 for (const [entry, budget] of Object.entries(syncBudgets)) {

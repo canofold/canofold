@@ -1,6 +1,6 @@
 {
   "name": "@canofold/markdown",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "An interactive, themeable Markdown renderer for knowledge and documentation sites.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -29,7 +29,7 @@
     },
     "./client": {
       "types": "./dist/client.d.ts",
-      "import": "./dist/client/index.js",
+      "import": "./dist/client/bundler.js",
       "default": "./dist/client/index.js"
     },
     "./server": {
@@ -63,7 +63,12 @@
     "provenance": true
   },
   "scripts": {
-    "build": "vite build && vite build -c vite.client.config.ts && tsc -p tsconfig.build.json && tailwindcss -i ./src/tailwind.css -o ./dist/base.css --minify && node scripts/build-css.mjs",
+    "build": "vite build && vite build -c vite.client.config.ts && tsc -p tsconfig.build.json && tailwindcss -i ./src/tailwind.css -o ./dist/base.css --minify",
+    "dev": "pnpm --parallel --stream run \"/^dev:.+/\"",
+    "dev:library": "vite build --watch --mode development",
+    "dev:client": "vite build --watch --mode development -c vite.client.config.ts",
+    "dev:types": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "dev:styles": "tailwindcss -i ./src/tailwind.css -o ./dist/base.css --minify --watch=always --poll=250",
     "test:browser": "node scripts/test-browser-build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --root ../.. packages/markdown"
@@ -95,13 +100,13 @@
     "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/unist": "^3.0.3",
     "mdast-util-directive": "^3.1.0",
     "mdast-util-to-hast": "^13.2.1",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vite": "^6.4.3",
