@@ -118,11 +118,13 @@ overrides:
   ]) {
     await assertExists(declaration)
   }
+  const expectedLucideVersion = markdownPackage.manifest.dependencies['lucide-react']
+  assert.equal(typeof expectedLucideVersion, 'string')
   for (const packageName of ['@canofold/markdown', 'canofold']) {
     const manifest = JSON.parse(
       await readFile(join(consumerRoot, 'node_modules', packageName, 'package.json'), 'utf8')
     )
-    assert.equal(manifest.dependencies['lucide-react'], '1.34.0')
+    assert.equal(manifest.dependencies['lucide-react'], expectedLucideVersion)
   }
   runPnpm(['exec', 'canofold', 'init', '--locale', 'en'])
   await assertExists('canofold.config.ts')
