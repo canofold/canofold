@@ -56,7 +56,7 @@
     "vite": "^6.4.0 || ^7.0.0 || ^8.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.20.3",
+    "@types/node": "^22.20.4",
     "canofold": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
