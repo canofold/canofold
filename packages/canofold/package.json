@@ -1,6 +1,6 @@
 {
   "name": "canofold",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "A static-first, minimally invasive knowledge and documentation platform for Markdown, MDX, search, and AI-ready output.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -54,7 +54,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch src",
     "typecheck": "tsc --noEmit",
     "test": "pnpm --dir ../.. build && vitest run --root ../.."
   },

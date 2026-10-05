@@ -15,6 +15,41 @@ afterEach(() => {
 })
 
 describe('native Markdown behaviors', () => {
+  it('scrolls overflowing code tabs and restores their controls on disposal', async () => {
+    const root = document.createElement('div')
+    root.innerHTML = `<div class="cf-code-group" data-cf-behavior="tabs">
+      <button data-cf-action="scroll-code-tabs" data-cf-direction="-1">Previous</button>
+      <div role="tablist"><button role="tab" data-cf-tab="one">One</button></div>
+      <button data-cf-action="scroll-code-tabs" data-cf-direction="1" hidden>Next</button>
+    </div>`
+    document.body.append(root)
+    const list = root.querySelector<HTMLElement>('[role="tablist"]')!
+    const previous = root.querySelector<HTMLButtonElement>('[data-cf-direction="-1"]')!
+    const next = root.querySelector<HTMLButtonElement>('[data-cf-direction="1"]')!
+    const scrollBy = vi.fn()
+    Object.defineProperties(list, {
+      scrollWidth: { configurable: true, value: 500 },
+      clientWidth: { configurable: true, value: 200 },
+      scrollBy: { configurable: true, value: scrollBy }
+    })
+
+    enhancement = enhanceMarkdown(root, { behaviors: ['tabs'] })
+    await enhancement.ready
+    expect(previous.hidden).toBe(true)
+    expect(next.hidden).toBe(false)
+
+    next.click()
+    expect(scrollBy).toHaveBeenCalledWith({ left: 180, behavior: 'smooth' })
+    list.scrollLeft = 300
+    list.dispatchEvent(new Event('scroll'))
+    expect(previous.hidden).toBe(false)
+    expect(next.hidden).toBe(true)
+
+    enhancement.dispose()
+    expect(previous.hidden).toBe(false)
+    expect(next.hidden).toBe(true)
+  })
+
   it('keeps tab keyboard state, focus, and panels synchronized', async () => {
     const root = document.createElement('div')
     root.innerHTML = `<div data-cf-behavior="tabs">

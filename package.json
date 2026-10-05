@@ -14,7 +14,7 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "build": "pnpm --filter @canofold/markdown build && pnpm --filter canofold build && pnpm --filter @canofold/vite build && pnpm --filter @canofold/plugins build",
-    "dev": "pnpm --parallel --stream --filter @canofold/markdown --filter canofold run dev",
+    "dev": "pnpm --parallel --stream --filter @canofold/markdown --filter canofold --filter @canofold/vite --filter @canofold/plugins run dev",
     "test": "pnpm build && vitest run",
     "test:coverage": "pnpm build && vitest run --coverage",
     "test:architecture": "pnpm build && node --test tests/architecture/*.test.mjs",

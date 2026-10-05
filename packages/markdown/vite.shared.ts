@@ -1,7 +1,7 @@
 import type { UserConfig } from 'vite'
 
-type RollupOptions = NonNullable<NonNullable<UserConfig['build']>['rollupOptions']>
-type WarningHandler = NonNullable<RollupOptions['onwarn']>
+type RolldownOptions = NonNullable<NonNullable<UserConfig['build']>['rolldownOptions']>
+type WarningHandler = NonNullable<RolldownOptions['onwarn']>
 
 interface PackageManifestDependencies {
   dependencies?: Record<string, string>

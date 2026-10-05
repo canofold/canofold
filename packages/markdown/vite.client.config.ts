@@ -1,13 +1,19 @@
 import { defineConfig } from 'vite'
-import { onMarkdownBuildWarning } from './vite.shared'
+import { onMarkdownBuildWarning } from './vite.shared.ts'
+import { signalWatchBuild } from '../../scripts/watchSignal.ts'
 
 export default defineConfig({
+  plugins: [
+    {
+      name: 'canofold-markdown-client-watch-signal',
+      writeBundle: () => signalWatchBuild('markdown-client')
+    }
+  ],
   define: {
     'process.env.NODE_ENV': JSON.stringify('production')
   },
   build: {
     target: 'es2020',
-    minify: 'esbuild',
     sourcemap: false,
     outDir: 'dist/client',
     emptyOutDir: false,
@@ -16,7 +22,7 @@ export default defineConfig({
       formats: ['es'],
       fileName: () => 'index.js'
     },
-    rollupOptions: {
+    rolldownOptions: {
       onwarn: onMarkdownBuildWarning,
       external: [/^node:/],
       output: {

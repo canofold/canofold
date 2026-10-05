@@ -1,13 +1,15 @@
 import { defineConfig } from 'tsup'
+import { signalWatchBuild } from '../../scripts/watchSignal'
 
-export default defineConfig({
+export default defineConfig((overrideOptions) => ({
   entry: { index: 'src/index.ts' },
   format: ['esm'],
   platform: 'node',
   target: 'node22',
   dts: true,
-  clean: true,
+  clean: !overrideOptions.watch,
   splitting: false,
   sourcemap: true,
-  external: ['canofold', 'vite']
-})
+  external: ['canofold', 'vite'],
+  onSuccess: () => signalWatchBuild('vite')
+}))

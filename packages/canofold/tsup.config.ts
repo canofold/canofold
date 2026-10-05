@@ -1,6 +1,7 @@
 import { defineConfig } from 'tsup'
 import { readFileSync } from 'node:fs'
 import { copyFile, cp } from 'node:fs/promises'
+import { signalWatchBuild } from '../../scripts/watchSignal'
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
   version: string
@@ -26,6 +27,7 @@ export default defineConfig((overrideOptions) => ({
   async onSuccess() {
     await copyFile('src/render/styles.input.css', 'dist/styles.input.css')
     await cp('src/assets/brand', 'dist/brand', { recursive: true })
+    if (overrideOptions.watch) await signalWatchBuild('canofold')
   },
   esbuildOptions(options) {
     options.keepNames = true

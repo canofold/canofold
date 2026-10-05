@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs'
 import { copyFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { externalPackageNames, onMarkdownBuildWarning } from './vite.shared'
+import { externalPackageNames, onMarkdownBuildWarning } from './vite.shared.ts'
+import { signalWatchBuild } from '../../scripts/watchSignal.ts'
 
 const packageRoot = fileURLToPath(new URL('.', import.meta.url))
 const sourceRoot = resolve(packageRoot, 'src')
@@ -33,6 +34,7 @@ function markdownAssets(): Plugin {
       for (const filename of await readdir(sourceFileIcons)) {
         await copyFile(resolve(sourceFileIcons, filename), resolve(outputFileIcons, filename))
       }
+      if (process.env.CANOFOLD_WATCH_SIGNAL_DIR) await signalWatchBuild('markdown-library')
     }
   }
 }
@@ -64,7 +66,7 @@ export default defineConfig(({ mode }) => ({
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.js`
     },
-    rollupOptions: {
+    rolldownOptions: {
       onwarn: onMarkdownBuildWarning,
       external: isExternal
     }

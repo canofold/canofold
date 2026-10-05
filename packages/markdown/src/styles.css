@@ -371,6 +371,8 @@
 }
 
 .cf-code {
+  --cf-code-line-gutter: 4.5ch;
+
   border: 0;
   outline: 0;
   color: var(--cf-code-ink);
@@ -754,7 +756,7 @@ html.dark .cf-code > pre.shiki span,
   max-width: 100%;
   min-height: 1.8em;
   line-height: 1.8;
-  padding-inline: calc(2.75ch + 0.4rem) 0;
+  padding-inline: calc(var(--cf-code-line-gutter) + 0.5rem) 0;
   overflow-wrap: break-word;
   word-break: break-word;
   white-space: pre-wrap;
@@ -788,7 +790,7 @@ html.dark .cf-code > pre.shiki span,
 .cf-code .line::before {
   position: absolute;
   inset-inline-start: 0;
-  width: 2.75ch;
+  width: var(--cf-code-line-gutter);
   color: var(--cf-ink-tertiary);
   content: counter(cf-code-line);
   counter-increment: cf-code-line;
@@ -1923,6 +1925,10 @@ html.dark .cf-code > pre.shiki span,
   cursor: zoom-in;
 }
 
+.cf-media-zoom[data-cf-preview-open='true'] > img {
+  visibility: hidden;
+}
+
 .cf-image-lightbox {
   position: fixed;
   inset: 0;
@@ -1948,7 +1954,9 @@ html.dark .cf-code > pre.shiki span,
   z-index: 1;
   display: grid;
   place-items: center;
-  width: min(92vw, 1440px);
+  width: fit-content;
+  min-width: 0;
+  max-width: min(calc(100vw - 48px), 1440px);
   max-height: 90dvh;
   padding: 0;
   border-radius: 0;
@@ -1959,9 +1967,10 @@ html.dark .cf-code > pre.shiki span,
 
 .cf-image-lightbox-card img {
   width: auto;
-  max-width: 100%;
+  max-width: min(calc(100vw - 48px), 1440px);
   max-height: 86dvh;
   border-radius: var(--cf-radius-sm);
+  background: #fff;
   box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
   object-fit: contain;
 }
@@ -1973,14 +1982,23 @@ html.dark .cf-code > pre.shiki span,
 }
 
 .cf-image-lightbox-close {
-  position: fixed;
-  inset: 18px 18px auto auto;
+  position: absolute;
+  inset: 12px 12px auto auto;
   z-index: 2;
+  min-width: 44px;
+  min-height: 44px;
   color: white;
   background: var(--cf-overlay-control);
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.22);
   backdrop-filter: blur(16px) saturate(135%);
   -webkit-backdrop-filter: blur(16px) saturate(135%);
+}
+
+.cf-image-lightbox-close:focus-visible,
+.cf-gallery-lightbox :where(.cf-icon-button, .cf-gallery-nav):focus-visible,
+.cf-table-preview .cf-icon-button:focus-visible {
+  outline: none;
+  box-shadow: var(--cf-focus-ring);
 }
 
 .cf-gallery-trigger {
@@ -2226,6 +2244,10 @@ html.dark .cf-code > pre.shiki span,
 }
 
 @media (hover: none) {
+  .cf-anchor-island {
+    opacity: 1;
+  }
+
   .cf-code :where(.cf-block-button, .cf-copy-snippet-button) {
     opacity: 1;
   }

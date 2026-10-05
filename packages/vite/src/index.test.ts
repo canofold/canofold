@@ -92,7 +92,7 @@ describe('@canofold/vite', () => {
       `export default {
   plugins: [{ name: 'fixture-count', configResolved(config) {
     globalThis.${counterKey} = (globalThis.${counterKey} || 0) + 1
-    globalThis.${targetKey} = config.optimizeDeps.esbuildOptions.target
+    globalThis.${targetKey} = config.optimizeDeps.rolldownOptions.transform.target
   } }],
   build: { lib: { entry: 'src/index.tsx', formats: ['es'] } }
 }`
@@ -146,7 +146,7 @@ describe('@canofold/vite', () => {
       `export default {
   plugins: [{ name: 'fixture-count-updated', configResolved(config) {
     globalThis.${counterKey} = (globalThis.${counterKey} || 0) + 1
-    globalThis.${targetKey} = config.optimizeDeps.esbuildOptions.target
+    globalThis.${targetKey} = config.optimizeDeps.rolldownOptions.transform.target
   } }],
   build: { lib: { entry: 'src/index.tsx', formats: ['es'] } }
 }`
@@ -504,7 +504,7 @@ export default {
          resolve: { alias: { '@fixture/ui': fileURLToPath(new URL('./src/library.tsx', import.meta.url)) } },
          build: {
            lib: { entry: fileURLToPath(new URL('./src/library.tsx', import.meta.url)), formats: ['es'] },
-           rollupOptions: { external: ['react', 'react/jsx-runtime'] }
+           rolldownOptions: { external: ['react', 'react/jsx-runtime'] }
          }
        })`
     )

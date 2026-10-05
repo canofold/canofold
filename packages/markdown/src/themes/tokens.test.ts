@@ -18,6 +18,36 @@ describe('Markdown CSS entrypoints', () => {
     expect(styles).toContain('min-width: 100%')
   })
 
+  it('keeps long code line numbers, image previews, and touch actions usable', async () => {
+    const styles = await readFile(stylesUrl, 'utf8')
+    const imageCardRule = styles.match(/\.cf-image-lightbox-card\s*\{([\s\S]*?)\}/)?.[1] ?? ''
+    const imageRule = styles.match(/\.cf-image-lightbox-card img\s*\{([\s\S]*?)\}/)?.[1] ?? ''
+    const openTriggerRule =
+      styles.match(/\.cf-media-zoom\[data-cf-preview-open='true'\] > img\s*\{([\s\S]*?)\}/)?.[1] ?? ''
+    const imageCloseRule = styles.match(/\.cf-image-lightbox-close\s*\{([\s\S]*?)\}/)?.[1] ?? ''
+    const noHoverRule = styles.match(/@media \(hover: none\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+
+    expect(styles).toContain('--cf-code-line-gutter: 4.5ch')
+    expect(styles).toContain('padding-inline: calc(var(--cf-code-line-gutter) + 0.5rem) 0')
+    expect(styles).toContain('width: var(--cf-code-line-gutter)')
+    expect(styles).not.toContain('2.75ch')
+
+    expect(imageCardRule).toContain('width: fit-content')
+    expect(imageCardRule).toContain('min-width: 0')
+    expect(imageCardRule).toContain('max-width: min(calc(100vw - 48px), 1440px)')
+    expect(imageRule).toContain('max-width: min(calc(100vw - 48px), 1440px)')
+    expect(imageRule).toContain('background: #fff')
+    expect(openTriggerRule).toContain('visibility: hidden')
+    expect(imageCloseRule).toContain('position: absolute')
+    expect(imageCloseRule).toContain('min-width: 44px')
+    expect(imageCloseRule).toContain('min-height: 44px')
+    expect(styles).toContain('.cf-image-lightbox-close:focus-visible')
+    expect(styles).toContain('.cf-table-preview .cf-icon-button:focus-visible')
+
+    expect(noHoverRule).toContain('.cf-anchor-island')
+    expect(noHoverRule).toContain('opacity: 1')
+  })
+
   it('ships the shared palette and a borderless, compact geometry contract', async () => {
     const [tokens, styles] = await Promise.all([readFile(tokensUrl, 'utf8'), readFile(stylesUrl, 'utf8')])
 
@@ -72,7 +102,7 @@ describe('Markdown CSS entrypoints', () => {
     expect(styles).toContain('counter-increment: cf-code-line')
     expect(styles).toContain('white-space: pre-wrap')
     expect(styles).toContain('line-height: 1.8')
-    expect(styles).toContain('padding-inline: calc(2.75ch + 0.4rem) 0')
+    expect(styles).toContain('padding-inline: calc(var(--cf-code-line-gutter) + 0.5rem) 0')
     expect(styles).toContain('.cf-table-window > .cf-block-toolbar')
     expect(styles).toContain('background: var(--cf-surface-elevated)')
     expect(styles).toContain('padding: 0 var(--cf-block-padding)')
