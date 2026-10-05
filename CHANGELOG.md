@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.4 - 2026-10-05
+
+- Keep three- and four-digit code line numbers aligned with wrapped, scrolled, highlighted, and diff content by using one shared gutter width.
+- Make image lightbox cards follow the rendered image, keep their close control attached to the card, and preserve backdrop, keyboard, focus, and scroll-lock behavior.
+- Hide the source image while its lightbox is open and give transparent previews an opaque background so diagrams remain legible without a duplicate showing through.
+- Keep heading anchors discoverable on touch devices and add explicit keyboard focus indicators to shared preview controls.
+- Use the matching dependency-optimizer target configuration for Vite 6/7 and Vite 8, and remove known `lucide-react` client-directive noise from Demo builds without hiding unrelated warnings.
+
 ## 0.3.3 - 2026-09-19
 
 - Keep Vite 8 Demo chunks and CSS below the generated `assets/canofold-demos` directory so production previews load the same component examples that work during development.

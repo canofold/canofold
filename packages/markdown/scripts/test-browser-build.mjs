@@ -24,7 +24,7 @@ const result = await build({
   build: {
     target: 'es2022',
     write: false,
-    rollupOptions: { input: entry }
+    rolldownOptions: { input: entry }
   }
 })
 

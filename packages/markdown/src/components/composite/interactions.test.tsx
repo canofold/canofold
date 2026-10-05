@@ -429,7 +429,7 @@ describe('React Markdown composite interactions', () => {
     container.remove()
   })
 
-  it('opens image preview and restores focus after Escape', async () => {
+  it('keeps image clicks open and closes previews from the backdrop, button, or Escape', async () => {
     const container = document.createElement('div')
     document.body.append(container)
     const root = createRoot(container)
@@ -456,14 +456,37 @@ describe('React Markdown composite interactions', () => {
     expect(dialog.getAttribute('aria-label')).toBe('Preview image')
     expect(document.activeElement).toBe(close)
     expect(document.body.style.overflow).toBe('hidden')
+    expect(trigger.dataset.cfPreviewOpen).toBe('true')
+
+    const previewImage = dialog.querySelector('img') as HTMLImageElement
+    await act(async () => previewImage.click())
+    expect(document.body.querySelector('[role="dialog"]')).toBe(dialog)
 
     await act(async () => {
       close.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))
     })
     expect(document.activeElement).toBe(close)
 
+    const backdrop = dialog.querySelector('.cf-image-lightbox-backdrop') as HTMLElement
+    await act(async () => backdrop.click())
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
+    expect(document.activeElement).toBe(trigger)
+    expect(document.body.style.overflow).toBe(previousOverflow)
+    expect(trigger.dataset.cfPreviewOpen).toBeUndefined()
+
+    await act(async () => trigger.click())
+    const reopenedClose = document.body.querySelector(
+      '[data-cf-action="close-image"][data-cf-slot="close"]'
+    ) as HTMLButtonElement
+    await act(async () => reopenedClose.click())
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
+    expect(document.activeElement).toBe(trigger)
+
+    await act(async () => trigger.click())
+    const reopenedDialog = document.body.querySelector('[role="dialog"]') as HTMLElement
+
     await act(async () => {
-      dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+      reopenedDialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     })
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
     expect(document.activeElement).toBe(trigger)

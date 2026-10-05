@@ -1,6 +1,6 @@
 {
   "name": "@canofold/plugins",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Official plugins and providers for Canofold and @canofold/markdown.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -80,6 +80,7 @@
   },
   "scripts": {
     "build": "tsup && node scripts/verify-client-assets.mjs && node scripts/build-math-css.mjs",
+    "dev": "tsup --watch src",
     "test:browser": "node scripts/test-browser-build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --root ../.. packages/plugins"

@@ -132,6 +132,7 @@ export function MarkdownImage({
         type="button"
         data-cf-action="zoom-image"
         data-cf-slot="action"
+        data-cf-preview-open={open ? 'true' : undefined}
         aria-label={zoomLabel}
         aria-haspopup="dialog"
         title={zoomLabel}

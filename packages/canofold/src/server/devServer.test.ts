@@ -106,6 +106,32 @@ describe('createBuildScheduler', () => {
 })
 
 describe('startDevServer', () => {
+  it('rebuilds linked assets in the existing server when refreshed', async () => {
+    const watcher = {
+      on: vi.fn(() => watcher),
+      close: vi.fn(async () => undefined)
+    }
+    const staticServer = {
+      port: 3333,
+      reload: vi.fn(),
+      sendBuildError: vi.fn(),
+      sendBuildOk: vi.fn(),
+      close: vi.fn(async () => undefined)
+    }
+    mocks.watch.mockReturnValue(watcher)
+    mocks.startStaticServer.mockResolvedValue(staticServer)
+    mocks.runBuild.mockResolvedValue(buildResult())
+
+    const server = await startDevServer({ cwd: '/project', port: 3333 })
+    server.refresh()
+    await wait(120)
+
+    expect(mocks.runBuild).toHaveBeenCalledTimes(2)
+    expect(mocks.runBuild.mock.calls[1]?.[0]).toHaveProperty('forceClean', true)
+    expect(staticServer.reload).toHaveBeenCalledOnce()
+    await server.close()
+  })
+
   it('restarts the mounted demo engine only when its development identity changes', async () => {
     let onFileEvent: ((eventName: string, path: string) => void) | undefined
     const watcher = {

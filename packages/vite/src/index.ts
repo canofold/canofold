@@ -21,8 +21,10 @@ import {
   type InlineConfig,
   type ModuleNode,
   type Plugin,
-  type ViteDevServer
+  type ViteDevServer,
+  version as viteVersion
 } from 'vite'
+import { onDemoBuildWarning } from './buildWarnings'
 import { demoRuntimeSource } from './runtime'
 
 const PUBLIC_CLIENT_ID = 'virtual:canofold-demo-client'
@@ -51,6 +53,12 @@ interface DevSession {
 }
 
 const devSessions = new WeakMap<HttpServer, DevSession>()
+
+type VersionedOptimizeDeps = NonNullable<InlineConfig['optimizeDeps']> & {
+  rolldownOptions?: {
+    transform?: { target?: string | string[] }
+  }
+}
 
 export interface CanofoldViteOptions {
   /** Project root passed to Vite. Defaults to the Canofold project root. */
@@ -226,6 +234,7 @@ function singleLibraryEntry(config: InlineConfig) {
   const library = config.build?.lib
   if (!library) return undefined
   const { entry } = library
+  if (!entry) return undefined
   if (typeof entry === 'string') return entry
   if (Array.isArray(entry)) return entry.length === 1 ? entry[0] : undefined
   const entries = Object.values(entry)
@@ -306,46 +315,53 @@ function inlineConfig(
 ): InlineConfig {
   const configFile: string | false | undefined =
     options.configFile === false ? false : options.configFile ? resolve(cwd, options.configFile) : undefined
+  const optimizeDeps: VersionedOptimizeDeps =
+    Number.parseInt(viteVersion, 10) >= 8
+      ? { rolldownOptions: { transform: { target: 'esnext' } } }
+      : { esbuildOptions: { target: 'esnext' } }
   return {
     root: canonicalPath(options.root ? resolve(cwd, options.root) : cwd),
     configFile,
     base: basePath,
     appType: 'custom' as const,
     plugins: Array.isArray(plugins) ? plugins : [plugins],
-    // The dev server ships native ESM to the current browser. Avoid asking
-    // esbuild to lower dependency syntax that its transformer cannot lower.
-    optimizeDeps: { esbuildOptions: { target: 'esnext' } },
+    // The dev server ships native ESM to the current browser. Avoid asking the
+    // active dependency optimizer to lower syntax that it cannot transform.
+    optimizeDeps,
     resolve: { dedupe: ['react', 'react-dom'] }
   }
 }
 
 function demoBuildOptions(context: CanofoldDemoPrepareContext): BuildOptions {
+  const bundlerOptions = {
+    onwarn: onDemoBuildWarning,
+    external: () => false,
+    // Canofold loads both browser entries with dynamic import() and consumes
+    // their named exports. Vite's application default may otherwise remove
+    // entry exports that are not referenced inside the bundle.
+    preserveEntrySignatures: 'strict' as const,
+    input: {
+      index: PUBLIC_CLIENT_ID,
+      markdown: PUBLIC_MARKDOWN_CLIENT_ID
+    },
+    output: {
+      format: 'es' as const,
+      entryFileNames: '[name].js',
+      chunkFileNames: 'chunks/[name]-[hash].js',
+      assetFileNames: 'assets/[name]-[hash][extname]'
+    }
+  }
   return {
     // The project may itself be a Vite library. Demos are a browser app and
     // must not inherit library externals or output conventions.
     lib: false,
-    minify: 'esbuild',
     outDir: join(context.outputRoot, 'assets/canofold-demos'),
     emptyOutDir: true,
     copyPublicDir: false,
     cssCodeSplit: true,
-    rollupOptions: {
-      external: () => false,
-      // Canofold loads both browser entries with dynamic import() and consumes
-      // their named exports. Vite's application default may otherwise remove
-      // entry exports that are not referenced inside the bundle.
-      preserveEntrySignatures: 'strict',
-      input: {
-        index: PUBLIC_CLIENT_ID,
-        markdown: PUBLIC_MARKDOWN_CLIENT_ID
-      },
-      output: {
-        format: 'es',
-        entryFileNames: '[name].js',
-        chunkFileNames: 'chunks/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]'
-      }
-    }
+    ...(Number.parseInt(viteVersion, 10) >= 8
+      ? { rolldownOptions: bundlerOptions }
+      : { rollupOptions: bundlerOptions })
   }
 }
 
@@ -382,9 +398,6 @@ async function isolatedBuildConfig(
     mode: 'production',
     define: {
       'process.env.NODE_ENV': JSON.stringify('production')
-    },
-    esbuild: {
-      jsxDev: false
     },
     build: {
       // Markdown browser modules are published as ES2022. Keep that baseline
@@ -487,7 +500,7 @@ async function prepareDevDemos(context: CanofoldDemoPrepareContext, options: Can
     session?.key === key &&
     (await devEnvironmentSignature(session.server, projectRoot)) !== session.environmentSignature
   if (environmentChanged && session) {
-    await session.server.restart(true)
+    await session.server.restart()
     session.environmentSignature = await devEnvironmentSignature(session.server, projectRoot)
   }
   if (session?.key !== key) {
@@ -525,6 +538,9 @@ async function prepareDevDemos(context: CanofoldDemoPrepareContext, options: Can
     context.demos.map((reference) => resolveDemo(session.server, reference, context.cwd))
   )
   const setup = await resolvedSetup(session.server, context.setup, context.cwd)
+  // Walking Demo and setup modules can start dependency optimization in the
+  // background. Finish those requests before a config change can restart Vite.
+  await session.server.waitForRequestsIdle()
   session.state.demos = demos
   session.state.setup = setup?.id
   const nextSignature = JSON.stringify([

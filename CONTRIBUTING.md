@@ -18,7 +18,7 @@ pnpm typecheck
 pnpm test
 ```
 
-Use `pnpm dev` for local package development. It runs the existing pnpm, Vite, tsup, TypeScript, and Tailwind watch modes directly; the repository does not maintain a second process supervisor or polling build system. Keep generated output, coverage, and local preview artifacts out of commits. Website development and deployment live in the [`canofold/website`](https://github.com/canofold/website) repository.
+Use `pnpm dev` for local package development. The repository builds and tests with Vite 8; `@canofold/vite` also supports Vite 6 and 7 in packed consumer projects, verified separately in CI. The command runs the existing pnpm, Vite, tsup, TypeScript, and Tailwind watch modes directly; the repository does not maintain a second process supervisor or polling build system. Keep generated output, coverage, and local preview artifacts out of commits. Website development and deployment live in the [`canofold/website`](https://github.com/canofold/website) repository.
 
 ## Changes
 

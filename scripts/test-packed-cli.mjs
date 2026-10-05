@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
-import { execPnpmSync } from './lib/packageManager.mjs'
+import { execPnpmSync, packageManagerInvocationFor } from './lib/packageManager.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-packed-cli-'))
@@ -36,6 +36,22 @@ function runPnpm(args, options = {}) {
     stdio: ['ignore', 'pipe', 'pipe'],
     ...options
   })
+}
+
+function runPnpmCaptured(args) {
+  const invocation = packageManagerInvocationFor(args)
+  const result = spawnSync(invocation.command, invocation.args, {
+    cwd: consumerRoot,
+    encoding: 'utf8',
+    stdio: 'pipe'
+  })
+  if (result.error) throw result.error
+  if (result.status !== 0) {
+    throw new Error(
+      `pnpm ${args.join(' ')} failed with exit code ${result.status}:\n${result.stdout}${result.stderr}`
+    )
+  }
+  return { stdout: result.stdout, stderr: result.stderr }
 }
 
 function portableRelativePath(from, to) {
@@ -107,7 +123,7 @@ try {
           pagefind: pluginsPackage.manifest.peerDependencies.pagefind,
           react: reactVersion ?? canofoldPackage.manifest.dependencies.react,
           'react-dom': reactVersion ?? canofoldPackage.manifest.dependencies['react-dom'],
-          vite: viteVersion ?? vitePackage.manifest.peerDependencies.vite.split(' || ')[0].replace('^', '')
+          vite: viteVersion ?? vitePackage.manifest.devDependencies.vite.replace('^', '')
         }
       },
       null,
@@ -312,8 +328,10 @@ export default function PackedButtonDemo() {
   await write('versions/v0/zh/index.md', `---\ntitle: 历史首页\n---\n\n# 历史首页\n\n历史版本。\n`)
 
   runPnpm(['exec', 'canofold', 'check'])
-  const cleanBuild = runPnpm(['exec', 'canofold', 'build', '--no-cache'])
-  assert.match(cleanBuild, /Built .+\(clean: forced\)/)
+  const cleanBuild = runPnpmCaptured(['exec', 'canofold', 'build', '--no-cache'])
+  assert.match(cleanBuild.stdout, /Built .+\(clean: forced\)/)
+  assert.doesNotMatch(cleanBuild.stderr, /optimizeDeps\.esbuildOptions/)
+  assert.doesNotMatch(cleanBuild.stderr, /MODULE_LEVEL_DIRECTIVE/)
 
   for (const output of [
     '.canofold/dist/index.html',

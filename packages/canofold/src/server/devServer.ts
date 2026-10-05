@@ -167,15 +167,24 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
     ignoreInitial: true,
     ignored: (path) => shouldIgnoreGeneratedPath(cwd, buildState.config.outputDir, path)
   })
+  let forceCleanNextBuild = false
   const scheduler = createBuildScheduler({
     build: async () => {
-      buildState = await runBuild({
-        cwd,
-        renderer,
-        demoMode: 'dev',
-        demoServer: httpServer
-      })
-      await refreshDemoRuntime()
+      const forceClean = forceCleanNextBuild
+      forceCleanNextBuild = false
+      try {
+        buildState = await runBuild({
+          cwd,
+          renderer,
+          demoMode: 'dev',
+          demoServer: httpServer,
+          ...(forceClean ? { forceClean: true } : {})
+        })
+        await refreshDemoRuntime()
+      } catch (error) {
+        if (forceClean) forceCleanNextBuild = true
+        throw error
+      }
       const routes = buildState.changedPages.flatMap((key) => {
         const page = buildState.graph.pages.find((candidate) => candidate.sourceRelativePath === key)
         return page ? [publicPathFor(buildState.config, page.routePath)] : []
@@ -207,6 +216,10 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
 
   return {
     port: server.port,
+    refresh: () => {
+      forceCleanNextBuild = true
+      scheduler.schedule()
+    },
     close: async () => {
       await watcher.close()
       await scheduler.close()
