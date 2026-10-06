@@ -378,6 +378,9 @@ export default function PackedButtonDemo() {
   )
   const demoEntry = await readFile(join(demoRoot, 'index.js'), 'utf8')
   const runtimeOwnership = JSON.parse(await readFile(join(demoRoot, 'runtime-ownership.json'), 'utf8'))
+  const buttonDemoChunk = demoJavaScript.find((source) => source.includes('Packed demo'))
+  assert.ok(buttonDemoChunk, 'Packed production demo chunk must be emitted')
+  assert.doesNotMatch(buttonDemoChunk, /jsxDEV/, 'Packed production demo must not call development JSX')
   assert.ok(demoCss.some((source) => /packed-button/.test(source)))
   assert.ok(
     !demoJavaScript.some((source) => /function\(\w\)\{return"\/"\+\w\}/.test(source)),

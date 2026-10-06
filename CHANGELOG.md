@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.5 - 2026-10-06
+
+- Compile component Demo JSX for production even when Vite's temporary analysis server has set `NODE_ENV=development`, preventing published Website demos from failing to load.
+- Verify the production JSX output in both the Vite engine test and a packed consumer.
+
 ## 0.3.4 - 2026-10-05
 
 - Keep three- and four-digit code line numbers aligned with wrapped, scrolled, highlighted, and diff content by using one shared gutter width.
