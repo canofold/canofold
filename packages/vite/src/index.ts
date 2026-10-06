@@ -399,6 +399,11 @@ async function isolatedBuildConfig(
     define: {
       'process.env.NODE_ENV': JSON.stringify('production')
     },
+    // The analysis Vite server may leave NODE_ENV=development in this process.
+    // Keep JSX production-only without mutating the host's process environment.
+    ...(Number.parseInt(viteVersion, 10) >= 8
+      ? { oxc: { jsx: { development: false } } }
+      : { esbuild: { jsxDev: false } }),
     build: {
       // Markdown browser modules are published as ES2022. Keep that baseline
       // when a component project does not declare its own Vite target.
