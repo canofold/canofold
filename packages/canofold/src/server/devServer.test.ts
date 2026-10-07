@@ -51,6 +51,7 @@ function buildResult(overrides: Partial<BuildResult> = {}): BuildResult {
       changedPages: [],
       durationMs: 0,
       outputs: [],
+      additionalOutputs: { paths: [], files: 0, bytes: 0 },
       removedPaths: [],
       removalBaseline: false
     },

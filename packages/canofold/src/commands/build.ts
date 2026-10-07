@@ -94,7 +94,9 @@ function logBuildReport(outputDir: string, report: BuildReport) {
   logInfo(
     `Outputs: search ${size(bytesFor(['search']))}, Markdown ${size(bytesFor(['markdownMirror']))}, ` +
       `AI ${size(bytesFor(['aiPageIndex', 'aiFullContent', 'aiMarkdownIndex', 'aiSummaries', 'aiCodeExamples', 'llmsTxt', 'llmsFullTxt']))}; ` +
-      `${report.removedPaths.length} removed; report .canofold/cache/build-report.json`
+      `${report.additionalOutputs.files} additional files; ` +
+      `${report.removalBaseline ? `${report.removedPaths.length} removed` : 'removals not compared'}; ` +
+      `report .canofold/cache/build-report.json`
   )
 }
 
@@ -222,8 +224,7 @@ async function runBuildLocked(
     analyzedDemoManifest,
     options.demoMode === 'dev' ? 'dev' : 'build'
   )
-  const existingManifest = await readBuildManifest(cacheRoot)
-  const previousManifest = options.noCache ? undefined : existingManifest
+  const previousManifest = options.noCache ? undefined : await readBuildManifest(cacheRoot)
   const outputExists = await pathExists(outputRoot)
   const outputValid =
     outputExists && previousManifest

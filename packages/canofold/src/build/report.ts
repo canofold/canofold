@@ -24,6 +24,7 @@ export interface BuildReport {
   changedPages: string[]
   durationMs: number
   outputs: OutputReport[]
+  additionalOutputs: { paths: string[]; files: number; bytes: number }
   removedPaths: string[]
   removalBaseline: boolean
 }
@@ -48,21 +49,34 @@ export function createBuildReport({
   durationMs: number
 }): BuildReport {
   const entries = planBuiltInOutputs(config, graph)
+  const enabledEntries = entries.filter((entry) => entry.enabled)
   const allPaths = Object.keys(manifest.outputs)
+  const exactOwners = new Map(
+    enabledEntries.flatMap((entry) => entry.paths.map((path) => [path, entry.id] as const))
+  )
   const ownerFor = (path: string) =>
-    entries.find((entry) => entry.paths.includes(path))?.id ??
-    entries.find((entry) => entry.id !== 'site' && entry.prefixes.some((prefix) => path.startsWith(prefix)))
-      ?.id ??
-    entries.find((entry) => entry.prefixes.some((prefix) => path.startsWith(prefix)))?.id
+    exactOwners.get(path) ??
+    enabledEntries.find(
+      (entry) => entry.id !== 'site' && entry.prefixes.some((prefix) => path.startsWith(prefix))
+    )?.id ??
+    enabledEntries.find((entry) => entry.prefixes.some((prefix) => path.startsWith(prefix)))?.id
+  const pathsByOwner = new Map(entries.map((entry) => [entry.id, [] as string[]]))
+  const additionalPaths: string[] = []
+  for (const path of allPaths) {
+    const owner = ownerFor(path)
+    if (owner) pathsByOwner.get(owner)!.push(path)
+    else additionalPaths.push(path)
+  }
+  const bytesFor = (paths: string[]) => paths.reduce((sum, path) => sum + manifest.outputs[path]!.size, 0)
   const outputs = entries.map((entry) => {
-    const paths = allPaths.filter((path) => ownerFor(path) === entry.id)
+    const paths = pathsByOwner.get(entry.id)!
     return {
       id: entry.id,
       enabled: entry.enabled,
       plannedPaths: entry.paths,
       paths,
       files: paths.length,
-      bytes: paths.reduce((sum, path) => sum + manifest.outputs[path]!.size, 0),
+      bytes: bytesFor(paths),
       missingPaths: entry.enabled ? entry.paths.filter((path) => !manifest.outputs[path]) : []
     }
   })
@@ -77,6 +91,11 @@ export function createBuildReport({
     changedPages,
     durationMs: Math.round(durationMs),
     outputs,
+    additionalOutputs: {
+      paths: additionalPaths,
+      files: additionalPaths.length,
+      bytes: bytesFor(additionalPaths)
+    },
     removedPaths: previous ? Object.keys(previous.outputs).filter((path) => !manifest.outputs[path]) : [],
     removalBaseline: Boolean(previous)
   }

@@ -1,7 +1,7 @@
 import { access, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { runBuild, versionSatisfies } from './build'
 
 async function directorySnapshot(
@@ -71,13 +71,24 @@ describe('runBuild', () => {
   it('governs optional outputs, removes stale files, and reports actual cached and rebuilt state', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-output-governance-'))
     await mkdir(join(cwd, 'docs'), { recursive: true })
+    await mkdir(join(cwd, 'docs/public'), { recursive: true })
     await writeFile(join(cwd, 'docs/index.md'), '# Home\n\nKnowledge')
+    await writeFile(join(cwd, 'docs/public/diagram.svg'), '<svg/>')
     const output = join(cwd, '.canofold/dist')
     const reportPath = join(cwd, '.canofold/cache/build-report.json')
 
     const first = await runBuild({ cwd })
     expect(first.report).toMatchObject({ mode: 'clean', pages: 1, locales: ['zh'], removalBaseline: false })
     expect(first.report.outputs.flatMap((item) => item.missingPaths)).toEqual([])
+    expect(first.report.additionalOutputs).toEqual({
+      paths: ['diagram.svg'],
+      files: 1,
+      bytes: Buffer.byteLength('<svg/>')
+    })
+    const firstManifest = JSON.parse(await readFile(join(cwd, '.canofold/cache/build-manifest.json'), 'utf8'))
+    expect(
+      first.report.outputs.reduce((count, item) => count + item.files, first.report.additionalOutputs.files)
+    ).toBe(Object.keys(firstManifest.outputs).length)
     expect(first.report.outputs.find((item) => item.id === 'aiFullContent')).toMatchObject({
       enabled: true,
       missingPaths: [],
@@ -86,6 +97,15 @@ describe('runBuild', () => {
     await access(join(output, 'index.md'))
     await access(join(output, 'ai/pages.json'))
     await access(join(output, 'ai/manifest.json'))
+
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    try {
+      const forced = await runBuild({ cwd, noCache: true })
+      expect(forced.report.removalBaseline).toBe(false)
+      expect(log).toHaveBeenCalledWith(expect.stringContaining('removals not compared'))
+    } finally {
+      log.mockRestore()
+    }
 
     await writeFile(
       join(cwd, 'canofold.config.ts'),
@@ -133,6 +153,23 @@ describe('runBuild', () => {
     await access(join(output, 'index.md'))
     await access(join(output, 'ai/pages.json'))
     await access(join(output, 'ai/manifest.json'))
+  })
+
+  it('does not attribute a user asset to a disabled built-in output', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-output-user-asset-'))
+    await mkdir(join(cwd, 'docs/public/ai'), { recursive: true })
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await writeFile(join(cwd, 'docs/public/ai/pages.json'), '{"source":"user"}')
+    await writeFile(join(cwd, 'canofold.config.ts'), 'export default { ai: { pageIndex: false } }')
+
+    const result = await runBuild({ cwd })
+
+    expect(result.report.outputs.find((item) => item.id === 'aiPageIndex')).toMatchObject({
+      enabled: false,
+      files: 0
+    })
+    expect(result.report.additionalOutputs.paths).toContain('ai/pages.json')
+    expect(await readFile(join(cwd, '.canofold/dist/ai/pages.json'), 'utf8')).toBe('{"source":"user"}')
   })
 
   it('compiles uppercase MDX extensions with MDX semantics', async () => {
@@ -285,7 +322,8 @@ describe('runBuild', () => {
     const helperPath = join(helperRoot, 'index.js')
     await writeFile(helperPath, `export const label = 'alpha'`)
 
-    await runBuild({ cwd })
+    const first = await runBuild({ cwd })
+    expect(first.report.additionalOutputs.paths).toContain('extensions/report/metadata.json')
     expect(
       JSON.parse(await readFile(join(cwd, '.canofold/dist/extensions/report/metadata.json'), 'utf8'))
     ).toEqual({ label: 'alpha' })

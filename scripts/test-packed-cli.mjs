@@ -357,6 +357,24 @@ export default function PackedButtonDemo() {
   assert.equal(initialReport.mode, 'clean')
   assert.equal(initialReport.pages, 6)
   assert.equal(initialReport.outputs.find((output) => output.id === 'aiFullContent').enabled, true)
+  assert.ok(initialReport.additionalOutputs.paths.includes('extensions/release-audit/result.json'))
+  const packedManifest = JSON.parse(
+    await readFile(join(consumerRoot, '.canofold/cache/build-manifest.json'), 'utf8')
+  )
+  assert.equal(
+    initialReport.outputs.reduce(
+      (total, output) => total + output.files,
+      initialReport.additionalOutputs.files
+    ),
+    Object.keys(packedManifest.outputs).length
+  )
+  assert.equal(
+    initialReport.outputs.reduce(
+      (total, output) => total + output.bytes,
+      initialReport.additionalOutputs.bytes
+    ),
+    Object.values(packedManifest.outputs).reduce((total, output) => total + output.size, 0)
+  )
   assert.deepEqual(
     initialReport.outputs.flatMap((output) => output.missingPaths),
     []
