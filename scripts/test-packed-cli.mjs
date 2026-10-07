@@ -329,7 +329,7 @@ export default function PackedButtonDemo() {
 
   runPnpm(['exec', 'canofold', 'check'])
   const cleanBuild = runPnpmCaptured(['exec', 'canofold', 'build', '--no-cache'])
-  assert.match(cleanBuild.stdout, /Built .+\(clean: forced\)/)
+  assert.match(cleanBuild.stdout, /Built .+\(clean: forced;/)
   assert.doesNotMatch(cleanBuild.stderr, /optimizeDeps\.esbuildOptions/)
   assert.doesNotMatch(cleanBuild.stderr, /MODULE_LEVEL_DIRECTIVE/)
 
@@ -352,6 +352,16 @@ export default function PackedButtonDemo() {
   ]) {
     await assertExists(output)
   }
+  const reportPath = join(consumerRoot, '.canofold/cache/build-report.json')
+  const initialReport = JSON.parse(await readFile(reportPath, 'utf8'))
+  assert.equal(initialReport.mode, 'clean')
+  assert.equal(initialReport.pages, 6)
+  assert.equal(initialReport.outputs.find((output) => output.id === 'aiFullContent').enabled, true)
+  assert.deepEqual(
+    initialReport.outputs.flatMap((output) => output.missingPaths),
+    []
+  )
+  assert.doesNotMatch(JSON.stringify(initialReport), /PACKED_TOKEN/)
 
   await assert.rejects(access(join(consumerRoot, '.canofold/dist/pagefind/pagefind-ui.js')))
   const homeHtml = await readFile(join(consumerRoot, '.canofold/dist/index.html'), 'utf8')
@@ -433,7 +443,27 @@ export default function PackedButtonDemo() {
   assert.equal(extensionOutput.pages, 6)
 
   const cachedBuild = runPnpm(['exec', 'canofold', 'build'])
-  assert.match(cachedBuild, /\(cache hit\)/)
+  assert.match(cachedBuild, /\(cached: unchanged-inputs;/)
+  assert.equal(JSON.parse(await readFile(reportPath, 'utf8')).mode, 'cached')
+
+  const configPath = join(consumerRoot, 'canofold.config.mts')
+  const originalConfig = await readFile(configPath, 'utf8')
+  await writeFile(
+    configPath,
+    originalConfig
+      .replace('  ai: {', '  markdownMirror: false,\n  ai: {\n    pageIndex: false,\n    fullContent: false,')
+      .replace('    llmsFullTxt: true,', '    llmsFullTxt: false,')
+  )
+  runPnpm(['exec', 'canofold', 'build'])
+  for (const path of ['index.md', 'ai/pages.json', 'ai/manifest.json', 'llms-full.txt']) {
+    await assert.rejects(access(join(consumerRoot, '.canofold/dist', path)))
+  }
+  const governedReport = JSON.parse(await readFile(reportPath, 'utf8'))
+  assert.equal(governedReport.mode, 'clean')
+  assert.equal(governedReport.outputs.find((output) => output.id === 'markdownMirror').enabled, false)
+  assert.equal(governedReport.outputs.find((output) => output.id === 'aiFullContent').files, 0)
+  assert.ok(governedReport.removedPaths.includes('ai/manifest.json'))
+  assert.match(await readFile(join(consumerRoot, '.canofold/dist/ai/index.md'), 'utf8'), /\]\(\//)
 
   run('node', [
     '--input-type=module',

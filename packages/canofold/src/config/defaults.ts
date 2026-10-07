@@ -7,6 +7,7 @@ export const defaultConfig: CanofoldConfig = {
   basePath: '/',
   docsDir: 'docs',
   outputDir: '.canofold/dist',
+  markdownMirror: true,
   styles: [],
   demos: {},
   layout: {
@@ -52,6 +53,8 @@ export const defaultConfig: CanofoldConfig = {
     messages: {}
   },
   ai: {
+    pageIndex: true,
+    fullContent: true,
     llmsTxt: true,
     llmsFullTxt: true,
     markdownIndex: true,

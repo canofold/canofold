@@ -16,7 +16,7 @@ const memoryBudgetBytes = Number(process.env.CANOFOLD_MEMORY_BUDGET_BYTES || 768
 
 async function runBuild(fixture) {
   const started = performance.now()
-  const stdout = await new Promise((resolveDone, reject) => {
+  await new Promise((resolveDone, reject) => {
     execFile(
       process.execPath,
       [join(root, 'packages/canofold/dist/cli.js'), 'build'],
@@ -28,10 +28,11 @@ async function runBuild(fixture) {
     )
   })
   const resourceReport = JSON.parse(await readFile(join(fixture, '.canofold/dist/.benchmark.json'), 'utf8'))
+  const buildReport = JSON.parse(await readFile(join(fixture, '.canofold/cache/build-report.json'), 'utf8'))
   return {
     elapsedMs: performance.now() - started,
     maxRssBytes: resourceReport.maxRssBytes,
-    stdout
+    buildReport
   }
 }
 
@@ -108,8 +109,7 @@ export default {
 
   if (generatedPages !== pageCount) throw new Error(`Expected ${pageCount} pages, got ${generatedPages}`)
   if (build.elapsedMs > buildBudgetMs) throw new Error(`Build exceeded ${buildBudgetMs}ms budget`)
-  if (!cachedBuild.stdout.includes('cache hit'))
-    throw new Error('Expected the second build to be a cache hit')
+  if (!cachedBuild.buildReport.cacheHit) throw new Error('Expected the second build to be a cache hit')
   if (cachedBuild.elapsedMs > cachedBuildBudgetMs) {
     throw new Error(`Cached build exceeded ${cachedBuildBudgetMs}ms budget`)
   }

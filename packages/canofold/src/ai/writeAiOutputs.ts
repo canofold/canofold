@@ -21,7 +21,7 @@ function pageMetadata(config: CanofoldConfig, page: DocPage) {
     title: page.title,
     description: page.description,
     routePath: publicPathFor(config, page.routePath),
-    markdownPath: publicPathFor(config, markdownRoute),
+    markdownPath: config.markdownMirror ? publicPathFor(config, markdownRoute) : undefined,
     version: page.version,
     locale: page.locale,
     status: page.status,
@@ -66,7 +66,7 @@ function selectedPages(config: CanofoldConfig, graph: ContentGraph) {
 
 interface ContentRecordBase {
   routePath: string
-  markdownPath: string
+  markdownPath?: string
   title: string
   description: string
   version: string
@@ -201,27 +201,29 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
 
   const aiPages = selectedPages(config, graph)
   const pages = aiPages.map((page) => pageMetadata(config, page))
-  const partitions = new Map<string, DocPage[]>()
-  for (const page of aiPages) {
-    const key = `${page.version}\u0000${page.locale}`
-    const partition = partitions.get(key) ?? []
-    partition.push(page)
-    partitions.set(key, partition)
-  }
   const partitionManifest = []
-  for (const [key, partitionPages] of partitions) {
-    const [version = '', locale = ''] = key.split('\u0000')
-    const shards = await writePartition(outputRoot, config, version, locale, partitionPages)
-    partitionManifest.push({
-      version,
-      locale,
-      pages: partitionPages.length,
-      sourceBytes: partitionPages.reduce((total, page) => total + Buffer.byteLength(page.body), 0),
-      shards
-    })
+  if (config.ai.fullContent) {
+    const partitions = new Map<string, DocPage[]>()
+    for (const page of aiPages) {
+      const key = `${page.version}\u0000${page.locale}`
+      const partition = partitions.get(key) ?? []
+      partition.push(page)
+      partitions.set(key, partition)
+    }
+    for (const [key, partitionPages] of partitions) {
+      const [version = '', locale = ''] = key.split('\u0000')
+      const shards = await writePartition(outputRoot, config, version, locale, partitionPages)
+      partitionManifest.push({
+        version,
+        locale,
+        pages: partitionPages.length,
+        sourceBytes: partitionPages.reduce((total, page) => total + Buffer.byteLength(page.body), 0),
+        shards
+      })
+    }
   }
 
-  await writeJsonArray(join(aiDir, 'pages.json'), 'pages', pages)
+  if (config.ai.pageIndex) await writeJsonArray(join(aiDir, 'pages.json'), 'pages', pages)
   if (config.ai.pageSummaries) {
     await writeJsonArray(
       join(aiDir, 'summaries.json'),
@@ -248,7 +250,10 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
   if (config.ai.markdownIndex) {
     await writePieces(
       join(aiDir, 'index.md'),
-      pages.map((page) => `- [${markdownLinkLabel(page.title || page.routePath)}](${page.markdownPath})\n`)
+      pages.map(
+        (page) =>
+          `- [${markdownLinkLabel(page.title || page.routePath)}](${page.markdownPath ?? page.routePath})\n`
+      )
     )
   }
   if (config.ai.llmsTxt) {
@@ -270,9 +275,9 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
       }
       await writePieces(join(outputRoot, 'llms-full.txt'), bodies())
       llmsFullMode = 'full'
-    } else if (config.ai.llmsFullOverflow === 'error') {
+    } else if (config.ai.llmsFullOverflow === 'error' || !config.ai.fullContent) {
       throw new Error(
-        `llms-full.txt requires ${aggregateBytes} bytes, exceeding ai.llmsFullMaxBytes ${config.ai.llmsFullMaxBytes}`
+        `llms-full.txt requires ${aggregateBytes} bytes, exceeding ai.llmsFullMaxBytes ${config.ai.llmsFullMaxBytes}${config.ai.fullContent ? '' : '; enable ai.fullContent, raise ai.llmsFullMaxBytes, or disable ai.llmsFullTxt'}`
       )
     } else {
       await writeFile(
@@ -293,31 +298,32 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
     }
   }
 
-  await writeFile(
-    join(aiDir, 'manifest.json'),
-    JSON.stringify(
-      {
-        schemaVersion: AI_MANIFEST_SCHEMA_VERSION,
-        currentVersion: graph.currentVersion,
-        includedVersions: config.ai.versions,
-        totals: {
-          pages: aiPages.length,
-          sourceBytes: aiPages.reduce((total, page) => total + Buffer.byteLength(page.body), 0)
+  if (config.ai.fullContent)
+    await writeFile(
+      join(aiDir, 'manifest.json'),
+      JSON.stringify(
+        {
+          schemaVersion: AI_MANIFEST_SCHEMA_VERSION,
+          currentVersion: graph.currentVersion,
+          includedVersions: config.ai.versions,
+          totals: {
+            pages: aiPages.length,
+            sourceBytes: aiPages.reduce((total, page) => total + Buffer.byteLength(page.body), 0)
+          },
+          budgets: {
+            chunkSizeBytes: config.ai.chunkSizeBytes,
+            llmsFullMaxBytes: config.ai.llmsFullMaxBytes
+          },
+          llmsFull: {
+            enabled: config.ai.llmsFullTxt,
+            mode: llmsFullMode,
+            sourceBytes: aggregateBytes,
+            path: config.ai.llmsFullTxt ? publicPathFor(config, '/llms-full.txt') : null
+          },
+          partitions: partitionManifest
         },
-        budgets: {
-          chunkSizeBytes: config.ai.chunkSizeBytes,
-          llmsFullMaxBytes: config.ai.llmsFullMaxBytes
-        },
-        llmsFull: {
-          enabled: config.ai.llmsFullTxt,
-          mode: llmsFullMode,
-          sourceBytes: aggregateBytes,
-          path: config.ai.llmsFullTxt ? publicPathFor(config, '/llms-full.txt') : null
-        },
-        partitions: partitionManifest
-      },
-      null,
-      2
+        null,
+        2
+      )
     )
-  )
 }

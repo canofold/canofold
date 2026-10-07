@@ -111,6 +111,24 @@ export interface CanofoldLocaleMessages {
   notFound?: Partial<CanofoldNotFoundMessages>
 }
 
+interface CanofoldAiConfig {
+  pageIndex: boolean
+  fullContent: boolean
+  llmsTxt: boolean
+  llmsFullTxt: boolean
+  markdownIndex: boolean
+  pageSummaries: boolean
+  codeExamples: boolean
+  /** Maximum encoded size of one ai/content JSONL shard. */
+  chunkSizeBytes: number
+  /** Maximum size of the legacy single-file llms-full.txt body. */
+  llmsFullMaxBytes: number
+  /** Write a manifest pointer or fail when llms-full.txt exceeds its budget. */
+  llmsFullOverflow: 'manifest' | 'error'
+  /** Current avoids duplicate historical answers; all publishes every configured version. */
+  versions: 'current' | 'all'
+}
+
 /** Public authoring contract for canofold.config.ts. Runtime validation uses the matching strict schema. */
 export interface CanofoldConfigInput {
   title?: string
@@ -122,6 +140,8 @@ export interface CanofoldConfigInput {
   requiredVersion?: string
   docsDir?: string
   outputDir?: string
+  /** Publish a raw Markdown mirror beside each HTML page. */
+  markdownMirror?: boolean
   styles?: string[]
   demos?: {
     engine?: CanofoldDemoEngine
@@ -177,21 +197,7 @@ export interface CanofoldConfigInput {
     localeNames?: Record<string, string>
     messages?: Record<string, CanofoldLocaleMessages>
   }
-  ai?: {
-    llmsTxt?: boolean
-    llmsFullTxt?: boolean
-    markdownIndex?: boolean
-    pageSummaries?: boolean
-    codeExamples?: boolean
-    /** Maximum encoded size of one ai/content JSONL shard. */
-    chunkSizeBytes?: number
-    /** Maximum size of the legacy single-file llms-full.txt body. */
-    llmsFullMaxBytes?: number
-    /** Write a manifest pointer or fail when llms-full.txt exceeds its budget. */
-    llmsFullOverflow?: 'manifest' | 'error'
-    /** Current avoids duplicate historical answers; all publishes every configured version. */
-    versions?: 'current' | 'all'
-  }
+  ai?: Partial<CanofoldAiConfig>
 }
 
 export interface CanofoldConfig {
@@ -204,6 +210,7 @@ export interface CanofoldConfig {
   requiredVersion?: string
   docsDir: string
   outputDir: string
+  markdownMirror: boolean
   styles: string[]
   demos: {
     engine?: CanofoldDemoEngine
@@ -249,15 +256,5 @@ export interface CanofoldConfig {
     localeNames?: Record<string, string>
     messages?: Record<string, CanofoldLocaleMessages>
   }
-  ai: {
-    llmsTxt: boolean
-    llmsFullTxt: boolean
-    markdownIndex: boolean
-    pageSummaries: boolean
-    codeExamples: boolean
-    chunkSizeBytes: number
-    llmsFullMaxBytes: number
-    llmsFullOverflow: 'manifest' | 'error'
-    versions: 'current' | 'all'
-  }
+  ai: CanofoldAiConfig
 }

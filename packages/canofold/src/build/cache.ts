@@ -96,11 +96,19 @@ export async function readBuildManifest(cacheRoot: string): Promise<BuildManifes
 }
 
 export async function writeBuildManifest(cacheRoot: string, manifest: BuildManifest) {
+  await writeBuildCacheJson(cacheRoot, 'build-manifest', manifest)
+}
+
+export async function writeBuildCacheJson(
+  cacheRoot: string,
+  name: 'build-manifest' | 'build-report',
+  value: unknown
+) {
   await mkdir(cacheRoot, { recursive: true })
-  const target = manifestPath(cacheRoot)
-  const temporary = join(cacheRoot, `.build-manifest.${randomUUID()}.tmp`)
+  const target = join(cacheRoot, `${name}.json`)
+  const temporary = join(cacheRoot, `.${name}.${randomUUID()}.tmp`)
   try {
-    await writeFile(temporary, `${JSON.stringify(manifest, null, 2)}\n`, {
+    await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, {
       flag: 'wx',
       flush: true
     })
