@@ -13,6 +13,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../commands/build', () => ({ runBuild: mocks.runBuild }))
 vi.mock('./staticServer', () => ({ startStaticServer: mocks.startStaticServer }))
 vi.mock('chokidar', () => ({ default: { watch: mocks.watch } }))
+vi.mock('node:fs/promises', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('node:fs/promises')>()),
+  realpath: async (path: string) => path
+}))
 vi.mock('@canofold/markdown/server', () => ({
   createMarkdownRenderer: mocks.createMarkdownRenderer
 }))
@@ -123,6 +127,7 @@ describe('createBuildScheduler', () => {
 describe('startDevServer', () => {
   it('rebuilds linked assets in the existing server when refreshed', async () => {
     const watcher = {
+      add: vi.fn(),
       on: vi.fn(() => watcher),
       close: vi.fn(async () => undefined)
     }
@@ -150,6 +155,7 @@ describe('startDevServer', () => {
   it('restarts the mounted demo engine only when its development identity changes', async () => {
     let onFileEvent: ((eventName: string, path: string) => void) | undefined
     const watcher = {
+      add: vi.fn(),
       on: vi.fn((eventName: string, listener: (...arguments_: unknown[]) => void) => {
         if (eventName === 'all') {
           onFileEvent = listener as (eventName: string, path: string) => void
@@ -174,7 +180,7 @@ describe('startDevServer', () => {
         config: createMockConfig({
           demos: { engine: { id: 'fixture', version: '1', cacheKey, prepare, startDev } }
         }),
-        demoManifest: { clientUrl: '/demo.js', demos: {} }
+        demoManifest: { clientUrl: '/demo.js', demos: {}, dependencyPaths: ['/shared/vite.config.ts'] }
       })
 
     mocks.watch.mockReturnValue(watcher)
@@ -194,6 +200,7 @@ describe('startDevServer', () => {
       .mockResolvedValueOnce(resultWithEngine('second', secondStartDev))
 
     const server = await startDevServer({ cwd: '/project', port: 3333 })
+    expect(mocks.watch.mock.calls[0]?.[0]).toEqual(['.', '/shared/vite.config.ts'])
     const sharedServer = mocks.runBuild.mock.calls[0]?.[0].demoServer
     expect(sharedServer).toBeDefined()
     expect(mocks.startStaticServer.mock.calls[0]?.[0].server).toBe(sharedServer)
@@ -207,6 +214,7 @@ describe('startDevServer', () => {
     await wait(120)
     expect(secondStartDev).toHaveBeenCalledOnce()
     expect(firstRuntime.close).toHaveBeenCalledOnce()
+    expect(watcher.add).toHaveBeenCalledWith(['/shared/vite.config.ts'])
 
     onFileEvent?.('change', 'docs/guide.md')
     await wait(120)
@@ -223,6 +231,7 @@ describe('startDevServer', () => {
     let onFileEvent: ((eventName: string, path: string) => void) | undefined
     let onWatcherError: ((error: unknown) => void) | undefined
     const watcher = {
+      add: vi.fn(),
       on: vi.fn((eventName: string, listener: (...arguments_: unknown[]) => void) => {
         if (eventName === 'all') {
           onFileEvent = listener as (eventName: string, path: string) => void

@@ -1,5 +1,22 @@
 import { z } from 'zod'
+import { parseDocument } from 'yaml'
 import { publicResourceSchema } from '../config/publicResource'
+
+/** Read the documented YAML header; never evaluate executable frontmatter. */
+export function parseFrontmatter(input: string): { data: unknown; content: string } {
+  const source = input.replace(/^\uFEFF/, '')
+  const start = /^---[\t ]*\r?\n/.exec(source)
+  if (!start) return { data: {}, content: source }
+  const remaining = source.slice(start[0].length)
+  const end = /^(?:---|\.\.\.)[\t ]*(?:\r?\n|$)/m.exec(remaining)
+  if (!end) throw new Error('Unterminated YAML frontmatter')
+  const document = parseDocument(remaining.slice(0, end.index), { merge: true })
+  if (document.errors.length) throw document.errors[0]
+  return {
+    data: document.toJS({ maxAliasCount: 100 }) ?? {},
+    content: remaining.slice(end.index + end[0].length)
+  }
+}
 
 export const homeIconNames = [
   'ai',

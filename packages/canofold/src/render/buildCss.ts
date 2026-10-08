@@ -50,15 +50,3 @@ export async function compileCss({ math = false }: { math?: boolean } = {}): Pro
     mathCss ? `/* Math */\n${mathCss}\n` : ''
   }/* Canofold shell */\n${shell}\n`
 }
-
-const cached = new Map<boolean, Promise<string>>()
-
-export function buildCssCached(options: { math?: boolean } = {}): Promise<string> {
-  const math = options.math === true
-  let result = cached.get(math)
-  if (!result) {
-    result = compileCss({ math })
-    cached.set(math, result)
-  }
-  return result
-}

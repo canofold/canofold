@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os'
 import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it, onTestFinished } from 'vitest'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { vite } from './index'
 
 const fixtureNodeModules = fileURLToPath(new URL('../node_modules', import.meta.url))
@@ -36,6 +36,146 @@ async function linkBrowserRuntime(directory: string) {
 }
 
 describe('@canofold/vite', () => {
+  it('rejects failed config restarts repeatedly and recovers after the config is fixed', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-restart-error-'))
+    await mkdir(join(cwd, 'src'))
+    await linkNodeModules(cwd)
+    await writeFile(
+      join(cwd, 'src/demo.tsx'),
+      'export default function Demo(){ return <button>Demo</button> }'
+    )
+    await writeFile(join(cwd, 'vite.config.ts'), 'export default {}')
+    const server = createServer()
+    const context = {
+      cwd,
+      server,
+      outputRoot: join(cwd, '.canofold/dist'),
+      basePath: '/',
+      mode: 'dev' as const,
+      demos: [
+        {
+          id: 'demo',
+          specifier: '/src/demo.tsx',
+          sandbox: 'inline' as const,
+          pageSourcePath: join(cwd, 'docs/index.md'),
+          pageSourceRelativePath: 'docs/index.md',
+          routePath: '/',
+          locale: 'en'
+        }
+      ]
+    }
+    const engine = vite()
+    const manifest = await engine.prepare(context)
+    const runtime = await engine.startDev!({
+      cwd,
+      server,
+      basePath: '/',
+      getDemos: () => Object.values(manifest.demos),
+      shouldIgnorePath: () => false
+    })
+    onTestFinished(() => runtime.close())
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    onTestFinished(() => error.mockRestore())
+    await writeFile(join(cwd, 'vite.config.ts'), 'export default { invalid: }')
+    await expect(engine.prepare(context)).rejects.toThrow(/restart/i)
+    await expect(engine.prepare(context)).rejects.toThrow(/restart/i)
+    await writeFile(join(cwd, 'vite.config.ts'), 'export default { define: { FIXED: true } }')
+    await expect(engine.prepare(context)).resolves.toHaveProperty('demos.demo')
+    expect(
+      await engine.startDev!({
+        cwd,
+        server,
+        basePath: '/',
+        getDemos: () => [],
+        shouldIgnorePath: () => false
+      })
+    ).toBe(runtime)
+  })
+
+  it('releases a newly created session when demo preparation fails', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-prepare-error-'))
+    await mkdir(join(cwd, 'src'))
+    await linkNodeModules(cwd)
+    await writeFile(join(cwd, 'src/demo.tsx'), 'export default function Demo(){ return <button> }')
+    const server = createServer()
+    const engine = vite({ configFile: false })
+    const devContext = { cwd, server, basePath: '/', getDemos: () => [], shouldIgnorePath: () => false }
+    onTestFinished(async () => {
+      try {
+        const runtime = await engine.startDev!(devContext)
+        await runtime.close()
+      } catch {}
+    })
+    await expect(
+      engine.prepare({
+        cwd,
+        server,
+        outputRoot: join(cwd, '.canofold/dist'),
+        basePath: '/',
+        mode: 'dev',
+        demos: [
+          {
+            id: 'demo',
+            specifier: '/src/demo.tsx',
+            sandbox: 'inline',
+            pageSourcePath: join(cwd, 'docs/index.md'),
+            pageSourceRelativePath: 'docs/index.md',
+            routePath: '/',
+            locale: 'en'
+          }
+        ]
+      })
+    ).rejects.toThrow()
+    await expect(engine.startDev!(devContext)).rejects.toThrow(/not prepared/)
+  })
+  it('keeps one owned runtime when setup changes on the shared server', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-setup-'))
+    await mkdir(join(cwd, 'src'), { recursive: true })
+    await linkNodeModules(cwd)
+    await writeFile(
+      join(cwd, 'src/demo.tsx'),
+      'export default function Demo() { return <button>Demo</button> }'
+    )
+    await writeFile(
+      join(cwd, 'src/setup.tsx'),
+      'export default function Setup({ children }) { return <section>{children}</section> }'
+    )
+    const server = createServer()
+    const engine = vite({ configFile: false })
+    const context = {
+      cwd,
+      server,
+      outputRoot: join(cwd, '.canofold/dist'),
+      basePath: '/',
+      mode: 'dev' as const,
+      demos: [
+        {
+          id: 'demo',
+          specifier: '/src/demo.tsx',
+          sandbox: 'inline' as const,
+          pageSourcePath: join(cwd, 'docs/index.md'),
+          pageSourceRelativePath: 'docs/index.md',
+          routePath: '/',
+          locale: 'en'
+        }
+      ]
+    }
+    let manifest = await engine.prepare(context)
+    const devContext = {
+      cwd,
+      server,
+      basePath: '/',
+      getDemos: () => Object.values(manifest.demos),
+      shouldIgnorePath: () => false
+    }
+    const first = await engine.startDev!(devContext)
+    onTestFinished(() => first.close())
+    manifest = await engine.prepare({ ...context, setup: './src/setup.tsx' })
+    const next = await engine.startDev!({ ...devContext, setup: './src/setup.tsx' })
+    onTestFinished(() => next.close())
+    expect(next).toBe(first)
+  })
+
   it('builds the client without requiring transitive engine dependencies in the project root', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-client-boundary-'))
     const outputRoot = join(cwd, '.canofold/dist')
@@ -87,10 +227,11 @@ describe('@canofold/vite', () => {
       join(cwd, 'package.json'),
       JSON.stringify({ name: '@fixture/dev-components', type: 'module' })
     )
+    await writeFile(join(cwd, 'settings.ts'), `export const suffix = 'first'`)
     await writeFile(
       join(cwd, 'vite.config.ts'),
-      `export default {
-  plugins: [{ name: 'fixture-count', configResolved(config) {
+      `import { suffix } from './settings'; export default {
+  plugins: [{ name: 'fixture-count-' + suffix, configResolved(config) {
     globalThis.${counterKey} = (globalThis.${counterKey} || 0) + 1
     globalThis.${targetKey} = config.optimizeDeps.rolldownOptions.transform.target
   } }],
@@ -143,8 +284,8 @@ describe('@canofold/vite', () => {
 
     await writeFile(
       join(cwd, 'vite.config.ts'),
-      `export default {
-  plugins: [{ name: 'fixture-count-updated', configResolved(config) {
+      `import { suffix } from './settings'; export default {
+  plugins: [{ name: 'fixture-count-updated-' + suffix, configResolved(config) {
     globalThis.${counterKey} = (globalThis.${counterKey} || 0) + 1
     globalThis.${targetKey} = config.optimizeDeps.rolldownOptions.transform.target
   } }],
@@ -152,7 +293,15 @@ describe('@canofold/vite', () => {
 }`
     )
     const thirdEngine = vite()
+    // Let the filesystem event arrive before Canofold prepares the next build.
+    // The engine must not race its host with a second, native config restart.
+    await new Promise((resolve) => setTimeout(resolve, 150))
+    expect((globalThis as Record<string, unknown>)[counterKey]).toBe(1)
     const thirdManifest = await thirdEngine.prepare(context)
+    await writeFile(join(cwd, 'settings.ts'), `export const suffix = 'second'`)
+    await new Promise((resolve) => setTimeout(resolve, 150))
+    expect((globalThis as Record<string, unknown>)[counterKey]).toBe(2)
+    await thirdEngine.prepare(context)
     await writeFile(
       join(cwd, 'package.json'),
       JSON.stringify({ name: '@fixture/dev-components', type: 'module', dependencies: { react: '19.3.0' } })
@@ -160,12 +309,13 @@ describe('@canofold/vite', () => {
     const fourthEngine = vite()
     const fourthManifest = await fourthEngine.prepare(context)
 
-    expect((globalThis as Record<string, unknown>)[counterKey]).toBe(3)
+    expect((globalThis as Record<string, unknown>)[counterKey]).toBe(4)
     expect((globalThis as Record<string, unknown>)[targetKey]).toBe('esnext')
     expect(secondManifest.clientUrl).toBe(thirdManifest.clientUrl)
     expect(thirdManifest.clientUrl).toBe(fourthManifest.clientUrl)
     expect(fourthManifest.dependencyPaths).toContain(await realpath(join(cwd, 'package.json')))
     expect(fourthManifest.dependencyPaths).toContain(await realpath(join(cwd, 'vite.config.ts')))
+    expect(fourthManifest.dependencyPaths).toContain(await realpath(join(cwd, 'settings.ts')))
     expect(runtime.handlesFile?.(join(cwd, 'src/demo.tsx'))).toBe(true)
   })
 

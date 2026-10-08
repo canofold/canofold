@@ -141,6 +141,43 @@ overrides:
   )
 
   runPnpm(['install', '--prefer-offline', '--ignore-scripts', '--store-dir', workspaceStore])
+  const consumerLock = await readFile(join(consumerRoot, 'pnpm-lock.yaml'), 'utf8')
+  assert.doesNotMatch(
+    consumerLock,
+    /gray-matter@|sprintf-js@|katex@0\.16\./,
+    'Published consumers must not retain the obsolete frontmatter or math dependency chains'
+  )
+  const mathVersion = run(process.execPath, [
+    '--input-type=module',
+    '-e',
+    "import {createRequire} from 'node:module'; const require=createRequire(import.meta.resolve('@canofold/plugins/math')); console.log(require('katex').version)"
+  ]).trim()
+  assert.match(
+    mathVersion,
+    /^0\.18\./,
+    'The published math renderer must use the same KaTeX line as its styles'
+  )
+  run(process.execPath, [
+    '--input-type=module',
+    '-e',
+    String.raw`
+    import assert from 'node:assert/strict'
+    import { createMarkdownRenderer } from '@canofold/markdown/server'
+    import { renderToStaticMarkup } from 'react-dom/server'
+    import { math } from '@canofold/plugins/math'
+    const renderer = createMarkdownRenderer()
+    const plugin = math({ throwOnError: true })
+    const identity = JSON.stringify(plugin.cacheKey)
+    const options = { markdown: { plugins: [plugin] } }
+    const rendered = await renderer.render('$\\gdef\\scoped{X}$ $\\scoped$', options)
+    assert.match(renderToStaticMarkup(rendered.content), /class="katex"/)
+    assert.equal(JSON.stringify(plugin.cacheKey), identity)
+    await assert.rejects(renderer.render('$\\scoped$', options))
+    await assert.rejects(renderer.render('$\\frac{$', options))
+    const soft = await renderer.render('$\\frac{$', {markdown: {plugins: [math()]}})
+    assert.match(renderToStaticMarkup(soft.content), /katex-error/)
+  `
+  ])
   if (viteVersion) {
     const installedVite = JSON.parse(
       await readFile(join(consumerRoot, 'node_modules/vite/package.json'), 'utf8')
@@ -345,6 +382,7 @@ export default function PackedButtonDemo() {
     '.canofold/dist/assets/canofold-brand/logo-dark.webp',
     '.canofold/dist/assets/canofold-brand/favicon.webp',
     '.canofold/dist/assets/canofold-demos/index.js',
+    '.canofold/dist/assets/canofold-shell.js',
     '.canofold/dist/assets/canofold-demos/markdown.js',
     '.canofold/dist/ai/manifest.json',
     '.canofold/dist/llms-full.txt',

@@ -29,6 +29,13 @@ const index: CompactSearchIndex = {
 }
 
 describe('queryCompactIndex', () => {
+  it('does not treat inherited object properties as postings', () => {
+    const parsed: CompactSearchIndex = JSON.parse(JSON.stringify({ ...index, postings: {} }))
+    expect(queryCompactIndex('constructor', parsed)).toEqual([])
+    parsed.postings = JSON.parse('{"constructor":[0]}')
+    expect(queryCompactIndex('constructor', parsed)).toEqual([index.docs[0]])
+  })
+
   it('ranks a complete Chinese phrase above partial token matches', () => {
     expect(queryCompactIndex('组件开发', index).map((document) => document.routePath)).toEqual([
       '/component-development/',

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { resolve as resolveModule } from 'import-meta-resolve'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -223,14 +224,7 @@ export async function loadConfig(cwd: string): Promise<CanofoldConfig> {
   const temporaryPath = join(temporaryDirectory, `${randomUUID()}.mjs`)
   let loaded: { default?: unknown }
   try {
-    let canofoldEntry: string
-    try {
-      canofoldEntry = fileURLToPath(import.meta.resolve('canofold'))
-    } catch {
-      // Vitest's module runner does not implement import.meta.resolve. Its
-      // source execution path can be bundled directly by esbuild instead.
-      canofoldEntry = fileURLToPath(new URL('../index.ts', import.meta.url))
-    }
+    const canofoldEntry = fileURLToPath(resolveModule('canofold', import.meta.url))
     const result = await build({
       entryPoints: [configPath],
       absWorkingDir: cwd,

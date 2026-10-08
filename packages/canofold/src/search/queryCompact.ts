@@ -22,7 +22,8 @@ export function queryCompactIndex(query: string, index: CompactSearchIndex, limi
   const scores = new Map<number, number>()
 
   queryTokens.forEach((token) => {
-    ;(index.postings[token] || []).forEach((documentId) => {
+    const postings = Object.hasOwn(index.postings, token) ? index.postings[token] : undefined
+    ;(postings ?? []).forEach((documentId) => {
       scores.set(documentId, (scores.get(documentId) || 0) + 1)
     })
   })

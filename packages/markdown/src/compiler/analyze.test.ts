@@ -1,7 +1,34 @@
 import { describe, expect, it } from 'vitest'
 import { analyzeMarkdown } from './analyze'
+import { createMarkdownRenderer } from '../server/createMarkdownRenderer'
+import { renderToStaticMarkup } from 'react-dom/server'
 
 describe('analyzeMarkdown', () => {
+  it.each([
+    '[^note]:\n    ## Note heading\n\n# Body\n\nText[^note]',
+    '# Body[^note]\n\n[^note]:\n    ## Note heading',
+    '[^note]:\n    ## Same\n\n## Same\n\nText[^note]'
+  ])('keeps footnote headings aligned with rendered order and anchors', async (source) => {
+    const rendered = await createMarkdownRenderer().render(source)
+    const html = renderToStaticMarkup(rendered.content)
+    const ids = [...html.matchAll(/<h[1-6][^>]*id="([^"]+)"/g)]
+      .map((match) => match[1])
+      .filter((id) => id !== 'footnote-label')
+    const headings = analyzeMarkdown(source).headings
+    expect(headings.map((heading) => heading.slug)).toEqual(ids)
+    expect(headings.map((heading) => heading.text)).not.toContain('Footnotes')
+  })
+  it.each(['foo**bar**', 'hello `world`', 'foo  bar', '![Logo](logo.png)Title'])(
+    'uses the rendered heading slug for %s',
+    async (heading) => {
+      const source = `# ${heading}\n\n# ${heading}`
+      const rendered = await createMarkdownRenderer().render(source)
+      const html = renderToStaticMarkup(rendered.content)
+      const ids = [...html.matchAll(/<h1[^>]*id="([^"]+)"/g)].map((match) => match[1])
+      expect(analyzeMarkdown(source).headings.map((item) => item.slug)).toEqual(ids)
+    }
+  )
+
   it('returns declared directive metadata for host integrations', () => {
     const result = analyzeMarkdown('::demo[Basic usage]{src="/src/demo/basic.tsx" sandbox="iframe"}', {
       plugins: [{ name: 'demo-host', directiveNames: ['demo'] }]

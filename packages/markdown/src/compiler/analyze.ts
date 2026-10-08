@@ -1,20 +1,14 @@
-import GithubSlugger from 'github-slugger'
+import rehypeSlug from 'rehype-slug'
+import { toHast } from 'mdast-util-to-hast'
+import { toString } from 'hast-util-to-string'
 import { remarkDefinitionList } from 'remark-definition-list'
 import remarkDirective from 'remark-directive'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import { unified } from 'unified'
 import { visit } from 'unist-util-visit'
-import type {
-  Code,
-  Definition,
-  Image,
-  ImageReference,
-  Link,
-  LinkReference,
-  PhrasingContent,
-  Text
-} from 'mdast'
+import type { Code, Definition, Image, ImageReference, Link, LinkReference, Text } from 'mdast'
+import type { Root as HastRoot } from 'hast'
 import type { Directives } from 'mdast-util-directive'
 import type { Node, Parent } from 'unist'
 import { normalizeCallouts } from './plugins/directives'
@@ -76,8 +70,21 @@ function nodeText(node: Node): string {
 export function analyzeMarkdown(source: string, options: AnalyzeMarkdownOptions = {}): MarkdownAnalysis {
   const processor = unified().use(remarkParse).use(remarkDefinitionList).use(remarkGfm).use(remarkDirective)
   const tree = processor.parse(normalizeCallouts(source))
-  const slugger = new GithubSlugger()
   const headings: MarkdownHeading[] = []
+  // The parser always produces a root, which toHast preserves.
+  const renderedTree = toHast(tree) as HastRoot
+  rehypeSlug()(renderedTree)
+  visit(renderedTree, 'element', (node) => {
+    // Footnotes move headings and add a synthetic label. Read source headings
+    // from the rendered tree itself, never zip two differently ordered trees.
+    if (/^h[1-6]$/.test(node.tagName) && node.position) {
+      headings.push({
+        level: Number(node.tagName[1]),
+        text: toString(node),
+        slug: String(node.properties.id)
+      })
+    }
+  })
   const codeExamples: MarkdownCodeExample[] = []
   const links: string[] = []
   const images: string[] = []
@@ -90,11 +97,6 @@ export function analyzeMarkdown(source: string, options: AnalyzeMarkdownOptions 
   })
 
   visit(tree, (node: Node) => {
-    if (node.type === 'heading') {
-      const heading = node as Parent & { depth: number; children: PhrasingContent[] }
-      const text = nodeText(heading).replace(/\s+/g, ' ').trim()
-      headings.push({ level: heading.depth, text, slug: slugger.slug(text) })
-    }
     if (node.type === 'code') {
       const code = node as Code
       if (!code.lang) missingCodeBlockLanguages += 1

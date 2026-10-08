@@ -3,7 +3,7 @@ import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import { hasMarkdownFenceLanguage, markdownProse } from '../shared/markdownSource'
 
-const PLUGIN_VERSION = '3'
+const PLUGIN_VERSION = '4'
 
 export interface MathOptions {
   /** KaTeX should throw instead of rendering unsupported input. */
@@ -57,6 +57,22 @@ export function hasMathSyntax(source: string) {
   return hasMarkdownFenceLanguage(source, new Set(['math'])) || hasDisplayMath(prose) || hasInlineMath(prose)
 }
 
+function rehypeMath(options: MathOptions) {
+  return (
+    tree: Parameters<ReturnType<typeof rehypeKatex>>[0],
+    file: Parameters<ReturnType<typeof rehypeKatex>>[1]
+  ) => {
+    const firstMessage = file.messages.length
+    // KaTeX mutates macros for \gdef. Share within this document, never across
+    // documents or with the immutable plugin/cache configuration.
+    rehypeKatex({ ...options, macros: { ...options.macros } })(tree, file)
+    if (options.throwOnError) {
+      const error = file.messages.slice(firstMessage).find((message) => message.source === 'rehype-katex')
+      if (error) file.fail(error)
+    }
+  }
+}
+
 export function math(options: MathOptions = {}): MarkdownPlugin {
   const resolved = {
     throwOnError: options.throwOnError ?? false,
@@ -75,6 +91,6 @@ export function math(options: MathOptions = {}): MarkdownPlugin {
     fenceLanguages: ['math'],
     assets: { math: true },
     remarkPlugins: [remarkMath],
-    rehypePlugins: [[rehypeKatex, resolved]]
+    rehypePlugins: [[rehypeMath, resolved]]
   })
 }

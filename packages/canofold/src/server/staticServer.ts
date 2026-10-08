@@ -40,7 +40,7 @@ const RELOAD_HEARTBEAT_MS = 15_000
 export interface DevReloadUpdate {
   protocol: 1
   type: 'update'
-  mode: 'page' | 'full'
+  mode: 'page' | 'demo-source' | 'full'
   routes: string[]
 }
 
@@ -97,7 +97,7 @@ async function applyPageUpdate(update){
   if(!response.ok||!(response.headers.get('content-type')||'').includes('text/html'))return false;
   const nextDocument=new DOMParser().parseFromString(await response.text(),'text/html');
   if(typeof window.__canofoldApplyPageDocument!=='function')return false;
-  return window.__canofoldApplyPageDocument(nextDocument,{mode:'update'});
+  return window.__canofoldApplyPageDocument(nextDocument,{mode:update.mode==='demo-source'?'demo-source':'update'});
 }
 source.onopen=()=>{if(connected&&disconnected){clearError();location.reload();}connected=true;disconnected=false;};
 source.onerror=()=>{if(connected)disconnected=true;};
@@ -106,7 +106,7 @@ source.addEventListener('update',async(event)=>{
   clearError();
   try{
     const update=JSON.parse(event.data);
-    if(update.protocol!==1||update.type!=='update'||update.mode!=='page'){location.reload();return;}
+    if(update.protocol!==1||update.type!=='update'||!['page','demo-source'].includes(update.mode)){location.reload();return;}
     if(!await applyPageUpdate(update))location.reload();
   }catch{location.reload();}
 });

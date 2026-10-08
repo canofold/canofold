@@ -1,7 +1,18 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import * as fs from 'node:fs/promises'
 import { compileCss, markdownFileIconsDir, mathFontsDir } from './buildCss'
 
+vi.mock('node:fs/promises', { spy: true })
+afterEach(() => vi.resetAllMocks())
+
 describe('buildCss', () => {
+  it('reads changed styles on the next build in the same process', async () => {
+    vi.mocked(fs.readFile).mockResolvedValue('before' as never)
+    expect(await compileCss()).toContain('before')
+    vi.mocked(fs.readFile).mockResolvedValue('after' as never)
+    expect(await compileCss()).toContain('after')
+  })
+
   it('assembles the shared Markdown theme and site-shell layers', async () => {
     const css = await compileCss()
     expect(css).toContain('/* Markdown base */')

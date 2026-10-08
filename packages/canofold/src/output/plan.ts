@@ -79,6 +79,7 @@ export function planBuiltInOutputs(config: CanofoldConfig, graph: ContentGraph):
       [
         '404.html',
         'assets/canofold.css',
+        'assets/canofold-shell.js',
         ...BUILT_IN_BRAND_OUTPUT_PATHS,
         ...graph.pages.map((page) => page.outputPath)
       ],

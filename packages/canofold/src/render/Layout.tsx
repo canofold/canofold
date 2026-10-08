@@ -8,7 +8,7 @@ import { LayoutHeader } from './layout/LayoutHeader'
 import { createLayoutModel } from './layout/model'
 import { LayoutOverlays } from './layout/LayoutOverlays'
 import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
-import { noFlashScript, outlineScript, shellScript } from './shellScripts'
+import { noFlashScript } from './shellScripts'
 
 export function Layout({
   config,
@@ -146,8 +146,7 @@ export function Layout({
           <script type="module" src={publicPathFor(config, '/assets/canofold-playground/index.js')} />
         ) : null}
         {demoClientUrl ? <script type="module" src={demoClientUrl} /> : null}
-        <script dangerouslySetInnerHTML={{ __html: shellScript }} />
-        <script dangerouslySetInnerHTML={{ __html: outlineScript }} />
+        <script type="module" src={publicPathFor(config, '/assets/canofold-shell.js')} />
         {config.search.enabled ? (
           <script type="module" src={publicPathFor(config, '/assets/canofold-search.js')} />
         ) : null}

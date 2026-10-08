@@ -28,8 +28,7 @@ const loaders: Record<RichBehaviorName, () => Promise<IslandModule>> = {
 }
 
 const hydratedRoots = new WeakMap<HTMLElement, Root>()
-const pendingRoots = new WeakSet<HTMLElement>()
-const cancelledRoots = new WeakSet<HTMLElement>()
+const pendingRoots = new WeakMap<HTMLElement, Promise<void>>()
 
 function knownRichNames(names: readonly MarkdownBehaviorName[]): RichBehaviorName[] {
   return [...new Set(names)].filter((name): name is RichBehaviorName => Object.hasOwn(loaders, name))
@@ -55,29 +54,25 @@ export async function enhanceRichMarkdown(
 ) {
   const uniqueNames = knownRichNames(names)
   await Promise.all(
-    uniqueNames.map(async (name) => {
-      const elements = matchingElements(root, selectors[name]).filter(
-        (element) => !hydratedRoots.has(element) && !pendingRoots.has(element)
-      )
-      if (!elements.length) return
-      elements.forEach((element) => {
-        cancelledRoots.delete(element)
-        pendingRoots.add(element)
+    uniqueNames.flatMap((name) =>
+      matchingElements(root, selectors[name]).map((element) => {
+        if (hydratedRoots.has(element)) return
+        const pending = pendingRoots.get(element)
+        if (pending) return pending
+        const task = loaders[name]()
+          .then((island) => {
+            // Disposal invalidates this request; a later owner has its own task.
+            if (pendingRoots.get(element) !== task) return
+            const reactRoot = island.hydrate(element, renderOptions)
+            if (reactRoot) hydratedRoots.set(element, reactRoot)
+          })
+          .finally(() => {
+            if (pendingRoots.get(element) === task) pendingRoots.delete(element)
+          })
+        pendingRoots.set(element, task)
+        return task
       })
-      try {
-        const island = await loaders[name]()
-        for (const element of elements) {
-          if (cancelledRoots.has(element) || hydratedRoots.has(element)) continue
-          const reactRoot = island.hydrate(element, renderOptions)
-          if (reactRoot) hydratedRoots.set(element, reactRoot)
-        }
-      } finally {
-        elements.forEach((element) => {
-          pendingRoots.delete(element)
-          cancelledRoots.delete(element)
-        })
-      }
-    })
+    )
   )
 }
 
@@ -88,7 +83,7 @@ export function disposeRichMarkdown(
 ) {
   for (const name of knownRichNames(names)) {
     for (const element of matchingElements(root, selectors[name])) {
-      if (pendingRoots.has(element)) cancelledRoots.add(element)
+      pendingRoots.delete(element)
       const reactRoot = hydratedRoots.get(element)
       if (!reactRoot) continue
       reactRoot.unmount()

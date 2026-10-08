@@ -9,6 +9,7 @@ import { publicPathFor } from '../seo/urls'
 import { logError } from '../utils/logger'
 import type { CanofoldDemoDevRuntime } from '../demos/types'
 import { createServer } from 'node:http'
+import { realpath } from 'node:fs/promises'
 
 interface BuildScheduler {
   schedule(): void
@@ -96,9 +97,17 @@ export function createBuildScheduler<Update = void>({
 }
 
 export async function startDevServer({ cwd, port }: { cwd: string; port: number }) {
+  cwd = await realpath(cwd)
   const renderer = createMarkdownRenderer()
   const httpServer = createServer()
-  let buildState = await runBuild({ cwd, renderer, demoMode: 'dev', demoServer: httpServer })
+  let buildState: Awaited<ReturnType<typeof runBuild>>
+  try {
+    buildState = await runBuild({ cwd, renderer, demoMode: 'dev', demoServer: httpServer })
+  } catch (error) {
+    // Also emits close before listen(), releasing tooling owned by this host.
+    httpServer.close()
+    throw error
+  }
   let demoRuntime: CanofoldDemoDevRuntime | undefined
   let demoRuntimeKey: string | undefined
 
@@ -138,7 +147,7 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
     const previousRuntime = demoRuntime
     demoRuntime = nextRuntime
     demoRuntimeKey = nextKey
-    await previousRuntime?.close()
+    if (previousRuntime !== nextRuntime) await previousRuntime?.close()
   }
 
   const server = await startStaticServer({
@@ -161,15 +170,26 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
         close: () => demoRuntime?.close()
       }
     }
+  }).catch(async (error: unknown) => {
+    await demoRuntime?.close()
+    httpServer.close()
+    throw error
   })
-  const watcher = chokidar.watch('.', {
+  const watcher = chokidar.watch(['.', ...(buildState.demoManifest?.dependencyPaths ?? [])], {
     cwd,
     ignoreInitial: true,
     ignored: (path) => shouldIgnoreGeneratedPath(cwd, buildState.config.outputDir, path)
   })
   let forceCleanNextBuild = false
+  const changedPaths = new Set<string>()
   const scheduler = createBuildScheduler({
     build: async () => {
+      const batch = [...changedPaths]
+      changedPaths.clear()
+      const demoSources = new Set(
+        Object.values(buildState.demoManifest?.demos ?? {}).map((demo) => resolve(demo.modulePath))
+      )
+      const sourcesOnly = batch.length > 0 && batch.every((path) => demoSources.has(path))
       const forceClean = forceCleanNextBuild
       forceCleanNextBuild = false
       try {
@@ -181,7 +201,9 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
           ...(forceClean ? { forceClean: true } : {})
         })
         await refreshDemoRuntime()
+        watcher.add(buildState.demoManifest?.dependencyPaths ?? [])
       } catch (error) {
+        batch.forEach((path) => changedPaths.add(path))
         if (forceClean) forceCleanNextBuild = true
         throw error
       }
@@ -192,7 +214,12 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
       return {
         protocol: 1,
         type: 'update',
-        mode: buildState.partialReload && routes.length === 1 ? 'page' : 'full',
+        mode:
+          sourcesOnly && !forceClean
+            ? 'demo-source'
+            : buildState.partialReload && routes.length === 1
+              ? 'page'
+              : 'full',
         routes
       } satisfies DevReloadUpdate
     },
@@ -205,7 +232,13 @@ export async function startDevServer({ cwd, port }: { cwd: string; port: number 
     onBuildOk: () => server.sendBuildOk()
   })
   watcher.on('all', (_event, path) => {
-    if (demoRuntime?.handlesFile?.(resolve(cwd, path))) return
+    const absolutePath = resolve(cwd, path)
+    const isDemoSource = Object.values(buildState.demoManifest?.demos ?? {}).some(
+      (demo) => resolve(demo.modulePath) === absolutePath
+    )
+    const isEngineDependency = buildState.demoManifest?.dependencyPaths?.includes(absolutePath)
+    if (!isDemoSource && !isEngineDependency && demoRuntime?.handlesFile?.(absolutePath)) return
+    changedPaths.add(absolutePath)
     scheduler.schedule()
   })
   watcher.on('error', (error: unknown) => {
