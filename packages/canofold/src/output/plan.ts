@@ -7,7 +7,17 @@ import { searchProviderClient } from '../search'
 import { portablePathKey } from '../utils/paths'
 import { BUILT_IN_BRAND_OUTPUT_PATHS } from '../brand'
 
-const INTERNAL_OUTPUT_PATHS = new Set(['.benchmark.json'])
+export interface OutputPlanEntry {
+  id: string
+  enabled: boolean
+  paths: string[]
+  /** Dynamically named files produced by this output (not collision reservations). */
+  prefixes: string[]
+}
+
+function output(id: string, enabled: boolean, paths: string[], prefixes: string[] = []): OutputPlanEntry {
+  return { id, enabled, paths, prefixes }
+}
 export const RESERVED_OUTPUT_DIRECTORIES = [
   'assets/canofold-markdown',
   'assets/canofold-demos',
@@ -48,43 +58,61 @@ function assertGeneratedOutputPlan(paths: string[]) {
   }
 }
 
-function plannedOutputPaths(config: CanofoldConfig, graph: ContentGraph) {
-  const paths = [
-    '.benchmark.json',
-    '404.html',
-    'assets/canofold.css',
-    ...BUILT_IN_BRAND_OUTPUT_PATHS,
-    'robots.txt',
-    'ai/pages.json',
-    'ai/manifest.json',
-    ...graph.pages.flatMap((page) => [page.outputPath, page.markdownOutputPath])
-  ]
-  if (config.search.enabled) {
-    paths.push('assets/canofold-search.js')
-    if (searchProviderClient(config.search.provider) === 'compact') {
-      for (const version of graph.versions) {
-        for (const locale of graph.locales) {
-          paths.push(
-            version.id === graph.currentVersion
-              ? `search/${locale}.json`
-              : `search/${version.id}/${locale}.json`
-          )
-        }
+export function planBuiltInOutputs(config: CanofoldConfig, graph: ContentGraph): OutputPlanEntry[] {
+  const redirects = resolveRedirects(config, graph)
+  const searchPaths = ['assets/canofold-search.js']
+  if (searchProviderClient(config.search.provider) === 'compact') {
+    for (const version of graph.versions) {
+      for (const locale of graph.locales) {
+        searchPaths.push(
+          version.id === graph.currentVersion
+            ? `search/${locale}.json`
+            : `search/${version.id}/${locale}.json`
+        )
       }
     }
   }
-  if (config.siteUrl) paths.push('sitemap.xml')
-  if (config.ai.pageSummaries) paths.push('ai/summaries.json')
-  if (config.ai.codeExamples) paths.push('ai/code-examples.json')
-  if (config.ai.markdownIndex) paths.push('ai/index.md')
-  if (config.ai.llmsTxt) paths.push('llms.txt')
-  if (config.ai.llmsFullTxt) paths.push('llms-full.txt')
-  const redirects = resolveRedirects(config, graph)
-  if (redirects.length) {
-    paths.push('redirects.json')
-    for (const [source] of redirects) paths.push(routeOutputPathFor(source))
-  }
-  return { paths, redirects }
+  return [
+    output(
+      'site',
+      true,
+      [
+        '404.html',
+        'assets/canofold.css',
+        ...BUILT_IN_BRAND_OUTPUT_PATHS,
+        ...graph.pages.map((page) => page.outputPath)
+      ],
+      ['assets/']
+    ),
+    output(
+      'markdownMirror',
+      config.markdownMirror,
+      graph.pages.map((page) => page.markdownOutputPath)
+    ),
+    output('search', config.search.enabled, searchPaths, ['search/', 'pagefind/']),
+    output('aiPageIndex', config.ai.pageIndex, ['ai/pages.json']),
+    output('aiFullContent', config.ai.fullContent, ['ai/manifest.json'], ['ai/content/']),
+    output('aiMarkdownIndex', config.ai.markdownIndex, ['ai/index.md']),
+    output('aiSummaries', config.ai.pageSummaries, ['ai/summaries.json']),
+    output('aiCodeExamples', config.ai.codeExamples, ['ai/code-examples.json']),
+    output('llmsTxt', config.ai.llmsTxt, ['llms.txt']),
+    output('llmsFullTxt', config.ai.llmsFullTxt, ['llms-full.txt']),
+    output('seo', true, ['robots.txt', ...(config.siteUrl ? ['sitemap.xml'] : [])]),
+    output(
+      'redirects',
+      redirects.length > 0,
+      redirects.length ? ['redirects.json', ...redirects.map(([source]) => routeOutputPathFor(source))] : []
+    )
+  ]
+}
+
+function plannedOutputPaths(config: CanofoldConfig, graph: ContentGraph) {
+  const entries = planBuiltInOutputs(config, graph)
+  const paths = [
+    '.benchmark.json',
+    ...entries.filter((entry) => entry.enabled).flatMap((entry) => entry.paths)
+  ]
+  return { paths, redirects: resolveRedirects(config, graph) }
 }
 
 export function generatedOutputPaths(config: CanofoldConfig, graph: ContentGraph) {
@@ -98,7 +126,7 @@ export function generatedPublicPaths(config: CanofoldConfig, graph: ContentGraph
   assertGeneratedOutputPlan(paths)
   return new Set([
     ...paths
-      .filter((path) => !INTERNAL_OUTPUT_PATHS.has(path))
+      .filter((path) => path !== '.benchmark.json')
       .map((path) => `/${path.split('/').map(encodeURIComponent).join('/')}`),
     ...redirects.map(([source]) => source)
   ])

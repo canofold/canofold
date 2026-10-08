@@ -13,6 +13,8 @@ describe('loadConfig', () => {
     expect(config.title).toBe('Canofold')
     expect(config.docsDir).toBe('docs')
     expect(config.outputDir).toBe('.canofold/dist')
+    expect(config.markdownMirror).toBe(true)
+    expect(config.ai).toMatchObject({ pageIndex: true, fullContent: true })
     expect(config.layout).toEqual({ header: true })
     expect(config.i18n.defaultLocale).toBe('zh')
     expect(config.i18n.locales).toEqual(['zh'])
@@ -410,6 +412,17 @@ describe('loadConfig', () => {
       `export default { ai: { chunkSizeBytes: 1024, llmsFullOverflow: 'truncate' } }`
     )
     await expect(loadConfig(invalid)).rejects.toThrow()
+  })
+
+  it('loads independent output switches without changing other defaults', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      'export default { markdownMirror: false, ai: { pageIndex: false, fullContent: false } }'
+    )
+    const config = await loadConfig(cwd)
+    expect(config.markdownMirror).toBe(false)
+    expect(config.ai).toMatchObject({ pageIndex: false, fullContent: false, markdownIndex: true })
   })
 
   it('deep merges Markdown compiler options without duplicating package defaults', async () => {

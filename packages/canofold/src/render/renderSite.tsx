@@ -289,11 +289,6 @@ export async function renderSite({
       (markdownContent ?? <article className="cf-content" />)
     )
 
-    const markdownPath = resolveOutputPath(
-      outputRoot,
-      page.markdownOutputPath,
-      `page ${page.sourceRelativePath}`
-    )
     const rawSource = page.transformedSource
 
     const html =
@@ -320,8 +315,15 @@ export async function renderSite({
     await mkdir(dirname(htmlPath), { recursive: true })
     await writeFile(htmlPath, html)
 
-    await mkdir(dirname(markdownPath), { recursive: true })
-    await writeFile(markdownPath, rawSource)
+    if (config.markdownMirror) {
+      const markdownPath = resolveOutputPath(
+        outputRoot,
+        page.markdownOutputPath,
+        `page ${page.sourceRelativePath}`
+      )
+      await mkdir(dirname(markdownPath), { recursive: true })
+      await writeFile(markdownPath, rawSource)
+    }
   })
 
   if (markdownBehaviors.size > 0 && !demoManifest?.markdownClientUrl) {

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import type { Server as HttpServer } from 'node:http'
 import { basename, dirname, join, relative, resolve } from 'node:path'
+import { performance } from 'node:perf_hooks'
 import { writeAiOutputs } from '../ai/writeAiOutputs'
 import { loadConfig } from '../config/load'
 import type { CanofoldConfig } from '../config/types'
@@ -28,6 +29,7 @@ import {
   resolveBuildCacheRoot,
   resolveBuildTemporaryRoot,
   withBuildLock,
+  writeBuildCacheJson,
   type AssertBuildLockOwned,
   writeBuildManifest
 } from '../build/cache'
@@ -35,6 +37,7 @@ import { planBuild } from '../build/invalidation'
 import { captureBuildOutputs, copyBuildOutputs, verifyBuildOutputs } from '../build/outputs'
 import { buildPageKey, createBuildManifest } from '../build/state'
 import type { BuildMode, PageBuildState } from '../build/types'
+import { createBuildReport, type BuildReport } from '../build/report'
 import { resolveSafeOutputRoot } from '../build/safety'
 import { loadExtensionHost, type ExtensionHost } from '../extensions/host'
 import { prepareDemoManifest } from '../demos/prepare'
@@ -64,6 +67,7 @@ export interface BuildResult {
   /** True only when exactly one existing route changed without renaming or deleting outputs. */
   partialReload: boolean
   reason: string
+  report: BuildReport
   demoManifest?: CanofoldDemoManifest
 }
 
@@ -77,6 +81,23 @@ function assertRequiredVersion(config: CanofoldConfig) {
   if (config.requiredVersion && !versionSatisfies(canofoldVersion, config.requiredVersion)) {
     throw new Error(`Canofold ${canofoldVersion} does not satisfy requiredVersion ${config.requiredVersion}`)
   }
+}
+
+function logBuildReport(outputDir: string, report: BuildReport) {
+  const bytesFor = (ids: string[]) =>
+    report.outputs.filter((output) => ids.includes(output.id)).reduce((sum, output) => sum + output.bytes, 0)
+  const size = (bytes: number) => `${(bytes / 1024).toFixed(1)} KiB`
+  logInfo(
+    `Built ${outputDir} (${report.mode}: ${report.reason}; ${report.pages} pages; ` +
+      `${report.locales.join(', ')}; versions ${report.versions.join(', ')}; ${report.durationMs} ms)`
+  )
+  logInfo(
+    `Outputs: search ${size(bytesFor(['search']))}, Markdown ${size(bytesFor(['markdownMirror']))}, ` +
+      `AI ${size(bytesFor(['aiPageIndex', 'aiFullContent', 'aiMarkdownIndex', 'aiSummaries', 'aiCodeExamples', 'llmsTxt', 'llmsFullTxt']))}; ` +
+      `${report.additionalOutputs.files} additional files; ` +
+      `${report.removalBaseline ? `${report.removedPaths.length} removed` : 'removals not compared'}; ` +
+      `report .canofold/cache/build-report.json`
+  )
 }
 
 async function writeBuildOutputs({
@@ -178,7 +199,8 @@ async function runBuildLocked(
   cacheRoot: string,
   config: CanofoldConfig,
   outputRoot: string,
-  assertBuildLockOwned: AssertBuildLockOwned
+  assertBuildLockOwned: AssertBuildLockOwned,
+  startedAt: number
 ): Promise<BuildResult> {
   await recoverInterruptedOutputReplacement(outputRoot)
   const extensions = await loadExtensionHost(
@@ -218,7 +240,18 @@ async function runBuildLocked(
   const renderer = options.renderer ?? createMarkdownRenderer()
 
   if (plan.mode === 'cached') {
-    logInfo(`Built ${config.outputDir} (cache hit)`)
+    const report = createBuildReport({
+      config,
+      graph,
+      manifest: previousManifest!,
+      previous: previousManifest,
+      mode: plan.mode,
+      reason: plan.reason,
+      changedPages: [],
+      durationMs: performance.now() - startedAt
+    })
+    await writeBuildCacheJson(cacheRoot, 'build-report', report)
+    logBuildReport(config.outputDir, report)
     return {
       config,
       graph,
@@ -228,6 +261,7 @@ async function runBuildLocked(
       changedPages: [],
       partialReload: false,
       reason: plan.reason,
+      report,
       ...(analyzedDemoManifest ? { demoManifest: analyzedDemoManifest } : {})
     }
   }
@@ -315,14 +349,26 @@ async function runBuildLocked(
   await assertBuildLockOwned()
   await writeBuildManifest(cacheRoot, completedManifest)
 
-  logInfo(`Built ${config.outputDir} (${plan.mode}: ${plan.reason})`)
+  const changedPagePaths = [...new Set(changedPages.map((page) => page.sourceRelativePath))]
+  const report = createBuildReport({
+    config,
+    graph,
+    manifest: completedManifest,
+    previous: outputValid ? previousManifest : undefined,
+    mode: plan.mode,
+    reason: plan.reason,
+    changedPages: changedPagePaths,
+    durationMs: performance.now() - startedAt
+  })
+  await writeBuildCacheJson(cacheRoot, 'build-report', report)
+  logBuildReport(config.outputDir, report)
   return {
     config,
     graph,
     incremental: plan.mode === 'incremental',
     cached: false,
     mode: plan.mode,
-    changedPages: [...new Set(changedPages.map((page) => page.sourceRelativePath))],
+    changedPages: changedPagePaths,
     partialReload:
       plan.mode === 'incremental' &&
       plan.changedPageKeys.length === 1 &&
@@ -332,17 +378,19 @@ async function runBuildLocked(
         currentManifest.pages[plan.changedPageKeys[0] ?? '']?.outputPath
       ),
     reason: plan.reason,
+    report,
     ...(analyzedDemoManifest ? { demoManifest: analyzedDemoManifest } : {})
   }
 }
 
 export async function runBuild(options: BuildOptions): Promise<BuildResult> {
+  const startedAt = performance.now()
   const cacheRoot = resolveBuildCacheRoot(options.cwd)
   await assertProjectPath(options.cwd, cacheRoot, 'build cache')
   const config = await loadConfig(options.cwd)
   assertRequiredVersion(config)
   const outputRoot = await resolveSafeOutputRoot(options.cwd, config, cacheRoot)
   return withBuildLock(cacheRoot, (assertOwned) =>
-    runBuildLocked(options, cacheRoot, config, outputRoot, assertOwned)
+    runBuildLocked(options, cacheRoot, config, outputRoot, assertOwned, startedAt)
   )
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - 2026-10-08
+
+- Add independent, default-on switches for per-page Markdown mirrors, the AI page index, and versioned AI full-content shards without changing existing output defaults.
+- Keep generated AI references valid when upstream outputs are disabled: omit unavailable Markdown paths, link the Markdown index to HTML routes, and fail an overflowing `llms-full.txt` when its manifest is disabled.
+- Plan built-in outputs by logical type and write a machine-readable Build Report with actual file counts, sizes, cache mode, changed pages, duration, and removed paths.
+- Verify output toggles, stale-file removal, cache behavior, and the packed CLI consumer.
+
 ## 0.3.5 - 2026-10-06
 
 - Compile component Demo JSX for production even when Vite's temporary analysis server has set `NODE_ENV=development`, preventing published Website demos from failing to load.

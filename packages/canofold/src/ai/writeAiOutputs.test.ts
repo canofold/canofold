@@ -8,6 +8,54 @@ import { defaultConfig } from '../config/defaults'
 import { writeAiOutputs } from './writeAiOutputs'
 
 describe('writeAiOutputs', () => {
+  it('uses live page routes when Markdown mirrors are disabled and never points to disabled shards', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-ai-governed-'))
+    await mkdir(join(cwd, '.canofold/dist'), { recursive: true })
+    const graph = createMockGraph({ pages: [createMockPage({ body: '# Home', ai: true })] })
+    const config = {
+      ...defaultConfig,
+      markdownMirror: false,
+      ai: { ...defaultConfig.ai, fullContent: false }
+    }
+    await writeAiOutputs(cwd, config, graph)
+    const root = join(cwd, '.canofold/dist')
+    const pages = JSON.parse(await readFile(join(root, 'ai/pages.json'), 'utf8'))
+    expect(pages.pages[0]).not.toHaveProperty('markdownPath')
+    expect(await readFile(join(root, 'ai/index.md'), 'utf8')).toContain(`](${pages.pages[0].routePath})`)
+    await expect(stat(join(root, 'ai/manifest.json'))).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(stat(join(root, 'ai/content'))).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  it('rejects an overflowing llms-full pointer when the content manifest is disabled', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-ai-no-shards-'))
+    await mkdir(join(cwd, '.canofold/dist'), { recursive: true })
+    const graph = createMockGraph({ pages: [createMockPage({ body: 'x'.repeat(20_000), ai: true })] })
+    await expect(
+      writeAiOutputs(
+        cwd,
+        {
+          ...defaultConfig,
+          ai: { ...defaultConfig.ai, fullContent: false, llmsFullMaxBytes: 16 * 1024 }
+        },
+        graph
+      )
+    ).rejects.toThrow('enable ai.fullContent')
+  })
+
+  it('omits Markdown paths from full-content records when mirrors are disabled', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-ai-no-mirror-'))
+    await mkdir(join(cwd, '.canofold/dist'), { recursive: true })
+    await writeAiOutputs(
+      cwd,
+      { ...defaultConfig, markdownMirror: false },
+      createMockGraph({ pages: [createMockPage({ body: '# Home', ai: true })] })
+    )
+    const record = JSON.parse(
+      (await readFile(join(cwd, '.canofold/dist/ai/content/current/zh/0001.jsonl'), 'utf8')).trim()
+    )
+    expect(record).not.toHaveProperty('markdownPath')
+  })
+
   it('writes structured AI files from the content graph', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-ai-'))
     await mkdir(join(cwd, '.canofold/dist'), { recursive: true })

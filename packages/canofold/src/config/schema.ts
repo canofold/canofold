@@ -398,6 +398,7 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
     requiredVersion: z.string().optional(),
     docsDir: z.string().optional(),
     outputDir: z.string().optional(),
+    markdownMirror: z.boolean().optional(),
     styles: z.array(z.string().min(1)).optional(),
     demos: z
       .object({
@@ -497,6 +498,8 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
       .optional(),
     ai: z
       .object({
+        pageIndex: z.boolean().optional(),
+        fullContent: z.boolean().optional(),
         llmsTxt: z.boolean().optional(),
         llmsFullTxt: z.boolean().optional(),
         markdownIndex: z.boolean().optional(),

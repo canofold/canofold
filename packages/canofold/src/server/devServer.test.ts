@@ -40,6 +40,21 @@ function buildResult(overrides: Partial<BuildResult> = {}): BuildResult {
     changedPages: [],
     partialReload: false,
     reason: 'test',
+    report: {
+      schemaVersion: 1,
+      pages: graph.pages.length,
+      locales: graph.locales,
+      versions: graph.versions.map((version) => version.id),
+      mode: 'clean',
+      cacheHit: false,
+      reason: 'test',
+      changedPages: [],
+      durationMs: 0,
+      outputs: [],
+      additionalOutputs: { paths: [], files: 0, bytes: 0 },
+      removedPaths: [],
+      removalBaseline: false
+    },
     ...overrides
   }
 }
