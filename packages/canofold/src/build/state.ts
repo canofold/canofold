@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises'
+import { resolve as resolveModule } from 'import-meta-resolve'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { CanofoldConfig } from '../config/types'
@@ -63,39 +64,18 @@ export async function fingerprintExistingFiles(paths: string[]) {
   return fingerprint(entries)
 }
 
-async function filesUnderIfPresent(root: string) {
-  try {
-    return await supportFilesUnder(root)
-  } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return []
-    throw error
-  }
-}
-
 async function runtimeFingerprint() {
-  // tsup emits flat chunks under dist/, so import.meta.url is dist/chunk-*.js.
-  // Tests import this file from src/build/. Hash whatever actually exists beside us.
-  const here = dirname(fileURLToPath(import.meta.url))
-  const markdownFiles: string[] = []
-  try {
-    const markdownTheme = fileURLToPath(import.meta.resolve('@canofold/markdown/theme'))
-    const markdownDir = dirname(markdownTheme)
-    markdownFiles.push(
-      join(markdownDir, 'tokens.css'),
-      join(markdownDir, 'styles.css'),
-      join(markdownDir, 'theme.css'),
-      join(markdownDir, 'base.css'),
-      markdownTheme
-    )
-  } catch {
-    // Tests and incomplete installs still fingerprint the local renderer.
-  }
-  return fingerprintExistingFiles([
-    ...(await filesUnderIfPresent(here)),
-    ...(await filesUnderIfPresent(join(here, 'render'))),
-    ...(await filesUnderIfPresent(fileURLToPath(new URL('../render', import.meta.url)))),
-    ...markdownFiles
-  ])
+  const runtimeDir = dirname(fileURLToPath(resolveModule('canofold', import.meta.url)))
+  const markdownTheme = fileURLToPath(resolveModule('@canofold/markdown/theme', import.meta.url))
+  const markdownDir = dirname(markdownTheme)
+  const markdownFiles = [
+    join(markdownDir, 'tokens.css'),
+    join(markdownDir, 'styles.css'),
+    join(markdownDir, 'theme.css'),
+    join(markdownDir, 'base.css'),
+    markdownTheme
+  ]
+  return fingerprintExistingFiles([...(await supportFilesUnder(runtimeDir)), ...markdownFiles])
 }
 
 async function supportFingerprint(cwd: string, config: CanofoldConfig, pageDependencies: Set<string>) {

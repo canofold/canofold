@@ -100,7 +100,7 @@ describe('resolveRequestPath', () => {
     expect(html).toContain("source.addEventListener('update'")
     expect(html).toContain('applyPageUpdate')
     expect(html).toContain('window.__canofoldApplyPageDocument')
-    expect(html).toContain("{mode:'update'}")
+    expect(html).toContain("{mode:update.mode==='demo-source'?'demo-source':'update'}")
     expect(html).toContain('update.protocol!==1')
     expect(html).not.toContain('function capturePageState')
     expect(html).toContain("overlay.textContent='⚠️ Build error:\\n\\n'+msg;")

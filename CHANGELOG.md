@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.1 - 2026-10-08
+
+- Preserve the shared Vite runtime when Demo setup changes, canonicalize the development root, and dispose each owned server exactly once.
+- Serialize Vite configuration restarts through the host watcher, including imported config dependencies, instead of racing two independent restart paths.
+- Close newly created Vite sessions when initial Demo analysis, page rendering, or HTTP startup fails; keep failed config restarts retryable instead of accepting stale configuration.
+- Refresh highlighted Demo source alongside Vite HMR without replacing the page or collapsing the source panel; prevent old HMR callbacks from remounting stale previews.
+- Let isolated Demo frames shrink as well as grow with their content, and cancel pending Demo mounts on disposal.
+- Show an accessible, localized error when standalone Demo imports fail instead of leaving an empty page.
+- Load iframe Demo modules as external scripts with data attributes instead of constructing executable source strings, and include the host page styles in isolated previews.
+- Isolate KaTeX macros per document, keep plugin cache configuration immutable, and honor `throwOnError` in both server and browser compilation.
+- Deliver the official math syntax/rendering adapters with a single declared, fixed KaTeX runtime matching the CSS/fonts. Reuse the external HTML parser instead of duplicating it in plugin entries.
+- Replace the obsolete gray-matter/js-yaml dependency chain with maintained YAML parsing, bounded aliases, and explicit malformed-header errors.
+- Recompile shared CSS when rebuilding instead of retaining a process-global stale stylesheet cache.
+- Match analyzed heading anchors to rendered inline text and prevent inherited search-posting properties from being treated as results.
+- Analyze headings in rendered footnote order through the same slug plugin as rendering, without exposing the synthetic footnote label as an authored heading.
+- Make asynchronous Markdown island disposal and immediate re-enhancement safe.
+- Move shell and Demo interactions from generated source strings into typed, behavior-tested client modules; resolve published package boundaries without test-only production fallbacks.
+- Include the Vite package in coverage and add real HTTP/SSE development regression tests alongside browser, packed-consumer, and lifecycle checks.
+
 ## 0.4.0 - 2026-10-08
 
 - Add independent, default-on switches for per-page Markdown mirrors, the AI page index, and versioned AI full-content shards without changing existing output defaults.

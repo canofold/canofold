@@ -1,12 +1,11 @@
 import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
-import matter from 'gray-matter'
 import { join, posix } from 'node:path'
 import type { CanofoldConfig, CanofoldNavigationItem, CanofoldVersionItem } from '../config/types'
 import type { ExtensionHost } from '../extensions/host'
 import { demoDirectivePlugin, demoReferencesForPage } from '../demos/references'
 import { portablePathKey, resolveProjectPath } from '../utils/paths'
 import { isMarkdownIndexName, isMdxPath } from './fileKinds'
-import { frontmatterSchema } from './frontmatter'
+import { frontmatterSchema, parseFrontmatter } from './frontmatter'
 import { htmlOutputPathFor, localeRelativePathFor, markdownOutputPathFor, routePathFor } from './routes'
 import { scanMarkdownFiles } from './scan'
 import type {
@@ -224,7 +223,7 @@ async function scanVersionPages(
           locale
         })
       : file.raw
-    const parsed = matter(transformedSource)
+    const parsed = parseFrontmatter(transformedSource)
     const data = frontmatterSchema.parse(parsed.data)
     const status = data.status ?? 'published'
     if (status === 'draft') continue

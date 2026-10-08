@@ -6,6 +6,7 @@ import type { Server as HttpServer } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import type {
   CanofoldDemoDevContext,
+  CanofoldDemoDevRuntime,
   CanofoldDemoEngine,
   CanofoldDemoPrepareContext,
   CanofoldDemoReference,
@@ -46,6 +47,7 @@ interface DevSession {
   environmentSignature: string
   server: ViteDevServer
   plugin: Plugin
+  runtime?: CanofoldDemoDevRuntime
   state: {
     demos: CanofoldPreparedDemo[]
     setup?: string
@@ -302,7 +304,8 @@ function virtualClientPlugin({
       entries.push(`const CANOFOLD_DEMO_REGISTRY = [${registry.join(',')}];`)
       const setup = getSetup()
       const setupImport = setup ? `import CanofoldDemoSetup from ${jsonForJavaScript(setup)};` : undefined
-      return demoRuntimeSource(entries, setupImport, PUBLIC_MARKDOWN_CLIENT_ID)
+      const runtimePath = fileURLToPath(new URL('../dist/demo-runtime.js', import.meta.url))
+      return demoRuntimeSource(entries, setupImport, PUBLIC_MARKDOWN_CLIENT_ID, normalizePath(runtimePath))
     }
   }
 }
@@ -494,6 +497,36 @@ function isGeneratedPath(context: CanofoldDemoPrepareContext, path: string) {
   )
 }
 
+function createDevRuntime(host: HttpServer, session: DevSession): CanofoldDemoDevRuntime {
+  const { server } = session
+  let closing: Promise<void> | undefined
+  const close = () => {
+    if (!closing) {
+      host.off('close', onHostClose)
+      if (devSessions.get(host) === session) devSessions.delete(host)
+      closing = server.close()
+    }
+    return closing
+  }
+  // Own the session from creation, even if the host fails before startDev()
+  // can return a handle (for example, Markdown rendering or listen failures).
+  const onHostClose = () => {
+    void close().catch((error: unknown) => {
+      server.config.logger.error(`Failed to close the Demo server: ${String(error)}`)
+    })
+  }
+  host.once('close', onHostClose)
+  return {
+    middleware(request, response, next) {
+      server.middlewares(request, response, next)
+    },
+    handlesFile(path) {
+      return Boolean(server.moduleGraph.getModulesByFile(canonicalPath(path))?.size)
+    },
+    close
+  }
+}
+
 async function prepareDevDemos(context: CanofoldDemoPrepareContext, options: CanofoldViteOptions) {
   if (!context.server) {
     throw new Error('@canofold/vite requires the shared Canofold HTTP server in dev mode')
@@ -501,73 +534,106 @@ async function prepareDevDemos(context: CanofoldDemoPrepareContext, options: Can
   const key = devSessionKey(context, options)
   const projectRoot = canonicalPath(options.root ? resolve(context.cwd, options.root) : context.cwd)
   let session = devSessions.get(context.server)
+  let createdSession = false
   const environmentChanged =
     session?.key === key &&
     (await devEnvironmentSignature(session.server, projectRoot)) !== session.environmentSignature
   if (environmentChanged && session) {
+    const previousConfig = session.server.config
     await session.server.restart()
+    // Vite logs configuration errors and resolves restart() without replacing
+    // its config. Do not acknowledge that failed restart or cache its inputs.
+    if (session.server.config === previousConfig) {
+      throw new Error('Vite config restart failed; fix the configuration error reported above')
+    }
     session.environmentSignature = await devEnvironmentSignature(session.server, projectRoot)
   }
   if (session?.key !== key) {
-    if (session) await session.server.close()
+    if (session?.runtime) await session.runtime.close()
+    else if (session) await session.server.close()
     const state: DevSession['state'] = { demos: [] }
     const plugin = virtualClientPlugin({
       projectRoot,
       getDemos: () => state.demos,
       getSetup: () => state.setup
     })
+    const configPaths = new Set<string>()
+    const configLifecycle: Plugin = {
+      name: 'canofold-dev-config',
+      configResolved(config) {
+        configPaths.clear()
+        config.configFileDependencies.forEach((path) => configPaths.add(canonicalPath(path)))
+      }
+    }
     const server = await createViteServer({
-      ...inlineConfig(context.cwd, context.basePath, options, plugin),
+      ...inlineConfig(context.cwd, context.basePath, options, [plugin, configLifecycle]),
       server: {
         middlewareMode: true,
         hmr: { server: context.server },
-        watch: { ignored: (path) => isGeneratedPath(context, path) }
+        // The host watches the manifest's config dependencies and serializes
+        // rebuilds. Only it may restart Vite; native config restarts would race
+        // prepare() while the dependency optimizer is still processing modules.
+        watch: {
+          ignored: (path) => configPaths.has(canonicalPath(path)) || isGeneratedPath(context, path)
+        }
       }
     })
     session = {
       key,
-      environmentSignature: await devEnvironmentSignature(server, projectRoot),
+      environmentSignature: '',
       server,
       plugin,
       state
     }
+    session.runtime = createDevRuntime(context.server, session)
     devSessions.set(context.server, session)
+    createdSession = true
   }
 
-  const wasInitialized = session.state.demos.length > 0 || session.state.setup !== undefined
-  const previousSignature = JSON.stringify([
-    session.state.demos.map((demo) => [demo.id, demo.modulePath]),
-    session.state.setup
-  ])
-  const demos = await Promise.all(
-    context.demos.map((reference) => resolveDemo(session.server, reference, context.cwd))
-  )
-  const setup = await resolvedSetup(session.server, context.setup, context.cwd)
-  // Walking Demo and setup modules can start dependency optimization in the
-  // background. Finish those requests before a config change can restart Vite.
-  await session.server.waitForRequestsIdle()
-  session.state.demos = demos
-  session.state.setup = setup?.id
-  const nextSignature = JSON.stringify([
-    session.state.demos.map((demo) => [demo.id, demo.modulePath]),
-    session.state.setup
-  ])
-  if (wasInitialized && previousSignature !== nextSignature) {
-    const module = session.server.moduleGraph.getModuleById(RESOLVED_CLIENT_ID)
-    if (module) session.server.moduleGraph.invalidateModule(module)
-    session.server.ws.send({ type: 'full-reload' })
-  }
-  return {
-    demos,
-    setup: session.state.setup,
-    dependencyPaths: [
-      ...new Set([
-        ...session.server.config.configFileDependencies.map((path) => canonicalPath(path)),
-        ...(await projectMetadataPaths(projectRoot)),
-        ...(setup?.dependencyPaths ?? [])
-      ])
-    ],
-    plugin: session.plugin
+  try {
+    if (createdSession) {
+      session.environmentSignature = await devEnvironmentSignature(session.server, projectRoot)
+    }
+    const wasInitialized = session.state.demos.length > 0 || session.state.setup !== undefined
+    const previousSignature = JSON.stringify([
+      session.state.demos.map((demo) => [demo.id, demo.modulePath]),
+      session.state.setup
+    ])
+    const demos = await Promise.all(
+      context.demos.map((reference) => resolveDemo(session.server, reference, context.cwd))
+    )
+    const setup = await resolvedSetup(session.server, context.setup, context.cwd)
+    // Walking Demo and setup modules can start dependency optimization in the
+    // background. Finish those requests before a config change can restart Vite.
+    await session.server.waitForRequestsIdle()
+    session.state.demos = demos
+    session.state.setup = setup?.id
+    const nextSignature = JSON.stringify([
+      session.state.demos.map((demo) => [demo.id, demo.modulePath]),
+      session.state.setup
+    ])
+    if (wasInitialized && previousSignature !== nextSignature) {
+      const module = session.server.moduleGraph.getModuleById(RESOLVED_CLIENT_ID)
+      if (module) session.server.moduleGraph.invalidateModule(module)
+      session.server.ws.send({ type: 'full-reload' })
+    }
+    return {
+      demos,
+      setup: session.state.setup,
+      dependencyPaths: [
+        ...new Set([
+          ...session.server.config.configFileDependencies.map((path) => canonicalPath(path)),
+          ...(await projectMetadataPaths(projectRoot)),
+          ...(setup?.dependencyPaths ?? [])
+        ])
+      ],
+      plugin: session.plugin
+    }
+  } catch (error) {
+    // An existing session must survive a bad edit; a new session has no host
+    // runtime yet and must not leak its watcher when initial analysis fails.
+    if (createdSession) await session.runtime?.close()
+    throw error
   }
 }
 
@@ -585,7 +651,7 @@ async function outputPathsUnder(root: string, prefix: string): Promise<string[]>
 export function vite(options: CanofoldViteOptions = {}): CanofoldDemoEngine {
   return {
     id: '@canofold/vite',
-    version: '2',
+    version: '3',
     cacheKey: {
       root: options.root ?? null,
       configFile: options.configFile ?? null
@@ -624,25 +690,10 @@ export function vite(options: CanofoldViteOptions = {}): CanofoldDemoEngine {
     },
     async startDev(context: CanofoldDemoDevContext) {
       const session = devSessions.get(context.server)
-      if (!session) {
+      if (!session?.runtime) {
         throw new Error('@canofold/vite dev session was not prepared on the shared HTTP server')
       }
-      const { server } = session
-      return {
-        middleware(request, response, next) {
-          server.middlewares(request, response, next)
-        },
-        handlesFile(path) {
-          const absolutePath = canonicalPath(path)
-          return Boolean(server.moduleGraph.getModulesByFile(absolutePath)?.size)
-        },
-        async close() {
-          if (devSessions.get(context.server) === session) {
-            devSessions.delete(context.server)
-          }
-          await server.close()
-        }
-      }
+      return session.runtime
     }
   }
 }

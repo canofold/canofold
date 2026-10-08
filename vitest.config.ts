@@ -35,7 +35,8 @@ export default defineConfig({
       include: [
         'packages/markdown/src/**/*.{ts,tsx}',
         'packages/canofold/src/**/*.{ts,tsx}',
-        'packages/plugins/src/**/*.{ts,tsx}'
+        'packages/plugins/src/**/*.{ts,tsx}',
+        'packages/vite/src/**/*.{ts,tsx}'
       ],
       // cli.ts is a shebang-only process adapter exercised by the child-process smoke test.
       exclude: ['**/*.test.{ts,tsx}', 'packages/canofold/src/cli.ts'],

@@ -27,7 +27,10 @@ export default defineConfig((overrideOptions): Options[] => [
     // not create a second layer of generated shared chunks and source maps.
     splitting: false,
     sourcemap: false,
-    external: ['@canofold/markdown', 'canofold', 'katex', 'pagefind', 'rehype-katex', 'remark-math'],
+    // Bundle the syntax/AST adapters, but resolve KaTeX from our declared
+    // runtime dependency, shared with the published CSS and fonts.
+    noExternal: ['rehype-katex', 'remark-math'],
+    external: ['@canofold/markdown', 'canofold', 'katex', 'pagefind', 'hast-util-from-html'],
     onSuccess: () => signalWatchBuild('plugins-node')
   },
   {

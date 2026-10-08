@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { bootstrapSearch } from './searchClientRuntime'
-import { noFlashScript, outlineScript, shellScript } from './shellScripts'
+import { noFlashScript } from './shellScripts'
+import { bootstrapShell, bootstrapOutline } from '../client/shell'
 
 afterEach(() => {
   const runtime = window as typeof window & {
@@ -28,11 +29,25 @@ afterEach(() => {
 })
 
 describe('browser shell scripts', () => {
-  it.each([
-    ['no-flash', noFlashScript],
-    ['shell', shellScript],
-    ['outline', outlineScript]
-  ])('emits valid JavaScript for %s', (_name, source) => {
+  it('updates demo source without disposing the preview or changing its expanded state', async () => {
+    document.body.innerHTML =
+      '<div data-canofold-page-root><div data-cf-demo-preview><button>Keep state</button></div><div id="source" data-cf-demo-source><code>old</code></div></div>'
+    bootstrapShell()
+    const preview = document.querySelector('[data-cf-demo-preview]')
+    const dispose = vi.fn()
+    window.__canofoldDemoDispose = dispose
+    const next = new DOMParser().parseFromString(
+      '<div id="source" data-cf-demo-source hidden><code>new</code></div>',
+      'text/html'
+    )
+    expect(await window.__canofoldApplyPageDocument?.(next, { mode: 'demo-source' })).toBe(true)
+    expect(document.getElementById('source')?.textContent).toBe('new')
+    expect(document.getElementById('source')?.hidden).toBe(false)
+    expect(document.querySelector('[data-cf-demo-preview]')).toBe(preview)
+    expect(dispose).not.toHaveBeenCalled()
+    delete window.__canofoldDemoDispose
+  })
+  it.each([['no-flash', noFlashScript]])('emits valid JavaScript for %s', (_name, source) => {
     expect(() => new Function(source)).not.toThrow()
   })
 
@@ -50,7 +65,7 @@ describe('browser shell scripts', () => {
         <article><h1>Source</h1></article>
       </div>`
 
-    new Function(shellScript)()
+    bootstrapShell()
     const toggle = document.querySelector<HTMLButtonElement>('[data-canofold-playground-toggle]')
     toggle?.click()
 
@@ -77,7 +92,7 @@ describe('browser shell scripts', () => {
         ></div>
       </div>`
 
-    new Function(shellScript)()
+    bootstrapShell()
     const playground = document.querySelector<HTMLElement>('[data-canofold-playground]')
     const resizer = document.querySelector<HTMLElement>('[data-canofold-playground-resizer]')
 
@@ -102,7 +117,7 @@ describe('browser shell scripts', () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 1000 })
     Object.defineProperty(window, 'scrollY', { configurable: true, value: 500 })
 
-    new Function(shellScript)()
+    bootstrapShell()
 
     expect(document.querySelector<HTMLElement>('[data-canofold-progress]')?.style.transform).toBe(
       'scaleX(0.5)'
@@ -117,7 +132,7 @@ describe('browser shell scripts', () => {
       get: () => scrollY
     })
 
-    new Function(shellScript)()
+    bootstrapShell()
     const header = document.querySelector<HTMLElement>('.cf-header-home')
     expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('0%')
     expect(header?.style.getPropertyValue('--cf-header-backdrop-blur')).toBe('0px')
@@ -147,7 +162,7 @@ describe('browser shell scripts', () => {
     const scrollTo = vi.fn()
     vi.stubGlobal('scrollTo', scrollTo)
 
-    new Function(shellScript)()
+    bootstrapShell()
     const event = new MouseEvent('click', { button: 0, bubbles: true, cancelable: true })
     document.querySelector<HTMLAnchorElement>('a')?.dispatchEvent(event)
 
@@ -177,7 +192,7 @@ describe('browser shell scripts', () => {
       value: () => ({ top: 80 })
     })
 
-    expect(() => new Function(outlineScript)()).not.toThrow()
+    expect(() => bootstrapOutline()).not.toThrow()
     expect(document.querySelector<HTMLElement>('[data-canofold-outline-link]')?.dataset.active).toBe('true')
   })
 
@@ -193,7 +208,7 @@ describe('browser shell scripts', () => {
       <aside data-canofold-sidebar data-open="false"></aside>
       <button data-canofold-sidebar-backdrop hidden></button>`
 
-    new Function(shellScript)()
+    bootstrapShell()
     const toggle = document.querySelector<HTMLButtonElement>('[data-canofold-sidebar-open]')!
     const backdrop = document.querySelector<HTMLButtonElement>('[data-canofold-sidebar-backdrop]')!
 
@@ -212,7 +227,7 @@ describe('browser shell scripts', () => {
     document.documentElement.classList.remove('dark')
     document.body.innerHTML = '<button data-canofold-theme-toggle type="button">Theme</button>'
 
-    new Function(shellScript)()
+    bootstrapShell()
     ;(
       window as typeof window & {
         __canofoldBootstrapShell?: () => void
@@ -281,7 +296,7 @@ describe('browser shell scripts', () => {
       window as typeof window & { __canofoldLoadPageModule?: (url: string) => Promise<void> }
     ).__canofoldLoadPageModule = loadPageModule
 
-    new Function(shellScript)()
+    bootstrapShell()
     const sidebar = document.querySelector<HTMLElement>('[data-canofold-sidebar]')!
     sidebar.scrollTop = 137
     const nativeReplaceWith = Element.prototype.replaceWith

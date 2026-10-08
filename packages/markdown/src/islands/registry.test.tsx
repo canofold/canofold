@@ -43,6 +43,24 @@ async function Markdown({
 }
 
 describe('Markdown React Islands', () => {
+  it('can reattach while a disposed enhancement is still loading', async () => {
+    const element = await Markdown({ source: '| Value |\n| --- |\n| Two |\n| One |' })
+    const container = document.createElement('div')
+    container.innerHTML = renderToStaticMarkup(element)
+    document.body.append(container)
+    await act(async () => {
+      const first = enhanceMarkdown(container, { behaviors: ['table'] })
+      first.dispose()
+      const second = enhanceMarkdown(container, { behaviors: ['table'] })
+      activeEnhancements.push(second)
+      await Promise.all([first.ready, second.ready])
+    })
+    await act(async () => {
+      ;(container.querySelector('[data-cf-action="sort-table"]') as HTMLButtonElement).click()
+    })
+    expect(container.querySelector('tbody td')?.textContent).toBe('One')
+  })
+
   it('assigns every compiler behavior fact to exactly one browser runtime', () => {
     const native = new Set<MarkdownBehaviorName>(NATIVE_MARKDOWN_BEHAVIOR_NAMES)
     const rich = new Set<MarkdownBehaviorName>(RICH_MARKDOWN_BEHAVIOR_NAMES)

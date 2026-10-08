@@ -1,5 +1,7 @@
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { resolve as resolveModule } from 'import-meta-resolve'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactNode } from 'react'
 import type { CanofoldConfig } from '../config/types'
@@ -17,7 +19,7 @@ import {
   type MarkdownRenderer
 } from '@canofold/markdown/server'
 import { detectMarkdownAssets } from '@canofold/markdown/server/analyze'
-import { buildCssCached, markdownFileIconsDir, mathFontsDir } from './buildCss'
+import { compileCss, markdownFileIconsDir, mathFontsDir } from './buildCss'
 import { HomeHero } from './HomeHero'
 import { Layout } from './Layout'
 import { markdownLabelsFor, notFoundContentFor } from './layoutContent'
@@ -170,10 +172,14 @@ export async function renderSite({
           ).math
       )
     const [css, customStyles] = await Promise.all([
-      buildCssCached({ math: needsMath }),
+      compileCss({ math: needsMath }),
       readCustomStyles(cwd, config.styles)
     ])
     await copyBuiltInBrandAssets(outputRoot)
+    await cp(
+      join(dirname(fileURLToPath(resolveModule('canofold', import.meta.url))), 'shell-client.js'),
+      join(outputRoot, 'assets/canofold-shell.js')
+    )
     await writeFile(
       join(outputRoot, 'assets/canofold.css'),
       `${css}\n${buildThemeVariables(config)}\n${customStyles}\n`

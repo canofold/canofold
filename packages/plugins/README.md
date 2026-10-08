@@ -47,6 +47,18 @@ When using the plugins directly with `@canofold/markdown` in a React application
 
 Package-root and focused factory entries such as `@canofold/plugins/math` are public. Browser and CSS entries are consumed by generated sites and should not be treated as plugin factories.
 
+### Math isolation and dependency boundaries
+
+Macros are shared within one document, never across documents or with plugin configuration. `throwOnError: true` rejects invalid formulas; the default `false` preserves error markup.
+
+Since 0.4.1, the published package includes the official Markdown math adapters and uses its directly declared KaTeX 0.18.x runtime, CSS, and fonts. Consumers do not need dependency overrides.
+
+Optional Mermaid uses its own upstream runtime, not the `math()` renderer. Mermaid 11 still includes KaTeX 0.16.x and the low-severity [GHSA-238p-pmpm-9mq7](https://github.com/advisories/GHSA-238p-pmpm-9mq7) advisory, which requires existing prototype pollution. This risk is not resolved; audit suppression and cross-version overrides do not fix it. The workspace's math-adapter build dependencies also report this upstream advisory, but their old KaTeX is not shipped to ordinary `math()` consumers.
+
+Verified on 2026-10-08: the latest stable Mermaid, 12.1.0, still declares `katex: ^0.16.47`, whereas the advisory is fixed in KaTeX 0.18.2. The shipped Mermaid 11 browser distribution also embeds old KaTeX code, so changing a lockfile or overriding a dependency does not replace the code the browser executes. Canofold retains Mermaid's `securityLevel: 'strict'`; this does not mean the upstream vulnerability is eliminated.
+
+Closing this risk requires an upstream browser runtime containing the fix, followed by diagram, formula-label, and security regression checks. Eliminating the advisory before an upstream fix would instead require maintaining and validating an alternative build and its dependencies, not a risk-free patch upgrade. This release does not use private patches, replace prebuilt chunks, or suppress audit results.
+
 See the [official plugin guide](https://canofold.dev/en/guide/site/plugins/) for options, examples, lifecycle differences, and verification steps.
 
 License: MIT

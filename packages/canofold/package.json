@@ -1,6 +1,6 @@
 {
   "name": "canofold",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A static-first, minimally invasive knowledge and documentation platform for Markdown, MDX, search, and AI-ready output.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -62,12 +62,13 @@
     "@canofold/markdown": "workspace:*",
     "chokidar": "^5.0.0",
     "esbuild": "^0.28.2",
-    "gray-matter": "^4.0.3",
+    "import-meta-resolve": "^4.2.0",
     "lucide-react": "1.46.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "semver": "^7.8.5",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
