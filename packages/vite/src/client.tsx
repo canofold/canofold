@@ -84,11 +84,6 @@ export function createDemoRuntime(
     return root
   }
 
-  function iframeDocument(id: string, failedLabel: string) {
-    const script = `import(${JSON.stringify(moduleUrl)}).then(({mountDemo})=>mountDemo(document.getElementById('root'),${JSON.stringify(id)},${JSON.stringify(failedLabel)})).catch(error=>{console.error('[Canofold demo iframe]',error);const root=document.getElementById('root');root.setAttribute('role','alert');root.textContent=${JSON.stringify(failedLabel)}});`
-    return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0}body{display:grid;place-items:center;padding:24px;box-sizing:border-box;font-family:system-ui,sans-serif}#root{min-width:0;max-width:100%}</style></head><body><div id="root"></div><script type="module">${script.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
-  }
-
   async function bootstrapDemos() {
     window.__canofoldDemoDispose?.()
     events = new AbortController()
@@ -149,8 +144,33 @@ export function createDemoRuntime(
             frame.loading = 'lazy'
             frame.referrerPolicy = 'no-referrer'
             frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
-            frame.addEventListener('load', () => frameCleanups.add(fitFrame(frame)), { once: true, signal })
-            frame.srcdoc = iframeDocument(id, failed)
+            frame.addEventListener(
+              'load',
+              () => {
+                const frameDocument = frame.contentDocument
+                const root = frameDocument?.getElementById('root')
+                if (!frameDocument || !root) return
+                root.dataset.cfDemoPreview = ''
+                root.dataset.cfDemoId = id
+                root.dataset.cfDemoFailedLabel = failed
+                document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+                  frameDocument.head.append(frameDocument.importNode(link, true))
+                })
+                const script = frameDocument.createElement('script')
+                script.type = 'module'
+                script.src = moduleUrl
+                script.addEventListener('error', () => {
+                  root.setAttribute('role', 'alert')
+                  root.textContent = failed
+                  root.dataset.cfDemoError = ''
+                })
+                frameDocument.body.append(script)
+                frameCleanups.add(fitFrame(frame))
+              },
+              { once: true, signal }
+            )
+            frame.srcdoc =
+              '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0}body{display:grid;place-items:center;padding:24px;box-sizing:border-box;font-family:system-ui,sans-serif}#root{min-width:0;max-width:100%}</style></head><body><div id="root"></div></body></html>'
             preview.replaceChildren(frame)
           } else {
             preview.textContent = ''

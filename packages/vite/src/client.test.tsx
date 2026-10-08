@@ -64,18 +64,34 @@ describe('Demo client', () => {
     )
     document.body.innerHTML =
       '<section data-cf-component="demo" data-cf-demo-sandbox="iframe"><h3 class="cf-demo-title">Frame</h3><div data-cf-demo-preview data-cf-demo-id="demo"></div></section>'
+    const stylesheet = document.createElement('link')
+    stylesheet.rel = 'stylesheet'
+    stylesheet.href = '/assets/canofold.css'
+    document.head.append(stylesheet)
     const runtime = createDemoRuntime(new Map(), undefined, 'https://example.test/demo.js')
     await runtime.bootstrapDemos()
     const frame = document.querySelector('iframe')!
     expect(frame.title).toBe('Frame')
     expect(frame.getAttribute('sandbox')).toBe('allow-scripts allow-same-origin')
-    expect(frame.srcdoc).toContain('https://example.test/demo.js')
+    expect(frame.srcdoc).not.toContain('<script')
     frame.contentDocument!.body.innerHTML = '<div id="root"></div>'
     onLoad?.call(frame, new Event('load'))
     expect(observed).toBe(frame.contentDocument!.getElementById('root'))
+    expect(frame.contentDocument!.querySelector('link[rel="stylesheet"]')?.getAttribute('href')).toBe(
+      '/assets/canofold.css'
+    )
+    const script = frame.contentDocument!.querySelector<HTMLScriptElement>('script[type="module"]')!
+    expect(script.src).toBe('https://example.test/demo.js')
+    expect(script.textContent).toBe('')
+    expect(observed?.getAttribute('data-cf-demo-id')).toBe('demo')
+    script.dispatchEvent(new Event('error'))
+    expect(frame.contentDocument!.querySelector('[role="alert"]')?.textContent).toBe(
+      'This example could not be loaded.'
+    )
     runtime.dispose()
     expect(disconnect).toHaveBeenCalledOnce()
     expect(() => fitFrame(document.createElement('iframe'))()).not.toThrow()
+    stylesheet.remove()
   })
   it('toggles highlighted source without remounting its preview', async () => {
     document.body.innerHTML =

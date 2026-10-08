@@ -8,6 +8,7 @@
 - Refresh highlighted Demo source alongside Vite HMR without replacing the page or collapsing the source panel; prevent old HMR callbacks from remounting stale previews.
 - Let isolated Demo frames shrink as well as grow with their content, and cancel pending Demo mounts on disposal.
 - Show an accessible, localized error when standalone Demo imports fail instead of leaving an empty page.
+- Load iframe Demo modules as external scripts with data attributes instead of constructing executable source strings, and include the host page styles in isolated previews.
 - Isolate KaTeX macros per document, keep plugin cache configuration immutable, and honor `throwOnError` in both server and browser compilation.
 - Deliver the official math syntax/rendering adapters with a single declared, fixed KaTeX runtime matching the CSS/fonts. Reuse the external HTML parser instead of duplicating it in plugin entries.
 - Replace the obsolete gray-matter/js-yaml dependency chain with maintained YAML parsing, bounded aliases, and explicit malformed-header errors.
