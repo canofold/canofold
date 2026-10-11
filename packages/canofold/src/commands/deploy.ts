@@ -54,9 +54,9 @@ function createGuides(
   }`
   const quotedOutputPath = JSON.stringify(outputPath)
   const buildCommand = {
-    npm: 'npm exec -- canofold build',
-    pnpm: 'pnpm exec canofold build',
-    yarn: 'yarn exec canofold build'
+    npm: 'npm exec -- canofold check && npm exec -- canofold build',
+    pnpm: 'pnpm exec canofold check && pnpm exec canofold build',
+    yarn: 'yarn exec canofold check && yarn exec canofold build'
   }[packageManager]
   const shared = `Deploy directory:
 
@@ -131,14 +131,17 @@ jobs:
           elif [[ -f package.json ]]; then
             npm install
           fi
-      - name: Build documentation
+      - name: Check and build documentation
         shell: bash
         run: |
           if [[ -f pnpm-lock.yaml ]]; then
+            pnpm exec canofold check
             pnpm exec canofold build
           elif [[ -f yarn.lock ]]; then
+            yarn exec canofold check
             yarn exec canofold build
           elif [[ -f package.json ]]; then
+            npm exec -- canofold check
             npm exec -- canofold build
           else
             echo "Add canofold to package.json before deploying" >&2
@@ -156,12 +159,14 @@ jobs:
 ${shared}
 
 Set the output directory to \`${outputPath}\`.
+Set the build command to \`${buildCommand}\` so content errors stop deployment before building.
 `,
     'vercel.md': `# Vercel
 
 ${shared}
 
 Use \`${outputPath}\` as the output directory.
+Set the build command to \`${buildCommand}\` so content errors stop deployment before building.
 `,
     'vercel.json': `{
   "outputDirectory": ${quotedOutputPath}

@@ -41,16 +41,11 @@ export interface CanofoldExtensionGenerateContext {
   emitFile(path: string, content: string | Uint8Array): Promise<void>
 }
 
-/**
- * Versioned, semantic site-build contract. Compiler ASTs and internal render
- * plugins intentionally stay private so upgrades do not depend on pipeline order.
- * Per-document syntax belongs to MarkdownPlugin; whole-site search indexing
- * belongs to SearchProvider.
- */
+/** Versioned site-build contract; syntax and search stay with their dedicated plugins. */
 export interface CanofoldExtension {
   apiVersion: typeof CANOFOLD_EXTENSION_API_VERSION
   name: string
-  /** Every generated path must be declared up front and is scoped under extensions/{name}/. */
+  /** Predeclared paths under extensions/{name}/. */
   outputs?: string[]
   transformSource?(context: Readonly<CanofoldExtensionSourceContext>): string | Promise<string>
   extendPage?(

@@ -31,6 +31,9 @@ describe('runCli', () => {
       await expect(runCli(['build', '--definitely-unknown'], cwd)).rejects.toThrow(
         'Unknown option: --definitely-unknown'
       )
+      await expect(runCli(['check', '--definitely-unknown'], cwd)).rejects.toThrow(
+        'Unknown option: --definitely-unknown'
+      )
     } finally {
       log.mockRestore()
       await rm(cwd, { recursive: true, force: true })

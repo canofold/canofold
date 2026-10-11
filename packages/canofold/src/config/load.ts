@@ -96,6 +96,7 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
       enabled: input.search?.enabled ?? base.search.enabled,
       provider: input.search?.provider ?? base.search.provider
     },
+    checks: { rules: { ...base.checks.rules, ...input.checks?.rules } },
     extensions: (input.extensions ?? base.extensions).map((extension) => ({
       ...extension,
       ...(extension.options ? { options: structuredClone(extension.options) } : {})
@@ -183,6 +184,9 @@ function assertVersionConfig(config: CanofoldConfig) {
   const current = config.versions.items.find((item) => item.id === config.versions.current)
   if (current?.base !== '/') {
     throw new Error('The current documentation version must use base "/"')
+  }
+  if (current?.status === 'archived') {
+    throw new Error('The current documentation version cannot be archived')
   }
 }
 

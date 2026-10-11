@@ -1,11 +1,11 @@
 import { copyFile, cp, lstat, mkdir, readFile, readdir, realpath, rm, stat } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { dirname, join, posix, relative, resolve } from 'node:path'
+import { basename, dirname, extname, join, posix, relative, resolve } from 'node:path'
+import { build } from 'esbuild'
 import type { CanofoldConfig } from '../config/types'
 import type { DocPage } from '../content/types'
 import { RESERVED_OUTPUT_DIRECTORIES } from '../output/plan'
 import { isInside, portablePathKey, resolveOutputPath, resolveProjectPath } from '../utils/paths'
-import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
 import type {
   MarkdownAssets,
   MarkdownPluginClientAsset,
@@ -96,6 +96,28 @@ async function copyMarkdownPluginClient(target: string, asset: MarkdownPluginCli
       throw new Error(`Markdown plugin resource output escapes its client directory: ${resource.output}`)
     }
     await mkdir(dirname(resourceTarget), { recursive: true })
+    if (resource.bundle) {
+      const extension = extname(resourceTarget)
+      if (!['.js', '.mjs'].includes(extension) || resource.directories?.length) {
+        throw new Error('Bundled Markdown plugin resources require a .js/.mjs output and no directories')
+      }
+      const name = basename(resourceTarget, extension)
+      await build({
+        entryPoints: [{ in: resourceEntry, out: name }],
+        outdir: dirname(resourceTarget),
+        outExtension: { '.js': extension },
+        chunkNames: `${name}-chunks/[name]-[hash]`,
+        bundle: true,
+        splitting: true,
+        format: 'esm',
+        platform: 'browser',
+        target: 'es2022',
+        minify: true,
+        tsconfigRaw: {},
+        logLevel: 'warning'
+      })
+      continue
+    }
     await copyFile(resourceEntry, resourceTarget)
 
     for (const directory of resource.directories ?? []) {
@@ -151,6 +173,10 @@ export interface AssetCopy {
   outputPath: string
 }
 
+export interface PageAssetCopy extends AssetCopy {
+  page: DocPage
+}
+
 export async function collectPublicAssets(cwd: string, config: CanofoldConfig): Promise<AssetCopy[]> {
   const assets: AssetCopy[] = []
   async function walk(directory: string, prefix: string): Promise<void> {
@@ -176,8 +202,7 @@ export async function collectPublicAssets(cwd: string, config: CanofoldConfig): 
   return assets
 }
 
-function relativeAssetTargets(markdown: string) {
-  const analysis = analyzeMarkdown(markdown)
+function relativeAssetTargets(analysis: Pick<DocPage['references'], 'links' | 'images'>) {
   return [...new Set([...analysis.images, ...analysis.links])]
     .map((target) => (target.split('#')[0] ?? '').split('?')[0] ?? '')
     .filter(
@@ -202,12 +227,14 @@ function decodeRelativeUrlPath(target: string) {
     .join('/')
 }
 
-export async function collectPageAssets(cwd: string, pages: DocPage[]): Promise<AssetCopy[]> {
-  const assets: AssetCopy[] = []
+export async function collectPageAssets(cwd: string, pages: DocPage[]): Promise<PageAssetCopy[]> {
+  const assets: PageAssetCopy[] = []
   for (const page of pages) {
+    const targets = relativeAssetTargets(page.references)
+    if (!targets.length) continue
     const docsRoot = resolveProjectPath(cwd, page.docsDir, 'docsDir')
     const realDocsRoot = await realpath(docsRoot)
-    for (const target of relativeAssetTargets(page.body)) {
+    for (const target of targets) {
       const decodedTarget = decodeRelativeUrlPath(target)
       const source = resolve(dirname(page.sourcePath), decodedTarget)
       let sourceStat
@@ -230,6 +257,7 @@ export async function collectPageAssets(cwd: string, pages: DocPage[]): Promise<
         throw new Error(`Relative asset must stay inside docsDir: ${target}`)
       }
       assets.push({
+        page,
         source: realSource,
         outputPath: posix.resolve('/', posix.dirname(page.outputPath), decodedTarget).slice(1)
       })
@@ -241,41 +269,21 @@ export async function collectPageAssets(cwd: string, pages: DocPage[]): Promise<
 export interface PreviousPageOutput {
   outputPath: string
   markdownOutputPath: string
-  body?: string
-  assetOutputPaths?: string[]
-}
-
-export function pageAssetOutputPathsFor(
-  pages: ReadonlyArray<Pick<DocPage, 'body' | 'outputPath'> | Pick<PreviousPageOutput, 'assetOutputPaths'>>
-) {
-  const paths = new Set<string>()
-  for (const page of pages) {
-    if ('assetOutputPaths' in page && page.assetOutputPaths) {
-      page.assetOutputPaths.forEach((path) => paths.add(path))
-      continue
-    }
-    if (!('body' in page)) continue
-    for (const target of relativeAssetTargets(page.body)) {
-      const decodedTarget = decodeRelativeUrlPath(target)
-      paths.add(posix.resolve('/', posix.dirname(page.outputPath), decodedTarget).slice(1))
-    }
-  }
-  return paths
+  assetOutputPaths: string[]
 }
 
 export async function removeStalePageAssets(
   outputRoot: string,
   previousPages: PreviousPageOutput[],
-  currentPages: DocPage[],
+  currentAssets: readonly AssetCopy[],
   protectedPaths: Iterable<string>
 ) {
   if (!previousPages.length) return
   const currentKeys = new Set(
-    [...pageAssetOutputPathsFor(currentPages), ...protectedPaths].map(portablePathKey)
+    [...currentAssets.map((asset) => asset.outputPath), ...protectedPaths].map(portablePathKey)
   )
-  const stalePaths = [...pageAssetOutputPathsFor(previousPages)].filter(
-    (path) => !currentKeys.has(portablePathKey(path))
-  )
+  const previousPaths = new Set(previousPages.flatMap((page) => page.assetOutputPaths))
+  const stalePaths = [...previousPaths].filter((path) => !currentKeys.has(portablePathKey(path)))
   await Promise.all(
     stalePaths.map((path) =>
       rm(resolveOutputPath(outputRoot, path, `stale page asset ${path}`), { force: true })

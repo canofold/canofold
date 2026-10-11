@@ -1,30 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { createPagefindSearchDocument, highlightSearchText, rankSearchDocuments } from './searchClient'
+import { createPagefindSearchDocument, highlightSearchText } from './searchClient'
 
 describe('search client helpers', () => {
-  it('promotes title matches without discarding Pagefind ordering', () => {
-    const ranked = rankSearchDocuments('插件', [
-      {
-        title: '定制主题',
-        description: '配置站点主题',
-        excerpt: '主题也可以由插件扩展',
-        routePath: '/guide/theme/'
-      },
-      {
-        title: '官方插件',
-        description: '按需启用插件能力',
-        excerpt: '插件统一从包根导入',
-        routePath: '/guide/plugins/'
-      }
-    ])
-
-    expect(ranked.map((item) => item.title)).toEqual(['官方插件', '定制主题'])
-  })
-
   it('highlights matching text while escaping indexed content', () => {
     expect(highlightSearchText('<script>插件</script>', '插件')).toBe(
       '&lt;script&gt;<mark>插件</mark>&lt;/script&gt;'
     )
+  })
+
+  it('highlights useful terms when a multi-word query is split across a result', () => {
+    expect(
+      highlightSearchText('Deploy with Cloudflare and GitHub Pages', 'Cloudflare Pages deployment')
+    ).toBe('Deploy with <mark>Cloudflare</mark> and GitHub <mark>Pages</mark>')
   })
 
   it('uses the matching Pagefind heading as the result destination', () => {
@@ -98,5 +85,64 @@ describe('search client helpers', () => {
       excerpt: '品牌图标不会覆盖插件提供的语义内容。',
       routePath: '/guide/theme/'
     })
+  })
+
+  it('keeps a Pagefind result when query terms occur in different matching sections', () => {
+    expect(
+      createPagefindSearchDocument('Cloudflare Pages 部署', {
+        url: '/guide/delivery/deployment/',
+        meta: { title: '部署静态站点' },
+        excerpt: '<mark>部署</mark>静态站点。',
+        sub_results: [
+          {
+            title: '部署静态站点',
+            url: '/guide/delivery/deployment/#intro',
+            excerpt: '<mark>部署</mark>静态站点。'
+          },
+          {
+            title: '平台参数',
+            url: '/guide/delivery/deployment/#platforms',
+            excerpt: 'GitHub <mark>Pages</mark> 与 <mark>Cloudflare</mark> <mark>Pages</mark>。'
+          }
+        ]
+      })
+    ).toEqual({
+      title: '部署静态站点',
+      description: '平台参数 · GitHub Pages 与 Cloudflare Pages。',
+      excerpt: 'GitHub Pages 与 Cloudflare Pages。',
+      routePath: '/guide/delivery/deployment/#platforms'
+    })
+  })
+
+  it('keeps a Pagefind typo match with a meaningful highlighted excerpt', () => {
+    expect(
+      createPagefindSearchDocument('component demostration', {
+        url: '/en/guide/writing/component-demos/',
+        meta: { title: 'Build component demos with Vite' },
+        excerpt: 'Build <mark>component</mark> <mark>demos</mark> with Vite.'
+      })
+    ).toEqual({
+      title: 'Build component demos with Vite',
+      description: 'Build component demos with Vite.',
+      excerpt: 'Build component demos with Vite.',
+      routePath: '/en/guide/writing/component-demos/'
+    })
+  })
+
+  it('rejects a long unmatched query that Pagefind only matched to one character', () => {
+    expect(
+      createPagefindSearchDocument('zzqxyvnotapage93821', {
+        url: '/reference/configuration/frontmatter/',
+        meta: { title: 'Frontmatter 参考' },
+        excerpt: '日期应包含 <mark>Z</mark> 或 +08:00。',
+        sub_results: [
+          {
+            title: '日期字段',
+            url: '/reference/configuration/frontmatter/#dates',
+            excerpt: '日期应包含 <mark>Z</mark> 或 +08:00。'
+          }
+        ]
+      })
+    ).toBeUndefined()
   })
 })

@@ -12,8 +12,8 @@
   --cf-canvas: #f6f6f8;
   --cf-ink: #1d1d1f;
   --cf-ink-body: #363638;
-  --cf-ink-secondary: #66666b;
-  --cf-ink-tertiary: #737379;
+  --cf-ink-secondary: #5f5f65;
+  --cf-ink-tertiary: #65656b;
   --cf-surface: #ffffff;
   --cf-surface-secondary: #f3f3f5;
   --cf-surface-soft: #f7f7f9;
@@ -132,7 +132,7 @@ html.dark,
   --cf-ink: #f5f5f7;
   --cf-ink-body: #e3e3e8;
   --cf-ink-secondary: #b9b9c0;
-  --cf-ink-tertiary: #98989f;
+  --cf-ink-tertiary: #a8a8af;
   --cf-surface: #232326;
   --cf-surface-secondary: #343438;
   --cf-surface-soft: #2b2b2f;

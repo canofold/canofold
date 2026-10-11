@@ -384,6 +384,58 @@ describe('@canofold/vite', () => {
     expect(await readFile(join(outputRoot, cssPath!), 'utf8')).toContain('.fixture-demo')
   })
 
+  it('builds historical and current demos from their own version-local source trees', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-versioned-demo-'))
+    const outputRoot = join(cwd, '.canofold/dist')
+    await mkdir(join(cwd, 'docs/demo'), { recursive: true })
+    await mkdir(join(cwd, 'versions/v1/demo'), { recursive: true })
+    await linkNodeModules(cwd)
+    await writeFile(join(cwd, 'docs/demo/label.ts'), `export const label = 'CURRENT_DEMO_LABEL'`)
+    await writeFile(join(cwd, 'versions/v1/demo/label.ts'), `export const label = 'HISTORICAL_DEMO_LABEL'`)
+    const source = `import { label } from './label'; export default function Demo() { return <button>{label}</button> }`
+    await writeFile(join(cwd, 'docs/demo/basic.tsx'), source)
+    await writeFile(join(cwd, 'versions/v1/demo/basic.tsx'), source)
+
+    const manifest = await vite({ configFile: false }).prepare({
+      cwd,
+      outputRoot,
+      basePath: '/',
+      mode: 'build',
+      demos: [
+        {
+          id: 'current',
+          specifier: './demo/basic.tsx',
+          sandbox: 'inline',
+          pageSourcePath: join(cwd, 'docs/index.md'),
+          pageSourceRelativePath: 'docs/index.md',
+          routePath: '/',
+          locale: 'en'
+        },
+        {
+          id: 'historical',
+          specifier: './demo/basic.tsx',
+          sandbox: 'inline',
+          pageSourcePath: join(cwd, 'versions/v1/index.md'),
+          pageSourceRelativePath: 'versions/v1/index.md',
+          routePath: '/v1/',
+          locale: 'en'
+        }
+      ]
+    })
+
+    expect(manifest.demos.current?.dependencyPaths).toContain(join(await realpath(cwd), 'docs/demo/label.ts'))
+    expect(manifest.demos.historical?.dependencyPaths).toContain(
+      join(await realpath(cwd), 'versions/v1/demo/label.ts')
+    )
+    const output = await Promise.all(
+      (manifest.outputPaths ?? [])
+        .filter((path) => path.endsWith('.js'))
+        .map((path) => readFile(join(outputRoot, path), 'utf8'))
+    )
+    expect(output.some((code) => code.includes('CURRENT_DEMO_LABEL'))).toBe(true)
+    expect(output.some((code) => code.includes('HISTORICAL_DEMO_LABEL'))).toBe(true)
+  })
+
   it('escapes project paths before generating the virtual demo client', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-safe-source-'))
     const outputRoot = join(cwd, '.canofold/dist')

@@ -11,17 +11,13 @@ export interface SearchProviderContext {
   resolveOutputPath(outputPath: string, label: string): string
 }
 
-/**
- * Whole-site index lifecycle. Unlike a Markdown plugin, a provider consumes the
- * completed ContentGraph and output root; unlike an Extension, it owns only the
- * configured search implementation's artifacts.
- */
+/** Whole-site indexer. Markdown plugins handle syntax; extensions handle other site outputs. */
 export interface SearchProvider {
   readonly id: string
-  /** Browser-side query protocol consumed by Canofold's built-in search modal. */
+  /** Browser query protocol used by the built-in search modal. */
   readonly client: 'compact' | 'pagefind'
   readonly version?: string
-  /** Resolved JSON options used for build invalidation. Bump `version` when implementation changes. */
+  /** JSON cache identity; bump `version` when implementation changes. */
   readonly cacheKey?: CanofoldJsonValue
   write(context: SearchProviderContext): Promise<void>
 }

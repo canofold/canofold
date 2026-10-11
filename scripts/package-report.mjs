@@ -11,8 +11,8 @@ const packages = [
     name: '@canofold/markdown',
     root: join(workspace, 'packages/markdown'),
     compressedBudget: 400 * 1024,
-    // Declarations, file-tree icons (27 SVG), runtime chunks and CSS.
-    fileCountBudget: 135
+    // Declarations, file-tree icons, runtime chunks and CSS, including the shared srcSet parser.
+    fileCountBudget: 136
   },
   {
     name: 'canofold',

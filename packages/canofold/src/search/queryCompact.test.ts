@@ -46,4 +46,15 @@ describe('queryCompactIndex', () => {
   it('honors the result limit', () => {
     expect(queryCompactIndex('组件', index, 1)).toHaveLength(1)
   })
+
+  it('prefers a matching page title over an incidental body mention', () => {
+    const sample: CompactSearchIndex = {
+      docs: [
+        { title: 'Overview', description: 'Search settings', routePath: '/overview/' },
+        { title: 'Pagefind search', description: '', routePath: '/search/' }
+      ],
+      postings: { pagefind: [0, 1], search: [0, 1], settings: [0, 1] }
+    }
+    expect(queryCompactIndex('Pagefind search settings', sample)[0]?.routePath).toBe('/search/')
+  })
 })

@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { runBuild, versionSatisfies } from './build'
+import { runCheck } from './check'
+import { trackedMkdtemp } from '../../test/fixtures'
 
 async function directorySnapshot(
   root: string,
@@ -37,6 +39,170 @@ describe('versionSatisfies', () => {
 })
 
 describe('runBuild', () => {
+  it('renders Markdown and MDX source links as HTML routes when Markdown mirrors are disabled', async () => {
+    const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-source-links-'))
+    await mkdir(join(cwd, 'docs/guide'), { recursive: true })
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default ${JSON.stringify({
+        basePath: '/project/',
+        markdownMirror: false,
+        i18n: { defaultLocale: 'en', locales: ['en'] }
+      })}`
+    )
+    await writeFile(join(cwd, 'docs/index.md'), '# Home\n\n[Next](./guide/next.mdx?from=home#api)')
+    await writeFile(join(cwd, 'docs/guide/download'), 'download contents')
+    await writeFile(join(cwd, 'docs/guide/download.md'), '# Download page')
+    await writeFile(
+      join(cwd, 'docs/guide/next.mdx'),
+      '# Next\n\n## API\n\n<a href="../index.md#home">Home</a>\n\n<a href="../index#home">Extensionless home</a>\n\n[Download](./download)\n\n[Download page](./download.md)'
+    )
+    await runBuild({ cwd })
+    const output = join(cwd, '.canofold/dist')
+    expect(await readFile(join(output, 'index.html'), 'utf8')).toContain(
+      'href="/project/guide/next/?from=home#api"'
+    )
+    expect(await readFile(join(output, 'guide/next/index.html'), 'utf8')).toContain('href="/project/#home"')
+    const nextHtml = await readFile(join(output, 'guide/next/index.html'), 'utf8')
+    expect(nextHtml).toContain('href="/project/#home">Extensionless home')
+    expect(nextHtml).toContain('href="./download"')
+    expect(nextHtml).toContain('href="/project/guide/download/"')
+    expect(await readFile(join(output, 'guide/next/download'), 'utf8')).toBe('download contents')
+    await expect(access(join(output, 'guide/next/index.md'))).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  it('does not let another page download shadow a source-relative document link', async () => {
+    const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-page-link-ownership-'))
+    await mkdir(join(cwd, 'docs/a'), { recursive: true })
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await writeFile(join(cwd, 'docs/bar.md'), '# Target document')
+    await writeFile(join(cwd, 'docs/a/bar'), 'download contents')
+    await writeFile(join(cwd, 'docs/a/index.md'), '# Downloads\n\n[Download](./bar)')
+    await writeFile(join(cwd, 'docs/a/foo.md'), '# Foo\n\n[Open document from Foo](../bar)')
+    await runBuild({ cwd })
+
+    const output = join(cwd, '.canofold/dist')
+    const html = await readFile(join(output, 'a/foo/index.html'), 'utf8')
+    const documentLink = html.match(/<a\b[^>]*>Open document from Foo<\/a>/)?.[0]
+    expect(documentLink).toContain('href="/bar/"')
+    expect(await readFile(join(output, 'a/index.html'), 'utf8')).toContain('href="./bar"')
+    expect(await readFile(join(output, 'a/bar'), 'utf8')).toBe('download contents')
+  })
+
+  it('checks and copies resources declared in static native MDX JSX', async () => {
+    const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-mdx-jsx-assets-'))
+    await mkdir(join(cwd, 'docs'))
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await writeFile(join(cwd, 'docs/figure.svg'), '<svg>figure</svg>')
+    await writeFile(join(cwd, 'docs/frame.svg'), '<svg>frame</svg>')
+    await writeFile(join(cwd, 'docs/figure-2x.svg'), '<svg>figure-2x</svg>')
+    await writeFile(
+      join(cwd, 'docs/guide.mdx'),
+      '# Guide\n\n<h2 id="jsx-heading">JSX heading</h2>\n\n<img src="./figure.svg" srcSet="./figure.svg 1x, ./figure-2x.svg 2x" alt="Figure" />\n\n<MarkdownImage src={"./frame.svg"} alt="Frame" />\n\n<a href="#jsx-heading">Read</a>'
+    )
+    const originalExit = process.exitCode
+    try {
+      expect((await runCheck({ cwd })).filter((issue) => issue.severity === 'error')).toEqual([])
+      await runBuild({ cwd })
+      const output = join(cwd, '.canofold/dist')
+      const html = await readFile(join(output, 'guide/index.html'), 'utf8')
+      expect(html).toContain('src="./figure.svg"')
+      expect(html).toContain('src="./frame.svg"')
+      expect(html).toContain('href="#jsx-heading"')
+      expect(await readFile(join(output, 'guide/figure.svg'), 'utf8')).toBe('<svg>figure</svg>')
+      expect(await readFile(join(output, 'guide/figure-2x.svg'), 'utf8')).toBe('<svg>figure-2x</svg>')
+      expect(await readFile(join(output, 'guide/frame.svg'), 'utf8')).toBe('<svg>frame</svg>')
+      await writeFile(join(cwd, 'docs/guide.mdx'), '# Guide\n\n<img srcSet="./missing.svg 2x" />')
+      const issues = await runCheck({ cwd })
+      expect(issues).toContainEqual(
+        expect.objectContaining({
+          ruleId: 'broken-image',
+          page: 'docs/guide.mdx',
+          line: 3,
+          column: 1
+        })
+      )
+    } finally {
+      process.exitCode = originalExit
+    }
+  })
+
+  it.each(['md', 'mdx'])(
+    'keeps plugin-transformed %s content consistent across published outputs and check',
+    async (extension) => {
+      const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-plugin-facts-'))
+      await mkdir(join(cwd, 'docs'))
+      await writeFile(join(cwd, 'docs/index.md'), '# Home')
+      await writeFile(join(cwd, 'docs/published.md'), '# Destination')
+      await writeFile(join(cwd, 'docs/final.svg'), '<svg>published</svg>')
+      await writeFile(join(cwd, 'docs/generated.svg'), '<svg>generated</svg>')
+      const source =
+        '# Original heading\n\nOriginal prose\n\n[Read](./original.md)\n\n![Picture](./original.svg)'
+      const pagePath = join(cwd, `docs/guide.${extension}`)
+      await writeFile(pagePath, source)
+      await writeFile(
+        join(cwd, 'canofold.config.ts'),
+        `export default {
+      markdown: { plugins: [{ name: 'compiled-facts', version: '1',
+        remarkPlugins: [() => async tree => {
+          function walk(node) {
+            if (node.type === 'text') node.value = node.value.replaceAll('Original', 'Published')
+            if (node.type === 'link') node.url = './published.md'
+            if (node.type === 'image') node.url = './published.svg'
+            node.children?.forEach(walk)
+          }
+          walk(tree)
+        }],
+        rehypePlugins: [() => async tree => {
+          function walk(node) {
+            if (node.tagName === 'img') node.properties.src = './final.svg'
+            if (node.tagName === 'h1' && node.properties.id === 'published-heading') node.properties.id = 'final-heading'
+            node.children?.forEach(walk)
+          }
+          walk(tree)
+          if (tree.children.some(node => node.tagName === 'h1' && node.properties.id === 'final-heading')) {
+            tree.children.push({ type: 'element', tagName: 'img', properties: { src: './generated.svg' }, children: [] })
+          }
+        }]
+      }] }
+    }`
+      )
+      const output = join(cwd, '.canofold/dist')
+      const originalExit = process.exitCode
+      try {
+        expect((await runCheck({ cwd })).filter((issue) => issue.severity === 'error')).toEqual([])
+        await runBuild({ cwd })
+        const html = await readFile(join(output, 'guide/index.html'), 'utf8')
+        expect(html).toContain('id="final-heading"')
+        expect(html).toContain('href="#final-heading"')
+        expect(html).not.toContain('original-heading')
+        expect(html).toContain('src="./final.svg"')
+        expect(await readFile(join(output, 'guide/final.svg'), 'utf8')).toBe('<svg>published</svg>')
+        expect(await readFile(join(output, 'guide/generated.svg'), 'utf8')).toBe('<svg>generated</svg>')
+        const index = JSON.parse(await readFile(join(output, 'search/zh.json'), 'utf8'))
+        expect(index.docs.find((page: { routePath: string }) => page.routePath === '/guide/')).toMatchObject({
+          title: 'Published heading',
+          excerpt: 'Published heading Published prose Read Picture'
+        })
+        const metadata = JSON.parse(await readFile(join(output, 'ai/pages.json'), 'utf8'))
+        expect(
+          metadata.pages.find((page: { routePath: string }) => page.routePath === '/guide/').headings
+        ).toEqual([{ level: 1, text: 'Published heading', slug: 'final-heading' }])
+        const summaries = JSON.parse(await readFile(join(output, 'ai/summaries.json'), 'utf8'))
+        expect(
+          summaries.summaries.find((page: { routePath: string }) => page.routePath === '/guide/').summary
+        ).toBe('Published prose')
+        // Markdown mirrors remain authored source, not a lossy serialization of the compiled HTML.
+        expect(await readFile(join(output, 'guide/index.md'), 'utf8')).toContain('Original heading')
+        expect((await runBuild({ cwd })).mode).toBe('cached')
+        await writeFile(pagePath, source.replace('\n\n![Picture](./original.svg)', ''))
+        expect((await runBuild({ cwd })).mode).toBe('incremental')
+        await expect(access(join(output, 'guide/final.svg'))).rejects.toMatchObject({ code: 'ENOENT' })
+      } finally {
+        process.exitCode = originalExit
+      }
+    }
+  )
   it.each([
     ['markdownMirror', 'markdownMirror: false', 'index.md'],
     ['aiPageIndex', 'ai: { pageIndex: false }', 'ai/pages.json'],
@@ -384,6 +550,129 @@ describe('runBuild', () => {
     ).toEqual(deletionSnapshot)
   })
 
+  it('keeps site, search, and AI outputs aligned across locales, versions, and rebuild modes', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-cross-output-'))
+    await mkdir(join(cwd, 'docs/zh'), { recursive: true })
+    await mkdir(join(cwd, 'docs/en'), { recursive: true })
+    await mkdir(join(cwd, 'versions/v1/zh'), { recursive: true })
+    await mkdir(join(cwd, 'versions/v1/en'), { recursive: true })
+    const currentZh = join(cwd, 'docs/zh/index.md')
+    const removedEn = join(cwd, 'docs/en/guide.md')
+    await writeFile(currentZh, '---\ntitle: 当前中文\n---\n# 当前中文\n\n旧版中文正文')
+    await writeFile(join(cwd, 'docs/en/index.md'), '# Current English\n\nEnglish home body')
+    await writeFile(removedEn, '# English Guide\n\nOld English guide body')
+    await writeFile(join(cwd, 'versions/v1/zh/index.md'), '# 历史中文\n\n历史中文正文')
+    await writeFile(join(cwd, 'versions/v1/en/index.md'), '# Historical English\n\nHistorical English body')
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default {
+        i18n: { defaultLocale: 'zh', locales: ['zh', 'en'] },
+        versions: {
+          current: 'v2',
+          items: [
+            { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
+            { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
+          ]
+        },
+        ai: { versions: 'all' }
+      }`
+    )
+
+    const output = join(cwd, '.canofold/dist')
+    await runBuild({ cwd })
+    const initialPages = JSON.parse(await readFile(join(output, 'ai/pages.json'), 'utf8')).pages
+    expect(initialPages).toHaveLength(5)
+    expect(initialPages.map((page: { routePath: string }) => page.routePath)).toEqual(
+      expect.arrayContaining(['/', '/en/', '/en/guide/', '/v1/', '/v1/en/'])
+    )
+
+    await writeFile(currentZh, '---\ntitle: 更新中文\n---\n# 更新中文\n\n新版中文正文')
+    await rm(removedEn)
+    expect((await runBuild({ cwd })).mode).toBe('incremental')
+
+    expect(await readFile(join(output, 'index.html'), 'utf8')).toContain('新版中文正文')
+    expect(await readFile(join(output, 'index.md'), 'utf8')).toContain('新版中文正文')
+    await expect(access(join(output, 'en/guide/index.html'))).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(access(join(output, 'en/guide/index.md'))).rejects.toMatchObject({ code: 'ENOENT' })
+    expect(await readFile(join(output, 'v1/en/index.html'), 'utf8')).toContain('Historical English body')
+
+    const currentSearch = JSON.parse(await readFile(join(output, 'search/zh.json'), 'utf8'))
+    const englishSearch = JSON.parse(await readFile(join(output, 'search/en.json'), 'utf8'))
+    const historicalSearch = JSON.parse(await readFile(join(output, 'search/v1/en.json'), 'utf8'))
+    expect(currentSearch.docs).toMatchObject([{ title: '更新中文', routePath: '/' }])
+    expect(englishSearch.docs).toMatchObject([{ title: 'Current English', routePath: '/en/' }])
+    expect(historicalSearch.docs).toMatchObject([{ title: 'Historical English', routePath: '/v1/en/' }])
+
+    const pages = JSON.parse(await readFile(join(output, 'ai/pages.json'), 'utf8')).pages
+    expect(pages).toHaveLength(4)
+    expect(pages).toContainEqual(
+      expect.objectContaining({
+        title: '更新中文',
+        version: 'v2',
+        locale: 'zh',
+        routePath: '/'
+      })
+    )
+    expect(pages).not.toContainEqual(expect.objectContaining({ routePath: '/en/guide/' }))
+    expect(pages).toContainEqual(
+      expect.objectContaining({
+        title: 'Historical English',
+        version: 'v1',
+        locale: 'en',
+        routePath: '/v1/en/'
+      })
+    )
+    const aiManifest = JSON.parse(await readFile(join(output, 'ai/manifest.json'), 'utf8'))
+    let aiContent = ''
+    for (const partition of aiManifest.partitions as Array<{ shards: Array<{ path: string }> }>) {
+      for (const shard of partition.shards) {
+        aiContent += await readFile(join(output, shard.path.replace(/^\//, '')), 'utf8')
+      }
+    }
+    expect(aiContent).toContain('新版中文正文')
+    expect(aiContent).toContain('Historical English body')
+    expect(aiContent).not.toContain('旧版中文正文')
+    expect(aiContent).not.toContain('Old English guide body')
+
+    const rebuiltSnapshot = await directorySnapshot(output)
+    expect((await runBuild({ cwd })).mode).toBe('cached')
+    expect(await directorySnapshot(output)).toEqual(rebuiltSnapshot)
+    expect((await runBuild({ cwd, noCache: true })).mode).toBe('clean')
+    expect(await directorySnapshot(output)).toEqual(rebuiltSnapshot)
+  })
+
+  it('updates every published route when a source page moves', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-route-move-'))
+    await mkdir(join(cwd, 'docs'), { recursive: true })
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    const original = join(cwd, 'docs/guide.md')
+    await writeFile(original, '# Guide\n\nStable guide content')
+    const output = join(cwd, '.canofold/dist')
+    await runBuild({ cwd })
+
+    await rename(original, join(cwd, 'docs/manual.md'))
+    await runBuild({ cwd })
+
+    await expect(access(join(output, 'guide/index.html'))).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(access(join(output, 'guide/index.md'))).rejects.toMatchObject({ code: 'ENOENT' })
+    expect(await readFile(join(output, 'manual/index.html'), 'utf8')).toContain('Stable guide content')
+    expect(await readFile(join(output, 'manual/index.md'), 'utf8')).toContain('Stable guide content')
+
+    const search = JSON.parse(await readFile(join(output, 'search/zh.json'), 'utf8'))
+    expect(search.docs.map((page: { routePath: string }) => page.routePath)).toEqual(['/', '/manual/'])
+    const aiPages = JSON.parse(await readFile(join(output, 'ai/pages.json'), 'utf8')).pages
+    expect(aiPages.map((page: { routePath: string }) => page.routePath)).toEqual(['/', '/manual/'])
+    const aiManifest = JSON.parse(await readFile(join(output, 'ai/manifest.json'), 'utf8'))
+    const shardPath = aiManifest.partitions[0].shards[0].path.replace(/^\//, '')
+    const aiContent = await readFile(join(output, shardPath), 'utf8')
+    expect(aiContent).toContain('"routePath":"/manual/"')
+    expect(aiContent).not.toContain('"routePath":"/guide/"')
+
+    const movedSnapshot = await directorySnapshot(output)
+    await runBuild({ cwd, noCache: true })
+    expect(await directorySnapshot(output)).toEqual(movedSnapshot)
+  })
+
   it('rejects output directories that overlap source documents without deleting them', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-build-safety-'))
     await mkdir(join(cwd, 'docs/zh'), { recursive: true })
@@ -569,6 +858,24 @@ describe('runBuild', () => {
 
     expect(withoutPlayground.mode).toBe('clean')
     await expect(access(playgroundBundle)).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  it('does not treat removed directory links as stale assets during incremental builds', async () => {
+    const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-directory-link-cleanup-'))
+    await mkdir(join(cwd, 'docs/guide'), { recursive: true })
+    const homePath = join(cwd, 'docs/index.md')
+    await writeFile(homePath, '# Home\n\n[Guide](./guide/)')
+    await writeFile(join(cwd, 'docs/guide/index.md'), '# Guide\n\nKeep this page.')
+    await runBuild({ cwd })
+    await writeFile(homePath, '# Home\n\nNo directory link now.')
+
+    const rebuilt = await runBuild({ cwd })
+
+    expect(rebuilt.incremental).toBe(true)
+    expect(await readFile(join(cwd, '.canofold/dist/guide/index.html'), 'utf8')).toContain('Keep this page.')
+    const incremental = await directorySnapshot(join(cwd, '.canofold/dist'))
+    await runBuild({ cwd, noCache: true })
+    expect(await directorySnapshot(join(cwd, '.canofold/dist'))).toEqual(incremental)
   })
 
   it('removes page assets that are no longer referenced after an incremental rebuild', async () => {

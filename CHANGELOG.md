@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0 - 2026-10-11
+
+- Preserve valid Pagefind body matches in the UI and improve the default Compact search ranking for titles, descriptions, tags, and paths; retain language/version and no-result isolation.
+- Preview and check draft pages locally while excluding them from published site, search, Markdown mirror, and AI outputs; `check` requires a published home page for every version and locale.
+- Add stable content-check rule IDs, source positions, actionable suggestions, per-rule severity, JSON output, translation coverage, and source-hash-based translation status.
+- Add `canofold snapshot <id>` for explicit version-local document snapshots, archived-version notices, and clearer missing-page locale/version switches. Historical Demo and local MDX code must live in that version's docs tree; move shared project-root Demo sources into each version before upgrading. A snapshot does not freeze third-party packages, Vite configuration, or global providers.
+- Use explicit `updatedAt` or trustworthy Git content history for last-updated dates rather than checkout time; show no date when the source is unknown.
+- Check content before deployment, keep output facts aligned across site, search, Markdown, AI, and redirects, and retain existing clean/cached/incremental build recovery.
+- Derive navigation, reference checks, resource copies, search, and AI metadata from the shared Markdown/MDX compiler after async remark/rehype transforms; reuse bounded compilation caches and preserve authored Markdown mirrors without evaluating MDX for static analysis.
+- Improve default light/dark reading contrast and exercise keyboard, mobile, search, Demo, and accessibility behavior across Chromium, Firefox, and WebKit.
+- Respect JSX attribute overrides in static reference analysis and reduced-motion preferences in both native and React code-tab scrolling.
+- Resolve relative document links to generated HTML routes within their source version, including extensionless and directory references while preserving real downloads, query strings, fragments, locales, and deployment base paths even when Markdown mirrors are disabled.
+- Apply the host URL transform to native MDX JSX after expressions and spreads resolve, without double-transforming Markdown links or changing custom-component props.
+- Record only actual copied page assets in build manifests; invalidate old manifests and preserve page directories when document links are removed. Scope download precedence to the referring page so another page's asset cannot shadow a document route.
+- Build Mermaid resources from its module entry and installed dependencies so sanitizer updates reach browser output; skip unused local resources when a custom module URL is configured.
+- Verify bilingual, versioned Vite Demos and an existing Markdown corpus through packed-package consumers; keep package sizes and thousand-page build budgets unchanged.
+
 ## 0.4.1 - 2026-10-08
 
 - Preserve the shared Vite runtime when Demo setup changes, canonicalize the development root, and dispose each owned server exactly once.

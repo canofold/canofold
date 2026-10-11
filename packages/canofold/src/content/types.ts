@@ -1,4 +1,4 @@
-import type { MarkdownCodeExample, MarkdownHeading } from '@canofold/markdown/server/analyze'
+import type { MarkdownContentAnalysis, MarkdownReferences } from '@canofold/markdown/server'
 import type { CanofoldFrontmatter } from './frontmatter'
 import type { CanofoldDemoReference } from '../demos/types'
 
@@ -15,7 +15,7 @@ export interface SidebarLink {
 
 export interface SidebarTreeGroup {
   type: 'group'
-  /** Stable identity among sibling directories; display titles may be translated or duplicated. */
+  /** Sibling identity independent of translated titles. */
   segment: string
   title: string
   collapsed: boolean
@@ -25,9 +25,9 @@ export interface SidebarTreeGroup {
 export type SidebarItem = SidebarLink | SidebarTreeGroup
 
 export interface SidebarGroup {
-  /** First directory segment under the locale; used to select a section sidebar. */
+  /** First locale subdirectory; selects the section sidebar. */
   segment: string
-  /** Section title used by automatic top navigation, not rendered inside the sidebar. */
+  /** Automatic top-nav title, not shown in the sidebar. */
   title: string
   items: SidebarItem[]
 }
@@ -37,13 +37,13 @@ export interface NavItem {
   routePath: string
 }
 
-export interface DocPage {
+export interface DocPage extends Pick<MarkdownContentAnalysis, 'headings' | 'codeExamples' | 'excerpt'> {
   sourcePath: string
-  /** Complete source after extension transforms, including frontmatter and MDX imports. */
+  /** Complete extension-transformed source. */
   transformedSource: string
-  /** Project-relative source path, including a version-specific docsDir. */
+  /** Project-relative source path. */
   sourceRelativePath: string
-  /** Path relative to this version's docs root. */
+  /** Path within this version's docs root. */
   relativePath: string
   version: string
   versionBase: string
@@ -55,15 +55,14 @@ export interface DocPage {
   title: string
   description: string
   order: number
-  /** First sub-directory segment under the locale, '' for root-level pages. */
+  /** First locale subdirectory, or ''. */
   group: string
   status: 'draft' | 'published'
   search: boolean
   ai: boolean
   body: string
-  headings: MarkdownHeading[]
   searchText: string
-  codeExamples: MarkdownCodeExample[]
+  references: MarkdownReferences
   demos: CanofoldDemoReference[]
   lastUpdated: string
   previous?: PageLink
@@ -73,12 +72,18 @@ export interface DocPage {
 
 export interface ContentGraph {
   pages: DocPage[]
-  /** Grouped sidebar entries per version and locale. */
+  /** Sidebar by version and locale. */
   sidebar: Record<string, Record<string, SidebarGroup[]>>
-  /** Top navigation entries per version and locale. */
+  /** Navigation by version and locale. */
   nav: Record<string, Record<string, NavItem[]>>
   locales: string[]
   defaultLocale: string
-  versions: Array<{ id: string; label: string; base: string; docsDir: string }>
+  versions: Array<{
+    id: string
+    label: string
+    base: string
+    docsDir: string
+    status?: 'supported' | 'archived'
+  }>
   currentVersion: string
 }

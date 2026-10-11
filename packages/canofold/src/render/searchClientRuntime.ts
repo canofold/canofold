@@ -2,7 +2,6 @@ import { queryCompactIndex, type CompactSearchIndex } from '../search/queryCompa
 import {
   createPagefindSearchDocument,
   highlightSearchText,
-  rankSearchDocuments,
   type PagefindResultData,
   type SearchResultDocument
 } from './searchClient'
@@ -118,10 +117,9 @@ export function bootstrapSearch() {
           return createPagefindSearchDocument(query, data)
         })
       )
-      return rankSearchDocuments(
-        query,
-        documents.filter((document): document is SearchResultDocument => Boolean(document))
-      ).slice(0, SEARCH_RESULT_LIMIT)
+      return documents
+        .filter((document): document is SearchResultDocument => Boolean(document))
+        .slice(0, SEARCH_RESULT_LIMIT)
     }
 
     function search(query: string) {

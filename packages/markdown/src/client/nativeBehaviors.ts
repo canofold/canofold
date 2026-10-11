@@ -199,9 +199,9 @@ function revealTab(trigger: HTMLElement) {
   if (!list || typeof list.scrollTo !== 'function') return
   const start = trigger.offsetLeft
   const end = start + trigger.offsetWidth
-  if (start < list.scrollLeft) list.scrollTo({ left: start, behavior: 'smooth' })
+  if (start < list.scrollLeft) list.scrollTo({ left: start })
   else if (end > list.scrollLeft + list.clientWidth) {
-    list.scrollTo({ left: end - list.clientWidth, behavior: 'smooth' })
+    list.scrollTo({ left: end - list.clientWidth })
   }
 }
 
@@ -373,8 +373,7 @@ function createState(root: ParentNode): NativeEnhancementState {
       event.preventDefault()
       if (typeof tabList.scrollBy === 'function') {
         tabList.scrollBy({
-          left: Number(tabScroll.dataset.cfDirection || 1) * Math.max(180, tabList.clientWidth * 0.72),
-          behavior: 'smooth'
+          left: Number(tabScroll.dataset.cfDirection || 1) * Math.max(180, tabList.clientWidth * 0.72)
         })
       }
       return

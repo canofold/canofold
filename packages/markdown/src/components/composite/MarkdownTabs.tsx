@@ -62,13 +62,13 @@ function elementRef<T extends HTMLElement>(element: ReactElement<Record<string, 
     : (element as ReactElement & { ref?: React.Ref<T> }).ref
 }
 
-function revealTab(list: HTMLElement, trigger: HTMLElement, behavior: ScrollBehavior = 'smooth') {
+function revealTab(list: HTMLElement, trigger: HTMLElement) {
   if (typeof list.scrollTo !== 'function') return
   const start = trigger.offsetLeft
   const end = start + trigger.offsetWidth
-  if (start < list.scrollLeft) list.scrollTo({ left: start, behavior })
+  if (start < list.scrollLeft) list.scrollTo({ left: start })
   else if (end > list.scrollLeft + list.clientWidth) {
-    list.scrollTo({ left: end - list.clientWidth, behavior })
+    list.scrollTo({ left: end - list.clientWidth })
   }
 }
 
@@ -230,8 +230,7 @@ export function MarkdownTabs({
     const list = tabListRef.current
     if (!list || typeof list.scrollBy !== 'function') return
     list.scrollBy({
-      left: direction * Math.max(180, list.clientWidth * 0.72),
-      behavior: 'smooth'
+      left: direction * Math.max(180, list.clientWidth * 0.72)
     })
   }
   const cleanProps = markdownDomProps(props)

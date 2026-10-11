@@ -1,6 +1,11 @@
 import type { ContentGraph, DocPage } from '../content/types'
-import { localeRelativePathFor } from '../content/routes'
-import { posix } from 'node:path'
+import {
+  localeRelativePathFor,
+  resolveRelativeSourcePath,
+  markdownExtensionKey,
+  sourceLinkCandidates
+} from '../content/routes'
+import { createHash } from 'node:crypto'
 import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
 import { canonicalRoutePath } from '../content/routes'
 import type { MarkdownPlugin } from '@canofold/markdown'
@@ -9,27 +14,36 @@ export interface CheckIssue {
   severity: 'warning' | 'error'
   message: string
   page?: string
+  line?: number
+  column?: number
+  version?: string
+  locale?: string
+  relativePath?: string
 }
 
-export function checkCodeBlockLanguages(markdown: string): CheckIssue[] {
-  return Array.from({ length: analyzeMarkdown(markdown).missingCodeBlockLanguages }, () => ({
+function atSource(location: { line: number; column: number } | null | undefined, lineOffset: number) {
+  return location ? { line: location.line + lineOffset, column: location.column } : {}
+}
+
+export function checkCodeBlockLanguages(markdown: string, lineOffset = 0): CheckIssue[] {
+  return analyzeMarkdown(markdown).missingCodeBlockLanguageLocations.map((location) => ({
     severity: 'warning' as const,
-    message: 'Code block is missing a language'
+    message: 'Code block is missing a language',
+    ...atSource(location, lineOffset)
   }))
 }
 
 export function checkRichDirectiveSyntax(
   markdown: string,
   lineOffset = 0,
-  plugins: readonly MarkdownPlugin[] = []
+  plugins: readonly MarkdownPlugin[] = [],
+  mode: 'markdown' | 'mdx' = 'markdown'
 ): CheckIssue[] {
-  return analyzeMarkdown(markdown, { plugins }).directiveIssues.map((issue) => ({
-    severity: 'error',
-    message: `${issue.message}${
-      issue.line === undefined
-        ? ''
-        : ` (line ${issue.line + lineOffset}${issue.column === undefined ? '' : `, column ${issue.column}`})`
-    }`
+  return analyzeMarkdown(markdown, { plugins, mode }).directiveIssues.map((issue) => ({
+    severity: 'error' as const,
+    message: issue.message,
+    ...(issue.line === undefined ? {} : { line: issue.line + lineOffset }),
+    ...(issue.column === undefined ? {} : { column: issue.column })
   }))
 }
 
@@ -70,18 +84,6 @@ function decodeFragment(fragment: string) {
   }
 }
 
-function resolveRelativeTarget(pageRelativePath: string, target: string) {
-  const decoded = target
-    .split('/')
-    .map((segment) => {
-      const value = decodeURIComponent(segment)
-      if (value.includes('/') || value.includes('\\')) throw new Error('Encoded path separator')
-      return value
-    })
-    .join('/')
-  return posix.normalize(posix.join(posix.dirname(pageRelativePath), decoded.replace(/^\.\//, '')))
-}
-
 function publicFileFor(target: string) {
   try {
     const decoded = target
@@ -100,56 +102,57 @@ function publicFileFor(target: string) {
   }
 }
 
-function markdownExtensionKey(path: string) {
-  return path.replace(/\.(?:md|mdx)$/i, (extension) => extension.toLocaleLowerCase('en-US'))
-}
-
 export function checkLinksAndImages(
-  markdown: string,
+  analysis: Pick<DocPage['references'], 'links' | 'linkLocations' | 'images' | 'imageLocations'>,
   existingRelativeFiles: Set<string>,
   pageRelativePath = '',
   routePaths: Set<string> = new Set(),
   headingSlugs: Set<string> = new Set(),
   routeHeadingSlugs: Map<string, Set<string>> = new Map(),
   fileHeadingSlugs: Map<string, Set<string>> = new Map(),
-  generatedPublicPaths: Set<string> = new Set()
+  generatedPublicPaths: Set<string> = new Set(),
+  lineOffset = 0
 ): CheckIssue[] {
   const issues: CheckIssue[] = []
-  const analysis = analyzeMarkdown(markdown)
   const markdownFilesByExtensionKey = new Map(
     [...existingRelativeFiles]
       .filter((path) => /\.(?:md|mdx)$/i.test(path))
       .map((path) => [markdownExtensionKey(path), path])
   )
+  const missing = (kind: 'Image' | 'Link' | 'Heading', target: string, position: object) => {
+    issues.push({ severity: 'error', message: `${kind} target does not exist: ${target}`, ...position })
+  }
 
-  for (const image of analysis.images) {
+  for (const [index, image] of analysis.images.entries()) {
+    const position = atSource(analysis.imageLocations[index], lineOffset)
     const target = splitTarget(image).path
     if (!target || isExternalTarget(target)) continue
     if (target.startsWith('/')) {
       if (!existingRelativeFiles.has(publicFileFor(target) ?? '')) {
-        issues.push({ severity: 'error', message: `Image target does not exist: ${target}` })
+        missing('Image', target, position)
       }
       continue
     }
     let resolved: string
     try {
-      resolved = resolveRelativeTarget(pageRelativePath, target)
+      resolved = resolveRelativeSourcePath(pageRelativePath, target)
     } catch {
-      issues.push({ severity: 'error', message: `Image target does not exist: ${target}` })
+      missing('Image', target, position)
       continue
     }
     if (!existingRelativeFiles.has(resolved)) {
-      issues.push({ severity: 'error', message: `Image target does not exist: ${target}` })
+      missing('Image', target, position)
     }
   }
 
-  for (const link of analysis.links) {
+  for (const [index, link] of analysis.links.entries()) {
+    const position = atSource(analysis.linkLocations[index], lineOffset)
     const { path: target, fragment } = splitTarget(link)
     const decodedFragment = decodeFragment(fragment)
     if (isExternalTarget(target)) continue
     if (!target) {
       if (fragment && (!decodedFragment || !headingSlugs.has(decodedFragment))) {
-        issues.push({ severity: 'error', message: `Heading target does not exist: #${fragment}` })
+        missing('Heading', `#${fragment}`, position)
       }
       continue
     }
@@ -159,35 +162,27 @@ export function checkLinksAndImages(
       try {
         canonicalTarget = canonicalRoutePath(target)
       } catch {
-        issues.push({ severity: 'error', message: `Link target does not exist: ${target}` })
+        missing('Link', target, position)
         continue
       }
       if (generatedPublicPaths.has(canonicalTarget)) continue
       const route = canonicalTarget === '/' ? '/' : `${canonicalTarget.replace(/\/+$/, '')}/`
       if (!routePaths.has(route)) {
-        issues.push({ severity: 'error', message: `Link target does not exist: ${target}` })
+        missing('Link', target, position)
       } else if (fragment && (!decodedFragment || !routeHeadingSlugs.get(route)?.has(decodedFragment))) {
-        issues.push({ severity: 'error', message: `Heading target does not exist: ${link}` })
+        missing('Heading', link, position)
       }
       continue
     }
 
     let resolved: string
     try {
-      resolved = resolveRelativeTarget(pageRelativePath, target)
+      resolved = resolveRelativeSourcePath(pageRelativePath, target)
     } catch {
-      issues.push({ severity: 'error', message: `Link target does not exist: ${target}` })
+      missing('Link', target, position)
       continue
     }
-    const candidates = /\.mdx?$/i.test(resolved)
-      ? [resolved]
-      : [
-          resolved,
-          `${resolved}.md`,
-          `${resolved}.mdx`,
-          posix.join(resolved, 'index.md'),
-          posix.join(resolved, 'index.mdx')
-        ]
+    const candidates = sourceLinkCandidates(resolved)
     const matched = candidates
       .map((candidate) =>
         existingRelativeFiles.has(candidate)
@@ -196,9 +191,9 @@ export function checkLinksAndImages(
       )
       .find((candidate): candidate is string => Boolean(candidate))
     if (!matched) {
-      issues.push({ severity: 'error', message: `Link target does not exist: ${target}` })
+      missing('Link', target, position)
     } else if (fragment && (!decodedFragment || !fileHeadingSlugs.get(matched)?.has(decodedFragment))) {
-      issues.push({ severity: 'error', message: `Heading target does not exist: ${link}` })
+      missing('Heading', link, position)
     }
   }
 
@@ -227,24 +222,99 @@ export function checkDuplicateHeadings(page: DocPage): CheckIssue[] {
     })
 }
 
-export function checkMissingTranslations(graph: ContentGraph): CheckIssue[] {
-  const byKey = new Map<string, Set<string>>()
+function translationRows(graph: ContentGraph) {
+  const byVersion = new Map<string, Map<string, Map<string, DocPage>>>()
   for (const page of graph.pages) {
-    const key = `${page.version}:${localeRelativePathFor(page.relativePath, page.locale)}`
-    byKey.set(key, (byKey.get(key) ?? new Set()).add(page.locale))
+    if (page.status === 'draft') continue
+    const paths = byVersion.get(page.version) ?? new Map<string, Map<string, DocPage>>()
+    const path = localeRelativePathFor(page.relativePath, page.locale)
+    const locales = paths.get(path) ?? new Map<string, DocPage>()
+    locales.set(page.locale, page)
+    paths.set(path, locales)
+    byVersion.set(page.version, paths)
   }
 
+  return byVersion
+}
+
+export function summarizeTranslationCoverage(graph: ContentGraph) {
+  const rows = translationRows(graph)
+  return graph.versions.flatMap((version) =>
+    graph.locales.map((locale) => {
+      const paths = rows.get(version.id) ?? new Map<string, Map<string, DocPage>>()
+      const existing = [...paths.values()].filter((locales) => locales.has(locale)).length
+      return { version: version.id, locale, total: paths.size, existing, missing: paths.size - existing }
+    })
+  )
+}
+
+export function checkMissingTranslations(graph: ContentGraph): CheckIssue[] {
   const issues: CheckIssue[] = []
-  for (const [key, locales] of byKey) {
-    for (const locale of graph.locales) {
-      if (!locales.has(locale)) {
-        const [version, ...path] = key.split(':')
-        issues.push({
-          severity: 'warning',
-          message: `Missing ${locale} translation for ${path.join(':')} in version ${version}`
-        })
+  for (const [version, paths] of translationRows(graph)) {
+    for (const [relativePath, locales] of paths) {
+      for (const locale of graph.locales) {
+        if (!locales.has(locale)) {
+          issues.push({
+            severity: 'warning',
+            version,
+            locale,
+            relativePath,
+            message: `Missing ${locale} translation for ${relativePath} in version ${version}`
+          })
+        }
       }
     }
   }
   return issues
+}
+
+/** The source fingerprint is content-based; checkout timestamps cannot change it. */
+export function translationSourceHash(page: DocPage) {
+  const content = JSON.stringify([page.title, page.description, page.body.replace(/\r\n?/g, '\n')])
+  return `sha256:${createHash('sha256').update(content).digest('hex')}`
+}
+
+export function summarizeTranslationStatus(graph: ContentGraph) {
+  const rows = translationRows(graph)
+  return graph.versions.flatMap((version) => {
+    return [...(rows.get(version.id) ?? [])].flatMap(([relativePath, locales]) => {
+      const source = locales.get(graph.defaultLocale)
+      const sourceHash = source ? translationSourceHash(source) : undefined
+      return graph.locales
+        .filter((locale) => locale !== graph.defaultLocale)
+        .map((locale) => {
+          const target = locales.get(locale)
+          const recordedSourceHash = target?.frontmatter.translation?.sourceHash
+          const status = !target
+            ? 'missing'
+            : !sourceHash || !recordedSourceHash
+              ? 'unknown'
+              : sourceHash === recordedSourceHash
+                ? 'current'
+                : 'stale'
+          return {
+            version: version.id,
+            relativePath,
+            locale,
+            status,
+            ...(sourceHash ? { sourceHash } : {}),
+            ...(recordedSourceHash ? { recordedSourceHash } : {}),
+            ...(target ? { page: target.sourceRelativePath } : {})
+          }
+        })
+    })
+  })
+}
+
+export function checkStaleTranslations(graph: ContentGraph): CheckIssue[] {
+  return summarizeTranslationStatus(graph)
+    .filter((item) => item.status === 'stale')
+    .map((item) => ({
+      severity: 'warning' as const,
+      page: item.page,
+      version: item.version,
+      locale: item.locale,
+      relativePath: item.relativePath,
+      message: `Translation source changed for ${item.relativePath} in version ${item.version}: ${item.locale}`
+    }))
 }

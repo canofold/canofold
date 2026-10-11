@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { ChevronDown, Code2, Eye } from 'lucide-react'
 import type { SidebarItem } from '../../content/types'
 import { publicPathFor } from '../../seo/urls'
-import { markdownLabelsFor } from '../layoutContent'
+import { markdownLabelsFor } from '../../config/locale'
 import { navItemIsActive } from './LayoutHeader'
 import type { LayoutModel } from './model'
 
@@ -103,9 +103,9 @@ function Sidebar({ model }: { model: LayoutModel }) {
 
 function PageFooter({ model }: { model: LayoutModel }) {
   const { editHref, labels, page } = model
-  const updated = new Intl.DateTimeFormat(page.locale, { dateStyle: 'medium' }).format(
-    new Date(page.lastUpdated)
-  )
+  const updated = page.lastUpdated
+    ? new Intl.DateTimeFormat(page.locale, { dateStyle: 'medium' }).format(new Date(page.lastUpdated))
+    : undefined
   return (
     <footer className="cf-page-footer">
       <div className="cf-page-meta">
@@ -120,9 +120,11 @@ function PageFooter({ model }: { model: LayoutModel }) {
             {labels.source}
           </button>
         </div>
-        <span>
-          {labels.updated} {updated}
-        </span>
+        {updated ? (
+          <span>
+            {labels.updated} {updated}
+          </span>
+        ) : null}
       </div>
       <nav className="cf-doc-pagination" aria-label={labels.pageNavigation}>
         {page.previous ? (
@@ -199,6 +201,16 @@ function Playground({ model, children }: { model: LayoutModel; children: ReactNo
         tabIndex={-1}
         data-pagefind-body={page.search ? '' : undefined}
       >
+        {page.status === 'draft' ? (
+          <p className="cf-draft-banner" role="status">
+            {labels.draftPreview}
+          </p>
+        ) : null}
+        {model.versionArchived ? (
+          <p className="cf-version-banner" role="status">
+            {labels.archivedVersion}
+          </p>
+        ) : null}
         <div
           className="cf-playground"
           data-canofold-playground=""
@@ -269,6 +281,16 @@ export function LayoutDocument({ model, children }: { model: LayoutModel; childr
         tabIndex={-1}
         data-pagefind-body={model.page.search ? '' : undefined}
       >
+        {model.page.status === 'draft' ? (
+          <p className="cf-draft-banner" role="status">
+            {model.labels.draftPreview}
+          </p>
+        ) : null}
+        {model.versionArchived ? (
+          <p className="cf-version-banner" role="status">
+            {model.labels.archivedVersion}
+          </p>
+        ) : null}
         {children}
         <PageFooter model={model} />
       </main>

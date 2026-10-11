@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   layoutContentFor,
   localeNameFor,
-  markdownLabelsFor,
   MARKDOWN_ELEMENT_GROUP_IDS,
   notFoundContentFor
 } from './layoutContent'
+import { markdownLabelsFor } from '../config/locale'
 
 describe('layout content', () => {
   it.each(['zh-CN', 'en'])('defines every Markdown element group exactly once for %s', (locale) => {

@@ -39,7 +39,8 @@ describe('native Markdown behaviors', () => {
     expect(next.hidden).toBe(false)
 
     next.click()
-    expect(scrollBy).toHaveBeenCalledWith({ left: 180, behavior: 'smooth' })
+    // Motion belongs to CSS so prefers-reduced-motion can override it.
+    expect(scrollBy).toHaveBeenCalledWith({ left: 180 })
     list.scrollLeft = 300
     list.dispatchEvent(new Event('scroll'))
     expect(previous.hidden).toBe(false)
@@ -68,10 +69,21 @@ describe('native Markdown behaviors', () => {
 
     const first = root.querySelector<HTMLButtonElement>('[data-cf-tab="one"]')!
     const third = root.querySelector<HTMLButtonElement>('[data-cf-tab="three"]')!
+    const list = root.querySelector<HTMLElement>('[role="tablist"]')!
+    const scrollTo = vi.fn()
+    Object.defineProperties(list, {
+      clientWidth: { configurable: true, value: 100 },
+      scrollTo: { configurable: true, value: scrollTo }
+    })
+    Object.defineProperties(third, {
+      offsetLeft: { configurable: true, value: 200 },
+      offsetWidth: { configurable: true, value: 50 }
+    })
     first.focus()
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
 
     expect(document.activeElement).toBe(third)
+    expect(scrollTo).toHaveBeenCalledWith({ left: 150 })
     expect(third.getAttribute('aria-selected')).toBe('true')
     expect(first.tabIndex).toBe(-1)
     expect(root.querySelector<HTMLElement>('[data-cf-tab-panel="one"]')?.hidden).toBe(true)

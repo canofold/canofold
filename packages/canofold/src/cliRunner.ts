@@ -13,7 +13,8 @@ Commands:
   clean          Remove generated output and the persistent build cache
   preview [--port <number>]
                  Preview .canofold/dist on a custom local port
-  check          Run documentation checks
+  check [--json] Run documentation checks; emit JSON for CI with --json
+  snapshot <id>   Copy the current docs into a version-local historical snapshot
   deploy         Generate deployment guidance
 `)
 }
@@ -59,9 +60,17 @@ export async function runCli(args: string[], cwd = process.cwd()) {
   }
 
   if (command === 'check') {
-    assertArgumentCount(args, 1)
+    if (args[1] !== undefined && args[1] !== '--json') throw new Error(`Unknown option: ${args[1]}`)
+    assertArgumentCount(args, 2)
     const { runCheck } = await import('./commands/check')
-    return runCheck({ cwd })
+    return runCheck({ cwd, format: args[1] === '--json' ? 'json' : 'text' })
+  }
+
+  if (command === 'snapshot') {
+    if (!args[1] || args[1].startsWith('-')) throw new Error('Missing snapshot version ID')
+    assertArgumentCount(args, 2)
+    const { runSnapshot } = await import('./commands/snapshot')
+    return runSnapshot({ cwd, id: args[1] })
   }
 
   if (command === 'deploy') {

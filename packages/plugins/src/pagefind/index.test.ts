@@ -125,6 +125,8 @@ describe('pagefind', () => {
           body: '# 部署指南',
           headings: [],
           searchText: '零停机发布与回滚策略',
+          excerpt: '零停机发布与回滚策略',
+          references: { links: [], linkLocations: [], images: [], imageLocations: [], anchors: [] },
           codeExamples: [],
           demos: [],
           lastUpdated: new Date().toISOString(),

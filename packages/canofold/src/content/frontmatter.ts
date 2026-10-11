@@ -52,6 +52,8 @@ export interface CanofoldFrontmatter {
   ai?: boolean
   tags?: string[]
   owner?: string
+  /** Hash of the default-locale source content when this translation was reviewed. */
+  translation?: { sourceHash: string }
   hero?: {
     accent?: string
     tagline?: string
@@ -134,6 +136,10 @@ export const frontmatterSchema = z
     ai: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
     owner: z.string().optional(),
+    translation: z
+      .object({ sourceHash: z.string().regex(/^sha256:[a-f0-9]{64}$/) })
+      .strict()
+      .optional(),
     hero: heroSchema.optional(),
     features: z.array(featureSchema).optional()
   })

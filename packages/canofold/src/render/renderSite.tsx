@@ -22,7 +22,8 @@ import { detectMarkdownAssets } from '@canofold/markdown/server/analyze'
 import { compileCss, markdownFileIconsDir, mathFontsDir } from './buildCss'
 import { HomeHero } from './HomeHero'
 import { Layout } from './Layout'
-import { markdownLabelsFor, notFoundContentFor } from './layoutContent'
+import { notFoundContentFor } from './layoutContent'
+import { markdownLabelsFor } from '../config/locale'
 import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
 import { copyBuiltInBrandAssets } from './brandAssets'
 import { renderMdxResult } from './renderMdx'
@@ -31,7 +32,7 @@ import { noFlashScript } from './shellScripts'
 import { buildThemeVariables } from './theme'
 import { generatedOutputPaths } from '../output/plan'
 import { mapConcurrent } from '../utils/concurrency'
-import { createBasePathUrlTransform } from './transformUrls'
+import { createPageUrlTransform } from './transformUrls'
 import { buildPlaygroundBundle } from './playgroundBundle'
 import type { CanofoldDemoManifest } from '../demos/types'
 import { createDemoMarkdownPlugin } from '../demos/markdown'
@@ -50,7 +51,7 @@ import {
   type PreviousPageOutput
 } from './siteAssets'
 
-export { copyRequiredMathFonts, pageAssetOutputPathsFor } from './siteAssets'
+export { copyRequiredMathFonts } from './siteAssets'
 export type { PreviousPageOutput } from './siteAssets'
 
 const emptyMarkdownAssets: MarkdownAssets = {
@@ -159,6 +160,7 @@ export async function renderSite({
   const generatedPaths = generatedOutputPaths(config, graph)
   const hasPlayground = graph.pages.some((page) => page.frontmatter.layout === 'playground')
   let publicAssets: AssetCopy[] = []
+  let pageAssets: Awaited<ReturnType<typeof collectPageAssets>> = []
   await mkdir(join(outputRoot, 'assets'), { recursive: true })
   if (writeSharedAssets) {
     const needsMath =
@@ -203,19 +205,17 @@ export async function renderSite({
     } else {
       await rm(join(outputRoot, 'assets/canofold-playground'), { recursive: true, force: true })
     }
-    const [collectedPublicAssets, pageAssets] = await Promise.all([
+    ;[publicAssets, pageAssets] = await Promise.all([
       collectPublicAssets(cwd, config),
       collectPageAssets(cwd, graph.pages)
     ])
-    publicAssets = collectedPublicAssets
     await copyStaticAssets(outputRoot, [...publicAssets, ...pageAssets], generatedPaths)
     await writeFile(join(outputRoot, '404.html'), render404Page(config, graph))
   } else {
-    const [collectedPublicAssets, pageAssets] = await Promise.all([
+    ;[publicAssets, pageAssets] = await Promise.all([
       collectPublicAssets(cwd, config),
       collectPageAssets(cwd, pages)
     ])
-    publicAssets = collectedPublicAssets
     await copyStaticAssets(outputRoot, pageAssets, generatedPaths)
   }
 
@@ -233,8 +233,15 @@ export async function renderSite({
     assets.behaviors.forEach((behavior) => markdownBehaviors.add(behavior))
   })
   const RENDER_CONCURRENCY = 8
-  const urlTransform = createBasePathUrlTransform(config.basePath)
+  const assetPathsByPage = new Map<DocPage, Set<string>>()
+  for (const asset of pageAssets) {
+    let paths = assetPathsByPage.get(asset.page)
+    if (!paths) assetPathsByPage.set(asset.page, (paths = new Set()))
+    paths.add(asset.outputPath)
+  }
+  const transformForPage = createPageUrlTransform(config.basePath, graph.pages)
   await mapConcurrent(pages, RENDER_CONCURRENCY, async (page) => {
+    const urlTransform = transformForPage(page, assetPathsByPage.get(page))
     const isHome = page.routePath === localeRootPath(page.locale, graph.defaultLocale, page.versionBase)
     let markdownContent: ReactNode | undefined
     let markdownAssets = emptyMarkdownAssets
@@ -338,8 +345,11 @@ export async function renderSite({
     await rm(join(outputRoot, 'assets/canofold-markdown'), { recursive: true, force: true })
   }
   await copyMarkdownPluginAssets(outputRoot, pluginClients, pluginStyles)
-  await removeStalePageAssets(outputRoot, previousPages, graph.pages, [
-    ...generatedPaths,
-    ...publicAssets.map((asset) => asset.outputPath)
-  ])
+  if (previousPages.length) {
+    const currentAssets = writeSharedAssets ? pageAssets : await collectPageAssets(cwd, graph.pages)
+    await removeStalePageAssets(outputRoot, previousPages, currentAssets, [
+      ...generatedPaths,
+      ...publicAssets.map((asset) => asset.outputPath)
+    ])
+  }
 }

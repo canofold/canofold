@@ -36,12 +36,15 @@ const canofoldDist = join(process.cwd(), 'packages/canofold/dist')
 const canofoldBudgets = {
   'cli.js': 3 * 1024,
   'playground-client.js': 3 * 1024,
+  'search-client.js': 4 * 1024,
+  'shell-client.js': 5 * 1024,
   'styles.input.css': 8 * 1024
 }
-// Output planning and the build report are part of the 0.4 production build
-// path. Keep the complete Node graph bounded independently of browser budgets.
+// Measure the actual Node import graph. Browser entries are separately bounded
+// above; counting them as Node code conflates two independently shipped paths.
 const canofoldJavaScriptBudget = 65 * 1024
-const canofoldBrowserEntries = new Set(['playground-client.js'])
+const canofoldNodeEntries = ['cli.js', 'index.js', 'demo-engine.js']
+const canofoldBrowserEntries = ['playground-client.js', 'search-client.js', 'shell-client.js']
 const pluginDist = join(process.cwd(), 'packages/plugins/dist')
 const pluginClientBudgets = {
   'client/kroki.js': 3 * 1024,
@@ -129,17 +132,31 @@ if (/mermaid\.esm|@mermaid-js|plantuml-encoder/.test(rootImplementationSource)) 
 
 const canofoldFiles = (await relativeFiles(canofoldDist)).filter((file) => /\.(?:js|css)$/.test(file)).sort()
 const canofoldRows = []
-const canofoldJavaScript = []
+const nodeGraph = new Set()
+const browserGraph = new Set()
+for (const entry of canofoldNodeEntries) {
+  for (const path of await moduleGraph(canofoldDist, entry, true)) nodeGraph.add(path)
+}
+for (const entry of canofoldBrowserEntries) {
+  for (const path of await moduleGraph(canofoldDist, entry, true)) browserGraph.add(path)
+}
 for (const file of canofoldFiles) {
   const source = await readFile(join(canofoldDist, file))
   const gzipBytes = gzipSync(source).byteLength
   const budget = canofoldBudgets[file]
   canofoldRows.push({ file, rawBytes: source.byteLength, gzipBytes, budget })
-  if (file.endsWith('.js') && !canofoldBrowserEntries.has(file)) canofoldJavaScript.push(source)
+  if (
+    file.endsWith('.js') &&
+    !nodeGraph.has(join(canofoldDist, file)) &&
+    !browserGraph.has(join(canofoldDist, file))
+  ) {
+    failures.push(`canofold/${file} is not reachable from a declared Node or browser entry`)
+  }
   if (budget && gzipBytes > budget) {
     failures.push(`canofold/${file}: ${gzipBytes} gzip bytes exceeds ${budget}`)
   }
 }
+const canofoldJavaScript = await Promise.all([...nodeGraph].sort().map((path) => readFile(path)))
 const canofoldJavaScriptBytes = gzipSync(Buffer.concat(canofoldJavaScript)).byteLength
 canofoldRows.push({
   file: 'Node JavaScript',

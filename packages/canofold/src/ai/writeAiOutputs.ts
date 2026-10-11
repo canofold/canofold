@@ -30,7 +30,7 @@ function pageMetadata(config: CanofoldConfig, page: DocPage) {
       : [],
     owner: typeof page.frontmatter.owner === 'string' ? page.frontmatter.owner : undefined,
     headings: page.headings,
-    lastUpdated: page.lastUpdated,
+    ...(page.lastUpdated ? { lastUpdated: page.lastUpdated } : {}),
     frontmatter: publicFrontmatterFor(page.frontmatter)
   }
 }
@@ -230,7 +230,7 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
       'summaries',
       aiPages.map((page) => ({
         routePath: publicPathFor(config, page.routePath),
-        summary: createDeterministicSummary({ description: page.description, body: page.body })
+        summary: createDeterministicSummary(page)
       }))
     )
   }

@@ -8,6 +8,7 @@ import type {
 import type { MarkdownThemeInput } from '@canofold/markdown/theme'
 import type { SearchProvider } from '../search/types'
 import type { CanofoldDemoEngine } from '../demos/types'
+import type { CheckRuleId, CheckRuleLevel } from '../check/rules'
 import { CANOFOLD_MARKDOWN_ELEMENT_GROUP_IDS, THEME_BASE_COLORS } from './constants'
 
 export type ThemeBaseColor = (typeof THEME_BASE_COLORS)[number]
@@ -24,6 +25,8 @@ export interface CanofoldVersionItem {
   docsDir: string
   /** Absolute URL base. The current version normally uses `/`. */
   base: string
+  /** An archived version stays readable but is no longer maintained. */
+  status?: 'supported' | 'archived'
 }
 
 export interface CanofoldAdvertisement {
@@ -50,6 +53,9 @@ export interface CanofoldExtensionDescriptor {
 
 export interface CanofoldLayoutLabels {
   skipToContent: string
+  draftPreview: string
+  archivedVersion: string
+  pageUnavailableHome: string
   search: string
   searchEmpty: string
   searchUnavailable: string
@@ -159,11 +165,7 @@ export interface CanofoldConfigInput {
     code?: Pick<MarkdownCodeOptions, 'themes' | 'fallbackLanguage' | 'overflow' | 'unknownLanguage'>
     features?: MarkdownFeatureOptions
     labels?: Partial<MarkdownLabels>
-    /**
-     * Compiler plugins imported into canofold.config.ts, e.g. from
-     * `@canofold/plugins`. They execute as trusted build code; cache identity
-     * comes from each plugin's `name`, `version` and `cacheKey`.
-     */
+    /** Trusted build plugins; name, version and cacheKey identify their cached output. */
     plugins?: readonly MarkdownPlugin[]
   }
   theme?: {
@@ -182,6 +184,9 @@ export interface CanofoldConfigInput {
     enabled?: boolean
     /** Use `compact` or a provider such as `pagefind()` from @canofold/plugins. */
     provider?: 'compact' | SearchProvider
+  }
+  checks?: {
+    rules?: Partial<Record<CheckRuleId, CheckRuleLevel>>
   }
   extensions?: CanofoldExtensionDescriptor[]
   navigation?: Record<string, CanofoldNavigationItem[]>
@@ -242,6 +247,9 @@ export interface CanofoldConfig {
     tokens: MarkdownThemeInput
   }
   search: CanofoldSearchConfig
+  checks: {
+    rules: Partial<Record<CheckRuleId, CheckRuleLevel>>
+  }
   extensions: CanofoldExtensionDescriptor[]
   navigation: Record<string, CanofoldNavigationItem[]>
   versions: {

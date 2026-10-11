@@ -162,6 +162,7 @@ overrides:
     '-e',
     String.raw`
     import assert from 'node:assert/strict'
+    import { createRequire } from 'node:module'
     import { createMarkdownRenderer } from '@canofold/markdown/server'
     import { renderToStaticMarkup } from 'react-dom/server'
     import { math } from '@canofold/plugins/math'
@@ -176,6 +177,19 @@ overrides:
     await assert.rejects(renderer.render('$\\frac{$', options))
     const soft = await renderer.render('$\\frac{$', {markdown: {plugins: [math()]}})
     assert.match(renderToStaticMarkup(soft.content), /katex-error/)
+
+    // Exercise the actual published runtime, not only its version string.
+    // GHSA-238p-pmpm-9mq7: inherited trust and namespace entries must be ignored.
+    const katex = createRequire(import.meta.resolve('@canofold/plugins/math'))('katex')
+    const expression = '\\href{https://example.invalid/}{link}'
+    const inheritedOptions = Object.assign(Object.create({ trust: true }), { strict: 'ignore' })
+    assert.doesNotMatch(katex.renderToString(expression, inheritedOptions), /<a\b/)
+    assert.match(katex.renderToString(expression, { trust: true }), /<a\b/)
+    assert.throws(() => katex.renderToString('\\inheritedMacro', {
+      macros: Object.create({ '\\inheritedMacro': 'INHERITED' })
+    }), /Undefined control sequence/)
+    const untrusted = await renderer.render('$' + expression + '$', { markdown: { plugins: [math()] } })
+    assert.doesNotMatch(renderToStaticMarkup(untrusted.content), /<a\b/)
   `
   ])
   if (viteVersion) {
@@ -532,8 +546,164 @@ export default function PackedButtonDemo() {
      if (api.canofoldVersion !== ${JSON.stringify(canofoldPackage.manifest.version)}) process.exit(3);`
   ])
 
+  // Exercise the snapshot workflow through the packed CLI and the real Vite Demo engine.
+  // The existing fixture's project-root Demo path is intentionally replaced with a
+  // version-local source before snapshotting, so historical code can be frozen.
+  await writeFile(
+    join(consumerRoot, 'docs/index.md'),
+    (await readFile(join(consumerRoot, 'docs/index.md'), 'utf8')).replaceAll(
+      '/src/button.demo.tsx',
+      './demo/snapshot.tsx'
+    )
+  )
+  await write(
+    'docs/demo/snapshot.tsx',
+    'export default function SnapshotDemo() { return <button>Historical English demo</button> }\n'
+  )
+  await write('docs/zh/index.md', '# 中文首页\n\n::demo[历史示例]{src="./demo/snapshot.tsx"}\n')
+  await write(
+    'docs/zh/demo/snapshot.tsx',
+    'export default function SnapshotDemo() { return <button>Historical Chinese demo</button> }\n'
+  )
+  runPnpm(['exec', 'canofold', 'snapshot', 'v1'])
+  await assertExists('versions/v1/index.md')
+  await assertExists('versions/v1/zh/index.md')
+  await assertExists('versions/v1/demo/snapshot.tsx')
+  await assertExists('versions/v1/zh/demo/snapshot.tsx')
+  await writeFile(
+    configPath,
+    originalConfig.replace(
+      "{ id: 'v0', label: 'v0', docsDir: 'versions/v0', base: '/v0/' }",
+      "{ id: 'v0', label: 'v0', docsDir: 'versions/v0', base: '/v0/' },\n" +
+        "      { id: 'v1', label: 'v1', docsDir: 'versions/v1', base: '/v1/', status: 'archived' }"
+    )
+  )
+  await writeFile(
+    join(consumerRoot, 'docs/demo/snapshot.tsx'),
+    'export default function SnapshotDemo() { return <button>Current English demo</button> }\n'
+  )
+  await writeFile(
+    join(consumerRoot, 'docs/zh/demo/snapshot.tsx'),
+    'export default function SnapshotDemo() { return <button>Current Chinese demo</button> }\n'
+  )
+  runPnpm(['exec', 'canofold', 'check'])
+  runPnpm(['exec', 'canofold', 'build', '--no-cache'])
+  for (const [path, expected, excluded] of [
+    ['index.html', 'Current English demo', 'Historical English demo'],
+    ['zh/index.html', 'Current Chinese demo', 'Historical Chinese demo'],
+    ['v1/index.html', 'Historical English demo', 'Current English demo'],
+    ['v1/zh/index.html', 'Historical Chinese demo', 'Current Chinese demo']
+  ]) {
+    const html = await readFile(join(consumerRoot, '.canofold/dist', path), 'utf8')
+    assert.match(html, new RegExp(expected))
+    assert.doesNotMatch(html, new RegExp(excluded))
+  }
+  assert.match(
+    await readFile(join(consumerRoot, '.canofold/dist/v1/index.html'), 'utf8'),
+    /This version is no longer maintained/
+  )
+  const snapshotChunks = await Promise.all(
+    (await filesUnder(join(consumerRoot, '.canofold/dist/assets/canofold-demos')))
+      .filter((path) => path.endsWith('.js'))
+      .map((path) => readFile(path, 'utf8'))
+  )
+  for (const label of [
+    'Historical English demo',
+    'Historical Chinese demo',
+    'Current English demo',
+    'Current Chinese demo'
+  ]) {
+    assert.ok(
+      snapshotChunks.some((source) => source.includes(label)),
+      `${label} must be bundled`
+    )
+  }
+
+  // Migrate real package documentation from this checkout so this regression
+  // also works in a clean CI clone. Only the language-switch URLs change.
+  for (const [source, target, oldLink, newLink] of [
+    ['README.md', 'docs/handbook', './README.zh-CN.md', '/zh/handbook/'],
+    ['README.zh-CN.md', 'docs/zh/handbook', './README.md', '/handbook/']
+  ]) {
+    const markdown = await readFile(join(workspace, 'packages/markdown', source), 'utf8')
+    assert.ok(markdown.includes(`](${oldLink})`), 'The real language link must be migrated explicitly')
+    await mkdir(join(consumerRoot, target), { recursive: true })
+    await writeFile(
+      join(consumerRoot, target, 'index.md'),
+      markdown.replace(`](${oldLink})`, `](${newLink})`)
+    )
+  }
+  runPnpm(['exec', 'canofold', 'check'])
+  runPnpm(['exec', 'canofold', 'build', '--no-cache'])
+  for (const [path, languageLink] of [
+    ['handbook/index.html', '/zh/handbook/'],
+    ['zh/handbook/index.html', '/handbook/']
+  ]) {
+    const html = await readFile(join(consumerRoot, '.canofold/dist', path), 'utf8')
+    assert.match(html, /@canofold\/markdown/)
+    assert.match(html, /Markdown/)
+    assert.match(html, /<pre\b/)
+    assert.ok(html.includes(`href="${languageLink}"`), 'Migrated language link must resolve')
+  }
+
+  // Representative framework migrations, not an automatic converter. Keep
+  // the source conventions and explicit content edits together for review.
+  const migrations = [
+    {
+      id: 'vitepress',
+      original:
+        '# VitePress migration\n\n<Badge type="tip" text="Stable" />\n\n::: tip Before deploying\nCheck all links.\n:::\n\n![Architecture](/architecture.svg)\n\n[Next](./next.md)\n',
+      migrated:
+        '# VitePress migration\n\n**Stable**\n\n:::tip[Before deploying]\nCheck all links.\n:::\n\n![Architecture](/migration-vitepress.svg)\n\n[Next](./next.md)\n',
+      marker: 'Before deploying'
+    },
+    {
+      id: 'docusaurus',
+      original:
+        '---\ntitle: Docusaurus migration\nslug: /old-install\nsidebar_position: 2\n---\n\nimport Tabs from "@theme/Tabs";\nimport TabItem from "@theme/TabItem";\n\n<Tabs><TabItem value="npm" label="npm">npm install example</TabItem></Tabs>\n\n![Architecture](/architecture.svg)\n\n[Next](./next.md)\n',
+      migrated:
+        '---\ntitle: Docusaurus migration\norder: 2\n---\n\n# Docusaurus migration\n\n::::tabs[Install]\n:::tab[npm]\n`npm install example`\n:::\n::::\n\n![Architecture](/migration-docusaurus.svg)\n\n[Next](./next.md)\n',
+      marker: 'npm install example'
+    }
+  ]
+  for (const migration of migrations) {
+    await write(`migration-source/${migration.id}/index.md`, migration.original)
+    await write(`docs/migrations/${migration.id}/index.md`, migration.migrated)
+    await write(`docs/migrations/${migration.id}/next.md`, '# Next\n\n[Back](./index.md)\n')
+    await write(
+      `docs/public/migration-${migration.id}.svg`,
+      '<svg xmlns="http://www.w3.org/2000/svg"><title>Architecture</title></svg>'
+    )
+  }
+  const migrationConfig = await readFile(configPath, 'utf8')
+  await writeFile(
+    configPath,
+    migrationConfig.replace(
+      "  title: 'Packed RC',",
+      "  title: 'Packed RC',\n  redirects: { '/old-install/': '/migrations/docusaurus/' },"
+    )
+  )
+  runPnpm(['exec', 'canofold', 'check'])
+  runPnpm(['exec', 'canofold', 'build', '--no-cache'])
+  for (const { id, marker } of migrations) {
+    const html = await readFile(join(consumerRoot, `.canofold/dist/migrations/${id}/index.html`), 'utf8')
+    assert.ok(html.includes(marker))
+    assert.ok(html.includes(`href="/migrations/${id}/next/"`))
+    assert.ok(html.includes(`src="/migration-${id}.svg"`))
+    assert.doesNotMatch(html, /&lt;Badge|@theme\/Tabs|sidebar_position/)
+    await assertExists(`.canofold/dist/migration-${id}.svg`)
+  }
+  assert.match(
+    await readFile(join(consumerRoot, '.canofold/dist/migrations/docusaurus/index.html'), 'utf8'),
+    /role="tab"/
+  )
+  assert.match(
+    await readFile(join(consumerRoot, '.canofold/dist/old-install/index.html'), 'utf8'),
+    /\/migrations\/docusaurus\//
+  )
+
   console.log(
-    `Packed CLI smoke passed: canofold@${canofoldPackage.manifest.version}, ${extensionOutput.pages} pages, Markdown ${(markdownEntryBytes / 1024).toFixed(2)} KiB gzip, Demo ${(demoEntryBytes / 1024).toFixed(2)} KiB gzip, Pagefind, AI shards, extension host, cache hit`
+    `Packed CLI smoke passed: canofold@${canofoldPackage.manifest.version}, ${extensionOutput.pages} initial pages, Markdown ${(markdownEntryBytes / 1024).toFixed(2)} KiB gzip, Demo ${(demoEntryBytes / 1024).toFixed(2)} KiB gzip, Pagefind, AI shards, extension host, cache hit, bilingual snapshot with independent Vite demos, existing bilingual Markdown README migration, representative VitePress/Docusaurus migrations`
   )
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true })

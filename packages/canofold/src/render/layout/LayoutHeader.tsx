@@ -179,12 +179,11 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
                 {versionOptions.map((option) => (
                   <a
                     key={option.id}
-                    className={
-                      option.id === page.version ? 'cf-menu-item cf-menu-item-active' : 'cf-menu-item'
-                    }
+                    className={`${option.id === page.version ? 'cf-menu-item cf-menu-item-active' : 'cf-menu-item'}${option.hasPage ? '' : ' cf-menu-item-unavailable'}`}
                     href={publicPathFor(config, option.routePath)}
                   >
                     <span>{option.label}</span>
+                    {!option.hasPage ? <small>{labels.pageUnavailableHome}</small> : null}
                   </a>
                 ))}
               </div>
@@ -206,13 +205,14 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
                     className={
                       option.locale === page.locale
                         ? 'cf-menu-item cf-language-menu-item cf-menu-item-active'
-                        : 'cf-menu-item cf-language-menu-item'
+                        : `cf-menu-item cf-language-menu-item${option.hasPage ? '' : ' cf-menu-item-unavailable'}`
                     }
                     href={publicPathFor(config, option.routePath)}
                     lang={option.locale}
                     aria-current={option.locale === page.locale ? 'page' : undefined}
                   >
                     {localeNameFor(option.locale, config.i18n.localeNames)}
+                    {!option.hasPage ? <small>{labels.pageUnavailableHome}</small> : null}
                   </a>
                 ))}
               </div>
