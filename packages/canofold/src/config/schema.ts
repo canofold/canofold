@@ -12,6 +12,7 @@ import type { SearchProvider } from '../search/types'
 import type { CanofoldDemoEngine } from '../demos/types'
 import { THEME_BASE_COLORS } from './constants'
 import { publicResourceSchema } from './publicResource'
+import { CHECK_RULE_IDS } from '../check/rules'
 import {
   type CanofoldLayoutLabels,
   type CanofoldConfigInput,
@@ -189,6 +190,9 @@ const markdownLabelsSchema = z
 const layoutLabelsSchema = z
   .object({
     skipToContent: z.string().optional(),
+    draftPreview: z.string().optional(),
+    archivedVersion: z.string().optional(),
+    pageUnavailableHome: z.string().optional(),
     search: z.string().optional(),
     searchEmpty: z.string().optional(),
     searchUnavailable: z.string().optional(),
@@ -445,6 +449,12 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
       .strict()
       .optional(),
     search: searchSchema.optional(),
+    checks: z
+      .object({
+        rules: z.partialRecord(z.enum(CHECK_RULE_IDS), z.enum(['off', 'warning', 'error'])).optional()
+      })
+      .strict()
+      .optional(),
     extensions: z.array(extensionSchema).optional(),
     navigation: z
       .record(
@@ -469,7 +479,8 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
                 id: versionIdSchema,
                 label: z.string().min(1),
                 docsDir: z.string().min(1),
-                base: absoluteRouteSchema
+                base: absoluteRouteSchema,
+                status: z.enum(['supported', 'archived']).optional()
               })
               .strict()
           )

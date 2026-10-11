@@ -544,7 +544,7 @@ describe('loadConfig', () => {
           current: 'v2',
           items: [
             { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
-            { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
+            { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/', status: 'archived' }
           ]
         },
         redirects: { '/old/': '/guide/' },
@@ -555,6 +555,7 @@ describe('loadConfig', () => {
     const config = await loadConfig(cwd)
     expect(config.navigation.zh?.[0]).toEqual({ text: '指南', link: '/guide/' })
     expect(config.versions.current).toBe('v2')
+    expect(config.versions.items[1]?.status).toBe('archived')
     expect(config.redirects['/old/']).toBe('/guide/')
     expect(config.advertising?.alt).toBe('Sponsor')
     expect(config.search).toEqual({ enabled: true, provider: 'compact' })
@@ -567,6 +568,15 @@ describe('loadConfig', () => {
     expect(config.versions.items).toEqual([
       { id: 'current', label: 'Current', docsDir: 'handbook', base: '/' }
     ])
+  })
+
+  it('refuses to mark the current version as archived', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-archived-current-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { versions: { current: 'v2', items: [{ id: 'v2', label: 'v2', docsDir: 'docs', base: '/', status: 'archived' }] } }`
+    )
+    await expect(loadConfig(cwd)).rejects.toThrow('current documentation version cannot be archived')
   })
 
   it('rejects version bases with traversal or URL suffixes', async () => {

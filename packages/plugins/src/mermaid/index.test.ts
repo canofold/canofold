@@ -22,12 +22,7 @@ describe('mermaid plugin', () => {
       expect.objectContaining({
         id: 'mermaid',
         module: '@canofold/plugins/client/mermaid',
-        resources: [
-          expect.objectContaining({
-            module: 'mermaid/dist/mermaid.esm.min.mjs',
-            output: 'mermaid.esm.min.mjs'
-          })
-        ]
+        resources: []
       })
     ])
     expect(result.assets.pluginStyles).toEqual([{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }])
@@ -41,6 +36,9 @@ describe('mermaid plugin', () => {
 
     expect(html).toContain('data-cf-plugin-diagram="mermaid"')
     expect(html).not.toContain('data-cf-module-url="https://')
+    expect(result.assets.pluginClients[0]?.resources).toEqual([
+      { module: 'mermaid', output: 'mermaid.esm.min.mjs', bundle: true }
+    ])
   })
 
   it('uses built-in Chinese action labels for a Chinese document', async () => {

@@ -1,19 +1,80 @@
 import { describe, expect, it } from 'vitest'
 import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
+import { createMockGraph, createMockPage } from '../../test/fixtures'
 import {
   checkCodeBlockLanguages,
   checkDuplicateHeadings,
   checkFrontmatterDescription,
   checkFrontmatterTitle,
   checkRichDirectiveSyntax,
-  checkLinksAndImages,
-  checkMissingTranslations
+  checkLinksAndImages as checkReferences,
+  checkMissingTranslations,
+  summarizeTranslationCoverage,
+  summarizeTranslationStatus,
+  translationSourceHash,
+  checkStaleTranslations
 } from './runChecks'
 
+function checkLinksAndImages(
+  source: string,
+  ...args: Parameters<typeof checkReferences> extends [unknown, ...infer Rest] ? Rest : never
+) {
+  const analysis = analyzeMarkdown(source)
+  return checkReferences(
+    {
+      ...analysis,
+      linkLocations: analysis.linkLocations.map((location) => location ?? null),
+      imageLocations: analysis.imageLocations.map((location) => location ?? null)
+    },
+    ...args
+  )
+}
+
 describe('quality checks', () => {
+  it('reports a translation as stale only when its recorded source fingerprint differs', () => {
+    const source = createMockPage({
+      locale: 'zh',
+      relativePath: 'zh/guide.md',
+      body: '# 当前内容',
+      title: '指南',
+      description: '中文说明'
+    })
+    const english = createMockPage({
+      locale: 'en',
+      relativePath: 'en/guide.md',
+      sourceRelativePath: 'docs/en/guide.md',
+      body: '# Current content',
+      frontmatter: { translation: { sourceHash: translationSourceHash(source) } }
+    })
+    const graph = createMockGraph({ pages: [source, english], locales: ['zh', 'en'] })
+    expect(summarizeTranslationStatus(graph)).toMatchObject([
+      { locale: 'en', status: 'current', sourceHash: translationSourceHash(source) }
+    ])
+    expect(checkStaleTranslations(graph)).toEqual([])
+
+    const changed = createMockGraph({
+      pages: [{ ...source, body: '# 已改变' }, english],
+      locales: ['zh', 'en']
+    })
+    expect(summarizeTranslationStatus(changed)).toMatchObject([{ locale: 'en', status: 'stale' }])
+    expect(checkStaleTranslations(changed)).toContainEqual(
+      expect.objectContaining({
+        severity: 'warning',
+        page: 'docs/en/guide.md',
+        locale: 'en'
+      })
+    )
+
+    const untracked = createMockGraph({
+      pages: [source, { ...english, frontmatter: {} }],
+      locales: ['zh', 'en']
+    })
+    expect(summarizeTranslationStatus(untracked)).toMatchObject([{ locale: 'en', status: 'unknown' }])
+    expect(checkStaleTranslations(untracked)).toEqual([])
+  })
   it('reports unlabeled code fences', () => {
     expect(checkCodeBlockLanguages('```\nconst x = 1\n```')).toEqual([
-      { severity: 'warning', message: 'Code block is missing a language' }
+      { severity: 'warning', message: 'Code block is missing a language', line: 1, column: 1 }
     ])
   })
 
@@ -29,7 +90,9 @@ describe('quality checks', () => {
     ).toEqual([
       {
         severity: 'error',
-        message: 'Each Gallery item must contain exactly one Markdown image (line 2, column 1)'
+        message: 'Each Gallery item must contain exactly one Markdown image',
+        line: 2,
+        column: 1
       }
     ])
   })
@@ -40,7 +103,9 @@ describe('quality checks', () => {
     expect(checkRichDirectiveSyntax(source)).toEqual([
       {
         severity: 'error',
-        message: 'Unknown Markdown directive `custom` (line 1, column 1)'
+        message: 'Unknown Markdown directive `custom`',
+        line: 1,
+        column: 1
       }
     ])
     expect(
@@ -59,6 +124,7 @@ describe('quality checks', () => {
       checkFrontmatterTitle(
         {},
         {
+          ...createMockPage(),
           sourcePath: '',
           transformedSource: '',
           sourceRelativePath: 'docs/zh/index.md',
@@ -91,7 +157,7 @@ describe('quality checks', () => {
 
   it('reports missing image candidates', () => {
     expect(checkLinksAndImages('![Logo](./missing.png)', new Set(), 'zh/index.md')).toEqual([
-      { severity: 'error', message: 'Image target does not exist: ./missing.png' }
+      { severity: 'error', message: 'Image target does not exist: ./missing.png', line: 1, column: 1 }
     ])
   })
 
@@ -104,7 +170,9 @@ describe('quality checks', () => {
         'zh/index.md',
         new Set(['/'])
       )
-    ).toEqual([{ severity: 'error', message: 'Image target does not exist: /missing.png' }])
+    ).toEqual([
+      { severity: 'error', message: 'Image target does not exist: /missing.png', line: 1, column: 49 }
+    ])
   })
 
   it('reports missing relative links and accepts known routes', () => {
@@ -115,7 +183,9 @@ describe('quality checks', () => {
         'zh/index.md',
         new Set(['/guide/'])
       )
-    ).toEqual([{ severity: 'error', message: 'Link target does not exist: ./missing.md' }])
+    ).toEqual([
+      { severity: 'error', message: 'Link target does not exist: ./missing.md', line: 1, column: 1 }
+    ])
   })
 
   it('treats every explicit URI scheme as external to the local file graph', () => {
@@ -171,13 +241,14 @@ describe('quality checks', () => {
   it('reports missing same-page fragments', () => {
     expect(
       checkLinksAndImages('[Missing](#unknown)', new Set(), 'zh/index.md', new Set(['/']), new Set(['known']))
-    ).toEqual([{ severity: 'error', message: 'Heading target does not exist: #unknown' }])
+    ).toEqual([{ severity: 'error', message: 'Heading target does not exist: #unknown', line: 1, column: 1 }])
   })
 
   it('reports duplicate headings', () => {
     const headings = analyzeMarkdown('# Intro\n\n## Intro').headings
     expect(
       checkDuplicateHeadings({
+        ...createMockPage(),
         sourcePath: '',
         transformedSource: '',
         sourceRelativePath: 'docs/zh/index.md',
@@ -215,6 +286,7 @@ describe('quality checks', () => {
 
   it('matches root default-locale pages with translated locale-directory pages', () => {
     const page = {
+      ...createMockPage(),
       sourcePath: '',
       transformedSource: '',
       sourceRelativePath: 'docs/index.md',
@@ -264,5 +336,28 @@ describe('quality checks', () => {
         currentVersion: 'current'
       })
     ).toEqual([])
+  })
+
+  it('reports missing pages by version and locale without counting drafts as translations', () => {
+    const original = createMockPage({ locale: 'zh', relativePath: 'guide.md', version: 'current' })
+    const draft = createMockPage({
+      locale: 'en',
+      relativePath: 'en/guide.md',
+      version: 'current',
+      status: 'draft'
+    })
+    const graph = createMockGraph({
+      pages: [original, draft],
+      locales: ['zh', 'en'],
+      versions: [{ id: 'current', label: 'Current', docsDir: 'docs', base: '/' }]
+    })
+
+    expect(summarizeTranslationCoverage(graph)).toEqual([
+      { version: 'current', locale: 'zh', total: 1, existing: 1, missing: 0 },
+      { version: 'current', locale: 'en', total: 1, existing: 0, missing: 1 }
+    ])
+    expect(checkMissingTranslations(graph)).toEqual([
+      expect.objectContaining({ version: 'current', locale: 'en', relativePath: 'guide.md' })
+    ])
   })
 })

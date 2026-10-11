@@ -208,7 +208,12 @@ async function runBuildLocked(
     resolveBuildTemporaryRoot(options.cwd),
     config.extensions
   )
-  const graph = await buildContentGraph(options.cwd, config, extensions)
+  const renderer = options.renderer ?? createMarkdownRenderer()
+  if (options.forceClean || options.noCache) renderer.clear()
+  const graph = await buildContentGraph(options.cwd, config, extensions, {
+    includeDrafts: options.demoMode === 'dev',
+    renderer
+  })
   const analyzedDemoManifest = await prepareDemoManifest({
     cwd: options.cwd,
     config,
@@ -237,7 +242,6 @@ async function runBuildLocked(
     outputValid,
     forceClean: options.forceClean || options.noCache
   })
-  const renderer = options.renderer ?? createMarkdownRenderer()
 
   if (plan.mode === 'cached') {
     const report = createBuildReport({
@@ -324,7 +328,6 @@ async function runBuildLocked(
               mode: 'build',
               server: options.demoServer
             })
-      renderer.clear()
       await writeBuildOutputs({
         cwd: options.cwd,
         config: temporaryConfig,

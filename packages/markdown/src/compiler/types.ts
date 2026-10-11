@@ -138,7 +138,7 @@ export interface MarkdownPluginClientAsset {
   id: string
   /** Public package export, for example `@scope/plugin/client`. */
   module: string
-  /** Extra package files copied beside this client under a directory named after `id`. */
+  /** Extra package resources emitted beside this client under a directory named after `id`. */
   resources?: readonly MarkdownPluginClientResource[]
 }
 
@@ -156,6 +156,8 @@ export interface MarkdownPluginClientResource {
   module: string
   /** Output file relative to this client's resource directory. */
   output: string
+  /** Bundle a browser ESM entry and its installed dependencies; cannot be combined with directories. */
+  bundle?: boolean
   /** Chunk directories located beside the resolved resource entry. */
   directories?: readonly MarkdownPluginClientResourceDirectory[]
 }
@@ -195,4 +197,5 @@ export interface RenderMarkdownOptions {
 export interface PreparedMarkdown {
   document: Root
   assets: MarkdownAssets
+  analysis: import('./analyze').MarkdownContentAnalysis
 }

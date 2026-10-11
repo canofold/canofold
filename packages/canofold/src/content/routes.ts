@@ -1,4 +1,28 @@
 import { posix } from 'node:path'
+import { stripMarkdownExtension } from './fileKinds'
+
+/** Decode a source-relative URL consistently for checking and HTML links. */
+export function resolveRelativeSourcePath(pageRelativePath: string, target: string) {
+  const decoded = target
+    .split('/')
+    .map((segment) => {
+      const value = decodeURIComponent(segment)
+      if (value.includes('/') || value.includes('\\')) throw new Error('Encoded path separator')
+      return value
+    })
+    .join('/')
+  return posix.normalize(posix.join(posix.dirname(pageRelativePath), decoded.replace(/^\.\//, '')))
+}
+
+export function markdownExtensionKey(path: string) {
+  return path.replace(/\.(?:md|mdx)$/i, (extension) => extension.toLocaleLowerCase('en-US'))
+}
+
+export function sourceLinkCandidates(path: string) {
+  return /\.mdx?$/i.test(path)
+    ? [path]
+    : [path, `${path}.md`, `${path}.mdx`, posix.join(path, 'index.md'), posix.join(path, 'index.mdx')]
+}
 
 function normalizeRoutePath(path: string) {
   return path.replace(/\\/g, '/')
@@ -116,4 +140,3 @@ export function routeOutputPathFor(routePath: string) {
   if (!normalized) return 'index.html'
   return posix.join(...normalized.split('/').map((segment) => decodeURIComponent(segment)), 'index.html')
 }
-import { stripMarkdownExtension } from './fileKinds'

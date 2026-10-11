@@ -31,11 +31,15 @@ describe('runDeploy', () => {
     expect(workflow).toContain('yarn install --immutable')
     expect(workflow).toContain('npm ci')
     expect(workflow).toContain('pnpm exec canofold build')
+    expect(workflow).toContain('pnpm exec canofold check')
+    expect(workflow.indexOf('pnpm exec canofold check')).toBeLessThan(
+      workflow.indexOf('pnpm exec canofold build')
+    )
     expect(workflow).toContain('npm exec -- canofold build')
     expect(workflow).not.toContain('npx --yes canofold@')
     expect(workflow).toContain('Add canofold to package.json before deploying')
     expect(await readFile(join(cwd, '.canofold/deploy/netlify.toml'), 'utf8')).toContain(
-      'command = "npm exec -- canofold build"'
+      'command = "npm exec -- canofold check && npm exec -- canofold build"'
     )
   })
 
@@ -52,9 +56,9 @@ describe('runDeploy', () => {
   })
 
   it.each([
-    ['pnpm-lock.yaml', 'pnpm exec canofold build'],
-    ['yarn.lock', 'yarn exec canofold build'],
-    ['package-lock.json', 'npm exec -- canofold build']
+    ['pnpm-lock.yaml', 'pnpm exec canofold check && pnpm exec canofold build'],
+    ['yarn.lock', 'yarn exec canofold check && yarn exec canofold build'],
+    ['package-lock.json', 'npm exec -- canofold check && npm exec -- canofold build']
   ])('uses the project package manager in Netlify guidance for %s', async (lockfile, command) => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-deploy-manager-'))
     await mkdir(join(cwd, '.canofold/dist'), { recursive: true })

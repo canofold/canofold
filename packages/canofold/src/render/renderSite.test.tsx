@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { createMockGraph, createMockPage, trackedMkdtemp as mkdtemp } from '../../test/fixtures'
 import { defaultConfig } from '../config/defaults'
 import { copyRequiredMathFonts, renderSite } from './renderSite'
-import { markdownLabelsFor } from './layoutContent'
+import { markdownLabelsFor } from '../config/locale'
 
 const mathAssetsPlugin = {
   name: 'math-assets-test',
@@ -644,7 +644,7 @@ describe('renderSite', () => {
     expect(html).toContain('>ガイド</a>')
     expect(html).toContain('aria-label="ドキュメントを検索"')
     expect(html).toContain('lang="ja" aria-current="page">日本語</a>')
-    expect(html).toContain('lang="en">English</a>')
+    expect(html).toContain('lang="en">English<small>Page unavailable · Open home</small></a>')
     expect(html).not.toContain('<span>ja</span>')
     expect(html).not.toContain('<span>en</span>')
 

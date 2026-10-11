@@ -1,6 +1,7 @@
 /** Build/SSR-only entry point with compiler details hidden behind renderers. */
 export { createMarkdownRenderer } from './server/createMarkdownRenderer'
 export { defineMarkdownPlugin } from './compiler/plugins'
+export type { MarkdownContentAnalysis, MarkdownReferences } from './compiler/analyze'
 export type {
   MarkdownAssets,
   MarkdownLabels,

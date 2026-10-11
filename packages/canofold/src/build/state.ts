@@ -4,9 +4,10 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { CanofoldConfig } from '../config/types'
 import { isMdxPath } from '../content/fileKinds'
+import { assertVersionLocalDependencies } from '../content/versionBoundary'
 import type { ContentGraph, DocPage } from '../content/types'
 import { canofoldVersion } from '../version'
-import { pageAssetOutputPathsFor } from '../render/siteAssets'
+import { collectPageAssets } from '../render/siteAssets'
 import { localComponentDependencyPaths } from '../render/localComponents'
 import { prepareMdxSource } from '../markdown/importBoundary'
 import { mapConcurrent } from '../utils/concurrency'
@@ -118,7 +119,9 @@ function serializablePage(page: DocPage) {
     transformedSource: page.transformedSource,
     headings: page.headings,
     searchText: page.searchText,
+    excerpt: page.excerpt,
     codeExamples: page.codeExamples,
+    references: page.references,
     demos: page.demos,
     lastUpdated: page.lastUpdated,
     ...(page.previous ? { previous: page.previous } : {}),
@@ -184,10 +187,16 @@ export async function createBuildManifest(
   demoDelivery: 'build' | 'dev' = 'build'
 ): Promise<BuildManifest> {
   const dependenciesByPage = new Map<string, Array<{ path: string; fingerprint: string }>>()
+  const assetPathsByPage = new Map<string, string[]>()
   await mapConcurrent(graph.pages, SUPPORT_FILE_CONCURRENCY, async (page) => {
+    const assets = await collectPageAssets(cwd, [page])
+    assetPathsByPage.set(buildPageKey(page), [...new Set(assets.map((asset) => asset.outputPath))].sort())
     const paths = isMdxPath(page.relativePath)
       ? await localComponentDependencyPaths(prepareMdxSource(page.body).imports, page.sourcePath, cwd)
       : []
+    if (page.version !== graph.currentVersion && paths.length > 0) {
+      await assertVersionLocalDependencies(cwd, page, paths)
+    }
     const dependencies = await mapConcurrent(paths, SUPPORT_FILE_CONCURRENCY, async (path) => ({
       path: portablePath(cwd, path),
       fingerprint: fingerprintBytes(await readFile(path))
@@ -253,7 +262,7 @@ export async function createBuildManifest(
         }),
         outputPath: page.outputPath,
         markdownOutputPath: page.markdownOutputPath,
-        assetOutputPaths: [...pageAssetOutputPathsFor([page])].sort()
+        assetOutputPaths: assetPathsByPage.get(buildPageKey(page))!
       }
     ])
   )

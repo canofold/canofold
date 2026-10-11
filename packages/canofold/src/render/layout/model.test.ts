@@ -31,10 +31,65 @@ describe('createLayoutModel', () => {
     })
 
     expect(model.languageOptions).toEqual([
-      { locale: 'zh', routePath: '/guide/start/' },
-      { locale: 'en', routePath: '/en/guide/start/' }
+      { locale: 'zh', routePath: '/guide/start/', hasPage: true },
+      { locale: 'en', routePath: '/en/guide/start/', hasPage: true }
     ])
     expect(model.outlineHeadings).toEqual([{ level: 1, text: 'Guide', slug: 'guide' }])
+  })
+
+  it('marks missing translated and versioned pages before linking to their home pages', () => {
+    const page = createMockPage({ relativePath: 'guide/start.md', routePath: '/guide/start/' })
+    const graph = createMockGraph({
+      pages: [page],
+      locales: ['zh', 'en'],
+      versions: [
+        { id: 'current', label: 'Current', docsDir: 'docs', base: '/' },
+        { id: 'v1', label: 'v1', docsDir: 'versions/v1', base: '/v1/' }
+      ]
+    })
+    const model = createLayoutModel({
+      config: createMockConfig({ i18n: { defaultLocale: 'zh', locales: ['zh', 'en'] } }),
+      graph,
+      page,
+      home: false,
+      assets: { behaviors: [], math: false, pluginClients: [], pluginStyles: [] },
+      rawSource: ''
+    })
+
+    expect(model.languageOptions.find((option) => option.locale === 'en')).toEqual({
+      locale: 'en',
+      routePath: '/en/',
+      hasPage: false
+    })
+    expect(model.versionOptions.find((option) => option.id === 'v1')).toEqual({
+      id: 'v1',
+      label: 'v1',
+      routePath: '/v1/',
+      hasPage: false
+    })
+  })
+
+  it('marks an archived version for a visible maintenance notice', () => {
+    const page = createMockPage({ version: 'v1', versionBase: '/v1/', routePath: '/v1/' })
+    const graph = createMockGraph({
+      pages: [page],
+      versions: [
+        { id: 'current', label: 'Current', docsDir: 'docs', base: '/' },
+        { id: 'v1', label: 'v1', docsDir: 'versions/v1', base: '/v1/', status: 'archived' }
+      ]
+    })
+
+    const model = createLayoutModel({
+      config: defaultConfig,
+      graph,
+      page,
+      home: true,
+      assets: { behaviors: [], math: false, pluginClients: [], pluginStyles: [] },
+      rawSource: ''
+    })
+
+    expect(model.versionArchived).toBe(true)
+    expect(model.labels.archivedVersion).toContain('停止维护')
   })
 
   it('uses the locale brand tagline instead of the global description', () => {

@@ -133,11 +133,22 @@ describe('React Markdown composite interactions', () => {
 
     const pnpm = container.querySelector('[data-cf-tab="pnpm"]') as HTMLButtonElement
     const npm = container.querySelector('[data-cf-tab="npm"]') as HTMLButtonElement
+    const list = container.querySelector<HTMLElement>('[role="tablist"]')!
+    const scrollTo = vi.fn()
+    Object.defineProperties(list, {
+      clientWidth: { configurable: true, value: 100 },
+      scrollTo: { configurable: true, value: scrollTo }
+    })
+    Object.defineProperties(npm, {
+      offsetLeft: { configurable: true, value: 200 },
+      offsetWidth: { configurable: true, value: 50 }
+    })
 
     await act(async () => {
       npm.click()
     })
     expect(npm.getAttribute('aria-selected')).toBe('true')
+    expect(scrollTo).toHaveBeenCalledWith({ left: 150 })
     expect(container.querySelector('[data-cf-tab-panel="pnpm"]')?.hasAttribute('hidden')).toBe(true)
     expect(container.querySelector('[data-cf-tab-panel="npm"]')?.hasAttribute('hidden')).toBe(false)
 

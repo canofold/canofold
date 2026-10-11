@@ -30,6 +30,7 @@ import { rehypeTables } from './plugins/tables'
 import type { MarkdownSyntaxFeatures } from './syntaxFeatures'
 import { remarkValidateRichDirectives } from './directiveValidation'
 import { markdownPluginDirectiveNames } from './plugins'
+import { remarkCollectCodeExamples } from './analyze'
 
 export interface MarkdownPluginPlan {
   remarkPlugins: PluggableList
@@ -67,6 +68,7 @@ export function createMarkdownPluginPlan(
   for (const plugin of options.plugins) {
     if (plugin.remarkPlugins) remarkPlugins.push(...plugin.remarkPlugins)
   }
+  remarkPlugins.push(remarkCollectCodeExamples)
   if (mode === 'mdx') {
     remarkPlugins.push([remarkMdxIslandTracker, assets])
     if (features.terminals) remarkPlugins.push([remarkMdxRichBlocks, assets, options])

@@ -1,12 +1,137 @@
-import { mkdir, symlink, writeFile } from 'node:fs/promises'
+import { mkdir, symlink, utimes, writeFile } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { createMockConfig, trackedMkdtemp as mkdtemp } from '../../test/fixtures'
 import { defaultConfig } from '../config/defaults'
 import { buildContentGraph } from './graph'
 
 describe('buildContentGraph', () => {
+  it.each(['md', 'mdx'])(
+    'derives %s navigation and references from compiler plugin output',
+    async (extension) => {
+      const cwd = await mkdtemp(join(tmpdir(), 'canofold-compiled-graph-'))
+      await mkdir(join(cwd, 'docs'))
+      await writeFile(join(cwd, 'docs/index.md'), '# Home')
+      await writeFile(
+        join(cwd, `docs/guide.${extension}`),
+        '# Original\n\n[Read](./original.md)\n\n![Picture](./original.svg)'
+      )
+      const config = createMockConfig()
+      type TestNode = { type: string; value?: string; url?: string; children?: TestNode[] }
+      config.markdown.plugins = [
+        {
+          name: 'published-content',
+          version: '1',
+          remarkPlugins: [
+            () => async (tree: TestNode) => {
+              const walk = (node: TestNode) => {
+                if (node.type === 'heading') node.children = [{ type: 'text', value: 'Published' }]
+                if (node.type === 'link') node.url = './published.md'
+                if (node.type === 'image') node.url = './published.svg'
+                node.children?.forEach(walk)
+              }
+              walk(tree)
+            }
+          ]
+        }
+      ]
+      const graph = await buildContentGraph(cwd, config)
+      const page = graph.pages.find((item) => item.routePath === '/guide/')!
+      expect(page.title).toBe('Published')
+      expect(page.headings).toEqual([{ level: 1, text: 'Published', slug: 'published' }])
+      expect(page.searchText).toBe('Published Read Picture')
+      expect(page.references).toMatchObject({ links: ['./published.md'], images: ['./published.svg'] })
+    }
+  )
+  it('does not invent content dates at a shallow history boundary', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'canofold-shallow-dates-'))
+    const origin = join(root, 'origin')
+    const cwd = join(root, 'checkout')
+    const git = promisify(execFile)
+    const env = {
+      ...process.env,
+      GIT_AUTHOR_NAME: 'Canofold Test',
+      GIT_AUTHOR_EMAIL: 'test@canofold.invalid',
+      GIT_COMMITTER_NAME: 'Canofold Test',
+      GIT_COMMITTER_EMAIL: 'test@canofold.invalid'
+    }
+    await mkdir(join(origin, 'docs'), { recursive: true })
+    await writeFile(join(origin, 'docs/index.md'), '# Home')
+    await writeFile(join(origin, 'docs/explicit.md'), '---\nupdatedAt: 2026-01-01\n---\n# Explicit')
+    await git('git', ['init', '-q'], { cwd: origin })
+    await git('git', ['add', '.'], { cwd: origin })
+    await git('git', ['-c', 'commit.gpgsign=false', 'commit', '-qm', 'Add documentation'], {
+      cwd: origin,
+      env: { ...env, GIT_AUTHOR_DATE: '2026-01-02T00:00:00Z', GIT_COMMITTER_DATE: '2026-01-02T00:00:00Z' }
+    })
+    await writeFile(join(origin, 'unrelated.txt'), 'Does not change documentation')
+    await git('git', ['add', '.'], { cwd: origin })
+    await git('git', ['-c', 'commit.gpgsign=false', 'commit', '-qm', 'Unrelated change'], {
+      cwd: origin,
+      env: { ...env, GIT_AUTHOR_DATE: '2026-02-02T00:00:00Z', GIT_COMMITTER_DATE: '2026-02-02T00:00:00Z' }
+    })
+    await git('git', ['clone', '-q', '--depth', '1', pathToFileURL(origin).href, cwd])
+
+    const pages = (await buildContentGraph(cwd, defaultConfig)).pages
+    expect(pages.find((page) => page.routePath === '/')?.lastUpdated).toBe('')
+    expect(pages.find((page) => page.routePath === '/explicit/')?.lastUpdated).toBe(
+      '2026-01-01T00:00:00.000Z'
+    )
+  })
+  it('uses Git content history rather than checkout time, and hides unknown dates for dirty pages', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-git-updated-'))
+    const git = promisify(execFile)
+    await mkdir(join(cwd, 'docs'))
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await git('git', ['init', '-q'], { cwd })
+    await git('git', ['add', 'docs/index.md'], { cwd })
+    await git('git', ['commit', '-qm', 'Add documentation'], {
+      cwd,
+      env: {
+        ...process.env,
+        GIT_AUTHOR_NAME: 'Canofold Test',
+        GIT_AUTHOR_EMAIL: 'test@canofold.invalid',
+        GIT_COMMITTER_NAME: 'Canofold Test',
+        GIT_COMMITTER_EMAIL: 'test@canofold.invalid',
+        GIT_AUTHOR_DATE: '2026-01-02T00:00:00Z',
+        GIT_COMMITTER_DATE: '2026-01-02T00:00:00Z'
+      }
+    })
+    await utimes(join(cwd, 'docs/index.md'), new Date('2026-10-09'), new Date('2026-10-09'))
+
+    expect((await buildContentGraph(cwd, defaultConfig)).pages[0]?.lastUpdated).toBe(
+      '2026-01-02T00:00:00.000Z'
+    )
+
+    await writeFile(join(cwd, 'docs/index.md'), '# Uncommitted change')
+    expect((await buildContentGraph(cwd, defaultConfig)).pages[0]?.lastUpdated).toBe('')
+  })
+  it('keeps drafts out of published builds but includes them when explicitly requested', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-graph-drafts-'))
+    await mkdir(join(cwd, 'docs'), { recursive: true })
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await writeFile(join(cwd, 'docs/draft.md'), '---\nstatus: draft\n---\n# Work in progress')
+
+    const published = await buildContentGraph(cwd, defaultConfig)
+    const authoring = await buildContentGraph(cwd, defaultConfig, undefined, { includeDrafts: true })
+
+    expect(published.pages.map((page) => page.routePath)).toEqual(['/'])
+    expect(authoring.pages.find((page) => page.routePath === '/draft/')).toMatchObject({ status: 'draft' })
+  })
+  it('allows a draft-only home in the local authoring graph', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-draft-home-preview-'))
+    await mkdir(join(cwd, 'docs'))
+    await writeFile(join(cwd, 'docs/index.md'), '---\nstatus: draft\n---\n# Preview home')
+
+    const authoring = await buildContentGraph(cwd, defaultConfig, undefined, { includeDrafts: true })
+
+    expect(authoring.pages[0]).toMatchObject({ routePath: '/', status: 'draft' })
+    await expect(buildContentGraph(cwd, defaultConfig)).rejects.toThrow('Missing published home page')
+  })
   it('rejects symbolic links instead of silently omitting documentation', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-graph-symlink-'))
     await mkdir(join(cwd, 'docs'), { recursive: true })
@@ -16,6 +141,15 @@ describe('buildContentGraph', () => {
     await expect(buildContentGraph(cwd, defaultConfig)).rejects.toThrow(
       'Documentation content must not use symbolic links: linked.md'
     )
+  })
+
+  it('rejects a documentation root symlink that escapes the project', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-graph-root-link-'))
+    const external = await mkdtemp(join(tmpdir(), 'canofold-graph-external-'))
+    await writeFile(join(external, 'index.md'), '# External')
+    await symlink(external, join(cwd, 'docs'))
+
+    await expect(buildContentGraph(cwd, defaultConfig)).rejects.toThrow('must resolve to a path inside')
   })
 
   it('recognizes Markdown extensions and index names case-insensitively', async () => {

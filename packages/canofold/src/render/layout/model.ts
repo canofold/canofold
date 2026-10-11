@@ -15,12 +15,14 @@ import {
 interface LayoutLanguageOption {
   locale: string
   routePath: string
+  hasPage: boolean
 }
 
 interface LayoutVersionOption {
   id: string
   label: string
   routePath: string
+  hasPage: boolean
 }
 
 export interface LayoutModel {
@@ -39,6 +41,7 @@ export interface LayoutModel {
   labels: CanofoldLayoutLabels
   brandTagline: string
   versionLabel: string
+  versionArchived: boolean
   localeRoot: string
   markdownShowcaseHref: string
   hasMarkdownShowcase: boolean
@@ -87,7 +90,8 @@ export function createLayoutModel({
     const match = alternatePages.find((candidate) => candidate.locale === locale)
     return {
       locale,
-      routePath: match?.routePath ?? localeRootPath(locale, graph.defaultLocale, page.versionBase)
+      routePath: match?.routePath ?? localeRootPath(locale, graph.defaultLocale, page.versionBase),
+      hasPage: Boolean(match)
     }
   })
   const versionOptions = graph.versions.map((version) => {
@@ -100,7 +104,8 @@ export function createLayoutModel({
     return {
       id: version.id,
       label: version.label,
-      routePath: match?.routePath ?? localeRootPath(page.locale, graph.defaultLocale, version.base)
+      routePath: match?.routePath ?? localeRootPath(page.locale, graph.defaultLocale, version.base),
+      hasPage: Boolean(match)
     }
   })
   const allGroups = graph.sidebar[page.version]?.[page.locale] ?? []
@@ -142,6 +147,7 @@ export function createLayoutModel({
       graph.versions.length === 1 && page.version === 'current'
         ? `v${canofoldVersion}`
         : (graph.versions.find((version) => version.id === page.version)?.label ?? page.version),
+    versionArchived: graph.versions.find((version) => version.id === page.version)?.status === 'archived',
     localeRoot: publicPathFor(config, localeRoot),
     markdownShowcaseHref: publicPathFor(config, rawMarkdownShowcaseHref),
     hasMarkdownShowcase,

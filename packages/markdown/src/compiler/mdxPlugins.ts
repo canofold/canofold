@@ -12,6 +12,40 @@ import {
   markdownPluginFenceLanguages,
   markdownPluginHighlightLanguages
 } from './plugins'
+import { compile } from '@mdx-js/mdx'
+import type { Root as HastRoot } from 'hast'
+import type { Plugin } from 'unified'
+import { analyzeDocument, type MarkdownContentAnalysis, type MarkdownCodeExample } from './analyze'
+import { normalizeCallouts } from './plugins/directives'
+
+export async function prepareMdx(
+  source: string,
+  options: RenderMarkdownOptions | undefined,
+  context: MarkdownCompilerContext
+) {
+  if (options?.html && options.html !== 'trusted') {
+    throw new Error('MDX executes trusted JSX and does not support sanitize or strip HTML policies')
+  }
+  const plugins = await createMarkdownMdxPlugins(options, source, context)
+  let analysis: MarkdownContentAnalysis | undefined
+  const collect: Plugin<[], HastRoot> = () => (tree, file) => {
+    analysis = analyzeDocument(tree, file.data.canofoldCodeExamples as MarkdownCodeExample[])
+  }
+  const compiled = await compile(
+    {
+      value: normalizeCallouts(source),
+      data: { canofoldLocale: options?.locale?.trim() || undefined }
+    },
+    {
+      outputFormat: 'function-body',
+      remarkPlugins: plugins.remarkPlugins,
+      rehypePlugins: [...plugins.rehypePlugins, collect],
+      remarkRehypeOptions: plugins.remarkRehypeOptions
+    }
+  )
+  if (!analysis) throw new Error('MDX compilation did not produce content analysis')
+  return { code: String(compiled), analysis, assets: plugins.getAssets() }
+}
 
 interface MarkdownMdxPlugins {
   remarkPlugins: PluggableList

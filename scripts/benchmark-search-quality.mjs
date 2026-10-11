@@ -18,6 +18,11 @@ const cases = [
   { kind: 'term', query: '图表服务', expected: ['/guide/diagram-service/'] },
   { kind: 'term', query: '发布流程', expected: ['/guide/release-process/'] },
   {
+    kind: 'multi-section',
+    query: 'Cloudflare Pages 部署',
+    expected: ['/guide/cloudflare-deployment/']
+  },
+  {
     kind: 'short-noise',
     query: '组件',
     expected: ['/guide/component-development/', '/guide/component-reference/']
@@ -58,7 +63,13 @@ const pages = [
     '发布流程包括构建、测试、打包检查和可信发布。'
   ],
   ['content-authoring', '内容编辑', '编写普通知识文档', '内容编辑关注标题、段落、链接和资源。'],
-  ['component-reference', '组件参考', '查询组件属性和状态', '组件参考列出 API，但不介绍完整开发流程。']
+  ['component-reference', '组件参考', '查询组件属性和状态', '组件参考列出 API，但不介绍完整开发流程。'],
+  [
+    'cloudflare-deployment',
+    '部署静态站点',
+    '把 Canofold 站点发布到托管平台',
+    '构建完成后上传静态产物。\n\n## 平台参数\n\nCloudflare Pages 的构建命令是 canofold build，输出目录是 .canofold/dist。'
+  ]
 ]
 
 function runBuild(fixture, provider) {
@@ -124,7 +135,7 @@ async function loadSearchAlgorithms(outputRoot) {
     stdin: {
       contents: [
         `export { queryCompactIndex } from ${JSON.stringify(join(root, 'packages/canofold/src/search/queryCompact.ts'))}`,
-        `export { createPagefindSearchDocument, rankSearchDocuments } from ${JSON.stringify(join(root, 'packages/canofold/src/render/searchClient.ts'))}`
+        `export { createPagefindSearchDocument } from ${JSON.stringify(join(root, 'packages/canofold/src/render/searchClient.ts'))}`
       ].join('\n'),
       resolveDir: root,
       sourcefile: 'search-quality-runtime.ts',
@@ -193,10 +204,7 @@ export default {
       const documents = candidates
         .map((data) => algorithms.createPagefindSearchDocument(query, data))
         .filter(Boolean)
-      const routes = algorithms
-        .rankSearchDocuments(query, documents)
-        .slice(0, 8)
-        .map((document) => document.routePath)
+      const routes = documents.slice(0, 8).map((document) => document.routePath)
       pagefindTimings.push(performance.now() - started)
       output.push({
         kind,

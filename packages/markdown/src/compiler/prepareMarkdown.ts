@@ -10,6 +10,7 @@ import {
   markdownPluginHighlightLanguages
 } from './plugins'
 import type { PreparedMarkdown, RenderMarkdownOptions } from './types'
+import { analyzeDocument, type MarkdownCodeExample } from './analyze'
 
 export type { MarkdownAssets } from './assets'
 export type {
@@ -83,11 +84,14 @@ export async function prepareMarkdown(
     syntaxHighlighter
   })
   const tree = processor.parse(normalizeCallouts(source))
-  const document = await processor.run(tree, {
-    data: { canofoldLocale: options?.locale?.trim() || undefined }
-  })
+  const data = {
+    canofoldLocale: options?.locale?.trim() || undefined,
+    canofoldCodeExamples: [] as MarkdownCodeExample[]
+  }
+  const document = (await processor.run(tree, { data })) as PreparedMarkdown['document']
   return {
-    document: document as PreparedMarkdown['document'],
+    document,
+    analysis: analyzeDocument(document, data.canofoldCodeExamples),
     assets: assets.snapshot()
   }
 }

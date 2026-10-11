@@ -1,13 +1,17 @@
 import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
+import { createMarkdownRenderer, type MarkdownRenderer } from '@canofold/markdown/server'
+import { markdownLabelsFor } from '../config/locale'
+import { prepareMdxSource } from '../markdown/importBoundary'
 import { join, posix } from 'node:path'
 import type { CanofoldConfig, CanofoldNavigationItem, CanofoldVersionItem } from '../config/types'
 import type { ExtensionHost } from '../extensions/host'
 import { demoDirectivePlugin, demoReferencesForPage } from '../demos/references'
-import { portablePathKey, resolveProjectPath } from '../utils/paths'
+import { assertProjectPath, portablePathKey, resolveProjectPath } from '../utils/paths'
 import { isMarkdownIndexName, isMdxPath } from './fileKinds'
 import { frontmatterSchema, parseFrontmatter } from './frontmatter'
 import { htmlOutputPathFor, localeRelativePathFor, markdownOutputPathFor, routePathFor } from './routes'
 import { scanMarkdownFiles } from './scan'
+import { gitContentDates } from './gitDates'
 import type {
   ContentGraph,
   DocPage,
@@ -28,6 +32,18 @@ function humanize(segment: string) {
 
 function isLocaleHome(page: DocPage) {
   return isMarkdownIndexName(localeRelativePathFor(page.relativePath, page.locale))
+}
+
+export function assertLocaleHomePages(pages: readonly DocPage[], config: CanofoldConfig) {
+  for (const version of config.versions.items) {
+    for (const locale of config.i18n.locales) {
+      if (
+        !pages.some((page) => page.version === version.id && page.locale === locale && isLocaleHome(page))
+      ) {
+        throw new Error(`Missing published home page for version "${version.id}" locale "${locale}"`)
+      }
+    }
+  }
 }
 
 function sidebarLink(page: DocPage): SidebarLink {
@@ -198,9 +214,13 @@ async function scanVersionPages(
   cwd: string,
   config: CanofoldConfig,
   version: CanofoldVersionItem,
-  extensions?: ExtensionHost
+  renderer: MarkdownRenderer,
+  extensions?: ExtensionHost,
+  includeDrafts = false,
+  contentDates: Map<string, string> = new Map()
 ): Promise<DocPage[]> {
   const docsRoot = resolveProjectPath(cwd, version.docsDir, `versions.items[${version.id}].docsDir`)
+  await assertProjectPath(cwd, docsRoot, `versions.items[${version.id}].docsDir`)
   const scanned = await scanMarkdownFiles(docsRoot)
   const pages: DocPage[] = []
 
@@ -226,10 +246,28 @@ async function scanVersionPages(
     const parsed = parseFrontmatter(transformedSource)
     const data = frontmatterSchema.parse(parsed.data)
     const status = data.status ?? 'published'
-    if (status === 'draft') continue
-    const analysis = analyzeMarkdown(parsed.content, {
-      plugins: [...config.markdown.plugins, demoDirectivePlugin]
+    if (status === 'draft' && !includeDrafts) continue
+    const mode = isMdxPath(file.path) ? 'mdx' : 'markdown'
+    const syntax = analyzeMarkdown(parsed.content, {
+      plugins: [...config.markdown.plugins, demoDirectivePlugin],
+      mode
     })
+    // Invalid directives have no compiled document. Keep source facts for check's
+    // positional diagnostics; the renderer still rejects them before publishing.
+    const analysis = syntax.directiveIssues.length
+      ? { ...syntax, excerpt: '', anchors: syntax.headings.map((heading) => heading.slug) }
+      : await renderer.analyze(mode === 'mdx' ? prepareMdxSource(parsed.content).source : parsed.content, {
+          mode,
+          markdown: {
+            ...config.markdown,
+            ...(mode === 'mdx' ? { html: 'trusted' as const } : {}),
+            plugins: syntax.directives.some((directive) => directive.name === 'demo')
+              ? [...config.markdown.plugins, demoDirectivePlugin]
+              : config.markdown.plugins,
+            locale,
+            labels: { ...markdownLabelsFor(locale, config.i18n.messages), ...config.markdown.labels }
+          }
+        })
     const order =
       typeof data.order === 'number' && Number.isFinite(data.order) ? data.order : Number.MAX_SAFE_INTEGER
     const relativePath = file.path.replace(/\\/g, '/')
@@ -256,12 +294,20 @@ async function scanVersionPages(
       body: parsed.content,
       headings: analysis.headings,
       searchText: analysis.text,
+      excerpt: analysis.excerpt,
       codeExamples: analysis.codeExamples,
+      references: {
+        links: analysis.links,
+        linkLocations: analysis.linkLocations.map((location) => location ?? null),
+        images: analysis.images,
+        imageLocations: analysis.imageLocations.map((location) => location ?? null),
+        anchors: analysis.anchors
+      },
       demos: [],
-      lastUpdated: data.updatedAt ?? new Date(file.mtimeMs).toISOString(),
+      lastUpdated: data.updatedAt ?? contentDates.get(sourceRelativePath) ?? '',
       frontmatter: data
     }
-    page.demos = demoReferencesForPage(page, analysis.directives)
+    page.demos = demoReferencesForPage(page, syntax.directives)
     pages.push(extensions ? await extensions.extendPage(page) : page)
   }
   return pages
@@ -270,11 +316,26 @@ async function scanVersionPages(
 export async function buildContentGraph(
   cwd: string,
   config: CanofoldConfig,
-  extensions?: ExtensionHost
+  extensions?: ExtensionHost,
+  options: { includeDrafts?: boolean; renderer?: MarkdownRenderer } = {}
 ): Promise<ContentGraph> {
   const pages: DocPage[] = []
+  const renderer = options.renderer ?? createMarkdownRenderer()
+  const contentDates = await gitContentDates(
+    cwd,
+    config.versions.items.map((version) => version.docsDir)
+  )
   for (const version of config.versions.items) {
-    for (const page of await scanVersionPages(cwd, config, version, extensions)) pages.push(page)
+    for (const page of await scanVersionPages(
+      cwd,
+      config,
+      version,
+      renderer,
+      extensions,
+      options.includeDrafts,
+      contentDates
+    ))
+      pages.push(page)
   }
 
   const versionOrder = new Map(config.versions.items.map((item, index) => [item.id, index]))
@@ -292,15 +353,7 @@ export async function buildContentGraph(
   })
   assertUniquePageTargets(pages)
 
-  for (const version of config.versions.items) {
-    for (const locale of config.i18n.locales) {
-      if (
-        !pages.some((page) => page.version === version.id && page.locale === locale && isLocaleHome(page))
-      ) {
-        throw new Error(`Missing published home page for version "${version.id}" locale "${locale}"`)
-      }
-    }
-  }
+  assertLocaleHomePages(pages, config)
 
   for (const version of config.versions.items) {
     for (const locale of config.i18n.locales) {

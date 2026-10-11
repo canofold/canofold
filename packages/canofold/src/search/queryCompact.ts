@@ -13,12 +13,15 @@ export interface CompactSearchIndex {
   postings: Record<string, number[] | undefined>
 }
 
-const EXACT_TEXT_MATCH_SCORE = 2
+function matchingTokens(queryTokens: string[], value: string) {
+  const tokens = new Set(tokenize(value))
+  return queryTokens.filter((token) => tokens.has(token)).length
+}
 
 /** Rank a generated compact index with the same small deterministic client algorithm. */
 export function queryCompactIndex(query: string, index: CompactSearchIndex, limit = 8) {
   const queryTokens = tokenize(query)
-  const lower = query.toLowerCase()
+  const lower = query.trim().toLowerCase()
   const scores = new Map<number, number>()
 
   queryTokens.forEach((token) => {
@@ -31,9 +34,18 @@ export function queryCompactIndex(query: string, index: CompactSearchIndex, limi
   return Array.from(scores, ([documentId, tokenScore]) => {
     const doc = index.docs[documentId]
     if (!doc) return undefined
-    const haystack = [doc.title, doc.description, ...(doc.tags || []), doc.excerpt].join(' ').toLowerCase()
-    const textScore = haystack.includes(lower) ? EXACT_TEXT_MATCH_SCORE : 0
-    return { doc, score: tokenScore + textScore }
+    const tags = (doc.tags ?? []).join(' ')
+    const score =
+      tokenScore +
+      matchingTokens(queryTokens, doc.title) * 4 +
+      matchingTokens(queryTokens, doc.description) * 2 +
+      matchingTokens(queryTokens, tags) * 3 +
+      matchingTokens(queryTokens, doc.routePath) * 2 +
+      (doc.title.toLowerCase().includes(lower) ? 12 : 0) +
+      (doc.description.toLowerCase().includes(lower) ? 4 : 0) +
+      (tags.toLowerCase().includes(lower) ? 6 : 0) +
+      (doc.excerpt?.toLowerCase().includes(lower) ? 2 : 0)
+    return { doc, score }
   })
     .filter((item): item is { doc: CompactSearchDocument; score: number } => Boolean(item))
     .filter((item) => item.score > 0)

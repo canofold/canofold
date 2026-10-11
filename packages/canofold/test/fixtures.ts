@@ -3,6 +3,7 @@ import { onTestFinished } from 'vitest'
 import { defaultConfig } from '../src/config/defaults'
 import type { CanofoldConfig } from '../src/config/types'
 import type { ContentGraph, DocPage } from '../src/content/types'
+import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
 
 export async function trackedMkdtemp(prefix: string) {
   const directory = await mkdtemp(prefix)
@@ -15,6 +16,7 @@ export function createMockConfig(overrides: Partial<CanofoldConfig> = {}): Canof
 }
 
 export function createMockPage(overrides: Partial<DocPage> = {}): DocPage {
+  const source = analyzeMarkdown(overrides.body ?? '# Guide')
   const relativePath = overrides.relativePath ?? 'guide.md'
   const routePath = overrides.routePath ?? '/guide/'
   const routeOutput = routePath === '/' ? '' : routePath.replace(/^\/+|\/+$/g, '')
@@ -40,7 +42,15 @@ export function createMockPage(overrides: Partial<DocPage> = {}): DocPage {
     body: '# Guide',
     headings: [{ level: 1, text: 'Guide', slug: 'guide' }],
     searchText: 'Guide',
+    excerpt: '',
     codeExamples: [],
+    references: {
+      links: source.links,
+      linkLocations: source.linkLocations.map((location) => location ?? null),
+      images: source.images,
+      imageLocations: source.imageLocations.map((location) => location ?? null),
+      anchors: source.headings.map((heading) => heading.slug)
+    },
     demos: [],
     lastUpdated: '2026-07-23T00:00:00.000Z',
     frontmatter: {},

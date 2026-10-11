@@ -3,9 +3,10 @@ import { prepareMarkdown } from '../compiler/prepareMarkdown'
 import { stableJson } from '../compiler/stableJson'
 import { createHash } from 'node:crypto'
 import type { PreparedMarkdown, RenderMarkdownOptions } from '../compiler/types'
+import { prepareMdx } from '../compiler/mdxPlugins'
 
 export interface MarkdownServerContextOptions {
-  /** Maximum number of prepared entries retained by this context. */
+  /** Maximum number of prepared entries retained per format (Markdown and MDX). */
   maxEntries?: number
   /** @internal Warning state shared by one renderer's Markdown and MDX paths. */
   warningState?: Set<string>
@@ -13,6 +14,7 @@ export interface MarkdownServerContextOptions {
 
 interface MarkdownServerContext {
   prepare(source: string, options?: RenderMarkdownOptions): Promise<PreparedMarkdown>
+  prepareMdx(source: string, options?: RenderMarkdownOptions): ReturnType<typeof prepareMdx>
   clear(): void
 }
 
@@ -69,6 +71,7 @@ export function createMarkdownServerContext({
 }: MarkdownServerContextOptions = {}): MarkdownServerContext {
   const limit = Number.isFinite(maxEntries) && maxEntries > 0 ? Math.floor(maxEntries) : 64
   const prepared = new Map<string, Promise<PreparedMarkdown>>()
+  const mdx = new Map<string, ReturnType<typeof prepareMdx>>()
 
   return {
     prepare(source, options) {
@@ -79,8 +82,17 @@ export function createMarkdownServerContext({
         limit
       )
     },
+    prepareMdx(source, options) {
+      return cached(
+        mdx,
+        cacheKey(source, options),
+        () => prepareMdx(source, options, { warnedLanguages: warningState }),
+        limit
+      )
+    },
     clear() {
       prepared.clear()
+      mdx.clear()
       warningState.clear()
     }
   }

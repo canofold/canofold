@@ -1,6 +1,6 @@
 {
   "name": "canofold",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "A static-first, minimally invasive knowledge and documentation platform for Markdown, MDX, search, and AI-ready output.",
   "license": "MIT",
   "author": "Canofold Contributors",

@@ -39,6 +39,7 @@ export const defaultConfig: CanofoldConfig = {
     enabled: true,
     provider: 'compact'
   },
+  checks: { rules: {} },
   extensions: [],
   navigation: {},
   versions: {

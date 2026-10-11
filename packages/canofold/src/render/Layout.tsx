@@ -53,6 +53,7 @@ export function Layout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {page.status === 'draft' ? <meta name="robots" content="noindex, nofollow" /> : null}
         <title>{model.title}</title>
         <meta name="description" content={model.description} data-canofold-page-head="" />
         <meta property="og:title" content={model.title} data-canofold-page-head="" />
@@ -134,6 +135,16 @@ export function Layout({
               tabIndex={-1}
               data-pagefind-body={page.search ? '' : undefined}
             >
+              {page.status === 'draft' ? (
+                <p className="cf-draft-banner" role="status">
+                  {model.labels.draftPreview}
+                </p>
+              ) : null}
+              {model.versionArchived ? (
+                <p className="cf-version-banner" role="status">
+                  {model.labels.archivedVersion}
+                </p>
+              ) : null}
               {children}
             </main>
           ) : (

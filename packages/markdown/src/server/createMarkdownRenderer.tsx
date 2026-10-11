@@ -1,4 +1,4 @@
-import { evaluate } from '@mdx-js/mdx'
+import { run } from '@mdx-js/mdx'
 import { type ElementType, type ReactNode } from 'react'
 import * as runtime from 'react/jsx-runtime'
 import {
@@ -7,13 +7,12 @@ import {
   type MarkdownComponents
 } from '../react/componentMap'
 import type { MarkdownAssets } from '../compiler/assets'
-import { createMarkdownMdxPlugins } from '../compiler/mdxPlugins'
-import { normalizeCallouts } from '../compiler/plugins/directives'
+import type { MarkdownContentAnalysis } from '../compiler/analyze'
 import { createMarkdownServerContext, type MarkdownServerContextOptions } from './cache'
 import type { RenderMarkdownOptions } from '../compiler/types'
 import { MarkdownDocument, MarkdownRoot } from '../react/Markdown'
 import { type MarkdownSlots } from '../react/slots'
-import type { MarkdownUrlTransform } from '../react/urlTransform'
+import { transformMarkdownUrlProps, type MarkdownUrlTransform } from '../react/urlTransform'
 
 export interface MarkdownRenderOptions {
   markdown?: RenderMarkdownOptions
@@ -38,9 +37,26 @@ export interface RenderedMarkdown {
 }
 
 export interface MarkdownRenderer {
+  /** Static content after compiler plugins; never executes author MDX components. */
+  analyze(
+    source: string,
+    options?: { markdown?: RenderMarkdownOptions; mode?: 'markdown' | 'mdx' }
+  ): Promise<MarkdownContentAnalysis>
   render(source: string, options?: MarkdownRenderOptions): Promise<RenderedMarkdown>
   renderMdx(source: string, options?: MdxRenderOptions): Promise<RenderedMarkdown>
   clear(): void
+}
+
+/** Explicit native JSX bypasses the MDX component map. Transform its final props here. */
+function withUrlTransform(factory: typeof runtime.jsx, transform?: MarkdownUrlTransform): typeof runtime.jsx {
+  return (type, props, key) =>
+    factory(
+      type,
+      typeof type === 'string' && props && typeof props === 'object'
+        ? transformMarkdownUrlProps(props as Record<string, unknown>, transform)
+        : props,
+      key
+    )
 }
 
 /**
@@ -55,6 +71,11 @@ export function createMarkdownRenderer(contextOptions: MarkdownServerContextOpti
   const context = createMarkdownServerContext({ ...contextOptions, warningState })
 
   return {
+    async analyze(source, { markdown, mode = 'markdown' } = {}) {
+      const prepared =
+        mode === 'mdx' ? await context.prepareMdx(source, markdown) : await context.prepare(source, markdown)
+      return structuredClone(prepared.analysis)
+    },
     async render(source, options = {}) {
       const prepared = await context.prepare(source, options.markdown)
       return {
@@ -75,25 +96,13 @@ export function createMarkdownRenderer(contextOptions: MarkdownServerContextOpti
     },
 
     async renderMdx(source, options = {}) {
-      if (options.markdown?.html && options.markdown.html !== 'trusted') {
-        throw new Error('MDX executes trusted JSX and does not support sanitize or strip HTML policies')
-      }
-      const plugins = await createMarkdownMdxPlugins(options.markdown, source, {
-        warnedLanguages: warningState
+      const prepared = await context.prepareMdx(source, options.markdown)
+      const evaluated = await run(prepared.code, {
+        ...runtime,
+        jsx: withUrlTransform(runtime.jsx, options.urlTransform),
+        jsxs: withUrlTransform(runtime.jsxs, options.urlTransform),
+        baseUrl: options.baseUrl ?? import.meta.url
       })
-      const evaluated = await evaluate(
-        {
-          value: normalizeCallouts(source),
-          data: { canofoldLocale: options.markdown?.locale?.trim() || undefined }
-        },
-        {
-          ...runtime,
-          remarkPlugins: plugins.remarkPlugins,
-          rehypePlugins: plugins.rehypePlugins,
-          remarkRehypeOptions: plugins.remarkRehypeOptions,
-          baseUrl: options.baseUrl ?? import.meta.url
-        }
-      )
       const Content = evaluated.default
       const componentMap = createMarkdownMdxComponentMap(
         options.classNames,
@@ -115,7 +124,7 @@ export function createMarkdownRenderer(contextOptions: MarkdownServerContextOpti
             <Content components={componentMap} />
           </MarkdownRoot>
         ),
-        assets: plugins.getAssets()
+        assets: prepared.assets
       }
     },
 

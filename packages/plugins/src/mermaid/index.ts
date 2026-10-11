@@ -3,7 +3,7 @@ import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import { diagramFence } from '../shared/diagram'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
-const PLUGIN_VERSION = '3'
+const PLUGIN_VERSION = '4'
 
 export interface MermaidOptions {
   /** Optional browser ESM module. The bundled Mermaid runtime is used by default. */
@@ -30,19 +30,15 @@ export function mermaid(options: MermaidOptions = {}): MarkdownPlugin {
         {
           id: 'mermaid',
           module: '@canofold/plugins/client/mermaid',
-          resources: [
-            {
-              module: 'mermaid/dist/mermaid.esm.min.mjs',
-              output: 'mermaid.esm.min.mjs',
-              directories: [
+          resources: moduleUrl
+            ? []
+            : [
                 {
-                  source: 'chunks/mermaid.esm.min',
-                  output: 'chunks/mermaid.esm.min',
-                  extensions: ['.mjs']
+                  module: 'mermaid',
+                  output: 'mermaid.esm.min.mjs',
+                  bundle: true
                 }
               ]
-            }
-          ]
         }
       ],
       styles: [{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }]

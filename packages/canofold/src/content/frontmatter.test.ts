@@ -36,4 +36,15 @@ describe('parseFrontmatter', () => {
     parseFrontmatter('---\n__proto__: {canofoldPolluted: true}\n---\nBody')
     expect(Object.hasOwn(Object.prototype, 'canofoldPolluted')).toBe(false)
   })
+
+  it('requires a complete source fingerprint for reviewed translations', () => {
+    expect(frontmatterSchema.safeParse({ translation: { sourceHash: 'sha256:abc' } }).success).toBe(false)
+    expect(
+      frontmatterSchema.safeParse({ translation: { sourceHash: `sha256:${'a'.repeat(64)}` } }).success
+    ).toBe(true)
+    expect(
+      frontmatterSchema.safeParse({ translation: { sourceHash: `sha256:${'a'.repeat(64)}`, checked: true } })
+        .success
+    ).toBe(false)
+  })
 })
