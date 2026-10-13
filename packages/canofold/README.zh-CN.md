@@ -9,7 +9,7 @@
 要求 Node.js 22 或更高版本。建议把 Canofold 安装为项目本地开发依赖：
 
 ```bash
-pnpm add -D canofold
+pnpm add -D canofold @canofold/themes
 pnpm exec canofold init
 pnpm exec canofold dev
 ```
@@ -25,6 +25,28 @@ pnpm exec canofold dev
 - `preview` 在本地预览生产产物。
 - `clean` 删除生成产物和持久化构建状态。
 - `deploy` 根据当前项目生成部署说明。
+
+## 视觉主题
+
+在 `canofold.config.ts` 中导入并排列读者可以选择的主题：
+
+```ts
+import { canofold, neoBrutalist, neumorphism } from '@canofold/themes'
+import { defineConfig } from 'canofold'
+import aurora from '@acme/canofold-theme'
+
+export default defineConfig({
+  themes: [canofold, neoBrutalist, neumorphism, aurora]
+})
+```
+
+数组第一项的第一个外观是默认选择。读者切换时无需刷新页面，选择会跨页面保留。每个主题定义自己拥有稳定 ID、本地化名称、CSS 入口和外观；`canofold` 提供浅色与深色，其余官方主题各提供一种外观。不配置 `themes` 时使用 `canofold`。全部官方主题定义见 [`@canofold/themes`](../themes/README.zh-CN.md)。
+
+官方和第三方主题遵守同一份 `ThemeDefinition` 契约。Core 不导出或注册主题；官方主题来自 `@canofold/themes`，第三方主题来自各自的 npm 包，站点只负责把导入的定义放进 `themes`。主题名称属于主题定义，不属于站点通用 `i18n.messages`；后者只覆盖搜索、导航、快捷入口、Markdown 交互和 404 等界面文案。`branding` 只管理 `logo`、`logoDark` 和 `favicon`，`layout` 只管理站点几何尺寸，视觉变量与主题专属样式全部由主题包管理。第三方主题包的完整契约见 [`@canofold/themes`](../themes/README.zh-CN.md)。
+
+## 导航
+
+顶部导航通常按目录路由识别当前栏目。如果相关文档使用平级路由，可在导航项的 `activePaths` 中列出页面的精确路径；这些路径必须指向已生成的页面。例如 `{ text: '组件', link: '/button/', activePaths: ['/notice/', '/progress/'] }`，无需改动页面 URL，也能让所列页面保持“组件”选中。
 
 ## 产物控制与构建报告
 

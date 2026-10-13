@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 
-const tokensUrl = new URL('../tokens.css', import.meta.url)
 const stylesUrl = new URL('../styles.css', import.meta.url)
 
 describe('Markdown CSS entrypoints', () => {
@@ -24,7 +23,8 @@ describe('Markdown CSS entrypoints', () => {
     const imageRule = styles.match(/\.cf-image-lightbox-card img\s*\{([\s\S]*?)\}/)?.[1] ?? ''
     const openTriggerRule =
       styles.match(/\.cf-media-zoom\[data-cf-preview-open='true'\] > img\s*\{([\s\S]*?)\}/)?.[1] ?? ''
-    const imageCloseRule = styles.match(/\.cf-image-lightbox-close\s*\{([\s\S]*?)\}/)?.[1] ?? ''
+    const imageCloseRule =
+      styles.match(/\.cf-image-lightbox-close\.cf-icon-button\s*\{([\s\S]*?)\}/)?.[1] ?? ''
     const noHoverRule = styles.match(/@media \(hover: none\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
 
     expect(styles).toContain('--cf-code-line-gutter: 4.5ch')
@@ -36,7 +36,8 @@ describe('Markdown CSS entrypoints', () => {
     expect(imageCardRule).toContain('min-width: 0')
     expect(imageCardRule).toContain('max-width: min(calc(100vw - 48px), 1440px)')
     expect(imageRule).toContain('max-width: min(calc(100vw - 48px), 1440px)')
-    expect(imageRule).toContain('background: #fff')
+    expect(imageRule).toContain('background: var(--cf-media-canvas)')
+    expect(imageRule).toContain('box-shadow: var(--cf-media-shadow)')
     expect(openTriggerRule).toContain('visibility: hidden')
     expect(imageCloseRule).toContain('position: absolute')
     expect(imageCloseRule).toContain('min-width: 44px')
@@ -46,34 +47,41 @@ describe('Markdown CSS entrypoints', () => {
 
     expect(noHoverRule).toContain('.cf-anchor-island')
     expect(noHoverRule).toContain('opacity: 1')
+
+    const mobileRules = styles.split('@media (max-width: 47.5rem) {')[1] ?? ''
+    expect(mobileRules).toMatch(
+      /\.cf-anchor-island\s*\{[^}]*position: static;[^}]*margin-inline-start: 0\.35rem;[^}]*vertical-align: text-bottom;/s
+    )
   })
 
-  it('ships the shared palette and a borderless, compact geometry contract', async () => {
-    const [tokens, styles] = await Promise.all([readFile(tokensUrl, 'utf8'), readFile(stylesUrl, 'utf8')])
+  it('preserves site branding in code bars and keeps embedded media visually bounded', async () => {
+    const styles = await readFile(stylesUrl, 'utf8')
+    const contentRule = styles.match(/\.cf-content\s*\{([^}]*)\}/)?.[1] ?? ''
+    const iconRule =
+      styles.match(/\.cf-code-file-icon\[data-cf-file-icon='canofold'\]\s*\{([^}]*)\}/)?.[1] ?? ''
+    const embedRule =
+      styles.match(/\.cf-content > iframe\[data-cf-element='embed'\]\s*\{([^}]*)\}/)?.[1] ?? ''
 
-    expect(tokens).toContain('--cf-accent-500: #0088ff')
-    expect(tokens).toContain('--cf-info: #0088ff')
-    expect(tokens).toContain('--cf-info-deep: #0088ff')
-    expect(tokens).toContain('--cf-success: #34c759')
-    expect(tokens).toContain('--cf-success-deep: #34c759')
-    expect(tokens).toContain('--cf-warning: #ff8d28')
-    expect(tokens).toContain('--cf-danger: #ff383c')
-    expect(tokens).toContain('--cf-danger-deep: #ff383c')
-    expect(tokens).toContain('--cf-yellow: #ffcc00')
-    expect(tokens).toContain('--cf-body-font-size: 1rem')
-    expect(tokens).toContain('--cf-body-line-height: 1.6')
-    expect(tokens).toContain('--cf-heading-1-size: 2rem')
-    expect(tokens).toContain('--cf-heading-2-size: 1.625rem')
-    expect(tokens).toContain('--cf-heading-3-size: 1.375rem')
-    expect(tokens).toContain('--cf-heading-4-size: 1.25rem')
-    expect(tokens).toContain('--cf-heading-5-size: 1.125rem')
-    expect(tokens).toContain('--cf-heading-6-size: 1.0625rem')
-    expect(tokens).toContain('--cf-site-gutter: 2.25rem')
-    expect(tokens).toContain('--cf-header-height: 4.25rem')
-    expect(tokens).toContain('--cf-sidebar-width: 17.5rem')
-    expect(tokens).toContain('--cf-outline-width: 18.75rem')
-    expect(tokens).toContain('--cf-radius-lg: 8px')
-    expect(tokens).not.toContain('9999px')
+    expect(contentRule).not.toContain('--cf-canofold-config-icon:')
+    expect(iconRule).toContain(
+      "background-image: var(--cf-canofold-config-icon, url('./file-icons/config.svg'))"
+    )
+    expect(embedRule).toContain('border: 1px solid var(--cf-hairline)')
+  })
+
+  it('wraps terminal output at mobile widths without changing desktop formatting', async () => {
+    const styles = await readFile(stylesUrl, 'utf8')
+    const mobileRules = styles.split('@media (max-width: 47.5rem) {')[1] ?? ''
+
+    expect(styles).toMatch(/\.cf-terminal > pre\s*\{\s*overflow-x: auto;/)
+    expect(mobileRules).toMatch(/\.cf-terminal > pre\s*\{[^}]*white-space: pre-wrap;/s)
+    expect(mobileRules).toMatch(/\.cf-terminal > pre\s*\{[^}]*overflow-wrap: anywhere;/s)
+  })
+
+  it('keeps the structural Markdown geometry and component contract', async () => {
+    const styles = await readFile(stylesUrl, 'utf8')
+    const mobileRules = styles.split('@media (max-width: 47.5rem) {')[1] ?? ''
+
     expect(styles).toContain('.cf-content')
     expect(styles).toContain('.cf-content *::before')
     expect(styles).not.toMatch(/(^|\n)\*[,\n]/)
@@ -82,7 +90,6 @@ describe('Markdown CSS entrypoints', () => {
     expect(styles).toContain('line-height: calc(var(--cf-heading-line-height) + 0.05)')
     expect(styles).toContain('line-height: calc(var(--cf-heading-line-height) + 0.2)')
     expect(styles).toContain('.cf-callout')
-    expect(tokens).not.toContain('--cf-callout-info')
     expect(styles).not.toMatch(/--cf-callout-tone:/)
     expect(styles).toContain('--cf-callout-tone-deep: var(--cf-success-deep)')
     expect(styles).toContain('--cf-block-padding: 0.875rem')
@@ -90,11 +97,10 @@ describe('Markdown CSS entrypoints', () => {
       '--cf-block-toolbar-surface: color-mix(in oklab, var(--cf-ink) 6%, var(--cf-surface-secondary))'
     )
     expect(styles).toContain('--cf-block-stage-surface: var(--cf-surface-soft)')
-    expect(tokens).toContain('--cf-diagram-surface: var(--cf-surface-soft)')
-    expect(tokens).toContain('--cf-diagram-accent: var(--cf-accent-500)')
     expect(styles).not.toContain('.cf-diagram-window')
     expect(styles).toContain('height: 1.2em')
-    expect(styles).toContain('inset-inline-start: -1.75rem')
+    expect(styles).toContain('inset: 0 auto auto -32px')
+    expect(mobileRules).not.toContain('inset-inline-start: -1.75rem')
     expect(styles).toContain('var(--cf-ink-secondary) 12%')
     expect(styles).toContain(".cf-sort-button[data-sort='asc'] .cf-sort-icon path:nth-child(2)")
     expect(styles).toContain(".cf-sort-button[data-sort='desc'] .cf-sort-icon path:nth-child(1)")

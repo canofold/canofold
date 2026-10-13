@@ -2,18 +2,18 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-`@canofold/markdown` is a standalone Markdown SDK. It provides React rendering, build or SSR support for Markdown and trusted MDX, content analysis, shared theme tokens, and behavior-based browser enhancement.
+`@canofold/markdown` is a standalone Markdown SDK. It provides React rendering, build or SSR support for Markdown and trusted MDX, content analysis, structural styles, and behavior-based browser enhancement. Visual themes are supplied by `@canofold/themes`.
 
 ## Install and render
 
 ```bash
-pnpm add @canofold/markdown react react-dom
+pnpm add @canofold/markdown @canofold/themes react react-dom
 ```
 
 ```tsx
 import { Markdown } from '@canofold/markdown'
 import '@canofold/markdown/base.css'
-import '@canofold/markdown/theme.css'
+import '@canofold/themes/canofold.css'
 
 export function Article({ source }: { source: string }) {
   return <Markdown source={source} />
@@ -26,8 +26,8 @@ export function Article({ source }: { source: string }) {
 - `@canofold/markdown/server` provides the Markdown and trusted-MDX build or SSR renderer.
 - `@canofold/markdown/server/analyze` analyzes document features without rendering.
 - `@canofold/markdown/client` enhances generated static HTML.
-- `@canofold/markdown/theme` provides the shared theme contract.
-- `@canofold/markdown/base.css` and `@canofold/markdown/theme.css` provide the public style layers.
+- `@canofold/markdown/base.css` provides structural Markdown and interaction styles.
+- `@canofold/themes` provides the theme contract and official visual themes; import one of its CSS entries after `base.css`.
 
 When `@canofold/markdown/client` is imported by Vite or another bundler, React and React DOM remain host-provided peer dependencies instead of hiding another bundled React copy. When the Canofold CLI emits a standalone static site that has no host bundler, it automatically selects a self-contained local browser asset. Both modes use the same public entry and require no user-managed alias, import map, or runtime path.
 
@@ -41,7 +41,7 @@ pnpm add @canofold/plugins
 import { Markdown } from '@canofold/markdown'
 import { math } from '@canofold/plugins'
 import '@canofold/markdown/base.css'
-import '@canofold/markdown/theme.css'
+import '@canofold/themes/canofold.css'
 import '@canofold/plugins/math.css'
 
 <Markdown source={source} options={{ plugins: [math()] }} />

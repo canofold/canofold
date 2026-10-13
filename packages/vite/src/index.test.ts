@@ -221,6 +221,8 @@ describe('@canofold/vite', () => {
     const outputRoot = join(cwd, '.canofold/dist')
     const counterKey = `__canofoldViteConfigCount${Date.now()}`
     const targetKey = `__canofoldViteOptimizerTarget${Date.now()}`
+    const includeKey = `__canofoldViteOptimizerInclude${Date.now()}`
+    const dedupeKey = `__canofoldViteDedupe${Date.now()}`
     await mkdir(join(cwd, 'src'), { recursive: true })
     await linkNodeModules(cwd)
     await writeFile(
@@ -234,6 +236,8 @@ describe('@canofold/vite', () => {
   plugins: [{ name: 'fixture-count-' + suffix, configResolved(config) {
     globalThis.${counterKey} = (globalThis.${counterKey} || 0) + 1
     globalThis.${targetKey} = config.optimizeDeps.rolldownOptions.transform.target
+    globalThis.${includeKey} = config.optimizeDeps.include
+    globalThis.${dedupeKey} = config.resolve.dedupe
   } }],
   build: { lib: { entry: 'src/index.tsx', formats: ['es'] } }
 }`
@@ -276,10 +280,25 @@ describe('@canofold/vite', () => {
     onTestFinished(async () => {
       delete (globalThis as Record<string, unknown>)[counterKey]
       delete (globalThis as Record<string, unknown>)[targetKey]
+      delete (globalThis as Record<string, unknown>)[includeKey]
+      delete (globalThis as Record<string, unknown>)[dedupeKey]
       await runtime.close()
     })
     expect((globalThis as Record<string, unknown>)[counterKey]).toBe(1)
     expect((globalThis as Record<string, unknown>)[targetKey]).toBe('esnext')
+    expect((globalThis as Record<string, unknown>)[includeKey]).toEqual(
+      expect.arrayContaining([
+        'react',
+        'react/jsx-runtime',
+        'react-dom',
+        'react-dom/client',
+        '@canofold/vite > @canofold/markdown > hast-util-to-jsx-runtime',
+        '@canofold/vite > @canofold/markdown > lucide-react'
+      ])
+    )
+    expect((globalThis as Record<string, unknown>)[dedupeKey]).toEqual(
+      expect.arrayContaining(['react', 'react-dom'])
+    )
     expect(firstManifest.clientUrl).toBe(secondManifest.clientUrl)
 
     await writeFile(
@@ -288,6 +307,8 @@ describe('@canofold/vite', () => {
   plugins: [{ name: 'fixture-count-updated-' + suffix, configResolved(config) {
     globalThis.${counterKey} = (globalThis.${counterKey} || 0) + 1
     globalThis.${targetKey} = config.optimizeDeps.rolldownOptions.transform.target
+    globalThis.${includeKey} = config.optimizeDeps.include
+    globalThis.${dedupeKey} = config.resolve.dedupe
   } }],
   build: { lib: { entry: 'src/index.tsx', formats: ['es'] } }
 }`

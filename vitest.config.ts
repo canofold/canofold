@@ -20,7 +20,6 @@ export default defineConfig({
         replacement: fromRoot('packages/markdown/src/server/analyze.ts')
       },
       { find: /^@canofold\/markdown\/client$/, replacement: fromRoot('packages/markdown/src/client.ts') },
-      { find: /^@canofold\/markdown\/theme$/, replacement: fromRoot('packages/markdown/src/theme.ts') },
       { find: /^@canofold\/markdown\/server$/, replacement: fromRoot('packages/markdown/src/server.ts') },
       { find: /^@canofold\/markdown$/, replacement: fromRoot('packages/markdown/src/index.ts') }
     ]

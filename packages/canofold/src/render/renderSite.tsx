@@ -19,7 +19,7 @@ import {
   type MarkdownRenderer
 } from '@canofold/markdown/server'
 import { detectMarkdownAssets } from '@canofold/markdown/server/analyze'
-import { compileCss, markdownFileIconsDir, mathFontsDir } from './buildCss'
+import { compileCss, compileThemes, markdownFileIconsDir, mathFontsDir } from './buildCss'
 import { HomeHero } from './HomeHero'
 import { Layout } from './Layout'
 import { notFoundContentFor } from './layoutContent'
@@ -28,8 +28,8 @@ import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
 import { copyBuiltInBrandAssets } from './brandAssets'
 import { renderMdxResult } from './renderMdx'
 import { buildSearchBundle } from './searchBundle'
-import { noFlashScript } from './shellScripts'
-import { buildThemeVariables } from './theme'
+import { themeBootScript } from './shellScripts'
+import { buildLayoutVariables } from './theme'
 import { generatedOutputPaths } from '../output/plan'
 import { mapConcurrent } from '../utils/concurrency'
 import { createPageUrlTransform } from './transformUrls'
@@ -99,7 +99,9 @@ function render404Page(config: CanofoldConfig, graph: ContentGraph): string {
   const defaultLocale = graph.defaultLocale
   const content = notFoundContentFor(defaultLocale, config.i18n.messages)
   const title = escapeHtml(config.title)
-  const favicon = escapeHtml(publicPathFor(config, config.theme.favicon ?? DEFAULT_BRAND_ASSET_PATHS.favicon))
+  const favicon = escapeHtml(
+    publicPathFor(config, config.branding.favicon ?? DEFAULT_BRAND_ASSET_PATHS.favicon)
+  )
   const stylesheet = escapeHtml(publicPathFor(config, '/assets/canofold.css'))
   const currentVersion = graph.versions.find((version) => version.id === graph.currentVersion)
   const defaultHome = publicPathFor(
@@ -127,9 +129,12 @@ function render404Page(config: CanofoldConfig, graph: ContentGraph): string {
       })
     )
     .sort((left, right) => right.prefix.length - left.prefix.length)
-  const localeScript = `(function(){var p=${jsonForInlineScript(presentations)},n=location.pathname,m=p.find(function(x){var r=x.prefix.replace(/\/$/,'');return n===r||n.indexOf(x.prefix)===0});if(!m)return;document.documentElement.lang=m.locale;document.title=m.documentTitle;var t=document.getElementById('canofold-404-title'),d=document.getElementById('canofold-404-description'),h=document.getElementById('canofold-404-home');if(t)t.textContent=m.title;if(d)d.textContent=m.description;if(h){h.textContent=m.homeLabel;h.setAttribute('href',m.home)}})()`
+  const localeScript = `(function(){var p=${jsonForInlineScript(presentations)},n=location.pathname,m=p.find(function(x){var r=x.prefix.endsWith('/')?x.prefix.slice(0,-1):x.prefix;return n===r||n.indexOf(x.prefix)===0});if(!m)return;document.documentElement.lang=m.locale;document.title=m.documentTitle;var t=document.getElementById('canofold-404-title'),d=document.getElementById('canofold-404-description'),h=document.getElementById('canofold-404-home');if(t)t.textContent=m.title;if(d)d.textContent=m.description;if(h){h.textContent=m.homeLabel;h.setAttribute('href',m.home)}})()`
 
-  return `<!doctype html><html lang="${escapeHtml(defaultLocale)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>404 - ${notFoundTitle} | ${title}</title><meta name="robots" content="noindex"><link rel="icon" href="${favicon}"><link rel="stylesheet" href="${stylesheet}"><script>${noFlashScript}</script></head><body><div class="cf-not-found"><span class="cf-not-found-code">404</span><h1 id="canofold-404-title" class="cf-not-found-title">${notFoundTitle}</h1><p id="canofold-404-description" class="cf-not-found-desc">${notFoundDescription}</p><a id="canofold-404-home" href="${home}" class="cf-not-found-link">${homeLabel}</a></div><script>${localeScript}</script></body></html>`
+  const initialTheme = config.themes[0]
+  const initialAppearance = initialTheme?.appearances[0]
+  const darkClass = initialAppearance?.colorScheme === 'dark' ? ' class="dark"' : ''
+  return `<!doctype html><html lang="${escapeHtml(defaultLocale)}"${darkClass}${initialTheme ? ` data-cf-theme="${escapeHtml(initialTheme.id)}"` : ''}${initialAppearance ? ` data-cf-theme-appearance="${escapeHtml(initialAppearance.id)}"` : ''}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>404 - ${notFoundTitle} | ${title}</title><meta name="robots" content="noindex"><link rel="icon" href="${favicon}"><link rel="stylesheet" href="${stylesheet}"><script>${themeBootScript(config.themes)}</script></head><body><div class="cf-not-found"><span class="cf-not-found-code">404</span><h1 id="canofold-404-title" class="cf-not-found-title">${notFoundTitle}</h1><p id="canofold-404-description" class="cf-not-found-desc">${notFoundDescription}</p><a id="canofold-404-home" href="${home}" class="cf-not-found-link">${homeLabel}</a></div><script>${localeScript}</script></body></html>`
 }
 
 export async function renderSite({
@@ -173,8 +178,9 @@ export async function renderSite({
             isMdxPath(page.relativePath) ? 'mdx' : 'markdown'
           ).math
       )
-    const [css, customStyles] = await Promise.all([
+    const [css, themes, customStyles] = await Promise.all([
       compileCss({ math: needsMath }),
+      compileThemes(config.themes, cwd),
       readCustomStyles(cwd, config.styles)
     ])
     await copyBuiltInBrandAssets(outputRoot)
@@ -184,7 +190,7 @@ export async function renderSite({
     )
     await writeFile(
       join(outputRoot, 'assets/canofold.css'),
-      `${css}\n${buildThemeVariables(config)}\n${customStyles}\n`
+      `${css}\n${themes}\n${buildLayoutVariables(config)}\n${customStyles}\n`
     )
     await cp(markdownFileIconsDir(), join(outputRoot, 'assets/file-icons'), {
       recursive: true,

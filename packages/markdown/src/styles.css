@@ -179,9 +179,7 @@
 }
 
 .cf-content kbd {
-  box-shadow:
-    var(--cf-shadow-inset),
-    0 2px 6px rgb(29 29 31 / 0.12);
+  box-shadow: var(--cf-kbd-shadow);
   white-space: nowrap;
 }
 
@@ -518,7 +516,7 @@
   background-image: url('./file-icons/docker.svg');
 }
 .cf-code-file-icon[data-cf-file-icon='canofold'] {
-  background-image: var(--cf-canofold-config-icon);
+  background-image: var(--cf-canofold-config-icon, url('./file-icons/config.svg'));
 }
 .cf-code-file-icon[data-cf-file-icon='environment'] {
   background-image: url('./file-icons/environment.svg');
@@ -1017,6 +1015,7 @@ html.dark .cf-code > pre.shiki span,
 
 .cf-content > iframe[data-cf-element='embed'] {
   min-height: clamp(20rem, 62dvh, 45rem);
+  border: 1px solid var(--cf-hairline);
 }
 
 .cf-content > audio {
@@ -1540,7 +1539,7 @@ html.dark .cf-code > pre.shiki span,
   content: counter(cf-step);
   place-items: center;
   border-radius: 50%;
-  color: #fff;
+  color: var(--cf-on-accent);
   background: var(--cf-accent-500);
   font: 700 0.7rem/1 var(--cf-font-mono);
 }
@@ -1971,8 +1970,8 @@ html.dark .cf-code > pre.shiki span,
   max-width: min(calc(100vw - 48px), 1440px);
   max-height: 86dvh;
   border-radius: var(--cf-radius-sm);
-  background: #fff;
-  box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
+  background: var(--cf-media-canvas);
+  box-shadow: var(--cf-media-shadow);
   object-fit: contain;
 }
 
@@ -1982,15 +1981,15 @@ html.dark .cf-code > pre.shiki span,
   text-align: center;
 }
 
-.cf-image-lightbox-close {
+.cf-image-lightbox-close.cf-icon-button {
   position: absolute;
   inset: 12px 12px auto auto;
   z-index: 2;
   min-width: 44px;
   min-height: 44px;
-  color: white;
+  color: var(--cf-overlay-control-ink);
   background: var(--cf-overlay-control);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.22);
+  box-shadow: var(--cf-overlay-control-shadow);
   backdrop-filter: blur(16px) saturate(135%);
   -webkit-backdrop-filter: blur(16px) saturate(135%);
 }
@@ -2051,7 +2050,7 @@ html.dark .cf-code > pre.shiki span,
 }
 
 .cf-gallery-thumbs button.is-current {
-  color: white;
+  color: var(--cf-overlay-control-ink);
   background: color-mix(in oklab, white 28%, transparent);
 }
 
@@ -2070,7 +2069,7 @@ html.dark .cf-code > pre.shiki span,
   max-height: min(62dvh, 38.75rem);
   object-fit: contain;
   border-radius: var(--cf-radius-sm);
-  box-shadow: 0 24px 70px rgb(0 0 0 / 0.4);
+  box-shadow: var(--cf-media-shadow);
 }
 
 .cf-gallery-stage figcaption {
@@ -2130,9 +2129,9 @@ html.dark .cf-code > pre.shiki span,
 
 .cf-gallery-lightbox .cf-gallery-dialog-head .cf-icon-button,
 .cf-gallery-lightbox .cf-gallery-nav {
-  color: white;
+  color: var(--cf-overlay-control-ink);
   background: var(--cf-overlay-control);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.22);
+  box-shadow: var(--cf-overlay-control-shadow);
   backdrop-filter: blur(16px) saturate(135%);
   -webkit-backdrop-filter: blur(16px) saturate(135%);
 }
@@ -2199,7 +2198,9 @@ html.dark .cf-code > pre.shiki span,
   }
 
   .cf-anchor-island {
-    inset-inline-start: -1.75rem;
+    position: static;
+    margin-inline-start: 0.35rem;
+    vertical-align: text-bottom;
   }
 
   .cf-content dl {
@@ -2220,6 +2221,11 @@ html.dark .cf-code > pre.shiki span,
   .cf-terminal > pre {
     padding-inline: 14px;
     font-size: 0.8rem;
+  }
+
+  .cf-terminal > pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 
   .cf-gallery-lightbox,

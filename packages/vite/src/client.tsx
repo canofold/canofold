@@ -31,7 +31,10 @@ class DemoBoundary extends React.Component<PropsWithChildren<{ message: string }
 export function fitFrame(frame: HTMLIFrameElement) {
   const frameDocument = frame.contentDocument
   const content = frameDocument?.getElementById('root')
-  if (!frameDocument || !content) return () => undefined
+  const frameView = frameDocument?.defaultView
+  if (!frameDocument || !frameView || frameView.document !== frameDocument || !content) {
+    return () => undefined
+  }
   const update = () => {
     const style = frame.contentWindow?.getComputedStyle(frameDocument.body)
     const padding =
@@ -39,7 +42,7 @@ export function fitFrame(frame: HTMLIFrameElement) {
     frame.style.height = `${Math.max(192, Math.ceil(content.getBoundingClientRect().height + padding))}px`
   }
   update()
-  const observer = new ResizeObserver(update)
+  const observer = new frameView.ResizeObserver(update)
   observer.observe(content)
   return () => observer.disconnect()
 }
@@ -147,9 +150,31 @@ export function createDemoRuntime(
             frame.addEventListener(
               'load',
               () => {
+                if (revision !== generation || signal.aborted) return
                 const frameDocument = frame.contentDocument
                 const root = frameDocument?.getElementById('root')
                 if (!frameDocument || !root) return
+                const siteRoot = document.documentElement
+                const frameRoot = frameDocument.documentElement
+                const siteDocument = siteRoot.ownerDocument
+                const siteView = siteDocument.defaultView
+                if (!siteView || siteView.document !== siteDocument) return
+                const syncAppearance = () => {
+                  const theme = siteRoot.getAttribute('data-cf-theme')
+                  if (theme) frameRoot.setAttribute('data-cf-theme', theme)
+                  else frameRoot.removeAttribute('data-cf-theme')
+                  const appearance = siteRoot.getAttribute('data-cf-theme-appearance')
+                  if (appearance) frameRoot.setAttribute('data-cf-theme-appearance', appearance)
+                  else frameRoot.removeAttribute('data-cf-theme-appearance')
+                  frameRoot.classList.toggle('dark', siteRoot.classList.contains('dark'))
+                }
+                syncAppearance()
+                const appearanceObserver = new siteView.MutationObserver(syncAppearance)
+                appearanceObserver.observe(siteRoot, {
+                  attributes: true,
+                  attributeFilter: ['data-cf-theme', 'data-cf-theme-appearance', 'class']
+                })
+                frameCleanups.add(() => appearanceObserver.disconnect())
                 root.dataset.cfDemoPreview = ''
                 root.dataset.cfDemoId = id
                 root.dataset.cfDemoFailedLabel = failed

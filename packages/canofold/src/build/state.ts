@@ -8,6 +8,7 @@ import { assertVersionLocalDependencies } from '../content/versionBoundary'
 import type { ContentGraph, DocPage } from '../content/types'
 import { canofoldVersion } from '../version'
 import { collectPageAssets } from '../render/siteAssets'
+import { resolveThemeStylePath } from '../render/buildCss'
 import { localComponentDependencyPaths } from '../render/localComponents'
 import { prepareMdxSource } from '../markdown/importBoundary'
 import { mapConcurrent } from '../utils/concurrency'
@@ -67,16 +68,8 @@ export async function fingerprintExistingFiles(paths: string[]) {
 
 async function runtimeFingerprint() {
   const runtimeDir = dirname(fileURLToPath(resolveModule('canofold', import.meta.url)))
-  const markdownTheme = fileURLToPath(resolveModule('@canofold/markdown/theme', import.meta.url))
-  const markdownDir = dirname(markdownTheme)
-  const markdownFiles = [
-    join(markdownDir, 'tokens.css'),
-    join(markdownDir, 'styles.css'),
-    join(markdownDir, 'theme.css'),
-    join(markdownDir, 'base.css'),
-    markdownTheme
-  ]
-  return fingerprintExistingFiles([...(await supportFilesUnder(runtimeDir)), ...markdownFiles])
+  const markdownBase = fileURLToPath(resolveModule('@canofold/markdown/base.css', import.meta.url))
+  return fingerprintExistingFiles([...(await supportFilesUnder(runtimeDir)), markdownBase])
 }
 
 async function supportFingerprint(cwd: string, config: CanofoldConfig, pageDependencies: Set<string>) {
@@ -86,6 +79,9 @@ async function supportFingerprint(cwd: string, config: CanofoldConfig, pageDepen
   const supportFiles = (await Promise.all(docsRoots.map((root) => supportFilesUnder(root)))).flat()
   for (const style of config.styles) {
     supportFiles.push(resolveProjectPath(cwd, style, 'styles'))
+  }
+  for (const style of config.themes.flatMap((theme) => theme.styles)) {
+    supportFiles.push(resolveThemeStylePath(cwd, style))
   }
   const uniqueFiles = [...new Set(supportFiles.map((path) => resolve(path)))]
     .filter((path) => !pageDependencies.has(path))

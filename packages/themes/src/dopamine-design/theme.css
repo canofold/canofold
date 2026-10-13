@@ -1,0 +1,100 @@
+html[data-cf-theme='dopamine-design'] {
+  color-scheme: light;
+  --cf-canvas: #fff4fb;
+  --cf-ink: #4b075f;
+  --cf-ink-body: #5c176f;
+  --cf-ink-secondary: #712985;
+  --cf-ink-tertiary: #8d4b9e;
+  --cf-surface: #fff9fd;
+  --cf-surface-secondary: #ffe2f1;
+  --cf-surface-soft: #f4e8ff;
+  --cf-surface-elevated: #ffffff;
+  --cf-surface-code: #f2e7ff;
+  --cf-code-ink: #4b075f;
+  --cf-border: #8338ec;
+  --cf-border-strong: #ff006e;
+  --cf-hairline: rgb(131 56 236 / 0.25);
+  --cf-accent-500: #d9005e;
+  --cf-accent-strong: #be0052;
+  --cf-accent-deep: #940040;
+  --cf-accent-secondary: #8338ec;
+  --cf-info: #176fd6;
+  --cf-info-deep: #0759b5;
+  --cf-success: #078661;
+  --cf-success-deep: #006b4c;
+  --cf-warning: #9a6300;
+  --cf-warning-deep: #744800;
+  --cf-danger: #d81b47;
+  --cf-danger-deep: #aa1136;
+  --cf-yellow: #ffbe0b;
+  --cf-overlay: rgb(75 7 95 / 0.48);
+  --cf-on-accent: #ffffff;
+  --cf-shadow-raised: 0 14px 0 rgb(131 56 236 / 0.2), 0 20px 36px rgb(255 0 110 / 0.18);
+  --cf-shadow-raised-sm: 0 7px 0 rgb(58 134 255 / 0.22), 0 12px 22px rgb(255 0 110 / 0.16);
+  --cf-shadow-inset: inset 0 0 0 2px rgb(255 0 110 / 0.2);
+  --cf-block-shell-shadow: var(--cf-shadow-raised-sm);
+  --cf-font-display: 'Arial Rounded MT Bold', 'Avenir Next', 'PingFang SC', sans-serif;
+  --cf-font-sans: 'Avenir Next', 'PingFang SC', system-ui, sans-serif;
+  --cf-radius-sm: 16px;
+  --cf-radius-md: 24px;
+  --cf-radius-lg: 32px;
+  --cf-radius-full: 999px;
+  --cf-duration-fast: 180ms;
+  --cf-duration-normal: 260ms;
+  --cf-easing-default: cubic-bezier(0.2, 0.9, 0.25, 1.2);
+  --cf-easing-spring: cubic-bezier(0.2, 1.35, 0.4, 1);
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 3px rgb(58 134 255 / 0.42);
+  --cf-nav-item-hover-ink: #6c1dc1;
+  --cf-nav-item-hover-surface: #ffe2f1;
+  --cf-nav-item-hover-shadow: 0 6px 0 rgb(255 190 11 / 0.58);
+  --cf-nav-item-active-ink: #4b075f;
+  --cf-nav-item-active-surface: #ffbe0b;
+  --cf-nav-item-active-shadow: 0 6px 0 rgb(255 86 7 / 0.42);
+  --cf-theme-header-shadow: 0 6px 0 rgb(131 56 236 / 0.2);
+  --cf-theme-rail-shadow: inset -1px 0 0 rgb(131 56 236 / 0.18);
+  --cf-theme-control-border: 2px solid #8338ec;
+  --cf-theme-control-ink: #4b075f;
+  --cf-theme-control-surface: #ffffff;
+  --cf-theme-control-shadow: 0 7px 0 rgb(58 134 255 / 0.25);
+  --cf-theme-control-hover-ink: #21012b;
+  --cf-theme-control-hover-surface: #ff006e;
+  --cf-theme-control-hover-shadow: 0 9px 0 rgb(131 56 236 / 0.38);
+  --cf-theme-control-hover-transform: scale(1.04);
+  --cf-theme-control-active-ink: #ffffff;
+  --cf-theme-control-active-surface: #8338ec;
+  --cf-theme-control-active-shadow: 0 3px 0 rgb(58 134 255 / 0.35);
+  --cf-theme-control-active-transform: scale(0.96);
+  --cf-theme-panel-border: 2px solid #8338ec;
+  --cf-theme-panel-surface: #fff9fd;
+  --cf-theme-panel-shadow: 0 12px 0 rgb(255 190 11 / 0.42), 0 24px 42px rgb(255 0 110 / 0.2);
+  --cf-theme-block-border: 2px solid #8338ec;
+  --cf-theme-block-shadow: 0 9px 0 rgb(58 134 255 / 0.2);
+  --cf-theme-toolbar-surface: #ffe2f1;
+  --cf-theme-button-shadow: 0 8px 0 rgb(131 56 236 / 0.34);
+  --cf-theme-button-hover-surface: #8338ec;
+  --cf-theme-button-hover-shadow: 0 10px 0 rgb(255 190 11 / 0.55);
+  --cf-theme-button-hover-transform: scale(1.05);
+  --cf-theme-button-active-shadow: 0 3px 0 rgb(58 134 255 / 0.36);
+  --cf-theme-button-active-transform: scale(0.95);
+  --cf-theme-input-border: 2px solid #8338ec;
+  --cf-theme-input-surface: #ffffff;
+  --cf-theme-input-focus-shadow: 0 0 0 4px rgb(255 0 110 / 0.22);
+}
+
+html[data-cf-theme='dopamine-design'] :where(body, .cf-main, .cf-content) {
+  background-color: var(--cf-surface);
+  background-image:
+    radial-gradient(circle at 8% 8%, rgb(255 190 11 / 0.18), transparent 24%),
+    radial-gradient(circle at 92% 18%, rgb(58 134 255 / 0.14), transparent 26%),
+    radial-gradient(circle at 70% 90%, rgb(6 214 160 / 0.14), transparent 24%);
+}
+
+html[data-cf-theme='dopamine-design'] .cf-btn-primary {
+  background: linear-gradient(120deg, #ff006e, #8338ec 54%, #3a86ff);
+}
+
+html[data-cf-theme='dopamine-design'] :where(.cf-content h1, .cf-content h2, .cf-hero-title) {
+  color: #ff006e;
+  text-shadow: 3px 3px 0 #ffbe0b;
+}

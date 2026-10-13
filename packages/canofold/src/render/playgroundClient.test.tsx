@@ -118,8 +118,10 @@ describe('playground client', () => {
     source.value = '# Second'
     source.dispatchEvent(new Event('input', { bubbles: true }))
 
-    await vi.waitFor(() => expect(preview.querySelector('h1')?.textContent).toBe('Second'))
-    expect(preview.scrollTop).toBe(800)
+    await vi.waitFor(() => {
+      expect(preview.querySelector('h1')?.textContent).toBe('Second')
+      expect(preview.scrollTop).toBe(800)
+    })
     expect(source.scrollTop).toBe(400)
   })
 
@@ -170,9 +172,10 @@ describe('playground client', () => {
 
     source.value = '# Third'
     source.dispatchEvent(new Event('input', { bubbles: true }))
-    await vi.waitFor(() => expect(preview.querySelector('h1')?.textContent).toBe('Third'))
-
-    expect(firstDispose).toHaveBeenCalledOnce()
+    await vi.waitFor(() => {
+      expect(preview.querySelector('h1')?.textContent).toBe('Third')
+      expect(firstDispose).toHaveBeenCalledOnce()
+    })
     expect(secondDispose).not.toHaveBeenCalled()
     expect(preview.querySelectorAll('.cf-playground-live-preview')).toHaveLength(1)
   })

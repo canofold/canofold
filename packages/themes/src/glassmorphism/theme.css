@@ -1,0 +1,177 @@
+/* Nocturne glass: a colorless frosted material over a deep, directional night scene. */
+html[data-cf-theme='glassmorphism'] {
+  color-scheme: dark;
+  --cf-canvas: #0b1322;
+  --cf-ink: #ffffff;
+  --cf-ink-body: #e3eaf3;
+  --cf-ink-secondary: #bdc8d7;
+  --cf-ink-tertiary: #9eacbf;
+  --cf-surface: #142033;
+  --cf-surface-secondary: #1a2940;
+  --cf-surface-soft: #18263b;
+  --cf-surface-elevated: #202f46;
+  --cf-surface-code: #101a2a;
+  --cf-code-ink: #f2f6fb;
+  --cf-border: rgb(255 255 255 / 15%);
+  --cf-border-strong: rgb(255 255 255 / 30%);
+  --cf-hairline: rgb(255 255 255 / 14%);
+  --cf-accent-500: #e4b863;
+  --cf-accent-strong: #f3dca8;
+  --cf-accent-deep: #f3dca8;
+  --cf-accent-secondary: #7c9cc4;
+  --cf-info: #8ab4e2;
+  --cf-info-deep: #b9d4f0;
+  --cf-success: #70c49a;
+  --cf-success-deep: #9ad8b7;
+  --cf-warning: #e4b863;
+  --cf-warning-deep: #f3dca8;
+  --cf-danger: #ed8796;
+  --cf-danger-deep: #f5b2bc;
+  --cf-yellow: #e4b863;
+  --cf-overlay: rgb(3 7 18 / 76%);
+  --cf-on-accent: #211809;
+  --cf-shadow-raised:
+    0 16px 40px rgb(3 7 18 / 50%), inset 0 1px 0 rgb(255 255 255 / 22%), inset 0 -1px 0 rgb(2 6 16 / 35%);
+  --cf-shadow-raised-sm: 0 8px 24px rgb(3 7 18 / 45%), inset 0 1px 0 rgb(255 255 255 / 18%);
+  --cf-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 16%), inset 0 -1px 0 rgb(2 6 16 / 30%);
+  --cf-block-shell-shadow: var(--cf-shadow-raised);
+  --cf-font-display: 'Avenir Next', 'Segoe UI', 'PingFang SC', sans-serif;
+  --cf-font-sans: 'Avenir Next', 'Segoe UI', 'PingFang SC', sans-serif;
+  --cf-radius-sm: 16px;
+  --cf-radius-md: 20px;
+  --cf-radius-lg: 24px;
+  --cf-radius-full: 999px;
+  --cf-duration-fast: 500ms;
+  --cf-duration-normal: 500ms;
+  --cf-easing-default: cubic-bezier(0.16, 1, 0.3, 1);
+  --cf-easing-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --cf-glass-blur: 40px;
+  --cf-focus-ring: 0 0 0 3px rgb(228 184 99 / 28%);
+  --cf-nav-item-hover-ink: #f3dca8;
+  --cf-nav-item-hover-surface: rgb(255 255 255 / 10%);
+  --cf-nav-item-hover-shadow: inset 0 1px 0 rgb(255 255 255 / 20%);
+  --cf-nav-item-active-ink: #f3dca8;
+  --cf-nav-item-active-surface: transparent;
+  --cf-nav-item-active-shadow: none;
+}
+
+html[data-cf-theme='glassmorphism'] :where(body, .cf-main, .cf-content) {
+  background-color: var(--cf-canvas);
+  background-image:
+    radial-gradient(circle at 86% 8%, rgb(124 156 196 / 28%), transparent 34rem),
+    radial-gradient(circle at 8% 92%, rgb(51 81 122 / 35%), transparent 32rem),
+    radial-gradient(circle at 52% 46%, rgb(228 184 99 / 10%), transparent 28rem);
+  background-attachment: fixed;
+}
+
+html[data-cf-theme='glassmorphism']
+  :where(
+    .cf-header,
+    .cf-sidebar,
+    .cf-outline,
+    .cf-search-panel,
+    .cf-source-panel,
+    .cf-table-preview-card,
+    .cf-diagram-dialog
+  ) {
+  border-color: var(--cf-border);
+  background: rgb(255 255 255 / 8%);
+  box-shadow: var(--cf-shadow-raised);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+}
+
+html[data-cf-theme='glassmorphism'] .cf-menu-list {
+  border-color: var(--cf-border);
+  background: rgb(11 19 34 / 96%);
+  box-shadow: var(--cf-shadow-raised);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+}
+
+html[data-cf-theme='glassmorphism']
+  :is(
+    .cf-content .cf-demo,
+    .cf-feature,
+    .cf-doc-pagination-link,
+    .cf-content .cf-callout,
+    .cf-content .cf-aside,
+    .cf-content details,
+    .cf-content .cf-code,
+    .cf-content .cf-code-group,
+    .cf-content .cf-table-window,
+    .cf-content .cf-api-block,
+    .cf-content .cf-file-tree,
+    .cf-content .cf-link-card,
+    .cf-diagram-window
+  ) {
+  border-color: var(--cf-border);
+  background: rgb(255 255 255 / 8%);
+  box-shadow: var(--cf-block-shell-shadow);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+}
+
+html[data-cf-theme='glassmorphism']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ) {
+  border-color: var(--cf-border);
+  background: rgb(255 255 255 / 8%);
+  box-shadow: var(--cf-shadow-raised-sm);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  transition:
+    color 500ms var(--cf-easing-default),
+    background 500ms var(--cf-easing-default),
+    border-color 500ms var(--cf-easing-default),
+    box-shadow 500ms var(--cf-easing-default),
+    transform 500ms var(--cf-easing-default);
+}
+
+html[data-cf-theme='glassmorphism']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ):hover {
+  border-color: var(--cf-border-strong);
+  background: rgb(255 255 255 / 13%);
+  box-shadow:
+    0 20px 60px rgb(3 7 18 / 60%),
+    inset 0 1px 0 rgb(255 255 255 / 30%);
+  transform: translateY(-2px);
+}
+
+html[data-cf-theme='glassmorphism'] :where(.cf-search-field, .cf-source-panel textarea) {
+  border-color: var(--cf-border);
+  background: rgb(255 255 255 / 6%);
+  box-shadow: var(--cf-shadow-inset);
+  backdrop-filter: blur(30px) saturate(160%);
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+}
+
+html[data-cf-theme='glassmorphism']
+  :where(.cf-search-backdrop, .cf-source-backdrop, .cf-table-preview-backdrop),
+html[data-cf-theme='glassmorphism'] .cf-diagram-dialog::backdrop {
+  background: var(--cf-overlay);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@media (max-width: 47.5rem) {
+  html[data-cf-theme='glassmorphism'] {
+    --cf-glass-blur: 30px;
+    --cf-shadow-raised: 0 8px 24px rgb(3 7 18 / 45%), inset 0 1px 0 rgb(255 255 255 / 18%);
+  }
+}

@@ -1,7 +1,8 @@
 # Contributing to Canofold
 
-Thanks for helping improve Canofold. The repository is a pnpm workspace with four publishable packages:
+Thanks for helping improve Canofold. The repository is a pnpm workspace with five publishable packages:
 
+- `@canofold/themes` — the public theme-definition contract, official visual themes, shared tokens, and site appearance.
 - `@canofold/markdown` — Markdown/MDX React renderer, client enhancer, and shared theme contract.
 - `canofold` — static documentation CLI and site generator.
 - `@canofold/vite` — official Vite Demo Engine for component documentation.
@@ -55,13 +56,13 @@ For a release-impacting change, run `pnpm test:release`, update `CHANGELOG.md`, 
 
 ## Release process
 
-1. Set the same version in all four package manifests and add the matching section to `CHANGELOG.md`.
+1. Set the same version in all five package manifests and add the matching section to `CHANGELOG.md`.
 2. Merge the release change into `main` only after `pnpm test:release` and the pull-request checks pass.
 3. Create and push a `v<version>` tag from the resulting `main` commit.
-4. The `Release` workflow verifies metadata, rebuilds and tests the repository, and stages `@canofold/markdown`, `canofold`, `@canofold/vite`, and `@canofold/plugins` in dependency order with provenance.
-5. Review the four staged packages on npm and approve them with 2FA. The workflow creates the GitHub release only after all four versions are publicly available.
+4. The `Release` workflow verifies metadata, rebuilds and tests the repository, and stages `@canofold/themes`, `@canofold/markdown`, `canofold`, `@canofold/vite`, and `@canofold/plugins` in dependency order with provenance.
+5. Review the five staged packages on npm and approve them with 2FA. The workflow creates the GitHub release only after all five versions are publicly available.
 
-The first `v0.1.0` publication used a temporary bypass-2FA token because npm cannot stage or configure Trusted Publishing for package records that do not yet exist. Bootstrap any newly introduced package, including `@canofold/vite`, the same way exactly once, then remove the token and repository secret immediately after verifying the package and provenance. Existing package records must use `release.yml` as their GitHub Actions Trusted Publisher with stage-only permission; CI authenticates through OIDC, and a maintainer must review and approve every staged package with npm 2FA before it becomes public.
+The first `v0.1.0` publication used a temporary bypass-2FA token because npm cannot stage or configure Trusted Publishing for package records that do not yet exist. Bootstrap the new `@canofold/themes` package this way exactly once, then remove the token and repository secret immediately after verifying the package and provenance. Existing package records must use `release.yml` as their GitHub Actions Trusted Publisher with stage-only permission; CI authenticates through OIDC, and a maintainer must review and approve every staged package with npm 2FA before it becomes public.
 
 ## Pull requests
 

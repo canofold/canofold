@@ -1,0 +1,133 @@
+/* The branded homepage treatment belongs to the Canofold visual theme,
+   not to the site shell shared by every theme. */
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) {
+  --cf-hero-visual-filter: drop-shadow(
+    0 2rem 3rem color-mix(in oklab, var(--cf-accent-500) 16%, transparent)
+  );
+  --cf-hero-visual-animation: cf-home-visual-float 8s ease-in-out infinite;
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']).dark {
+  --cf-hero-visual-filter: brightness(0.88) saturate(1.12) contrast(1.06)
+    drop-shadow(0 2rem 3rem color-mix(in oklab, #6155f4 22%, transparent));
+  --cf-hero-visual-opacity: 0.74;
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-home {
+  background:
+    radial-gradient(circle at 88% 14%, color-mix(in oklab, #8c5cff 17%, transparent), transparent 31rem),
+    radial-gradient(circle at 55% 34%, color-mix(in oklab, #38c8ff 10%, transparent), transparent 28rem),
+    linear-gradient(135deg, color-mix(in oklab, var(--cf-surface) 94%, #eef4ff), #f6f7ff 58%, #f1f4ff);
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']).dark .cf-home {
+  background:
+    radial-gradient(circle at 86% 12%, color-mix(in oklab, #7658ff 18%, transparent), transparent 30rem),
+    radial-gradient(circle at 57% 31%, color-mix(in oklab, #1abcf2 9%, transparent), transparent 27rem),
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--cf-canvas) 91%, #11182c),
+      color-mix(in oklab, var(--cf-canvas) 86%, #19172b) 58%,
+      color-mix(in oklab, var(--cf-canvas) 92%, #10172a)
+    );
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-hero-title {
+  color: transparent;
+  background: linear-gradient(105deg, #06185f 0%, #0d6df0 54%, #8f43eb 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']).dark .cf-hero-title {
+  background-image: linear-gradient(105deg, #f2f5ff 0%, #70b4ff 54%, #c679ff 100%);
+}
+
+@media (forced-colors: active) {
+  :where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-hero-title {
+    color: CanvasText;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-btn {
+  border-radius: 999px;
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-btn-primary {
+  background: linear-gradient(110deg, #087af7, #395cf4 52%, #9344ec);
+  box-shadow: 0 0.8rem 1.8rem color-mix(in oklab, #5060f5 28%, transparent);
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-btn-primary:hover {
+  background: linear-gradient(110deg, #087af7, #395cf4 52%, #9344ec);
+  box-shadow: 0 1rem 2rem color-mix(in oklab, #684ff1 38%, transparent);
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']).dark .cf-btn-primary {
+  box-shadow: none;
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-btn-secondary {
+  color: #2456d2;
+  background: color-mix(in oklab, #dfe6ff 72%, var(--cf-surface));
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-btn-secondary:hover {
+  color: #5e45e7;
+  background: color-mix(in oklab, #d5dcff 78%, var(--cf-surface));
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']).dark .cf-btn-secondary {
+  color: #bec8ff;
+  background: color-mix(in oklab, #6268dc 24%, var(--cf-surface));
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']).dark .cf-btn-secondary:hover {
+  color: #d3d9ff;
+  background: color-mix(in oklab, #696ee5 32%, var(--cf-surface));
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-feature {
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--cf-surface) 94%, #f4f6ff),
+    color-mix(in oklab, var(--cf-surface) 78%, #eff1ff)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 90%, transparent),
+    0 1rem 2.5rem color-mix(in oklab, #5461bf 9%, transparent);
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']).dark .cf-feature {
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--cf-surface) 92%, #181b2d),
+    color-mix(in oklab, var(--cf-surface) 84%, #121725)
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 5%),
+    0 1rem 2.5rem rgb(0 0 0 / 24%);
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) .cf-feature-icon {
+  color: #5b62ed;
+  background: color-mix(in oklab, #7467f4 14%, var(--cf-surface));
+}
+
+:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']).dark .cf-feature-icon {
+  background: color-mix(in oklab, #786af8 24%, var(--cf-surface));
+}
+
+@keyframes cf-home-visual-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -0.55rem, 0);
+  }
+}

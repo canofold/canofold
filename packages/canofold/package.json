@@ -1,6 +1,6 @@
 {
   "name": "canofold",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A static-first, minimally invasive knowledge and documentation platform for Markdown, MDX, search, and AI-ready output.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -60,6 +60,7 @@
   },
   "dependencies": {
     "@canofold/markdown": "workspace:*",
+    "@canofold/themes": "workspace:*",
     "chokidar": "^5.0.0",
     "esbuild": "^0.28.2",
     "import-meta-resolve": "^4.2.0",

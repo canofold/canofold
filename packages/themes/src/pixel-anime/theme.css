@@ -1,0 +1,96 @@
+html[data-cf-theme='pixel-anime'] {
+  color-scheme: dark;
+  --cf-canvas: #2d1b69;
+  --cf-ink: #ffffff;
+  --cf-ink-body: #eeeaff;
+  --cf-ink-secondary: #c9c0f0;
+  --cf-ink-tertiary: #aaa0dc;
+  --cf-surface: #241653;
+  --cf-surface-secondary: #352477;
+  --cf-surface-soft: #1a1040;
+  --cf-surface-elevated: #2d1b69;
+  --cf-surface-code: #1a1040;
+  --cf-code-ink: #ffffff;
+  --cf-border: #4a90d9;
+  --cf-border-strong: #8ec5ff;
+  --cf-hairline: #4a90d9;
+  --cf-accent-500: #4a90d9;
+  --cf-accent-strong: #69a9ed;
+  --cf-accent-deep: #8ec5ff;
+  --cf-accent-secondary: #ffd93d;
+  --cf-info: #4a90d9;
+  --cf-info-deep: #8ec5ff;
+  --cf-success: #50c878;
+  --cf-success-deep: #7ee49f;
+  --cf-warning: #ffd93d;
+  --cf-warning-deep: #ffe983;
+  --cf-danger: #ff6b6b;
+  --cf-danger-deep: #ff9a9a;
+  --cf-yellow: #ffd93d;
+  --cf-overlay: rgb(10 6 28 / 0.84);
+  --cf-on-accent: #120b32;
+  --cf-shadow-raised: 4px 4px 0 #0e0928;
+  --cf-shadow-raised-sm: 3px 3px 0 #0e0928;
+  --cf-shadow-inset: inset 0 0 0 2px #8ec5ff;
+  --cf-block-shell-shadow: var(--cf-shadow-raised);
+  --cf-font-display: 'SFMono-Regular', 'JetBrains Mono', Consolas, monospace;
+  --cf-font-sans: 'SFMono-Regular', 'JetBrains Mono', Consolas, monospace;
+  --cf-radius-sm: 0;
+  --cf-radius-md: 0;
+  --cf-radius-lg: 0;
+  --cf-radius-full: 0;
+  --cf-duration-fast: 75ms;
+  --cf-duration-normal: 75ms;
+  --cf-easing-default: linear;
+  --cf-easing-spring: linear;
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 3px #ffd93d;
+  --cf-nav-item-hover-ink: #ffffff;
+  --cf-nav-item-hover-surface: #352477;
+  --cf-nav-item-hover-shadow: 4px 4px 0 #ffd93d, -2px -2px 0 #ffd93d;
+  --cf-nav-item-active-ink: #120b32;
+  --cf-nav-item-active-surface: #ffd93d;
+  --cf-nav-item-active-shadow: inset 0 0 0 2px #120b32;
+  --cf-theme-header-shadow: 0 4px 0 #0e0928;
+  --cf-theme-rail-shadow: inset -2px 0 0 #4a90d9;
+  --cf-theme-control-border: 2px solid #4a90d9;
+  --cf-theme-control-ink: #ffffff;
+  --cf-theme-control-surface: #1a1040;
+  --cf-theme-control-shadow: 3px 3px 0 #0e0928;
+  --cf-theme-control-hover-ink: #ffffff;
+  --cf-theme-control-hover-surface: #352477;
+  --cf-theme-control-hover-shadow: 4px 4px 0 #ffd93d, -2px -2px 0 #ffd93d;
+  --cf-theme-control-hover-transform: translate(2px, -2px);
+  --cf-theme-control-active-ink: #120b32;
+  --cf-theme-control-active-surface: #ffd93d;
+  --cf-theme-control-active-shadow: none;
+  --cf-theme-control-active-transform: scaleX(1.1) scaleY(0.9);
+  --cf-theme-panel-border: 2px solid #4a90d9;
+  --cf-theme-panel-surface: #1a1040;
+  --cf-theme-panel-shadow: 4px 4px 0 #0e0928;
+  --cf-theme-block-border: 2px solid #4a90d9;
+  --cf-theme-block-shadow: 4px 4px 0 #0e0928;
+  --cf-theme-toolbar-surface: #2d1b69;
+  --cf-theme-button-shadow: 4px 4px 0 #0e0928;
+  --cf-theme-button-hover-surface: #ffd93d;
+  --cf-theme-button-hover-shadow: 4px 4px 0 #ff6b6b, -2px -2px 0 #50c878;
+  --cf-theme-button-hover-transform: translate(2px, -2px);
+  --cf-theme-button-active-shadow: none;
+  --cf-theme-button-active-transform: scaleX(1.1) scaleY(0.9);
+  --cf-theme-input-border: 2px solid #4a90d9;
+  --cf-theme-input-surface: #1a1040;
+  --cf-theme-input-focus-shadow: 4px 4px 0 #ffd93d;
+}
+
+html[data-cf-theme='pixel-anime'] :where(body, .cf-main, .cf-content) {
+  background-color: var(--cf-surface);
+  background-image:
+    linear-gradient(90deg, rgb(74 144 217 / 0.06) 2px, transparent 2px),
+    linear-gradient(rgb(74 144 217 / 0.06) 2px, transparent 2px);
+  background-size: 16px 16px;
+  image-rendering: pixelated;
+}
+
+html[data-cf-theme='pixel-anime'] :where(.cf-content h1, .cf-content h2, .cf-hero-title) {
+  text-shadow: 3px 3px 0 #ff6b6b;
+}

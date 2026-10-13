@@ -1,0 +1,261 @@
+/*
+ * Neumorphism follows one top-left light source. Clickable surfaces are
+ * convex; inputs and active states are concave. Structure stays in Core.
+ */
+html[data-cf-theme='neumorphism'] {
+  color-scheme: light;
+  --cf-canvas: #e0e5ec;
+  --cf-ink: #333333;
+  --cf-ink-body: #374151;
+  --cf-ink-secondary: #4b5563;
+  --cf-ink-tertiary: #5b6470;
+  --cf-surface: #e0e5ec;
+  --cf-surface-secondary: #d1d9e6;
+  --cf-surface-soft: #e0e5ec;
+  --cf-surface-elevated: #e0e5ec;
+  --cf-surface-code: #d1d9e6;
+  --cf-code-ink: #333333;
+  --cf-border: transparent;
+  --cf-border-strong: transparent;
+  --cf-hairline: transparent;
+  --cf-accent-50: #e0e5ec;
+  --cf-accent-100: #e0e5ec;
+  --cf-accent-200: #e0e5ec;
+  --cf-accent-soft: #e0e5ec;
+  --cf-accent-500: #6d5dfc;
+  --cf-accent-strong: #5d4bef;
+  --cf-accent-deep: #4f3cda;
+  --cf-accent-secondary: #4ecdc4;
+  --cf-info: #6d5dfc;
+  --cf-info-deep: #4f3cda;
+  --cf-success: #17795f;
+  --cf-success-deep: #11654e;
+  --cf-warning: #7a5a00;
+  --cf-warning-deep: #634900;
+  --cf-danger: #c33f4d;
+  --cf-danger-deep: #a92e3b;
+  --cf-yellow: #ffe66d;
+  --cf-overlay: rgb(51 51 51 / 0.36);
+  --cf-shadow-raised: 8px 8px 16px #b8bcc2, -8px -8px 16px #ffffff;
+  --cf-shadow-raised-sm: 4px 4px 8px #b8bcc2, -4px -4px 8px #ffffff;
+  --cf-shadow-inset: inset 8px 8px 16px #b8bcc2, inset -8px -8px 16px #ffffff;
+  --cf-neumorphic-shadow-input: inset 6px 6px 12px #b8bcc2, inset -6px -6px 12px #ffffff;
+  --cf-neumorphic-shadow-input-focus: inset 2px 2px 4px #b8bcc2, inset -2px -2px 4px #ffffff;
+  --cf-neumorphic-shadow-pressed: inset 4px 4px 8px #b8bcc2, inset -4px -4px 8px #ffffff;
+  --cf-neumorphic-shadow-modal: 0 14px 36px rgb(51 51 51 / 0.18);
+  --cf-block-shell-shadow: var(--cf-shadow-raised);
+  --cf-reading-progress-fill: var(--cf-accent-500);
+  --cf-demo-border: #c4c9d0;
+  --cf-nav-item-hover-ink: var(--cf-accent-deep);
+  --cf-nav-item-hover-surface: var(--cf-surface);
+  --cf-nav-item-hover-shadow: var(--cf-shadow-raised-sm);
+  --cf-nav-item-active-ink: var(--cf-accent-deep);
+  --cf-nav-item-active-surface: var(--cf-surface);
+  --cf-nav-item-active-shadow: var(--cf-neumorphic-shadow-pressed);
+  --cf-font-display: 'Avenir Next', 'Helvetica Neue', 'PingFang SC', sans-serif;
+  --cf-font-sans: 'Avenir Next', 'Helvetica Neue', 'PingFang SC', sans-serif;
+  --cf-radius-sm: 12px;
+  --cf-radius-md: 16px;
+  --cf-radius-lg: 20px;
+  --cf-radius-full: 999px;
+  --cf-duration-fast: 300ms;
+  --cf-duration-normal: 300ms;
+  --cf-easing-default: ease-in-out;
+  --cf-easing-spring: ease-in-out;
+  --cf-glass-blur: 0px;
+}
+
+html[data-cf-theme='neumorphism'] :where(.cf-header, .cf-sidebar) {
+  border-color: transparent;
+  background: var(--cf-canvas);
+}
+
+html[data-cf-theme='neumorphism'] .cf-header {
+  border-bottom: 0;
+  box-shadow: var(--cf-shadow-raised-sm);
+}
+
+html[data-cf-theme='neumorphism'] .cf-search-trigger {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-neumorphic-shadow-input);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='neumorphism'] .cf-search-trigger:hover {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-neumorphic-shadow-pressed);
+}
+
+html[data-cf-theme='neumorphism'] .cf-menu-list {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised);
+  backdrop-filter: none;
+}
+
+html[data-cf-theme='neumorphism']
+  :where(.cf-sidebar-toggle, .cf-icon-button, .cf-version-badge, .cf-search-close, .cf-diagram-dialog-close) {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised-sm);
+}
+
+html[data-cf-theme='neumorphism']
+  :where(
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close
+  ):hover {
+  color: var(--cf-accent-deep);
+  background: var(--cf-surface);
+  box-shadow:
+    2px 2px 4px #b8bcc2,
+    -2px -2px 4px #ffffff;
+}
+
+html[data-cf-theme='neumorphism']
+  :where(
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close
+  ):active,
+html[data-cf-theme='neumorphism'] .cf-menu[open] > summary {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-neumorphic-shadow-pressed);
+}
+
+html[data-cf-theme='neumorphism'] .cf-content .cf-demo {
+  border-color: transparent;
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised);
+}
+
+html[data-cf-theme='neumorphism'] .cf-content kbd {
+  box-shadow: var(--cf-neumorphic-shadow-pressed);
+}
+
+html[data-cf-theme='neumorphism'] :where(.cf-content .cf-demo-details, .cf-content .cf-demo-toolbar) {
+  background: var(--cf-surface);
+}
+
+html[data-cf-theme='neumorphism']
+  :where(.cf-content .cf-demo-action, .cf-diagram-actions button, .cf-diagram-zoom-controls button) {
+  color: var(--cf-ink-secondary);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised-sm);
+}
+
+html[data-cf-theme='neumorphism']
+  :where(
+    .cf-content .cf-demo-action:hover,
+    .cf-content .cf-demo-action:focus-visible,
+    .cf-diagram-actions button:hover,
+    .cf-diagram-zoom-controls button:hover:not(:disabled)
+  ) {
+  color: var(--cf-accent-deep);
+  background: var(--cf-surface);
+  box-shadow:
+    2px 2px 4px #b8bcc2,
+    -2px -2px 4px #ffffff;
+}
+
+html[data-cf-theme='neumorphism']
+  :where(
+    .cf-content .cf-demo-action:active,
+    .cf-content .cf-demo-source-toggle[aria-expanded='true'],
+    .cf-diagram-actions button:active,
+    .cf-diagram-zoom-controls button:active:not(:disabled)
+  ) {
+  color: var(--cf-accent-deep);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-neumorphic-shadow-pressed);
+}
+
+html[data-cf-theme='neumorphism'] .cf-btn {
+  color: var(--cf-accent-deep);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised);
+}
+
+html[data-cf-theme='neumorphism'] .cf-btn:hover {
+  color: var(--cf-accent-500);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised-sm);
+}
+
+html[data-cf-theme='neumorphism'] .cf-btn:active {
+  color: var(--cf-accent-deep);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-neumorphic-shadow-pressed);
+}
+
+html[data-cf-theme='neumorphism'] :where(.cf-doc-pagination-link, .cf-content .cf-link-card) {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised);
+}
+
+html[data-cf-theme='neumorphism'] :where(.cf-doc-pagination-link, .cf-content .cf-link-card):hover {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised-sm);
+}
+
+html[data-cf-theme='neumorphism'] :where(.cf-doc-pagination-link, .cf-content .cf-link-card):active {
+  box-shadow: var(--cf-neumorphic-shadow-pressed);
+}
+
+html[data-cf-theme='neumorphism'] .cf-content .cf-file-tree {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised);
+}
+
+/* Modal surfaces float above a scrim, so they use ambient elevation rather
+ * than the dual shadow reserved for surfaces extruded from the same canvas. */
+html[data-cf-theme='neumorphism']
+  :where(.cf-search-panel, .cf-source-panel, .cf-table-preview-card, .cf-diagram-dialog) {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-neumorphic-shadow-modal);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='neumorphism']
+  :where(.cf-search-backdrop, .cf-source-backdrop, .cf-table-preview-backdrop) {
+  background: var(--cf-overlay);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='neumorphism'] .cf-diagram-dialog::backdrop {
+  background: var(--cf-overlay);
+}
+
+html[data-cf-theme='neumorphism'] .cf-source-panel textarea {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-neumorphic-shadow-input);
+}
+
+html[data-cf-theme='neumorphism'] .cf-search-field {
+  background: var(--cf-surface);
+  box-shadow: var(--cf-neumorphic-shadow-input);
+}
+
+html[data-cf-theme='neumorphism'] .cf-search-field:focus-within {
+  box-shadow: var(--cf-neumorphic-shadow-input-focus);
+}
+
+html[data-cf-theme='neumorphism'] :where(.cf-command-item:hover, .cf-search-result:hover, .cf-command-glyph) {
+  color: var(--cf-accent-deep);
+  background: transparent;
+}
+
+@media (max-width: 47.5rem) {
+  html[data-cf-theme='neumorphism'] {
+    --cf-shadow-raised: 4px 4px 8px #b8bcc2, -4px -4px 8px #ffffff;
+    --cf-shadow-raised-sm: 2px 2px 4px #b8bcc2, -2px -2px 4px #ffffff;
+    --cf-shadow-inset: inset 4px 4px 8px #b8bcc2, inset -4px -4px 8px #ffffff;
+    --cf-block-shell-shadow: var(--cf-shadow-raised);
+  }
+}

@@ -10,8 +10,7 @@ const budgets = {
   'client/index.js': 5 * 1024,
   'server.js': 3 * 1024,
   'server/analyze.js': 7 * 1024,
-  'base.css': 10 * 1024,
-  'theme.css': 4 * 1024
+  'base.css': 10 * 1024
 }
 const syncBudgets = {
   // The React entry owns the compiler and component graph by design. Keep the

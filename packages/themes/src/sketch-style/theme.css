@@ -1,0 +1,123 @@
+/* Pencil sketch: warm paper, imperfect strokes, serif italics and dry graphite shadows. */
+html[data-cf-theme='sketch-style'] {
+  color-scheme: light;
+  --cf-canvas: #f5f0e8;
+  --cf-ink: #2c2c2c;
+  --cf-ink-body: #34302d;
+  --cf-ink-secondary: #5a554f;
+  --cf-ink-tertiary: #6d655d;
+  --cf-surface: #f5f0e8;
+  --cf-surface-secondary: #e8e2d8;
+  --cf-surface-soft: #eee8de;
+  --cf-surface-elevated: #faf6ef;
+  --cf-surface-code: #e8e2d8;
+  --cf-code-ink: #2c2c2c;
+  --cf-border: #2c2c2c;
+  --cf-border-strong: #2c2c2c;
+  --cf-hairline: #766f67;
+  --cf-accent-500: #c0392b;
+  --cf-accent-strong: #9f2f24;
+  --cf-accent-deep: #81261d;
+  --cf-accent-secondary: #2d6fa3;
+  --cf-info: #2d6fa3;
+  --cf-info-deep: #1f537c;
+  --cf-success: #287a49;
+  --cf-success-deep: #1d5d36;
+  --cf-warning: #9b6500;
+  --cf-warning-deep: #714900;
+  --cf-danger: #b5352b;
+  --cf-danger-deep: #84271f;
+  --cf-yellow: #e5bd47;
+  --cf-overlay: rgb(44 44 44 / 68%);
+  --cf-on-accent: #ffffff;
+  --cf-shadow-raised: 4px 4px 0 rgb(44 44 44 / 20%);
+  --cf-shadow-raised-sm: 2px 2px 0 rgb(44 44 44 / 24%);
+  --cf-shadow-inset: inset 0 0 0 1px rgb(44 44 44 / 24%);
+  --cf-block-shell-shadow: var(--cf-shadow-raised);
+  --cf-font-display: Georgia, 'Times New Roman', 'Songti SC', serif;
+  --cf-font-sans: Georgia, 'Times New Roman', 'Songti SC', serif;
+  --cf-radius-sm: 2px;
+  --cf-radius-md: 3px;
+  --cf-radius-lg: 4px;
+  --cf-radius-full: 6px;
+  --cf-duration-fast: 180ms;
+  --cf-duration-normal: 200ms;
+  --cf-easing-default: ease-out;
+  --cf-easing-spring: ease-out;
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 3px rgb(45 111 163 / 24%);
+  --cf-nav-item-hover-ink: #f5f0e8;
+  --cf-nav-item-hover-surface: #2c2c2c;
+  --cf-nav-item-hover-shadow: 2px 2px 0 rgb(44 44 44 / 24%);
+  --cf-nav-item-active-ink: #81261d;
+  --cf-nav-item-active-surface: transparent;
+  --cf-nav-item-active-shadow: none;
+}
+
+html[data-cf-theme='sketch-style'] :where(body, .cf-main, .cf-content) {
+  background-color: var(--cf-canvas);
+  background-image: url("data:image/svg+xml,%3Csvg width='8' height='8' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M-2 8L8-2M2 10L10 2' stroke='%232c2c2c' stroke-opacity='.035' stroke-width='.7'/%3E%3C/svg%3E");
+}
+
+html[data-cf-theme='sketch-style'] :where(.cf-content h1, .cf-content h2, .cf-content h3, .cf-hero-title) {
+  font-style: italic;
+  text-decoration-color: rgb(44 44 44 / 42%);
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 0.18em;
+}
+
+html[data-cf-theme='sketch-style']
+  :where(.cf-menu-list, .cf-search-panel, .cf-source-panel, .cf-table-preview-card, .cf-diagram-dialog),
+html[data-cf-theme='sketch-style']
+  :is(
+    .cf-content .cf-demo,
+    .cf-content .cf-callout,
+    .cf-content details,
+    .cf-content .cf-code,
+    .cf-content .cf-table-window,
+    .cf-content .cf-file-tree,
+    .cf-content .cf-link-card
+  ) {
+  border-style: dashed;
+  border-color: var(--cf-border);
+  background: var(--cf-surface-elevated);
+  box-shadow: var(--cf-shadow-raised);
+}
+
+html[data-cf-theme='sketch-style']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ) {
+  border: 2px dashed var(--cf-border);
+  background: transparent;
+  box-shadow: var(--cf-shadow-raised-sm);
+  transform: rotate(-0.35deg);
+}
+
+html[data-cf-theme='sketch-style']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ):hover {
+  color: var(--cf-surface);
+  background: var(--cf-ink);
+  transform: translate(-1px, -1px) rotate(0.35deg);
+}
+
+html[data-cf-theme='sketch-style'] :where(.cf-search-field, .cf-source-panel textarea) {
+  border: 2px dashed var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-inset);
+}

@@ -79,6 +79,7 @@ export function formatServerSentEvent(event: string, data = '') {
 }
 
 export function injectLiveReloadScript(html: string, eventsPath = '/__canofold/events') {
+  if (/\bdata-canofold-live-reload\s*=\s*(["'])off\1/i.test(html)) return html
   const script = `<script type="module">
 const source=new EventSource(${JSON.stringify(eventsPath)});
 let connected=false,disconnected=false;

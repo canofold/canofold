@@ -51,16 +51,6 @@ export function bootstrapShell() {
   let navigationController: AbortController | undefined
   const actionTimers = new Map<HTMLElement, ReturnType<typeof setTimeout>>()
 
-  const homeHeader = q('.cf-header-home')
-  function syncHomeHeader() {
-    const progress = Math.min(1, Math.max(0, window.scrollY / 96))
-    homeHeader?.style.setProperty('--cf-header-surface-mix', progress * 68 + '%')
-    homeHeader?.style.setProperty('--cf-header-backdrop-blur', progress * 22 + 'px')
-    homeHeader?.style.setProperty('--cf-header-backdrop-saturation', 100 + progress * 60 + '%')
-  }
-  syncHomeHeader()
-  on(window, 'scroll', syncHomeHeader, { passive: true })
-
   function disposePage() {
     window.__canofoldSearchDispose?.()
     window.__canofoldMarkdownDispose?.()
@@ -347,13 +337,33 @@ export function bootstrapShell() {
     return copyFallback(text)
   }
 
-  qa('[data-canofold-theme-toggle]').forEach((button) => {
-    button.setAttribute('aria-pressed', String(root.classList.contains('dark')))
-    on(button, 'click', () => {
-      const on = root.classList.toggle('dark')
-      button.setAttribute('aria-pressed', String(on))
+  const visualThemeOptions = qa<HTMLButtonElement>('[data-canofold-theme-option]')
+  const selectedTheme = () =>
+    root.dataset.cfTheme && root.dataset.cfThemeAppearance
+      ? `${root.dataset.cfTheme}:${root.dataset.cfThemeAppearance}`
+      : undefined
+  const syncVisualThemeOptions = () => {
+    const selected = selectedTheme()
+    visualThemeOptions.forEach((option) => {
+      option.setAttribute('aria-pressed', String(option.dataset.canofoldThemeOption === selected))
+    })
+  }
+  syncVisualThemeOptions()
+  visualThemeOptions.forEach((option) => {
+    on(option, 'click', () => {
+      const selection = option.dataset.canofoldThemeOption
+      if (!selection) return
+      const [theme, appearance] = selection.split(':')
+      if (!theme || !appearance) return
+      root.dataset.cfTheme = theme
+      root.dataset.cfThemeAppearance = appearance
+      root.classList.toggle('dark', option.dataset.canofoldThemeScheme === 'dark')
+      syncVisualThemeOptions()
+      const menu = option.closest('details')
+      menu?.removeAttribute('open')
+      menu?.querySelector<HTMLElement>('summary')?.focus()
       try {
-        localStorage.setItem('canofold-theme', on ? 'dark' : 'light')
+        localStorage.setItem('canofold-visual-theme', selection)
       } catch {}
     })
   })

@@ -106,6 +106,12 @@ describe('resolveRequestPath', () => {
     expect(html).toContain("overlay.textContent='⚠️ Build error:\\n\\n'+msg;")
   })
 
+  it('keeps live reload out of explicitly isolated HTML assets', () => {
+    const html = '<html data-canofold-live-reload="off"><body><main>Sandboxed embed</main></body></html>'
+
+    expect(injectLiveReloadScript(html)).toBe(html)
+  })
+
   it('ends and removes every live-reload stream during shutdown', () => {
     let ended = 0
     const clients = new Set([
@@ -205,6 +211,10 @@ describe('resolveRequestPath', () => {
     await mkdir(join(cwd, 'guide'), { recursive: true })
     await writeFile(join(cwd, 'index.html'), '<html><body>Home</body></html>')
     await writeFile(join(cwd, 'guide/index.html'), '<html><body>Guide</body></html>')
+    await writeFile(
+      join(cwd, 'embed.html'),
+      '<html data-canofold-live-reload="off"><body>Embedded asset</body></html>'
+    )
     await writeFile(join(cwd, 'asset.txt'), 'Asset')
     await writeFile(join(cwd, 'CNAME'), 'docs.example.com')
     await writeFile(join(cwd, '404.html'), '<html><body>Custom missing</body></html>')
@@ -216,6 +226,11 @@ describe('resolveRequestPath', () => {
       expect(home.body).toContain('Home')
       expect(home.body).toContain('/docs/__canofold/events')
       expect(home.headers['cache-control']).toBe('no-store')
+
+      const embed = await requestStaticServer(server.port, '/docs/embed.html')
+      expect(embed.status).toBe(200)
+      expect(embed.body).toContain('Embedded asset')
+      expect(embed.body).not.toContain('/docs/__canofold/events')
 
       const head = await requestStaticServer(server.port, '/docs/asset.txt', 'HEAD')
       expect(head.status).toBe(200)

@@ -8,6 +8,9 @@ afterEach(async () => {
   await act(async () => window.__canofoldDemoDispose?.())
   delete window.__canofoldDemoDispose
   document.body.innerHTML = ''
+  document.documentElement.removeAttribute('data-cf-theme')
+  document.documentElement.removeAttribute('data-cf-theme-appearance')
+  document.documentElement.classList.remove('dark')
   history.replaceState(null, '', '/')
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
@@ -52,7 +55,10 @@ describe('Demo client', () => {
       if (type === 'load' && typeof listener === 'function') onLoad = listener
     })
     let observed: Element | undefined
+    let appearanceObserved: Node | undefined
+    let syncAppearanceFromMutation: () => void = () => {}
     const disconnect = vi.fn()
+    const disconnectAppearance = vi.fn()
     vi.stubGlobal(
       'ResizeObserver',
       class {
@@ -62,8 +68,22 @@ describe('Demo client', () => {
         disconnect = disconnect
       }
     )
+    vi.stubGlobal(
+      'MutationObserver',
+      class {
+        constructor(callback: MutationCallback) {
+          syncAppearanceFromMutation = () => callback([], this as unknown as MutationObserver)
+        }
+        observe(value: Node) {
+          appearanceObserved = value
+        }
+        disconnect = disconnectAppearance
+      }
+    )
     document.body.innerHTML =
       '<section data-cf-component="demo" data-cf-demo-sandbox="iframe"><h3 class="cf-demo-title">Frame</h3><div data-cf-demo-preview data-cf-demo-id="demo"></div></section>'
+    document.documentElement.setAttribute('data-cf-theme', 'neumorphism')
+    document.documentElement.setAttribute('data-cf-theme-appearance', 'default')
     const stylesheet = document.createElement('link')
     stylesheet.rel = 'stylesheet'
     stylesheet.href = '/assets/canofold.css'
@@ -71,11 +91,24 @@ describe('Demo client', () => {
     const runtime = createDemoRuntime(new Map(), undefined, 'https://example.test/demo.js')
     await runtime.bootstrapDemos()
     const frame = document.querySelector('iframe')!
+    Object.assign(frame.contentWindow!, { ResizeObserver })
     expect(frame.title).toBe('Frame')
     expect(frame.getAttribute('sandbox')).toBe('allow-scripts allow-same-origin')
     expect(frame.srcdoc).not.toContain('<script')
     frame.contentDocument!.body.innerHTML = '<div id="root"></div>'
     onLoad?.call(frame, new Event('load'))
+    expect(appearanceObserved).toBe(document.documentElement)
+    expect(frame.contentDocument!.documentElement.dataset.cfTheme).toBe('neumorphism')
+    expect(frame.contentDocument!.documentElement.dataset.cfThemeAppearance).toBe('default')
+    document.documentElement.dataset.cfTheme = 'canofold'
+    document.documentElement.dataset.cfThemeAppearance = 'dark'
+    document.documentElement.classList.add('dark')
+    syncAppearanceFromMutation()
+    await vi.waitFor(() => {
+      expect(frame.contentDocument!.documentElement.dataset.cfTheme).toBe('canofold')
+      expect(frame.contentDocument!.documentElement.dataset.cfThemeAppearance).toBe('dark')
+      expect(frame.contentDocument!.documentElement.classList.contains('dark')).toBe(true)
+    })
     expect(observed).toBe(frame.contentDocument!.getElementById('root'))
     expect(frame.contentDocument!.querySelector('link[rel="stylesheet"]')?.getAttribute('href')).toBe(
       '/assets/canofold.css'
@@ -90,8 +123,72 @@ describe('Demo client', () => {
     )
     runtime.dispose()
     expect(disconnect).toHaveBeenCalledOnce()
+    expect(disconnectAppearance).toHaveBeenCalledOnce()
     expect(() => fitFrame(document.createElement('iframe'))()).not.toThrow()
     stylesheet.remove()
+  })
+
+  it('ignores an iframe load that finishes after the demo runtime was disposed', async () => {
+    let onLoad: EventListener | undefined
+    vi.spyOn(HTMLIFrameElement.prototype, 'addEventListener').mockImplementation((type, listener) => {
+      if (type === 'load' && typeof listener === 'function') onLoad = listener
+    })
+    const observe = vi.fn()
+    vi.stubGlobal(
+      'MutationObserver',
+      class {
+        observe = observe
+        disconnect() {}
+      }
+    )
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    )
+    document.body.innerHTML =
+      '<section data-cf-component="demo" data-cf-demo-sandbox="iframe"><div data-cf-demo-preview data-cf-demo-id="demo"></div></section>'
+    const runtime = createDemoRuntime(new Map(), undefined, 'https://example.test/demo.js')
+
+    await runtime.bootstrapDemos()
+    const frame = document.querySelector('iframe')!
+    frame.contentDocument!.body.innerHTML = '<div id="root"></div>'
+    runtime.dispose()
+
+    expect(() => onLoad?.call(frame, new Event('load'))).not.toThrow()
+    expect(observe).not.toHaveBeenCalled()
+    expect(frame.contentDocument!.querySelector('script')).toBeNull()
+  })
+
+  it('ignores an iframe load when its site document is no longer the active document', async () => {
+    let onLoad: EventListener | undefined
+    vi.spyOn(HTMLIFrameElement.prototype, 'addEventListener').mockImplementation((type, listener) => {
+      if (type === 'load' && typeof listener === 'function') onLoad = listener
+    })
+    const observe = vi.fn()
+    vi.stubGlobal(
+      'MutationObserver',
+      class {
+        observe = observe
+        disconnect() {}
+      }
+    )
+    document.body.innerHTML =
+      '<section data-cf-component="demo" data-cf-demo-sandbox="iframe"><div data-cf-demo-preview data-cf-demo-id="demo"></div></section>'
+    const runtime = createDemoRuntime(new Map(), undefined, 'https://example.test/demo.js')
+
+    await runtime.bootstrapDemos()
+    const frame = document.querySelector('iframe')!
+    frame.contentDocument!.body.innerHTML = '<div id="root"></div>'
+    vi.spyOn(document, 'defaultView', 'get').mockReturnValue({
+      document: document.implementation.createHTMLDocument('replacement')
+    } as unknown as Window & typeof globalThis)
+
+    expect(() => onLoad?.call(frame, new Event('load'))).not.toThrow()
+    expect(observe).not.toHaveBeenCalled()
+    expect(frame.contentDocument!.querySelector('script')).toBeNull()
   })
   it('toggles highlighted source without remounting its preview', async () => {
     document.body.innerHTML =
@@ -199,6 +296,7 @@ describe('Demo client', () => {
     )
     const frame = document.createElement('iframe')
     document.body.append(frame)
+    Object.assign(frame.contentWindow!, { ResizeObserver })
     const doc = frame.contentDocument!
     doc.body.innerHTML = '<div id="root"></div>'
     doc.body.style.padding = '24px'

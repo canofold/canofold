@@ -41,12 +41,15 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
     ...input,
     docsDir: currentDocsDir,
     styles: input.styles ? [...input.styles] : base.styles,
+    themes: [...(input.themes ?? base.themes)],
     demos: {
       engine: input.demos?.engine ?? base.demos.engine,
       setup: input.demos?.setup ?? base.demos.setup
     },
     layout: {
-      header: input.layout?.header ?? base.layout.header
+      header: input.layout?.header ?? base.layout.header,
+      sidebarWidth: input.layout?.sidebarWidth ?? base.layout.sidebarWidth,
+      outlineWidth: input.layout?.outlineWidth ?? base.layout.outlineWidth
     },
     seo: {
       robots: input.seo?.robots ?? base.seo.robots
@@ -72,25 +75,9 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
       // Plugin entries hold functions; pass them through untouched.
       plugins: input.markdown?.plugins ? [...input.markdown.plugins] : base.markdown.plugins
     },
-    theme: {
-      ...base.theme,
-      ...input.theme,
-      tokens: {
-        colors: {
-          light: {
-            ...base.theme.tokens.colors?.light,
-            ...input.theme?.tokens?.colors?.light
-          },
-          dark: {
-            ...base.theme.tokens.colors?.dark,
-            ...input.theme?.tokens?.colors?.dark
-          }
-        },
-        typography: { ...base.theme.tokens.typography, ...input.theme?.tokens?.typography },
-        layout: { ...base.theme.tokens.layout, ...input.theme?.tokens?.layout },
-        geometry: { ...base.theme.tokens.geometry, ...input.theme?.tokens?.geometry },
-        motion: { ...base.theme.tokens.motion, ...input.theme?.tokens?.motion }
-      }
+    branding: {
+      ...base.branding,
+      ...input.branding
     },
     search: {
       enabled: input.search?.enabled ?? base.search.enabled,
@@ -104,7 +91,10 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
     navigation: Object.fromEntries(
       Object.entries(input.navigation ?? base.navigation).map(([locale, items]) => [
         locale,
-        items.map((item) => ({ ...item }))
+        items.map((item) => ({
+          ...item,
+          ...(item.activePaths ? { activePaths: [...item.activePaths] } : {})
+        }))
       ])
     ),
     versions,
@@ -127,7 +117,7 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
   }
   // A custom light logo without a matching dark logo should be reused in both themes,
   // not paired with Canofold's built-in dark logo.
-  if (input.theme?.logo && !input.theme.logoDark) delete config.theme.logoDark
+  if (input.branding?.logo && !input.branding.logoDark) delete config.branding.logoDark
   return config
 }
 
@@ -191,14 +181,22 @@ function assertVersionConfig(config: CanofoldConfig) {
 }
 
 function assertEffectiveInput(input: CanofoldConfigInput) {
+  const themes = input.themes ?? defaultConfig.themes
+  const themeIds = themes.map((theme) => theme.id)
+  if (new Set(themeIds).size !== themeIds.length) {
+    throw new Error('themes must not contain duplicate theme ids')
+  }
   if (input.docsDir !== undefined && input.versions !== undefined) {
     throw new Error('docsDir cannot be combined with versions; set docsDir on each versions.items entry')
   }
-  if (input.theme?.logoDark && !input.theme.logo) {
-    throw new Error('theme.logoDark requires theme.logo')
+  if (input.branding?.logoDark && !input.branding.logo) {
+    throw new Error('branding.logoDark requires branding.logo')
   }
-  if (input.theme?.logoDark && input.theme.darkMode !== true) {
-    throw new Error('theme.logoDark requires theme.darkMode: true')
+  if (
+    input.branding?.logoDark &&
+    !themes.some((theme) => theme.appearances.some((appearance) => appearance.colorScheme === 'dark'))
+  ) {
+    throw new Error('branding.logoDark requires a configured theme with a dark appearance')
   }
 }
 
@@ -229,10 +227,14 @@ export async function loadConfig(cwd: string): Promise<CanofoldConfig> {
   let loaded: { default?: unknown }
   try {
     const canofoldEntry = fileURLToPath(resolveModule('canofold', import.meta.url))
+    const themesEntry = fileURLToPath(resolveModule('@canofold/themes', import.meta.url))
     const result = await build({
       entryPoints: [configPath],
       absWorkingDir: cwd,
-      alias: { canofold: canofoldEntry },
+      // Resolve Canofold's public config helpers from the CLI installation. This
+      // keeps config loading deterministic under strict package managers while
+      // third-party theme packages continue to resolve from the user's project.
+      alias: { canofold: canofoldEntry, '@canofold/themes': themesEntry },
       bundle: true,
       format: 'esm',
       platform: 'node',

@@ -40,6 +40,26 @@ test('Markdown package stays independent from Canofold and framework adapters', 
   }
 })
 
+test('Markdown consumes the public theme package boundary without reading sibling source', async () => {
+  const manifest = JSON.parse(await readFile(join(root, 'packages/markdown/package.json'), 'utf8'))
+  const entries = [
+    ...(await sourceText(join(root, 'packages/markdown/src'))),
+    [
+      join(root, 'packages/markdown/vite.config.ts'),
+      await readFile(join(root, 'packages/markdown/vite.config.ts'), 'utf8')
+    ]
+  ]
+
+  assert.equal(manifest.dependencies['@canofold/themes'], 'workspace:*')
+  for (const [file, source] of entries) {
+    assert.doesNotMatch(
+      source,
+      /(?:\.\.\/)+themes\/src/,
+      `${file} bypasses the @canofold/themes package boundary`
+    )
+  }
+})
+
 test('TypeScript source imports use bundler-native extensionless specifiers', async () => {
   const entries = (await sourceText(join(root, 'packages'))).filter(([file]) => /\.tsx?$/.test(file))
   const relativeJavaScriptImport = /(?:from\s+|import\s*\(\s*)['"]\.\.?\/[^'"]+\.js['"]/
@@ -139,7 +159,7 @@ test('Markdown interactions use stable action attributes instead of visual class
 
 test('maintainer documentation matches the publishable-package contract', async () => {
   const packageManifests = await Promise.all(
-    ['canofold', 'markdown', 'vite', 'plugins'].map((name) =>
+    ['themes', 'canofold', 'markdown', 'vite', 'plugins'].map((name) =>
       readFile(join(root, 'packages', name, 'package.json'), 'utf8').then(JSON.parse)
     )
   )
@@ -162,7 +182,7 @@ test('release workflow stages existing packages through OIDC', async () => {
     (match) => match[1]
   )
 
-  assert.equal(archives.length, 4, 'release workflow must stage all four package archives')
+  assert.equal(archives.length, 5, 'release workflow must stage all five package archives')
   for (const archive of archives) {
     assert.match(
       archive,
@@ -208,7 +228,7 @@ test('Markdown plugins, search providers, and site extensions keep distinct life
 })
 
 test('published packages include matching English and Chinese READMEs', async () => {
-  for (const directory of ['canofold', 'markdown', 'plugins']) {
+  for (const directory of ['themes', 'canofold', 'markdown', 'plugins']) {
     const packageRoot = join(root, 'packages', directory)
     const manifest = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'))
     const english = await readFile(join(packageRoot, 'README.md'), 'utf8')
@@ -247,7 +267,7 @@ test('Canofold and Markdown do not publish legacy theme token aliases', async ()
   const sources = await Promise.all([
     readFile(join(root, 'packages/canofold/src/render/styles.input.css'), 'utf8'),
     readFile(join(root, 'packages/canofold/src/render/theme.ts'), 'utf8'),
-    readFile(join(root, 'packages/markdown/src/tokens.css'), 'utf8')
+    readFile(join(root, 'packages/themes/src/canofold/tokens.css'), 'utf8')
   ])
   const legacyToken =
     /--(?:background|foreground|text|muted-foreground|card|primary|primary-soft|primary-foreground|border|hairline|ring|overlay|radius|font-sans|font-mono)\s*:/
@@ -271,8 +291,12 @@ test('Canofold shell publishes only the canonical site-shell stylesheet', async 
 })
 
 test('workspace styles do not reference undefined Canofold custom properties', async () => {
+  const themesManifest = JSON.parse(await readFile(join(root, 'packages/themes/package.json'), 'utf8'))
+  const themeStylePaths = Object.values(themesManifest.exports)
+    .filter((target) => typeof target === 'string' && target.endsWith('.css'))
+    .map((target) => join('packages/themes', target))
   const stylePaths = [
-    'packages/markdown/src/tokens.css',
+    ...themeStylePaths,
     'packages/markdown/src/styles.css',
     'packages/canofold/src/render/styles.input.css'
   ]
@@ -286,10 +310,43 @@ test('workspace styles do not reference undefined Canofold custom properties', a
   )
 
   for (const [index, source] of sources.entries()) {
-    const missing = [...new Set([...source.matchAll(/var\((--cf-[\w-]+)/g)].map((match) => match[1]))].filter(
-      (name) => !definitions.has(name)
-    )
+    const missing = [
+      ...new Set(
+        [...source.matchAll(/var\((--cf-[\w-]+)(\s*,)?/g)]
+          .filter((match) => !match[2] && !definitions.has(match[1]))
+          .map((match) => match[1])
+      )
+    ]
     assert.deepEqual(missing, [], `${stylePaths[index]} references undefined Canofold custom properties`)
+  }
+})
+
+test('every optional theme export provides its own semantic palette', async () => {
+  const manifest = JSON.parse(await readFile(join(root, 'packages/themes/package.json'), 'utf8'))
+  const optionalThemes = Object.entries(manifest.exports).filter(([specifier]) =>
+    /^\.\/(?!shared|canofold|expressive)[\w-]+\.css$/.test(specifier)
+  )
+  const [sharedCss, canofoldCss] = await Promise.all(
+    ['./shared.css', './canofold.css'].map((specifier) =>
+      readFile(join(root, 'packages/themes', manifest.exports[specifier]), 'utf8')
+    )
+  )
+  const declarations = (css) => new Set([...css.matchAll(/(--cf-[\w-]+)\s*:/g)].map((match) => match[1]))
+  const sharedTokens = declarations(sharedCss.match(/:root\s*\{([^}]*)\}/)?.[1] ?? '')
+  const requiredTokens = [...declarations(canofoldCss.match(/:root\s*\{([^}]*)\}/)?.[1] ?? '')].filter(
+    (token) => !sharedTokens.has(token)
+  )
+
+  assert.ok(optionalThemes.length > 0, 'the themes package must export optional visual themes')
+  for (const [specifier, relativePath] of optionalThemes) {
+    const theme = specifier.slice(2, -4)
+    const css = await readFile(join(root, 'packages/themes', relativePath), 'utf8')
+    const palette = css.match(new RegExp(`html\\[data-cf-theme='${theme}'\\]\\s*\\{([^}]*)\\}`))?.[1] ?? ''
+    assert.ok(palette, `${theme} must have a theme-scoped palette`)
+    assert.match(palette, /color-scheme:\s*(?:light|dark);/, `${theme} must declare a color scheme`)
+    for (const token of requiredTokens) {
+      assert.match(palette, new RegExp(`${token}:`), `${theme} must define ${token}`)
+    }
   }
 })
 
@@ -316,7 +373,7 @@ test('Markdown React components do not construct or mutate component UI through 
   }
 })
 
-test('workspace exposes core, renderer, Vite engine, and official plugin packages', async () => {
+test('workspace exposes core, renderer, Vite engine, plugins, and themes', async () => {
   const packageDirectories = []
   for (const entry of await readdir(join(root, 'packages'), { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
@@ -328,21 +385,31 @@ test('workspace exposes core, renderer, Vite engine, and official plugin package
     }
   }
 
-  assert.deepEqual(packageDirectories.sort(), ['canofold', 'markdown', 'plugins', 'vite'])
+  assert.deepEqual(packageDirectories.sort(), ['canofold', 'markdown', 'plugins', 'themes', 'vite'])
 
   const rootPackage = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
   const canofoldPackage = JSON.parse(await readFile(join(root, 'packages/canofold/package.json'), 'utf8'))
   const markdownPackage = JSON.parse(await readFile(join(root, 'packages/markdown/package.json'), 'utf8'))
   const vitePackage = JSON.parse(await readFile(join(root, 'packages/vite/package.json'), 'utf8'))
   const pluginsPackage = JSON.parse(await readFile(join(root, 'packages/plugins/package.json'), 'utf8'))
+  const themesPackage = JSON.parse(await readFile(join(root, 'packages/themes/package.json'), 'utf8'))
 
   assert.equal(canofoldPackage.name, 'canofold')
   assert.equal(markdownPackage.name, '@canofold/markdown')
   assert.equal(vitePackage.name, '@canofold/vite')
   assert.equal(pluginsPackage.name, '@canofold/plugins')
+  assert.equal(themesPackage.name, '@canofold/themes')
+  for (const script of ['build', 'dev', 'typecheck']) {
+    assert.match(
+      rootPackage.scripts[script],
+      /--filter @canofold\/themes/,
+      `the root ${script} lifecycle must include @canofold/themes`
+    )
+  }
   assert.doesNotMatch(rootPackage.scripts.build, /@canofold\/(?:react-markdown|vue-markdown|cli)/)
   assert.doesNotMatch(rootPackage.scripts.typecheck, /@canofold\/(?:react-markdown|vue-markdown|cli)/)
-  assert.doesNotMatch(JSON.stringify(markdownPackage.dependencies), /canofold/i)
+  assert.equal(markdownPackage.dependencies['@canofold/themes'], 'workspace:*')
+  assert.doesNotMatch(JSON.stringify(markdownPackage.dependencies), /"canofold"|@canofold\/(?:vite|plugins)/)
   assert.doesNotMatch(
     JSON.stringify(markdownPackage.dependencies),
     /katex|remark-math|rehype-katex|mermaid|fflate/,
@@ -356,6 +423,29 @@ test('workspace exposes core, renderer, Vite engine, and official plugin package
   })
 
   assert.deepEqual(Object.keys(canofoldPackage.exports), ['.', './demo-engine'])
+  assert.deepEqual(Object.keys(themesPackage.exports), [
+    '.',
+    './package.json',
+    './shared.css',
+    './canofold.css',
+    './canofold-site.css',
+    './expressive.css',
+    './neo-brutalist.css',
+    './neumorphism.css',
+    './glassmorphism.css',
+    './sketch-style.css',
+    './hand-drawn-doodle.css',
+    './minimalist-flat.css',
+    './bauhaus.css',
+    './memphis.css',
+    './cyber-chinese.css',
+    './pixel-anime.css',
+    './dopamine-design.css',
+    './shoujo-manga.css',
+    './outrun.css'
+  ])
+  assert.equal(themesPackage.exports['.'].types, './dist/index.d.ts')
+  assert.equal(themesPackage.exports['.'].import, './dist/index.js')
   assert.equal(vitePackage.peerDependencies.canofold, `^${canofoldPackage.version}`)
   assert.match(vitePackage.peerDependencies.vite, /\^6\.4\.0/)
   assert.deepEqual(Object.keys(markdownPackage.exports), [
@@ -363,9 +453,7 @@ test('workspace exposes core, renderer, Vite engine, and official plugin package
     './client',
     './server',
     './server/analyze',
-    './theme',
-    './base.css',
-    './theme.css'
+    './base.css'
   ])
   assert.equal(markdownPackage.exports['./client'].import, './dist/client/bundler.js')
   assert.equal(markdownPackage.exports['./client'].default, './dist/client/index.js')
@@ -375,7 +463,9 @@ test('workspace exposes core, renderer, Vite engine, and official plugin package
     './islands/react',
     './tokens.css',
     './styles.css',
-    './math.css'
+    './math.css',
+    './theme',
+    './theme.css'
   ]) {
     assert.equal(markdownPackage.exports[retiredExport], undefined, `${retiredExport} must stay private`)
   }

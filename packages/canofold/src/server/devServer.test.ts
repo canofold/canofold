@@ -73,13 +73,24 @@ describe('createBuildScheduler', () => {
     let maxActive = 0
     let builds = 0
     let reloads = 0
+    let markFirstBuildStarted!: () => void
+    let releaseFirstBuild!: () => void
+    const firstBuildStarted = new Promise<void>((resolve) => {
+      markFirstBuildStarted = resolve
+    })
+    const firstBuildRelease = new Promise<void>((resolve) => {
+      releaseFirstBuild = resolve
+    })
     const scheduler = createBuildScheduler({
       debounceMs: 5,
       build: async () => {
         builds += 1
         active += 1
         maxActive = Math.max(maxActive, active)
-        await wait(20)
+        if (builds === 1) {
+          markFirstBuildStarted()
+          await firstBuildRelease
+        }
         active -= 1
       },
       reload: () => {
@@ -90,10 +101,11 @@ describe('createBuildScheduler', () => {
     scheduler.schedule()
     scheduler.schedule()
     scheduler.schedule()
-    await wait(10)
+    await firstBuildStarted
     scheduler.schedule()
     scheduler.schedule()
-    await wait(70)
+    releaseFirstBuild()
+    await vi.waitFor(() => expect(reloads).toBe(2))
     await scheduler.close()
 
     expect(builds).toBe(2)

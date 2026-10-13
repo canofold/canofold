@@ -1,6 +1,8 @@
 import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import type { ThemeDefinition } from '@canofold/themes'
 
 const require = createRequire(import.meta.url)
 
@@ -16,6 +18,17 @@ function resolveFromProject(specifier: string): string {
       `Cannot resolve ${specifier} from ${process.cwd()}. Install @canofold/plugins to include math styles.`,
       { cause: error }
     )
+  }
+}
+
+export function resolveThemeStylePath(cwd: string, specifier: string): string {
+  if (specifier.startsWith('file:')) return fileURLToPath(specifier)
+  if (isAbsolute(specifier)) return specifier
+  if (specifier.startsWith('./') || specifier.startsWith('../')) return resolve(cwd, specifier)
+  try {
+    return require.resolve(specifier, { paths: [cwd] })
+  } catch {
+    return resolveFromModule(specifier)
   }
 }
 
@@ -38,15 +51,23 @@ async function readPublishedCss(specifier: string, fromProject = false): Promise
   return readFile(fromProject ? resolveFromProject(specifier) : resolveFromModule(specifier), 'utf8')
 }
 
-/** Assemble explicit Markdown, theme, optional math, and site-shell layers. */
+/** Assemble theme-independent Markdown structure, optional math, and the site shell. */
 export async function compileCss({ math = false }: { math?: boolean } = {}): Promise<string> {
-  const [shell, base, theme, mathCss] = await Promise.all([
+  const [shell, base, mathCss] = await Promise.all([
     readInputCss(),
     readPublishedCss('@canofold/markdown/base.css'),
-    readPublishedCss('@canofold/markdown/theme.css'),
     math ? readPublishedCss('@canofold/plugins/math.css', true) : undefined
   ])
-  return `/* Markdown base */\n${base}\n/* Default theme */\n${theme}\n${
-    mathCss ? `/* Math */\n${mathCss}\n` : ''
-  }/* Canofold shell */\n${shell}\n`
+  return `/* Markdown base */\n${base}\n${mathCss ? `/* Math */\n${mathCss}\n` : ''}/* Canofold shell */\n${shell}\n`
+}
+
+/** Include only the CSS owned by configured first- or third-party theme definitions. */
+export async function compileThemes(
+  themes: readonly ThemeDefinition[],
+  cwd = process.cwd()
+): Promise<string> {
+  const stylePaths = [
+    ...new Set(themes.flatMap((theme) => theme.styles).map((style) => resolveThemeStylePath(cwd, style)))
+  ]
+  return (await Promise.all(stylePaths.map((path) => readFile(path, 'utf8')))).join('\n')
 }

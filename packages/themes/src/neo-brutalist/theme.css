@@ -1,0 +1,359 @@
+/*
+ * Neo-brutalist keeps Canofold's shared layout and behavior, then applies a
+ * strict visual system: black structure, hard shadows, square corners and
+ * high-energy accents. There are no gradients, translucent surfaces or blur.
+ */
+html[data-cf-theme='neo-brutalist'] {
+  color-scheme: light;
+  --cf-canvas: #ffffff;
+  --cf-ink: #000000;
+  --cf-ink-body: #111111;
+  --cf-ink-secondary: #242424;
+  --cf-ink-tertiary: #404040;
+  --cf-surface: #ffffff;
+  --cf-surface-secondary: #f5f5f5;
+  --cf-surface-soft: #ffffff;
+  --cf-surface-elevated: #ffffff;
+  --cf-surface-code: #f5f5f5;
+  --cf-code-ink: #000000;
+  --cf-border: #000000;
+  --cf-border-strong: #000000;
+  --cf-hairline: #000000;
+  --cf-accent-500: #ff006e;
+  --cf-accent-strong: #d9005e;
+  --cf-accent-deep: #a80049;
+  --cf-accent-secondary: #00d9ff;
+  --cf-info: #006edb;
+  --cf-info-deep: #004f9e;
+  --cf-success: #3f8500;
+  --cf-success-deep: #2d6100;
+  --cf-warning: #c96d00;
+  --cf-warning-deep: #934f00;
+  --cf-danger: #d51f31;
+  --cf-danger-deep: #a31221;
+  --cf-info-soft: #00d9ff;
+  --cf-success-soft: #ccff00;
+  --cf-warning-soft: #ff9500;
+  --cf-danger-soft: #ff006e;
+  --cf-yellow: #ffff00;
+  --cf-overlay: rgb(0 0 0 / 0.72);
+  --cf-shadow-raised: 8px 8px 0 #000000;
+  --cf-shadow-raised-sm: 4px 4px 0 #000000;
+  --cf-shadow-inset: 0 0 0 transparent;
+  --cf-block-shell-shadow: 8px 8px 0 #000000;
+  --cf-font-display: 'Arial Black', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --cf-font-sans: 'SFMono-Regular', Consolas, 'PingFang SC', 'Microsoft YaHei', monospace;
+  --cf-radius-sm: 0;
+  --cf-radius-md: 0;
+  --cf-radius-lg: 0;
+  --cf-radius-full: 0;
+  --cf-duration-fast: 150ms;
+  --cf-duration-normal: 150ms;
+  --cf-easing-default: ease-out;
+  --cf-easing-spring: ease-out;
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 3px #00d9ff;
+  --cf-neo-structure-border: 4px solid #000000;
+  --cf-demo-divider-width: 4px;
+  --cf-neo-control-border: 2px solid #000000;
+  --cf-neo-header-rule: inset 0 -4px 0 #000000;
+  --cf-neo-sidebar-rule: inset -4px 0 0 #000000;
+  --cf-neo-outline-rule: inset 4px 0 0 #000000;
+  --cf-nav-item-hover-ink: var(--cf-ink);
+  --cf-nav-item-hover-surface: var(--cf-yellow);
+  --cf-nav-item-hover-shadow: inset 0 0 0 2px #000000, 3px 3px 0 #000000;
+  --cf-nav-item-active-ink: var(--cf-ink);
+  --cf-nav-item-active-surface: #ccff00;
+  --cf-nav-item-active-shadow: inset 0 0 0 2px #000000;
+}
+
+html[data-cf-theme='neo-brutalist'] :where(.cf-header, .cf-sidebar, .cf-outline) {
+  background: var(--cf-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-header {
+  box-shadow: var(--cf-neo-header-rule);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-sidebar {
+  box-shadow: var(--cf-neo-sidebar-rule);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-outline {
+  box-shadow: var(--cf-neo-outline-rule);
+}
+
+html[data-cf-theme='neo-brutalist'] :where(.cf-hero-title, .cf-content h1) {
+  font-weight: 900;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-content :where(h2, h3, h4, h5, h6) {
+  font-weight: 850;
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close
+  ) {
+  border: var(--cf-neo-control-border);
+  color: var(--cf-ink);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised-sm);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition:
+    color 150ms ease-out,
+    transform 150ms ease-out,
+    box-shadow 150ms ease-out;
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close
+  ):hover {
+  color: var(--cf-ink);
+  background: var(--cf-yellow);
+  box-shadow: 6px 6px 0 #000000;
+  transform: translate(-2px, -2px);
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close
+  ):active,
+html[data-cf-theme='neo-brutalist'] .cf-menu[open] > summary {
+  background: #ccff00;
+  box-shadow: none;
+  transform: translate(4px, 4px);
+}
+
+html[data-cf-theme='neo-brutalist'] :where(.cf-outline-link:hover, .cf-outline-link[data-active='true']) {
+  color: var(--cf-accent-deep);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-menu-list {
+  border: var(--cf-neo-structure-border);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='neo-brutalist']
+  :is(
+    .cf-content .cf-demo,
+    .cf-feature,
+    .cf-doc-pagination-link,
+    .cf-content .cf-callout,
+    .cf-content .cf-aside,
+    .cf-content details,
+    .cf-content .cf-code,
+    .cf-content .cf-code-group,
+    .cf-content .cf-terminal,
+    .cf-content .cf-table-window,
+    .cf-content .cf-api-block,
+    .cf-content .cf-file-tree,
+    .cf-content .cf-link-card,
+    .cf-diagram-window
+  ) {
+  border: var(--cf-neo-structure-border);
+  box-shadow: var(--cf-block-shell-shadow);
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(
+    .cf-content .cf-demo-details,
+    .cf-content .cf-demo-toolbar,
+    .cf-block-toolbar,
+    .cf-code-bar,
+    .cf-table-window > .cf-block-toolbar,
+    .cf-diagram-window > .cf-diagram-toolbar
+  ) {
+  border-color: var(--cf-border);
+  background: var(--cf-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-content .cf-demo-details {
+  border-top: var(--cf-neo-structure-border);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-content .cf-demo-toolbar {
+  border-top: 2px dashed var(--cf-border);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-content .cf-demo-source > .cf-code {
+  border-width: 2px 0 0;
+  box-shadow: none;
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(.cf-code-bar, .cf-table-window > .cf-block-toolbar, .cf-diagram-window > .cf-diagram-toolbar) {
+  border-bottom: var(--cf-neo-control-border);
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(.cf-content .cf-demo-action, .cf-diagram-actions button, .cf-diagram-zoom-controls button) {
+  color: var(--cf-ink);
+  background: transparent;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-diagram-zoom-controls {
+  border: var(--cf-neo-control-border);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised-sm);
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(
+    .cf-content .cf-demo-action:hover,
+    .cf-content .cf-demo-action:focus-visible,
+    .cf-content .cf-demo-source-toggle[aria-expanded='true'],
+    .cf-diagram-actions button:hover,
+    .cf-diagram-zoom-controls button:hover:not(:disabled)
+  ) {
+  color: var(--cf-ink);
+  background: var(--cf-yellow);
+  box-shadow: inset 0 0 0 2px #000000;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-btn {
+  border: var(--cf-neo-control-border);
+  box-shadow: var(--cf-shadow-raised-sm);
+  font-weight: 800;
+  transition:
+    color 150ms ease-out,
+    transform 150ms ease-out,
+    box-shadow 150ms ease-out;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-btn-primary {
+  color: var(--cf-ink);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-btn-secondary {
+  color: var(--cf-ink);
+  background: #00d9ff;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-btn:hover {
+  color: var(--cf-ink);
+  background: var(--cf-yellow);
+  box-shadow: 6px 6px 0 #000000;
+  transform: translate(-2px, -2px);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-btn:active {
+  box-shadow: none;
+  transform: translate(4px, 4px);
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(.cf-search-panel, .cf-source-panel, .cf-gallery-dialog, .cf-table-preview-card, .cf-diagram-dialog) {
+  border: var(--cf-neo-structure-border);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(
+    .cf-search-backdrop,
+    .cf-source-backdrop,
+    .cf-gallery-backdrop,
+    .cf-table-preview-backdrop,
+    .cf-image-lightbox-backdrop
+  ) {
+  background: var(--cf-overlay);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-diagram-dialog::backdrop {
+  background: var(--cf-overlay);
+}
+
+html[data-cf-theme='neo-brutalist'] :where(.cf-search-field, .cf-source-panel textarea) {
+  border-bottom: var(--cf-neo-control-border);
+  background: var(--cf-surface);
+  box-shadow: none;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-search-field:focus-within {
+  box-shadow: inset 0 -4px 0 #00d9ff;
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(
+    .cf-command-item:hover,
+    .cf-search-result:hover,
+    .cf-file-tree-folder:hover,
+    .cf-file-tree-file:hover
+  ) {
+  color: var(--cf-ink);
+  background: var(--cf-yellow);
+  box-shadow: inset 0 0 0 2px #000000;
+}
+
+html[data-cf-theme='neo-brutalist']
+  :where(
+    .cf-badge,
+    .cf-badge-success,
+    .cf-badge-warning,
+    .cf-badge-danger,
+    .cf-api-method,
+    .cf-content :where(code, kbd)
+  ) {
+  border: var(--cf-neo-control-border);
+  color: var(--cf-ink);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-content kbd {
+  box-shadow: 3px 3px 0 #000000;
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-image-lightbox-card img {
+  border: var(--cf-neo-structure-border);
+  box-shadow: var(--cf-shadow-raised);
+}
+
+html[data-cf-theme='neo-brutalist'] .cf-image-lightbox-close {
+  border: var(--cf-neo-control-border);
+  color: var(--cf-ink);
+  background: var(--cf-yellow);
+  box-shadow: var(--cf-shadow-raised-sm);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+@media (max-width: 47.5rem) {
+  html[data-cf-theme='neo-brutalist'] {
+    --cf-shadow-raised: 4px 4px 0 #000000;
+    --cf-shadow-raised-sm: 3px 3px 0 #000000;
+    --cf-block-shell-shadow: 4px 4px 0 #000000;
+    --cf-neo-structure-border: 2px solid #000000;
+    --cf-demo-divider-width: 2px;
+    --cf-neo-header-rule: inset 0 -2px 0 #000000;
+    --cf-neo-sidebar-rule: inset -2px 0 0 #000000;
+    --cf-neo-outline-rule: inset 2px 0 0 #000000;
+  }
+}

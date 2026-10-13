@@ -1,0 +1,63 @@
+{
+  "name": "@canofold/themes",
+  "version": "0.6.0",
+  "description": "The Canofold theme contract and official visual themes.",
+  "license": "MIT",
+  "author": "Canofold Contributors",
+  "homepage": "https://canofold.dev/",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canofold/canofold.git",
+    "directory": "packages/themes"
+  },
+  "bugs": {
+    "url": "https://github.com/canofold/canofold/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./shared.css": "./src/shared.css",
+    "./canofold.css": "./src/canofold/tokens.css",
+    "./canofold-site.css": "./src/canofold/site.css",
+    "./expressive.css": "./src/expressive/theme.css",
+    "./neo-brutalist.css": "./src/neo-brutalist/theme.css",
+    "./neumorphism.css": "./src/neumorphism/theme.css",
+    "./glassmorphism.css": "./src/glassmorphism/theme.css",
+    "./sketch-style.css": "./src/sketch-style/theme.css",
+    "./hand-drawn-doodle.css": "./src/hand-drawn-doodle/theme.css",
+    "./minimalist-flat.css": "./src/minimalist-flat/theme.css",
+    "./bauhaus.css": "./src/bauhaus/theme.css",
+    "./memphis.css": "./src/memphis/theme.css",
+    "./cyber-chinese.css": "./src/cyber-chinese/theme.css",
+    "./pixel-anime.css": "./src/pixel-anime/theme.css",
+    "./dopamine-design.css": "./src/dopamine-design/theme.css",
+    "./shoujo-manga.css": "./src/shoujo-manga/theme.css",
+    "./outrun.css": "./src/outrun/theme.css"
+  },
+  "files": [
+    "dist",
+    "src/**/*.css",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --root ../.. packages/themes"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.3",
+    "tsup": "^8.3.5",
+    "typescript": "^6.0.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

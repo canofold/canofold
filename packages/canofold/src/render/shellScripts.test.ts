@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { bootstrapSearch } from './searchClientRuntime'
-import { noFlashScript } from './shellScripts'
+import { themeBootScript } from './shellScripts'
 import { bootstrapShell, bootstrapOutline } from '../client/shell'
+import { canofold, neumorphism } from '@canofold/themes'
 
 afterEach(() => {
   const runtime = window as typeof window & {
@@ -24,6 +25,8 @@ afterEach(() => {
   document.body.innerHTML = ''
   document.head.querySelectorAll('[data-canofold-page-head]').forEach((node) => node.remove())
   document.documentElement.className = ''
+  document.documentElement.removeAttribute('data-cf-theme')
+  document.documentElement.removeAttribute('data-cf-theme-appearance')
   document.documentElement.lang = ''
   window.history.replaceState(null, '', '/')
 })
@@ -47,8 +50,23 @@ describe('browser shell scripts', () => {
     expect(dispose).not.toHaveBeenCalled()
     delete window.__canofoldDemoDispose
   })
-  it.each([['no-flash', noFlashScript]])('emits valid JavaScript for %s', (_name, source) => {
-    expect(() => new Function(source)).not.toThrow()
+  it('emits valid JavaScript for the configured themes', () => {
+    expect(() => new Function(themeBootScript([canofold, neumorphism]))).not.toThrow()
+  })
+
+  it('restores only a configured visual theme before paint and falls back to the first', () => {
+    const boot = new Function(themeBootScript([neumorphism, canofold]))
+    localStorage.setItem('canofold-visual-theme', 'canofold:dark')
+    boot()
+    expect(document.documentElement.dataset.cfTheme).toBe('canofold')
+    expect(document.documentElement.dataset.cfThemeAppearance).toBe('dark')
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+
+    localStorage.setItem('canofold-visual-theme', 'removed-theme')
+    boot()
+    expect(document.documentElement.dataset.cfTheme).toBe('neumorphism')
+    expect(document.documentElement.dataset.cfThemeAppearance).toBe('default')
+    expect(document.documentElement.classList.contains('dark')).toBe(false)
   })
 
   it('switches the playground view without changing the rendered content', () => {
@@ -124,35 +142,12 @@ describe('browser shell scripts', () => {
     )
   })
 
-  it('progressively strengthens the home header background as the page scrolls', () => {
-    document.body.innerHTML = '<header class="cf-header cf-header-home"></header>'
-    let scrollY = 0
-    Object.defineProperty(window, 'scrollY', {
-      configurable: true,
-      get: () => scrollY
-    })
-
+  it('does not mutate the home header appearance as the page scrolls', () => {
+    document.body.innerHTML = '<header class="cf-header"></header>'
     bootstrapShell()
-    const header = document.querySelector<HTMLElement>('.cf-header-home')
-    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('0%')
-    expect(header?.style.getPropertyValue('--cf-header-backdrop-blur')).toBe('0px')
-    expect(header?.style.getPropertyValue('--cf-header-backdrop-saturation')).toBe('100%')
-
-    scrollY = 48
+    const header = document.querySelector<HTMLElement>('.cf-header')
     window.dispatchEvent(new Event('scroll'))
-    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('34%')
-    expect(header?.style.getPropertyValue('--cf-header-backdrop-blur')).toBe('11px')
-    expect(header?.style.getPropertyValue('--cf-header-backdrop-saturation')).toBe('130%')
-
-    scrollY = 96
-    window.dispatchEvent(new Event('scroll'))
-    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('68%')
-    expect(header?.style.getPropertyValue('--cf-header-backdrop-blur')).toBe('22px')
-    expect(header?.style.getPropertyValue('--cf-header-backdrop-saturation')).toBe('160%')
-
-    scrollY = 0
-    window.dispatchEvent(new Event('scroll'))
-    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('0%')
+    expect(header?.getAttribute('style')).toBeNull()
   })
 
   it('keeps repeated same-page fragment links under native anchor scrolling', () => {
@@ -225,7 +220,10 @@ describe('browser shell scripts', () => {
 
   it('disposes the previous shell runtime before bootstrapping again', () => {
     document.documentElement.classList.remove('dark')
-    document.body.innerHTML = '<button data-canofold-theme-toggle type="button">Theme</button>'
+    document.documentElement.dataset.cfTheme = 'canofold'
+    document.documentElement.dataset.cfThemeAppearance = 'light'
+    document.body.innerHTML =
+      '<button data-canofold-theme-option="canofold:dark" data-canofold-theme-scheme="dark" type="button">Theme</button>'
 
     bootstrapShell()
     ;(
@@ -233,7 +231,7 @@ describe('browser shell scripts', () => {
         __canofoldBootstrapShell?: () => void
       }
     ).__canofoldBootstrapShell?.()
-    document.querySelector<HTMLButtonElement>('[data-canofold-theme-toggle]')?.click()
+    document.querySelector<HTMLButtonElement>('[data-canofold-theme-option]')?.click()
 
     expect(document.documentElement.classList.contains('dark')).toBe(true)
   })

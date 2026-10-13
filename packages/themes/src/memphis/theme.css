@@ -1,0 +1,92 @@
+html[data-cf-theme='memphis'] {
+  color-scheme: light;
+  --cf-canvas: #feca57;
+  --cf-ink: #17121f;
+  --cf-ink-body: #241b2f;
+  --cf-ink-secondary: #493957;
+  --cf-ink-tertiary: #665371;
+  --cf-surface: #fff8e7;
+  --cf-surface-secondary: #ffe0e8;
+  --cf-surface-soft: #fff0bd;
+  --cf-surface-elevated: #ffffff;
+  --cf-surface-code: #e8f9ff;
+  --cf-code-ink: #17121f;
+  --cf-border: #17121f;
+  --cf-border-strong: #17121f;
+  --cf-hairline: #17121f;
+  --cf-accent-500: #e94f5d;
+  --cf-accent-strong: #c52e43;
+  --cf-accent-deep: #9d1832;
+  --cf-accent-secondary: #5f27cd;
+  --cf-info: #167995;
+  --cf-info-deep: #0c6078;
+  --cf-success: #0c8667;
+  --cf-success-deep: #05634c;
+  --cf-warning: #a35b00;
+  --cf-warning-deep: #783f00;
+  --cf-danger: #c52e43;
+  --cf-danger-deep: #9d1832;
+  --cf-yellow: #feca57;
+  --cf-overlay: rgb(23 18 31 / 0.72);
+  --cf-on-accent: #17121f;
+  --cf-shadow-raised: 6px 6px 0 #17121f;
+  --cf-shadow-raised-sm: 4px 4px 0 #17121f;
+  --cf-shadow-inset: inset 0 0 0 2px #17121f;
+  --cf-block-shell-shadow: var(--cf-shadow-raised);
+  --cf-font-display: 'Arial Black', 'Trebuchet MS', 'PingFang SC', sans-serif;
+  --cf-font-sans: 'Trebuchet MS', 'Avenir Next', 'PingFang SC', sans-serif;
+  --cf-radius-sm: 0;
+  --cf-radius-md: 0;
+  --cf-radius-lg: 0;
+  --cf-radius-full: 0;
+  --cf-duration-fast: 150ms;
+  --cf-duration-normal: 150ms;
+  --cf-easing-default: ease-out;
+  --cf-easing-spring: ease-out;
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 3px #48dbfb;
+  --cf-nav-item-hover-ink: #17121f;
+  --cf-nav-item-hover-surface: #ff9ff3;
+  --cf-nav-item-hover-shadow: 3px 3px 0 #17121f;
+  --cf-nav-item-active-ink: #17121f;
+  --cf-nav-item-active-surface: #feca57;
+  --cf-nav-item-active-shadow: inset 0 0 0 2px #17121f;
+  --cf-theme-header-shadow: 0 4px 0 #17121f;
+  --cf-theme-rail-shadow: inset -3px 0 0 #17121f;
+  --cf-theme-control-border: 3px solid #17121f;
+  --cf-theme-control-ink: #17121f;
+  --cf-theme-control-surface: #48dbfb;
+  --cf-theme-control-shadow: 4px 4px 0 #17121f;
+  --cf-theme-control-hover-ink: #17121f;
+  --cf-theme-control-hover-surface: #ff9ff3;
+  --cf-theme-control-hover-shadow: 6px 6px 0 #17121f;
+  --cf-theme-control-hover-transform: translate(-2px, -2px);
+  --cf-theme-control-active-surface: #1dd1a1;
+  --cf-theme-control-active-shadow: none;
+  --cf-theme-control-active-transform: translate(4px, 4px);
+  --cf-theme-panel-border: 3px solid #17121f;
+  --cf-theme-panel-surface: #fff8e7;
+  --cf-theme-panel-shadow: 6px 6px 0 #17121f;
+  --cf-theme-block-border: 3px solid #17121f;
+  --cf-theme-block-shadow: 6px 6px 0 #17121f;
+  --cf-theme-toolbar-surface: #feca57;
+  --cf-theme-button-shadow: 5px 5px 0 #17121f;
+  --cf-theme-button-hover-surface: #ff9ff3;
+  --cf-theme-button-hover-shadow: 7px 7px 0 #17121f;
+  --cf-theme-button-hover-transform: translate(-2px, -2px);
+  --cf-theme-button-active-shadow: none;
+  --cf-theme-button-active-transform: translate(5px, 5px);
+  --cf-theme-input-border: 3px solid #17121f;
+  --cf-theme-input-surface: #ffffff;
+  --cf-theme-input-focus-shadow: 4px 4px 0 #48dbfb;
+}
+
+html[data-cf-theme='memphis'] :where(body, .cf-main, .cf-content) {
+  background-color: var(--cf-surface);
+  background-image: radial-gradient(circle, rgb(23 18 31 / 12%) 1.5px, transparent 1.5px);
+  background-size: 18px 18px;
+}
+
+html[data-cf-theme='memphis'] :where(.cf-content h1, .cf-content h2, .cf-hero-title) {
+  text-shadow: 3px 3px 0 #48dbfb;
+}
