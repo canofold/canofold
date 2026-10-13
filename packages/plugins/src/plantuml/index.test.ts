@@ -49,12 +49,18 @@ describe('plantUml plugin', () => {
     expect(html).toContain('data-cf-diagram-type="plantuml"')
     expect(html).toContain('class="cf-diagram-zoom-controls"')
     expect(html).not.toContain('<img')
-    expect(plugin.browserCompiler?.options).toEqual({ renderer: 'client', server: false })
+    expect(plugin.browserCompiler?.options).toEqual({ renderer: 'client' })
   })
 
   it('rejects simultaneous remote and client renderers', () => {
     expect(() => plantUml({ server: 'https://plantuml.example/svg', renderer: 'client' })).toThrow(
       'PlantUML cannot use server and client rendering at the same time.'
+    )
+  })
+
+  it('rejects an invalid explicit server', () => {
+    expect(() => plantUml({ server: '' })).toThrow(
+      'PlantUML server must be an HTTP(S) base URL without a query or fragment.'
     )
   })
 

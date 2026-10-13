@@ -55,7 +55,12 @@ const options = {
   ${plugins}
   ] }
 }
-window.__canofoldBootstrapPlayground = () => mountPlaygrounds(options)
+window.__canofoldBootstrapPlayground = () => {
+  const dispose = mountPlaygrounds(options)
+  if (!dispose) return
+  window.__canofoldPlaygroundDispose?.()
+  window.__canofoldPlaygroundDispose = dispose
+}
 window.__canofoldBootstrapPlayground()`
 
   await build({

@@ -24,6 +24,7 @@ declare global {
     __canofoldShellDispose?: () => void
     __canofoldSearchDispose?: () => void
     __canofoldMarkdownDispose?: () => void
+    __canofoldPlaygroundDispose?: () => void
     __canofoldOutlineDispose?: () => void
     __canofoldDemoDispose?: () => void
     __canofoldLoadPageModule?: (url: string) => Promise<unknown>
@@ -53,6 +54,7 @@ export function bootstrapShell() {
 
   function disposePage() {
     window.__canofoldSearchDispose?.()
+    window.__canofoldPlaygroundDispose?.()
     window.__canofoldMarkdownDispose?.()
     window.__canofoldOutlineDispose?.()
     window.__canofoldDemoDispose?.()

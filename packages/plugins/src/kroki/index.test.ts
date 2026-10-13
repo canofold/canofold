@@ -42,25 +42,9 @@ describe('kroki plugin', () => {
     warning.mockRestore()
   })
 
-  it('keeps the existing public Kroki service default for patch-version compatibility', async () => {
+  it('shows source instead of an endless loading preview when the server is omitted', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const plugin = kroki()
-    const html = await render('```dot\ndigraph G { a -> b }\n```', plugin)
-
-    expect(html).toContain('data-cf-plugin-diagram="kroki"')
-    expect(html).toContain('src="https://kroki.io/graphviz/svg/')
-    expect(plugin.browserCompiler?.options).toEqual({
-      format: 'svg',
-      languages: { graphviz: 'graphviz', dot: 'graphviz', gv: 'graphviz', d2: 'd2' },
-      server: 'https://kroki.io'
-    })
-    expect(warning).toHaveBeenCalledOnce()
-    warning.mockRestore()
-  })
-
-  it('shows source instead of an endless loading preview when remote rendering is disabled', async () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    const plugin = kroki({ server: false })
     const html = await render('```dot\ndigraph G { a -> b }\n```', plugin)
 
     expect(html).toContain('data-cf-plugin-diagram="kroki"')
@@ -71,6 +55,10 @@ describe('kroki plugin', () => {
     expect(html).not.toContain('data-cf-diagram-action="expand"')
     expect(html).toContain('class="cf-diagram-source"')
     expect(html).not.toContain('class="cf-diagram-source" hidden=""')
+    expect(plugin.browserCompiler?.options).toEqual({
+      format: 'svg',
+      languages: { graphviz: 'graphviz', dot: 'graphviz', gv: 'graphviz', d2: 'd2' }
+    })
     expect(warning).not.toHaveBeenCalled()
     warning.mockRestore()
   })
@@ -88,6 +76,12 @@ describe('kroki plugin', () => {
   it('rejects simultaneous remote and client renderers', () => {
     expect(() => kroki({ server: 'https://kroki.example', renderer: 'client' })).toThrow(
       'Kroki cannot use server and client rendering at the same time.'
+    )
+  })
+
+  it('rejects an invalid explicit server', () => {
+    expect(() => kroki({ server: '' })).toThrow(
+      'Kroki server must be an HTTP(S) base URL without a query or fragment.'
     )
   })
 

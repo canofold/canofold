@@ -210,6 +210,12 @@ function setupSynchronizedScrolling(source: HTMLElement, preview: HTMLElement) {
       const previewMax = Math.max(0, preview.scrollHeight - preview.clientHeight)
       if (source.clientHeight > 0 && preview.clientHeight > 0) preview.scrollTop = progress * previewMax
       resumeAfterPaint()
+    },
+    dispose() {
+      pause()
+      source.removeEventListener('scroll', onSourceScroll)
+      preview.removeEventListener('scroll', onPreviewScroll)
+      preview.removeEventListener('click', onPreviewAnchorClick)
     }
   }
 }
@@ -219,74 +225,83 @@ function mountPlayground(playground: HTMLElement, clientOptions: PlaygroundClien
   const source = playground.querySelector<HTMLTextAreaElement>('[data-canofold-playground-source]')
   const preview = playground.querySelector<HTMLElement>('[data-canofold-playground-preview]')
   if (!source || !preview) return
+  const view = source.ownerDocument.defaultView
+  if (!view) return
 
   const labels = parseLabels(playground)
   const options: RenderMarkdownOptions = {
     ...clientOptions.markdown,
     labels,
-    locale: document.documentElement.lang || clientOptions.markdown.locale
+    locale: source.ownerDocument.documentElement.lang || clientOptions.markdown.locale
   }
   const loadingLabel = `${playground.dataset.canofoldPlaygroundPreviewLabel ?? 'Preview'}…`
   let debounceTimer: number | undefined
   let revision = 0
   let activeStage: PreviewStage | undefined
   let staticPreviewActive = true
+  let disposed = false
+  const stages = new Set<PreviewStage>()
   const scrolling = setupSynchronizedScrolling(source, preview)
 
   const discardStage = (stage: PreviewStage) => {
+    if (!stages.delete(stage)) return
+    if (activeStage === stage) activeStage = undefined
     stage.dispose?.()
+    stage.dispose = undefined
     stage.root.unmount()
     stage.element.remove()
   }
 
   const activate = async (stage: PreviewStage, renderRevision: number) => {
-    if (stage.activating) return
+    if (stage.activating || disposed || !stages.has(stage)) return
     stage.activating = true
     if (revision !== renderRevision) {
       discardStage(stage)
       return
     }
 
+    let dispose: (() => void) | undefined
     try {
-      stage.dispose = await window.__canofoldEnhanceMarkdown?.(stage.element)
+      dispose = await view.__canofoldEnhanceMarkdown?.(stage.element)
     } catch (error) {
       discardStage(stage)
-      console.error('[canofold] Playground preview enhancement failed:', error)
+      if (!disposed) console.error('[canofold] Playground preview enhancement failed:', error)
       return
     }
 
-    if (revision !== renderRevision) {
+    if (disposed || revision !== renderRevision || !stages.has(stage)) {
+      dispose?.()
       discardStage(stage)
       return
     }
+    stage.dispose = dispose
 
     scrolling.replacePreview(() => {
       if (staticPreviewActive) {
         stage.element.remove()
-        window.__canofoldMarkdownDispose?.()
-        window.__canofoldMarkdownDispose = undefined
+        view.__canofoldMarkdownDispose?.()
+        view.__canofoldMarkdownDispose = undefined
         for (const child of [...preview.childNodes]) child.remove()
         staticPreviewActive = false
         stage.element.hidden = false
         preview.append(stage.element)
       } else {
         stage.element.hidden = false
-        activeStage?.dispose?.()
-        activeStage?.root.unmount()
-        activeStage?.element.remove()
+        if (activeStage) discardStage(activeStage)
       }
       activeStage = stage
     })
   }
 
   const render = async (renderRevision: number) => {
-    await window.__canofoldMarkdownReady
-    if (revision !== renderRevision) return
+    await view.__canofoldMarkdownReady
+    if (disposed || revision !== renderRevision) return
     const element = preview.ownerDocument.createElement('div')
     element.className = 'cf-playground-live-preview'
     element.hidden = true
     preview.append(element)
     const stage: PreviewStage = { element, root: createRoot(element), activating: false }
+    stages.add(stage)
     stage.root.render(
       createElement(LivePreview, {
         source: source.value,
@@ -295,31 +310,51 @@ function mountPlayground(playground: HTMLElement, clientOptions: PlaygroundClien
         loadingLabel,
         onReady: () => void activate(stage, renderRevision),
         onFailure: (error) => {
-          console.error('[canofold] Playground preview render failed:', error)
-          queueMicrotask(() => discardStage(stage))
+          if (!disposed) console.error('[canofold] Playground preview render failed:', error)
+          view.queueMicrotask(() => discardStage(stage))
         }
       })
     )
   }
 
   const scheduleRender = () => {
+    if (disposed) return
     const renderRevision = ++revision
-    if (debounceTimer !== undefined) window.clearTimeout(debounceTimer)
-    debounceTimer = window.setTimeout(() => void render(renderRevision), 120)
+    if (debounceTimer !== undefined) view.clearTimeout(debounceTimer)
+    debounceTimer = view.setTimeout(() => {
+      debounceTimer = undefined
+      void render(renderRevision)
+    }, 120)
   }
 
-  source.addEventListener('input', scheduleRender)
-  source.addEventListener('keydown', (event) => {
+  const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'Tab' || event.altKey || event.ctrlKey || event.metaKey) return
     event.preventDefault()
     source.setRangeText('  ', source.selectionStart, source.selectionEnd, 'end')
     scheduleRender()
-  })
+  }
+  source.addEventListener('input', scheduleRender)
+  source.addEventListener('keydown', onKeyDown)
   playground.dataset.canofoldPlaygroundReady = ''
+
+  return () => {
+    if (disposed) return
+    disposed = true
+    revision += 1
+    if (debounceTimer !== undefined) view.clearTimeout(debounceTimer)
+    debounceTimer = undefined
+    source.removeEventListener('input', scheduleRender)
+    source.removeEventListener('keydown', onKeyDown)
+    scrolling.dispose()
+    for (const stage of [...stages]) discardStage(stage)
+    delete playground.dataset.canofoldPlaygroundReady
+  }
 }
 
 export function mountPlaygrounds(options: PlaygroundClientOptions) {
-  document
-    .querySelectorAll<HTMLElement>('[data-canofold-playground]')
-    .forEach((playground) => mountPlayground(playground, options))
+  const disposers = [...document.querySelectorAll<HTMLElement>('[data-canofold-playground]')]
+    .map((playground) => mountPlayground(playground, options))
+    .filter((dispose): dispose is () => void => dispose !== undefined)
+  if (disposers.length === 0) return
+  return () => disposers.forEach((dispose) => dispose())
 }

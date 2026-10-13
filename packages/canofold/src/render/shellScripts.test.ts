@@ -11,14 +11,17 @@ afterEach(() => {
     __canofoldBootstrapPlayground?: unknown
     __canofoldLoadPageModule?: unknown
     __canofoldOutlineDispose?: () => void
+    __canofoldPlaygroundDispose?: () => void
     __canofoldSearchDispose?: () => void
     __canofoldShellDispose?: () => void
   }
   runtime.__canofoldOutlineDispose?.()
+  runtime.__canofoldPlaygroundDispose?.()
   runtime.__canofoldSearchDispose?.()
   runtime.__canofoldShellDispose?.()
   delete runtime.__canofoldApplyPageDocument
   delete runtime.__canofoldBootstrapPlayground
+  delete runtime.__canofoldPlaygroundDispose
   delete runtime.__canofoldLoadPageModule
   vi.useRealTimers()
   vi.unstubAllGlobals()
@@ -280,6 +283,9 @@ describe('browser shell scripts', () => {
     const scrollTo = vi.fn()
     vi.stubGlobal('scrollTo', scrollTo)
     const bootstrapPlayground = vi.fn()
+    const disposePlayground = vi.fn()
+    ;(window as typeof window & { __canofoldPlaygroundDispose?: () => void }).__canofoldPlaygroundDispose =
+      disposePlayground
     let finishPageModule!: () => void
     const pageModuleReady = new Promise<void>((resolve) => {
       finishPageModule = resolve
@@ -337,6 +343,7 @@ describe('browser shell scripts', () => {
     expect(document.querySelector('link[href="/assets/canofold-plugins/next.css"]')).not.toBeNull()
     expect(document.querySelector('link[href="/assets/canofold-plugins/old.css"]')).toBeNull()
     expect(loadPageModule).toHaveBeenCalledWith('/assets/canofold-playground/index.js')
+    expect(disposePlayground).toHaveBeenCalledOnce()
     expect(scrollTo).toHaveBeenCalledWith(0, 0)
     replaceWith.mockRestore()
   })

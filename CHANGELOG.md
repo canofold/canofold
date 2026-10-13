@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.2 - 2026-10-13
+
+- Keep Kroki source local by default. Remote rendering now requires an explicit trusted `server`, while `renderer: 'client'` continues to delegate SVG rendering to the host.
+- Remove the redundant `server: false` configuration path: omit `server` for source-only output. Require an HTTP(S) base URL without a query or fragment instead of silently masking malformed Kroki and PlantUML server values.
+- Share only external-server normalization between Kroki and PlantUML while preserving their separate protocol encoders, public client entries, cancellation, DOM restoration, and object-URL cleanup boundaries.
+- Dispose Playground debounce timers, synchronized-scroll listeners, React preview roots, and plugin enhancements as one page lifecycle so navigation and hot updates cannot render into a detached document.
+
 ## 0.6.1 - 2026-10-13
 
 - Add a typed host-renderer contract for PlantUML and Kroki diagrams. React, editor, and webview hosts can select `renderer: 'client'`, pass an asynchronous SVG renderer to the matching client enhancer, receive the authored language and mapped diagram type, cancel outstanding work through `AbortSignal`, and dispose generated object URLs without coupling `@canofold/markdown` to a native runtime.
