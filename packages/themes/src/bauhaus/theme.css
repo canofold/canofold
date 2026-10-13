@@ -1,0 +1,134 @@
+/* Bauhaus: functional geometry, primary pigments, black structure and mechanical motion. */
+html[data-cf-theme='bauhaus'] {
+  color-scheme: light;
+  --cf-canvas: #ffffff;
+  --cf-ink: #000000;
+  --cf-ink-body: #111111;
+  --cf-ink-secondary: #333333;
+  --cf-ink-tertiary: #4b4b4b;
+  --cf-surface: #ffffff;
+  --cf-surface-secondary: #ffcc00;
+  --cf-surface-soft: #f4f4f4;
+  --cf-surface-elevated: #ffffff;
+  --cf-surface-code: #f4f4f4;
+  --cf-code-ink: #000000;
+  --cf-border: #000000;
+  --cf-border-strong: #000000;
+  --cf-hairline: #000000;
+  --cf-accent-500: #dd0000;
+  --cf-accent-strong: #b50000;
+  --cf-accent-deep: #8f0000;
+  --cf-accent-secondary: #0000ff;
+  --cf-info: #0000c4;
+  --cf-info-deep: #00008f;
+  --cf-success: #006b38;
+  --cf-success-deep: #004d28;
+  --cf-warning: #8a6500;
+  --cf-warning-deep: #654a00;
+  --cf-danger: #b50000;
+  --cf-danger-deep: #8f0000;
+  --cf-yellow: #ffcc00;
+  --cf-overlay: rgb(0 0 0 / 74%);
+  --cf-on-accent: #ffffff;
+  --cf-shadow-raised: none;
+  --cf-shadow-raised-sm: none;
+  --cf-shadow-inset: none;
+  --cf-block-shell-shadow: none;
+  --cf-font-display: Futura, 'Avenir Next', 'Arial Black', 'PingFang SC', sans-serif;
+  --cf-font-sans: Futura, 'Avenir Next', Arial, 'PingFang SC', sans-serif;
+  --cf-radius-sm: 0;
+  --cf-radius-md: 0;
+  --cf-radius-lg: 0;
+  --cf-radius-full: 0;
+  --cf-duration-fast: 150ms;
+  --cf-duration-normal: 200ms;
+  --cf-easing-default: ease-out;
+  --cf-easing-spring: ease-out;
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 4px #ffcc00;
+  --cf-nav-item-hover-ink: #000000;
+  --cf-nav-item-hover-surface: #ffcc00;
+  --cf-nav-item-hover-shadow: inset 0 0 0 2px #000000;
+  --cf-nav-item-active-ink: #8f0000;
+  --cf-nav-item-active-surface: transparent;
+  --cf-nav-item-active-shadow: none;
+}
+
+html[data-cf-theme='bauhaus'] :where(.cf-content h1, .cf-content h2, .cf-content h3, .cf-hero-title) {
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-cf-theme='bauhaus'] :where(.cf-header, .cf-sidebar, .cf-outline, .cf-menu-list) {
+  border-color: var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='bauhaus']
+  :where(.cf-menu-list, .cf-search-panel, .cf-source-panel, .cf-table-preview-card, .cf-diagram-dialog),
+html[data-cf-theme='bauhaus']
+  :is(
+    .cf-content .cf-demo,
+    .cf-content .cf-callout,
+    .cf-content details,
+    .cf-content .cf-code,
+    .cf-content .cf-table-window,
+    .cf-content .cf-file-tree,
+    .cf-content .cf-link-card
+  ) {
+  border: 3px solid var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: none;
+}
+
+html[data-cf-theme='bauhaus']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ) {
+  border: 3px solid var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: none;
+  font-weight: 800;
+  text-transform: uppercase;
+  transition:
+    color 150ms ease-out,
+    background 150ms ease-out,
+    transform 150ms ease-out;
+}
+
+html[data-cf-theme='bauhaus']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ):hover {
+  color: #000000;
+  background: #ffcc00;
+  transform: translate(-2px, -2px);
+}
+
+html[data-cf-theme='bauhaus'] :where(.cf-search-field, .cf-source-panel textarea) {
+  border: 3px solid var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: none;
+}
+
+html[data-cf-theme='bauhaus'] .cf-content mark,
+html[data-cf-theme='bauhaus'] .cf-content ::selection {
+  color: #000000;
+  background: #ffcc00;
+}

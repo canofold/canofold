@@ -1,0 +1,100 @@
+html[data-cf-theme='shoujo-manga'] {
+  color-scheme: light;
+  --cf-canvas: #fff5f7;
+  --cf-ink: #51364d;
+  --cf-ink-body: #62445d;
+  --cf-ink-secondary: #795d74;
+  --cf-ink-tertiary: #80637b;
+  --cf-surface: #fffafd;
+  --cf-surface-secondary: #ffe8ee;
+  --cf-surface-soft: #fff0f4;
+  --cf-surface-elevated: #fffafd;
+  --cf-surface-code: #f7efff;
+  --cf-code-ink: #51364d;
+  --cf-border: #d898aa;
+  --cf-border-strong: #bd6c88;
+  --cf-hairline: rgb(189 108 136 / 0.24);
+  --cf-accent-500: #c44772;
+  --cf-accent-strong: #b23c67;
+  --cf-accent-deep: #963052;
+  --cf-accent-secondary: #8d72d8;
+  --cf-info: #7761b5;
+  --cf-info-deep: #634b9e;
+  --cf-success: #3f826c;
+  --cf-success-deep: #326956;
+  --cf-warning: #94701e;
+  --cf-warning-deep: #76570f;
+  --cf-danger: #bb4165;
+  --cf-danger-deep: #963052;
+  --cf-yellow: #fde68a;
+  --cf-overlay: rgb(81 54 77 / 0.42);
+  --cf-on-accent: #ffffff;
+  --cf-shadow-raised: 0 18px 44px rgb(160 91 122 / 0.18);
+  --cf-shadow-raised-sm: 0 8px 24px rgb(160 91 122 / 0.14);
+  --cf-shadow-inset: inset 0 0 0 1px rgb(255 255 255 / 0.78);
+  --cf-block-shell-shadow: var(--cf-shadow-raised-sm);
+  --cf-font-display: 'Songti SC', 'STSong', 'Yu Mincho', Georgia, serif;
+  --cf-font-sans: 'Avenir Next', 'PingFang SC', 'Yu Gothic', system-ui, sans-serif;
+  --cf-radius-sm: 12px;
+  --cf-radius-md: 18px;
+  --cf-radius-lg: 26px;
+  --cf-radius-full: 999px;
+  --cf-duration-fast: 220ms;
+  --cf-duration-normal: 320ms;
+  --cf-easing-default: ease-out;
+  --cf-easing-spring: cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 3px rgb(141 114 216 / 0.32);
+  --cf-nav-item-hover-ink: #963052;
+  --cf-nav-item-hover-surface: #ffe8ee;
+  --cf-nav-item-hover-shadow: 0 7px 18px rgb(160 91 122 / 0.12);
+  --cf-nav-item-active-ink: #963052;
+  --cf-nav-item-active-surface: #ffe0e9;
+  --cf-nav-item-active-shadow: inset 0 0 0 1px rgb(189 108 136 / 0.36);
+  --cf-theme-header-shadow: 0 5px 20px rgb(160 91 122 / 0.12);
+  --cf-theme-rail-shadow: inset -1px 0 0 rgb(189 108 136 / 0.2);
+  --cf-theme-control-border: 1px solid #d898aa;
+  --cf-theme-control-ink: #795d74;
+  --cf-theme-control-surface: #fffafd;
+  --cf-theme-control-shadow: 0 7px 18px rgb(160 91 122 / 0.12);
+  --cf-theme-control-hover-ink: #963052;
+  --cf-theme-control-hover-surface: #ffe8ee;
+  --cf-theme-control-hover-shadow: 0 10px 24px rgb(160 91 122 / 0.18);
+  --cf-theme-control-hover-transform: translateY(-1px);
+  --cf-theme-control-active-ink: #963052;
+  --cf-theme-control-active-surface: #ffd9e4;
+  --cf-theme-control-active-shadow: inset 0 2px 7px rgb(160 91 122 / 0.16);
+  --cf-theme-control-active-transform: translateY(1px);
+  --cf-theme-panel-border: 1px solid #d898aa;
+  --cf-theme-panel-surface: #fffafd;
+  --cf-theme-panel-shadow: 0 20px 52px rgb(160 91 122 / 0.2);
+  --cf-theme-block-border: 1px solid #e2b5c2;
+  --cf-theme-block-shadow: 0 10px 26px rgb(160 91 122 / 0.12);
+  --cf-theme-toolbar-surface: #fff0f4;
+  --cf-theme-button-border: 1px solid #bd6c88;
+  --cf-theme-button-shadow: 0 8px 20px rgb(160 91 122 / 0.16);
+  --cf-theme-button-hover-surface: #b23c67;
+  --cf-theme-button-hover-shadow: 0 12px 28px rgb(160 91 122 / 0.24);
+  --cf-theme-button-hover-transform: translateY(-1px);
+  --cf-theme-button-active-shadow: inset 0 3px 8px rgb(81 54 77 / 0.16);
+  --cf-theme-button-active-transform: translateY(1px);
+  --cf-theme-input-border: 1px solid #d898aa;
+  --cf-theme-input-surface: #fffafd;
+  --cf-theme-input-focus-shadow: 0 0 0 4px rgb(196 181 253 / 0.36);
+}
+
+html[data-cf-theme='shoujo-manga'] :where(body, .cf-main, .cf-content) {
+  background-color: var(--cf-surface);
+  background-image: radial-gradient(circle, rgb(201 76 119 / 0.07) 1px, transparent 1.5px);
+  background-size: 10px 10px;
+}
+
+html[data-cf-theme='shoujo-manga'] :where(.cf-content h1, .cf-content h2, .cf-hero-title) {
+  color: #963052;
+  font-style: italic;
+  text-shadow: 1px 1px 0 #fde68a;
+}
+
+html[data-cf-theme='shoujo-manga'] .cf-content blockquote {
+  background-image: linear-gradient(135deg, rgb(255 183 197 / 0.22), rgb(196 181 253 / 0.2));
+}

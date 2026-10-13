@@ -1,0 +1,115 @@
+/* Minimal flat: Swiss restraint, pure contrast, square edges and zero depth effects. */
+html[data-cf-theme='minimalist-flat'] {
+  color-scheme: light;
+  --cf-canvas: #ffffff;
+  --cf-ink: #000000;
+  --cf-ink-body: #151515;
+  --cf-ink-secondary: #3f3f3f;
+  --cf-ink-tertiary: #595959;
+  --cf-surface: #ffffff;
+  --cf-surface-secondary: #f2f2f2;
+  --cf-surface-soft: #f7f7f7;
+  --cf-surface-elevated: #ffffff;
+  --cf-surface-code: #f2f2f2;
+  --cf-code-ink: #000000;
+  --cf-border: #000000;
+  --cf-border-strong: #000000;
+  --cf-hairline: #000000;
+  --cf-accent-500: #ff3366;
+  --cf-accent-strong: #d90045;
+  --cf-accent-deep: #a80035;
+  --cf-accent-secondary: #007f6a;
+  --cf-info: #006ea8;
+  --cf-info-deep: #00527e;
+  --cf-success: #007f66;
+  --cf-success-deep: #005d4b;
+  --cf-warning: #8a6500;
+  --cf-warning-deep: #654a00;
+  --cf-danger: #c71445;
+  --cf-danger-deep: #970f34;
+  --cf-yellow: #ffcc00;
+  --cf-overlay: rgb(0 0 0 / 72%);
+  --cf-on-accent: #000000;
+  --cf-shadow-raised: none;
+  --cf-shadow-raised-sm: none;
+  --cf-shadow-inset: none;
+  --cf-block-shell-shadow: none;
+  --cf-font-display: 'Helvetica Neue', Arial, 'PingFang SC', sans-serif;
+  --cf-font-sans: 'Helvetica Neue', Arial, 'PingFang SC', sans-serif;
+  --cf-radius-sm: 0;
+  --cf-radius-md: 0;
+  --cf-radius-lg: 0;
+  --cf-radius-full: 0;
+  --cf-duration-fast: 75ms;
+  --cf-duration-normal: 75ms;
+  --cf-easing-default: linear;
+  --cf-easing-spring: linear;
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 3px rgb(255 51 102 / 24%);
+  --cf-nav-item-hover-ink: #ffffff;
+  --cf-nav-item-hover-surface: #000000;
+  --cf-nav-item-hover-shadow: none;
+  --cf-nav-item-active-ink: #a80035;
+  --cf-nav-item-active-surface: transparent;
+  --cf-nav-item-active-shadow: none;
+}
+
+html[data-cf-theme='minimalist-flat'] :where(.cf-header, .cf-sidebar, .cf-outline, .cf-menu-list) {
+  background: var(--cf-surface);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-cf-theme='minimalist-flat']
+  :where(.cf-menu-list, .cf-search-panel, .cf-source-panel, .cf-table-preview-card, .cf-diagram-dialog),
+html[data-cf-theme='minimalist-flat']
+  :is(
+    .cf-content .cf-demo,
+    .cf-content .cf-callout,
+    .cf-content details,
+    .cf-content .cf-code,
+    .cf-content .cf-table-window,
+    .cf-content .cf-file-tree,
+    .cf-content .cf-link-card
+  ) {
+  border: 2px solid var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: none;
+}
+
+html[data-cf-theme='minimalist-flat']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ) {
+  border: 2px solid var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: none;
+}
+
+html[data-cf-theme='minimalist-flat']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ):hover {
+  color: #ffffff;
+  background: #000000;
+  box-shadow: none;
+}
+
+html[data-cf-theme='minimalist-flat'] :where(.cf-search-field, .cf-source-panel textarea) {
+  border: 2px solid var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: none;
+}

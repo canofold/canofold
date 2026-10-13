@@ -6,6 +6,7 @@ import { createMockGraph, createMockPage, trackedMkdtemp as mkdtemp } from '../.
 import { defaultConfig } from '../config/defaults'
 import { copyRequiredMathFonts, renderSite } from './renderSite'
 import { markdownLabelsFor } from '../config/locale'
+import { canofold, neumorphism } from '@canofold/themes'
 
 const mathAssetsPlugin = {
   name: 'math-assets-test',
@@ -15,6 +16,71 @@ const mathAssetsPlugin = {
 }
 
 describe('renderSite', () => {
+  it('renders only configured theme variants with a single accessible theme menu', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-themes-'))
+    await mkdir(join(cwd, 'docs'), { recursive: true })
+    const sourcePath = join(cwd, 'docs/index.md')
+    await writeFile(sourcePath, '# Themes')
+    const page = createMockPage({
+      sourcePath,
+      sourceRelativePath: 'docs/index.md',
+      relativePath: 'index.md',
+      routePath: '/',
+      outputPath: 'index.html',
+      markdownOutputPath: 'index.md',
+      title: 'Themes',
+      body: '# Themes'
+    })
+    const config = {
+      ...defaultConfig,
+      themes: [neumorphism, canofold]
+    }
+    await renderSite({
+      cwd,
+      config: { ...config, themes: [...config.themes] },
+      graph: createMockGraph({ pages: [page] })
+    })
+    const html = await readFile(join(cwd, '.canofold/dist/index.html'), 'utf8')
+    const css = await readFile(join(cwd, '.canofold/dist/assets/canofold.css'), 'utf8')
+    expect(html).toContain('data-cf-theme="neumorphism"')
+    expect(html).toContain('data-cf-theme-appearance="default"')
+    expect(html).toContain('data-canofold-theme-option="canofold:dark"')
+    expect(html).toContain('data-canofold-theme-option="neumorphism:default"')
+    expect(html).toContain('新拟物派')
+    expect(html).not.toContain('neo-brutalist:default')
+    expect(html).not.toContain('data-canofold-theme-toggle')
+    expect(css).toContain("data-cf-theme='neumorphism'")
+    expect(css).not.toContain("data-cf-theme='neo-brutalist'")
+    expect(css.match(/--cf-canvas: #f6f6f8/g)).toHaveLength(1)
+  })
+  it('builds an alternate-only site without the Canofold palette or theme menu', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-neumorphism-only-'))
+    await mkdir(join(cwd, 'docs'), { recursive: true })
+    const sourcePath = join(cwd, 'docs/index.md')
+    await writeFile(sourcePath, '# Neumorphism')
+    const page = createMockPage({
+      sourcePath,
+      sourceRelativePath: 'docs/index.md',
+      relativePath: 'index.md',
+      routePath: '/',
+      outputPath: 'index.html',
+      markdownOutputPath: 'index.md',
+      title: 'Neumorphism',
+      body: '# Neumorphism'
+    })
+    await renderSite({
+      cwd,
+      config: { ...defaultConfig, themes: [neumorphism] },
+      graph: createMockGraph({ pages: [page] })
+    })
+    const html = await readFile(join(cwd, '.canofold/dist/index.html'), 'utf8')
+    const css = await readFile(join(cwd, '.canofold/dist/assets/canofold.css'), 'utf8')
+    expect(html).toContain('data-cf-theme="neumorphism"')
+    expect(html).not.toContain('data-canofold-theme-option')
+    expect(css).toContain('--cf-canvas: #e0e5ec')
+    expect(css).not.toContain('--cf-canvas: #f6f6f8')
+    expect(css).not.toContain('#087af7')
+  })
   it('fails explicitly when required KaTeX fonts cannot be copied', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-missing-math-fonts-'))
 
@@ -103,7 +169,7 @@ describe('renderSite', () => {
     await renderSite({ cwd, config: defaultConfig, graph })
     const html = await readFile(join(cwd, '.canofold/dist/markdown/playground/index.html'), 'utf8')
 
-    expect(html).toContain('<html lang="zh" class="cf-playground-page">')
+    expect(html).toContain('<html lang="zh" class="cf-playground-page" data-cf-theme="canofold"')
     expect(html).toContain('class="cf-shell cf-shell-playground"')
     expect(html).toContain('data-canofold-playground=""')
     expect(html).toContain('data-view="preview"')
@@ -253,12 +319,16 @@ describe('renderSite', () => {
 
     await renderSite({
       cwd,
-      config: { ...defaultConfig, basePath: '/project/', layout: { header: false } },
+      config: {
+        ...defaultConfig,
+        basePath: '/project/',
+        layout: { ...defaultConfig.layout, header: false }
+      },
       graph
     })
 
     const html = await readFile(join(cwd, '.canofold/dist/guide/index.html'), 'utf8')
-    expect(html).toContain('<html lang="zh" class="cf-header-hidden">')
+    expect(html).toContain('<html lang="zh" class="cf-header-hidden" data-cf-theme="canofold"')
     expect(html).not.toContain('<header')
     expect(html).toContain('href="/project/"')
     expect(html).toContain('src="/project/logo.svg"')
@@ -432,8 +502,8 @@ describe('renderSite', () => {
         basePath: '/project/',
         outputDir,
         styles: ['./docs/brand.css'],
-        theme: {
-          ...defaultConfig.theme,
+        branding: {
+          ...defaultConfig.branding,
           favicon: '/favicon.svg',
           logo: '/logo.svg',
           logoDark: '/logo-dark.svg'
@@ -468,7 +538,7 @@ describe('renderSite', () => {
     expect(html).toContain('data-empty-label="没有找到匹配文档"')
     expect(html).toContain('data-canofold-action-success="源文档已复制"')
     expect(html).toContain('data-canofold-search-default')
-    expect(html).not.toContain('data-canofold-search-action="theme"')
+    expect(html).toContain('data-canofold-search-action="theme"')
     expect(html).not.toContain('class="cf-menu cf-lang"')
     expect(html).toContain('class="cf-outline-ad"')
     expect(html).toContain('class="cf-sidebar-primary-nav"')
@@ -494,16 +564,16 @@ describe('renderSite', () => {
     expect(css).toContain('.brand-test { color: rebeccapurple; }')
     expect(css.lastIndexOf('.brand-test')).toBeGreaterThan(css.lastIndexOf('/* Canofold shell */'))
     expect(css).toContain('--cf-accent-500: #0088ff')
-    expect(css).toContain('--cf-body-font-size: 1rem')
+    expect(css).toMatch(/--cf-body-font-size:\s*1rem/)
     expect(css).not.toContain('--cf-material-')
     expect(css).not.toMatch(/Nocturne|\.cf-bento-grid|\.cf-hero-bento/i)
-    expect(css).toContain('--cf-glass-blur: 18px')
+    expect(css).toMatch(/--cf-glass-blur:\s*18px/)
     expect(css).toContain('padding:1.75rem var(--cf-site-gutter) 3.5rem')
     const searchClient = await readFile(join(cwd, outputDir, 'assets/canofold-search.js'), 'utf8')
     expect(searchClient).toContain('data-canofold-search-default')
     expect(searchClient).toContain('data-canofold-search-action')
     const notFound = await readFile(join(cwd, outputDir, '404.html'), 'utf8')
-    expect(notFound).toContain('<html lang="zh">')
+    expect(notFound).toContain('<html lang="zh" data-cf-theme="canofold"')
     expect(notFound).toContain('<h1 id="canofold-404-title" class="cf-not-found-title">页面未找到</h1>')
     expect(notFound).toContain('<link rel="icon" href="/project/favicon.svg">')
     expect(notFound).toContain('href="/project/assets/canofold.css"')
@@ -637,7 +707,7 @@ describe('renderSite', () => {
     const html = await readFile(join(cwd, outputDir, 'index.html'), 'utf8')
     expect(html).toContain('AUTHORED HOME BODY')
     expect(html).toContain('class="cf-home" tabindex="-1" data-pagefind-body=""')
-    expect(html).toContain('<header class="cf-header cf-header-home">')
+    expect(html).toContain('<header class="cf-header">')
     expect(html).not.toContain('class="cf-route-progress"')
     expect(html).toContain('data-cf-root="markdown"')
     expect(html).toContain('aria-label="メインナビゲーション"')
@@ -649,11 +719,16 @@ describe('renderSite', () => {
     expect(html).not.toContain('<span>en</span>')
 
     const notFound = await readFile(join(cwd, outputDir, '404.html'), 'utf8')
-    expect(notFound).toContain('<html lang="ja">')
+    expect(notFound).toContain('<html lang="ja" data-cf-theme="canofold"')
     expect(notFound).toContain('ページが見つかりません')
     expect(notFound).toContain('ページが移動または削除されました。')
     expect(notFound).toContain('Page not found')
     expect(notFound).toContain('/en/')
     expect(notFound).toContain('document.documentElement.lang=m.locale')
+    const inlineScripts = [...notFound.matchAll(/<script>([\s\S]*?)<\/script>/gi)].flatMap(([, source]) =>
+      source ? [source] : []
+    )
+    expect(inlineScripts).not.toHaveLength(0)
+    inlineScripts.forEach((source) => expect(() => new Function(source)).not.toThrow())
   })
 })

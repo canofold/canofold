@@ -1,6 +1,6 @@
 import { loadConfig } from '../config/load'
 import { startStaticServer } from '../server/staticServer'
-import { logInfo } from '../utils/logger'
+import { formatTerminalUrl, logInfo } from '../utils/logger'
 import { resolveOutputRoot } from '../utils/paths'
 
 export async function runPreview({ cwd, port = 4173 }: { cwd: string; port?: number }) {
@@ -10,6 +10,6 @@ export async function runPreview({ cwd, port = 4173 }: { cwd: string; port?: num
     port,
     basePath: config.basePath
   })
-  logInfo(`Preview running at http://127.0.0.1:${server.port}${config.basePath}`)
+  logInfo(`Preview running at ${formatTerminalUrl(`http://127.0.0.1:${server.port}${config.basePath}`)}`)
   return server
 }

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0 - 2026-10-13
+
+- Add `@canofold/themes` with the `canofold`, `glassmorphism`, `sketch-style`, `hand-drawn-doodle`, `minimalist-flat`, `bauhaus`, `neo-brutalist`, `neumorphism`, `memphis`, `cyber-chinese`, `pixel-anime`, `dopamine-design`, `shoujo-manga`, and `outrun` visual themes plus a public `ThemeDefinition` contract. Official and third-party packages now provide the same localized metadata, CSS entries, and appearances directly to `themes`; the first appearance is the default and readers can switch without reloading.
+- Make `@canofold/themes` the single owner of theme definitions and visual palettes. Standalone Markdown consumers now combine `@canofold/markdown/base.css` with a selected theme CSS entry instead of using a second Markdown-owned theme API.
+- Separate site branding and layout geometry into `branding` and `layout`; theme packages own visual tokens, localized names, and theme-specific styles instead of distributing them across `canofoldTheme` and locale messages.
+- Allow configured navigation entries to declare `activePaths` for related flat pages, so the primary navigation stays selected outside directory-based sections.
+- Use the Canofold light and dark appearances by default when `themes` is omitted, while allowing third-party themes to expose their own appearance set through the same contract.
+- Separate shared Markdown structure, default palette, site shell, and branded homepage styling. Include only selected optional theme styles, remove duplicate default palette output, make the default light header opaque, and keep layout geometry and interaction hit areas stable behind theme-owned visual hooks.
+- Carry the selected visual theme into isolated Vite component Demo frames and keep it synchronized when readers switch themes.
+- Resolve every workspace KaTeX consumer to the patched `0.18.7` runtime, including Mermaid and unified math adapters.
+
 ## 0.5.0 - 2026-10-11
 
 - Preserve valid Pagefind body matches in the UI and improve the default Compact search ranking for titles, descriptions, tags, and paths; retain language/version and no-result isolation.

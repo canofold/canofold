@@ -9,7 +9,7 @@ English | [简体中文](./README.zh-CN.md)
 Node.js 22 or newer is required. Install Canofold as a project-local development dependency:
 
 ```bash
-pnpm add -D canofold
+pnpm add -D canofold @canofold/themes
 pnpm exec canofold init --locale en
 pnpm exec canofold dev
 ```
@@ -25,6 +25,28 @@ pnpm exec canofold dev
 - `preview` serves the production output locally.
 - `clean` removes generated output and persistent build state.
 - `deploy` writes deployment guidance for the current project.
+
+## Visual themes
+
+Import and order the themes readers can use in `canofold.config.ts`:
+
+```ts
+import { canofold, neoBrutalist, neumorphism } from '@canofold/themes'
+import { defineConfig } from 'canofold'
+import aurora from '@acme/canofold-theme'
+
+export default defineConfig({
+  themes: [canofold, neoBrutalist, neumorphism, aurora]
+})
+```
+
+The first appearance of the first entry is the default. Readers can switch without reloading, and their selection persists across pages. Each definition owns its stable id, localized name, CSS entries, and appearances. `canofold` provides light and dark appearances; every other official theme provides one. Omitting `themes` uses `canofold`. The [`@canofold/themes`](../themes/README.md) package lists all official definitions.
+
+Official and third-party themes implement the same `ThemeDefinition` contract. Core neither exports nor registers themes: official definitions come from `@canofold/themes`, third-party definitions come from their own npm packages, and the site only places imported definitions in `themes`. Theme names belong to the definition rather than general `i18n.messages`; the latter only overrides interface copy for search, navigation, quick actions, Markdown interactions, and not-found pages. `branding` owns only `logo`, `logoDark`, and `favicon`; `layout` owns site geometry; visual tokens and theme-specific styles belong to the theme package. See [`@canofold/themes`](../themes/README.md) for the complete third-party contract.
+
+## Navigation
+
+Top navigation normally follows directory routes. For related documents kept at flat routes, add their exact paths to the navigation item's `activePaths`; those paths must point to generated pages. For example, `{ text: 'Components', link: '/button/', activePaths: ['/notice/', '/progress/'] }` keeps “Components” selected on the listed pages without changing their URLs.
 
 ## Output control and build report
 

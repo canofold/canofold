@@ -16,6 +16,7 @@ afterEach(() => {
   delete runtime.__canofoldMermaidRenders
   delete runtime.__canofoldMermaidActive
   delete runtime.__canofoldMermaidMaxActive
+  vi.restoreAllMocks()
 })
 
 describe('diagram client entries', () => {
@@ -70,6 +71,24 @@ describe('diagram client entries', () => {
     expect(
       (globalThis as typeof globalThis & { __canofoldMermaidRenders?: number }).__canofoldMermaidRenders
     ).toBe(1)
+  })
+
+  it('does not observe a detached document without a browsing context', () => {
+    const detached = document.implementation.createHTMLDocument('detached')
+    const observe = vi.fn()
+    const observer = vi.spyOn(globalThis, 'MutationObserver').mockImplementation(
+      class {
+        observe = observe
+        disconnect() {}
+      } as unknown as typeof MutationObserver
+    )
+
+    const dispose = enhanceMermaid(detached)
+
+    expect(detached.defaultView).toBeNull()
+    expect(observer).not.toHaveBeenCalled()
+    expect(observe).not.toHaveBeenCalled()
+    dispose()
   })
 
   it('retries a Mermaid module after a transient import failure', async () => {

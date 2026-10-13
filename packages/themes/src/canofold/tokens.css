@@ -1,9 +1,9 @@
 /*
- * Canofold's shared visual contract.
+ * Canofold's default theme and shared visual contract.
  *
  * The palette is intentionally semantic: Markdown and the site shell consume
  * the same variables, while a host can override the documented values from
- * `@canofold/markdown/theme`. Content surfaces stay opaque; translucent
+ * `@canofold/themes/canofold.css`. Content surfaces stay opaque; translucent
  * material is reserved for temporary controls and overlays.
  */
 :root {
@@ -20,36 +20,13 @@
   --cf-surface-elevated: #ffffff;
   --cf-surface-code: #f6f6f8;
   --cf-code-ink: #1d1d1f;
-  --cf-canofold-config-icon: url('./file-icons/config.svg');
-
-  /* The contract keeps these names for theme overrides. Visual rules never
-     draw a border; they use surfaces, inset highlights, and shadows instead. */
-  --cf-border: transparent;
-  --cf-border-strong: transparent;
   --cf-hairline: rgb(29 29 31 / 0.1);
 
   /* Default semantic palette. Components derive interaction and status tones
      from this contract instead of introducing local color constants. */
   --cf-accent-500: #0088ff;
-  --cf-accent-50: color-mix(in srgb, var(--cf-accent-500) 6%, white);
-  --cf-accent-100: color-mix(in srgb, var(--cf-accent-500) 10%, white);
-  --cf-accent-200: color-mix(in srgb, var(--cf-accent-500) 20%, white);
-  --cf-accent-300: color-mix(in srgb, var(--cf-accent-500) 38%, white);
-  --cf-accent-400: color-mix(in srgb, var(--cf-accent-500) 68%, white);
-  --cf-accent-600: color-mix(in srgb, var(--cf-accent-500) 88%, black);
-  --cf-accent-700: color-mix(in srgb, var(--cf-accent-500) 78%, black);
-  --cf-accent-800: color-mix(in srgb, var(--cf-accent-500) 66%, black);
-  --cf-accent-900: color-mix(in srgb, var(--cf-accent-500) 52%, black);
-  --cf-accent-soft: color-mix(in srgb, var(--cf-accent-500) 10%, white);
   --cf-accent-strong: #0088ff;
   --cf-accent-deep: color-mix(in srgb, var(--cf-accent-500) 78%, black);
-
-  /* Official diagram plugins consume this shared theme contract. */
-  --cf-diagram-surface: var(--cf-surface-soft);
-  --cf-diagram-foreground: var(--cf-ink-body);
-  --cf-diagram-accent: var(--cf-accent-500);
-  --cf-diagram-muted: var(--cf-ink-secondary);
-  --cf-diagram-line: color-mix(in srgb, var(--cf-ink-body) 12%, transparent);
   --cf-accent-secondary: #6155f5;
   --cf-info: #0088ff;
   --cf-info-deep: #0088ff;
@@ -59,32 +36,13 @@
   --cf-warning-deep: #ff8d28;
   --cf-danger: #ff383c;
   --cf-danger-deep: #ff383c;
-  --cf-info-soft: color-mix(in oklab, var(--cf-info) 9%, var(--cf-surface));
-  --cf-success-soft: color-mix(in oklab, var(--cf-success) 9%, var(--cf-surface));
-  --cf-warning-soft: color-mix(in oklab, var(--cf-warning) 9%, var(--cf-surface));
-  --cf-danger-soft: color-mix(in oklab, var(--cf-danger) 9%, var(--cf-surface));
   --cf-yellow: #ffcc00;
 
   --cf-overlay: rgb(0 0 0 / 0.42);
-  --cf-overlay-scrim: rgb(13 13 15 / 0.9);
-  --cf-overlay-control: rgb(255 255 255 / 0.14);
-  --cf-overlay-ink: rgb(255 255 255 / 0.78);
-  --cf-overlay-ink-muted: rgb(255 255 255 / 0.56);
   --cf-shadow-raised: 0 20px 52px rgb(29 29 31 / 0.14);
   --cf-shadow-raised-sm: 0 8px 22px rgb(29 29 31 / 0.09);
   --cf-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.7);
   --cf-block-shell-shadow: 0 1px 2px rgb(29 29 31 / 0.08), 0 6px 18px rgb(29 29 31 / 0.06);
-
-  /* Terminal is always a dark surface. Traffic-light dots are macOS chrome,
-     not semantic status colors — do not reuse them for callouts or badges. */
-  --cf-terminal-canvas: #1c1c1e;
-  --cf-terminal-toolbar: #2b2b2f;
-  --cf-terminal-ink: #f5f5f7;
-  --cf-terminal-ink-secondary: #b9b9c0;
-  --cf-terminal-ink-tertiary: #98989f;
-  --cf-terminal-traffic-close: #ff5f57;
-  --cf-terminal-traffic-minimize: #febc2e;
-  --cf-terminal-traffic-maximize: #28c840;
 
   --cf-font-display:
     -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Segoe UI',
@@ -92,36 +50,10 @@
   --cf-font-sans:
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  --cf-font-mono: 'SFMono-Regular', 'JetBrains Mono', Consolas, 'Liberation Mono', Menlo, monospace;
-  /* Typography scales with the user's root font size. Line heights stay unitless. */
-  --cf-body-font-size: 1rem;
-  --cf-body-line-height: 1.6;
-  --cf-heading-line-height: 1.2;
-  --cf-heading-1-size: 2rem;
-  --cf-heading-2-size: 1.625rem;
-  --cf-heading-3-size: 1.375rem;
-  --cf-heading-4-size: 1.25rem;
-  --cf-heading-5-size: 1.125rem;
-  --cf-heading-6-size: 1.0625rem;
-  --cf-reading-width: 100%;
-  --cf-content-width: 100%;
-  --cf-site-gutter: 2.25rem;
-
   --cf-radius-sm: 4px;
   --cf-radius-md: 6px;
   --cf-radius-lg: 8px;
   --cf-radius-full: 8px;
-
-  --cf-duration-fast: 120ms;
-  --cf-duration-normal: 220ms;
-  --cf-easing-default: cubic-bezier(0.22, 1, 0.36, 1);
-  --cf-easing-spring: cubic-bezier(0.2, 0.85, 0.25, 1);
-  --cf-glass-blur: 18px;
-  /* Major layout dimensions use rem; optical geometry below intentionally uses px. */
-  --cf-header-height: 4.25rem;
-  --cf-sidebar-width: 17.5rem;
-  --cf-outline-width: 18.75rem;
-  --cf-focus-ring: 0 0 0 3px color-mix(in srgb, var(--cf-accent-500) 24%, transparent);
 }
 
 html.dark,
@@ -163,10 +95,6 @@ html.dark,
   --cf-warning-deep: #ff9230;
   --cf-danger: #ff4245;
   --cf-danger-deep: #ff4245;
-  --cf-info-soft: color-mix(in oklab, var(--cf-info) 9%, var(--cf-surface));
-  --cf-success-soft: color-mix(in oklab, var(--cf-success) 9%, var(--cf-surface));
-  --cf-warning-soft: color-mix(in oklab, var(--cf-warning) 9%, var(--cf-surface));
-  --cf-danger-soft: color-mix(in oklab, var(--cf-danger) 9%, var(--cf-surface));
   --cf-yellow: #ffd600;
   --cf-overlay: rgb(0 0 0 / 0.62);
   --cf-shadow-raised: 0 22px 58px rgb(0 0 0 / 0.34);
@@ -174,10 +102,4 @@ html.dark,
   --cf-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.08);
   --cf-block-shell-shadow: 0 1px 2px rgb(0 0 0 / 0.28), 0 6px 18px rgb(0 0 0 / 0.18);
   --cf-focus-ring: 0 0 0 3px color-mix(in srgb, var(--cf-accent-500) 36%, transparent);
-}
-
-@media (max-width: 47.5rem) {
-  :root {
-    --cf-site-gutter: 1.25rem;
-  }
 }

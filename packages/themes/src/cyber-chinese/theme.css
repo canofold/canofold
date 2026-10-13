@@ -1,0 +1,102 @@
+html[data-cf-theme='cyber-chinese'] {
+  color-scheme: dark;
+  --cf-canvas: #0a0a0a;
+  --cf-ink: #f1dec0;
+  --cf-ink-body: #dbc9ad;
+  --cf-ink-secondary: #b9a98f;
+  --cf-ink-tertiary: #94856f;
+  --cf-surface: #101010;
+  --cf-surface-secondary: #1a1a1a;
+  --cf-surface-soft: #171413;
+  --cf-surface-elevated: #1a1a1a;
+  --cf-surface-code: #0d1518;
+  --cf-code-ink: #e7d6b9;
+  --cf-border: #c9a227;
+  --cf-border-strong: #d4553a;
+  --cf-hairline: rgb(201 162 39 / 0.4);
+  --cf-accent-500: #d4553a;
+  --cf-accent-strong: #ef6749;
+  --cf-accent-deep: #ff866d;
+  --cf-accent-secondary: #00d4ff;
+  --cf-info: #00d4ff;
+  --cf-info-deep: #62e6ff;
+  --cf-success: #48ca8b;
+  --cf-success-deep: #77e2ad;
+  --cf-warning: #c9a227;
+  --cf-warning-deep: #eed25b;
+  --cf-danger: #ef6749;
+  --cf-danger-deep: #ff8b74;
+  --cf-yellow: #c9a227;
+  --cf-overlay: rgb(0 0 0 / 0.82);
+  --cf-on-accent: #0a0a0a;
+  --cf-shadow-raised: 0 0 0 1px #c9a227, 0 0 22px rgb(212 85 58 / 0.34), 8px 8px 0 #050505;
+  --cf-shadow-raised-sm: 0 0 0 1px #c9a227, 0 0 14px rgb(0 212 255 / 0.25);
+  --cf-shadow-inset: inset 0 0 14px rgb(212 85 58 / 0.2);
+  --cf-block-shell-shadow: var(--cf-shadow-raised);
+  --cf-font-display: 'STKaiti', 'KaiTi', 'Songti SC', Georgia, serif;
+  --cf-font-sans: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --cf-radius-sm: 0;
+  --cf-radius-md: 0;
+  --cf-radius-lg: 0;
+  --cf-radius-full: 0;
+  --cf-duration-fast: 220ms;
+  --cf-duration-normal: 280ms;
+  --cf-easing-default: ease-out;
+  --cf-easing-spring: ease-out;
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 2px #00d4ff, 0 0 18px rgb(0 212 255 / 0.66);
+  --cf-nav-item-hover-ink: #62e6ff;
+  --cf-nav-item-hover-surface: rgb(0 212 255 / 0.08);
+  --cf-nav-item-hover-shadow: inset 0 0 0 1px #00d4ff, 0 0 14px rgb(0 212 255 / 0.28);
+  --cf-nav-item-active-ink: #f1dec0;
+  --cf-nav-item-active-surface: rgb(212 85 58 / 0.2);
+  --cf-nav-item-active-shadow: inset 0 0 0 1px #d4553a, 0 0 16px rgb(212 85 58 / 0.36);
+  --cf-theme-header-shadow: 0 0 18px rgb(212 85 58 / 0.22);
+  --cf-theme-rail-shadow: inset -1px 0 0 #c9a227;
+  --cf-theme-control-border: 1px solid #c9a227;
+  --cf-theme-control-ink: #f1dec0;
+  --cf-theme-control-surface: #14110f;
+  --cf-theme-control-shadow: 0 0 10px rgb(212 85 58 / 0.24);
+  --cf-theme-control-hover-ink: #62e6ff;
+  --cf-theme-control-hover-surface: #181112;
+  --cf-theme-control-hover-shadow: 0 0 8px #d4553a, 0 0 18px rgb(0 212 255 / 0.36);
+  --cf-theme-control-hover-transform: translateY(-1px);
+  --cf-theme-control-active-ink: #f1dec0;
+  --cf-theme-control-active-surface: #25120f;
+  --cf-theme-control-active-shadow: inset 0 0 10px rgb(212 85 58 / 0.45);
+  --cf-theme-control-active-transform: translateY(2px);
+  --cf-theme-panel-border: 1px solid #c9a227;
+  --cf-theme-panel-surface: #14110f;
+  --cf-theme-panel-shadow: 0 0 12px rgb(212 85 58 / 0.38), 0 0 28px rgb(0 212 255 / 0.16);
+  --cf-theme-block-border: 1px solid #c9a227;
+  --cf-theme-block-shadow: 0 0 18px rgb(212 85 58 / 0.2);
+  --cf-theme-toolbar-surface: #171210;
+  --cf-theme-button-shadow: 0 0 10px rgb(212 85 58 / 0.44), 0 0 22px rgb(0 212 255 / 0.18);
+  --cf-theme-button-hover-surface: #c9a227;
+  --cf-theme-button-hover-shadow: 0 0 12px #d4553a, 0 0 26px rgb(0 212 255 / 0.42);
+  --cf-theme-button-hover-transform: translateY(-1px);
+  --cf-theme-button-active-shadow: inset 0 0 10px rgb(10 10 10 / 0.7);
+  --cf-theme-button-active-transform: translateY(2px);
+  --cf-theme-input-border: 1px solid #c9a227;
+  --cf-theme-input-surface: #0a0a0a;
+  --cf-theme-input-focus-shadow: 0 0 8px #00d4ff, inset 0 0 10px rgb(0 212 255 / 0.12);
+}
+
+html[data-cf-theme='cyber-chinese'] :where(body, .cf-main, .cf-content) {
+  background-color: var(--cf-surface);
+  background-image:
+    linear-gradient(rgb(201 162 39 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(201 162 39 / 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 18% 12%, rgb(212 85 58 / 0.12), transparent 28%),
+    radial-gradient(circle at 82% 88%, rgb(160 32 240 / 0.08), transparent 32%);
+  background-size:
+    28px 28px,
+    28px 28px,
+    auto,
+    auto;
+}
+
+html[data-cf-theme='cyber-chinese'] :where(.cf-content h1, .cf-content h2, .cf-hero-title) {
+  color: #e7c04a;
+  text-shadow: 0 0 14px rgb(212 85 58 / 0.62);
+}

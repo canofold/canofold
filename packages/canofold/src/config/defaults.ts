@@ -1,5 +1,6 @@
 import type { CanofoldConfig } from './types'
 import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
+import { canofold } from '@canofold/themes'
 
 export const defaultConfig: CanofoldConfig = {
   title: 'Canofold',
@@ -9,9 +10,12 @@ export const defaultConfig: CanofoldConfig = {
   outputDir: '.canofold/dist',
   markdownMirror: true,
   styles: [],
+  themes: [canofold],
   demos: {},
   layout: {
-    header: true
+    header: true,
+    sidebarWidth: '17.5rem',
+    outlineWidth: '18.75rem'
   },
   seo: {
     robots: 'allow'
@@ -23,17 +27,10 @@ export const defaultConfig: CanofoldConfig = {
     labels: {},
     plugins: []
   },
-  theme: {
-    accentColor: 'canofold',
-    darkMode: false,
-    radius: 8,
-    baseColor: 'paper',
-    sidebarWidth: '17.5rem',
-    outlineWidth: '18.75rem',
+  branding: {
     logo: DEFAULT_BRAND_ASSET_PATHS.logo,
     logoDark: DEFAULT_BRAND_ASSET_PATHS.logoDark,
-    favicon: DEFAULT_BRAND_ASSET_PATHS.favicon,
-    tokens: {}
+    favicon: DEFAULT_BRAND_ASSET_PATHS.favicon
   },
   search: {
     enabled: true,

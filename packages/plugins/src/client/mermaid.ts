@@ -140,10 +140,11 @@ async function renderMermaid(figure: HTMLElement) {
 export function enhance(root: ParentNode = document) {
   const diagrams = enhanceDiagrams(root, 'mermaid', renderMermaid)
   const document = root instanceof Document ? root : root.ownerDocument
-  if (!document) return diagrams
+  const view = document?.defaultView
+  if (!document || !view || view.document !== document) return diagrams
 
   let scheduledFrame: number | undefined
-  const observer = new MutationObserver(() => {
+  const observer = new view.MutationObserver(() => {
     if (scheduledFrame !== undefined) return
     scheduledFrame = requestAnimationFrame(() => {
       scheduledFrame = undefined

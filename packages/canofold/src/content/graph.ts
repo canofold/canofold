@@ -173,7 +173,13 @@ function versionedNavLink(link: string, version: CanofoldVersionItem) {
 }
 
 function buildConfiguredNav(items: CanofoldNavigationItem[], version: CanofoldVersionItem): NavItem[] {
-  return items.map((item) => ({ title: item.text, routePath: versionedNavLink(item.link, version) }))
+  return items.map((item) => ({
+    title: item.text,
+    routePath: versionedNavLink(item.link, version),
+    ...(item.activePaths
+      ? { activePaths: item.activePaths.map((path) => versionedNavLink(path, version)) }
+      : {})
+  }))
 }
 
 /** Keep configured section links useful when the section landing page is hidden
@@ -391,8 +397,10 @@ export async function buildContentGraph(
   for (const versionNav of Object.values(nav)) {
     for (const items of Object.values(versionNav)) {
       for (const item of items) {
-        if (item.routePath.startsWith('/') && !pageRoutes.has(item.routePath)) {
-          throw new Error(`Navigation target is not a generated page: "${item.routePath}"`)
+        for (const routePath of [item.routePath, ...(item.activePaths ?? [])]) {
+          if (routePath.startsWith('/') && !pageRoutes.has(routePath)) {
+            throw new Error(`Navigation target is not a generated page: "${routePath}"`)
+          }
         }
       }
     }

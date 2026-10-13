@@ -475,6 +475,23 @@ describe('buildContentGraph', () => {
     ])
   })
 
+  it('versions explicit active paths for flat pages and validates their targets', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-nav-active-paths-'))
+    await mkdir(join(cwd, 'docs'), { recursive: true })
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await writeFile(join(cwd, 'docs/button.md'), '# Button')
+    await writeFile(join(cwd, 'docs/notice.md'), '# Notice')
+    const config = createMockConfig({
+      navigation: { zh: [{ text: 'Components', link: '/button/', activePaths: ['/notice/'] }] }
+    })
+    const graph = await buildContentGraph(cwd, config)
+    expect(graph.nav.current?.zh).toEqual([
+      { title: 'Components', routePath: '/button/', activePaths: ['/notice/'] }
+    ])
+    config.navigation.zh![0]!.activePaths = ['/missing/']
+    await expect(buildContentGraph(cwd, config)).rejects.toThrow('Navigation target is not a generated page')
+  })
+
   it('keeps external HTTPS navigation unchanged for historical versions regardless of scheme case', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-external-nav-'))
     await mkdir(join(cwd, 'docs/zh'), { recursive: true })

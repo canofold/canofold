@@ -8,6 +8,16 @@ import { execPnpmSync } from './lib/packageManager.mjs'
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const packages = [
   {
+    name: '@canofold/themes',
+    root: join(workspace, 'packages/themes'),
+    // Fourteen themes share common layers while retaining one public CSS
+    // subpath per visual theme. Keep only one file of growth headroom so copied
+    // component layers still fail this release gate.
+    compressedBudget: 24 * 1024,
+    fileCountBudget: 24,
+    cssSourcePackage: true
+  },
+  {
     name: '@canofold/markdown',
     root: join(workspace, 'packages/markdown'),
     compressedBudget: 400 * 1024,
@@ -58,9 +68,10 @@ try {
       .trim()
       .split('\n')
       .filter(Boolean)
-    const forbidden = files.filter((file) =>
-      /(?:^|\/)(?:src|scripts|tests?)(?:\/|$)|\.test\.|tsconfig|vite\.config/.test(file)
-    )
+    const forbidden = files.filter((file) => {
+      if (packageConfig.cssSourcePackage && /^package\/src\/.*\.css$/.test(file)) return false
+      return /(?:^|\/)(?:src|scripts|tests?)(?:\/|$)|\.test\.|tsconfig|vite\.config/.test(file)
+    })
     const missingRequiredFiles = [
       'package/LICENSE',
       'package/README.md',

@@ -15,14 +15,19 @@ describe('loadConfig', () => {
     expect(config.outputDir).toBe('.canofold/dist')
     expect(config.markdownMirror).toBe(true)
     expect(config.ai).toMatchObject({ pageIndex: true, fullContent: true })
-    expect(config.layout).toEqual({ header: true })
+    expect(config.layout).toEqual({
+      header: true,
+      sidebarWidth: '17.5rem',
+      outlineWidth: '18.75rem'
+    })
     expect(config.i18n.defaultLocale).toBe('zh')
     expect(config.i18n.locales).toEqual(['zh'])
     expect(config.extensions).toEqual([])
+    expect(config.themes.map((theme) => theme.id)).toEqual(['canofold'])
     expect(config.markdown.html).toBe('sanitize')
     expect(config.markdown.code.overflow).toBeUndefined()
     expect(config.seo).toEqual({ robots: 'allow' })
-    expect(config.theme).toMatchObject({
+    expect(config.branding).toMatchObject({
       logo: '/assets/canofold-brand/logo-light.webp',
       logoDark: '/assets/canofold-brand/logo-dark.webp',
       favicon: '/assets/canofold-brand/favicon.webp'
@@ -33,14 +38,71 @@ describe('loadConfig', () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
     await writeFile(
       join(cwd, 'canofold.config.ts'),
-      `export default { theme: { logo: '/product.svg', darkMode: true } }`
+      `export default {
+        branding: { logo: '/product.svg' }
+      }`
     )
 
     const config = await loadConfig(cwd)
 
-    expect(config.theme.logo).toBe('/product.svg')
-    expect(config.theme.logoDark).toBeUndefined()
-    expect(config.theme.favicon).toBe('/assets/canofold-brand/favicon.webp')
+    expect(config.branding.logo).toBe('/product.svg')
+    expect(config.branding.logoDark).toBeUndefined()
+    expect(config.branding.favicon).toBe('/assets/canofold-brand/favicon.webp')
+  })
+
+  it('keeps configured visual themes in order and rejects conflicting or duplicate choices', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-themes-'))
+    const path = join(cwd, 'canofold.config.ts')
+    await writeFile(
+      path,
+      `import { canofold, neumorphism } from '@canofold/themes'; export default { themes: [canofold, neumorphism] }`
+    )
+    expect((await loadConfig(cwd)).themes.map((theme) => theme.id)).toEqual(['canofold', 'neumorphism'])
+
+    await writeFile(
+      path,
+      `import { canofold } from '@canofold/themes'; export default { themes: [canofold, canofold] }`
+    )
+    await expect(loadConfig(cwd)).rejects.toThrow('themes must not contain duplicate')
+
+    await writeFile(path, `export default { themes: ['unlisted'] }`)
+    await expect(loadConfig(cwd)).rejects.toThrow('themes')
+
+    await writeFile(
+      path,
+      `import { defineTheme } from '@canofold/themes'; export default { themes: [defineTheme({ id: 'aurora', name: { zh: '极光' }, styles: ['./aurora.css'], appearances: [{ id: 'default', name: { zh: '默认' }, colorScheme: 'light' }] })] }`
+    )
+    expect((await loadConfig(cwd)).themes[0]).toMatchObject({ id: 'aurora', name: { zh: '极光' } })
+
+    await writeFile(path, `export default { themes: [{ id: 'neumorphism', label: 'Soft UI' }] }`)
+    await expect(loadConfig(cwd)).rejects.toThrow('themes')
+  })
+
+  it('keeps localized names inside third-party theme definitions', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-theme-name-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default {
+        themes: [{
+          id: 'soft-ui',
+          name: { zh: '柔和拟态', en: 'Soft UI' },
+          styles: ['./soft-ui.css'],
+          appearances: [{ id: 'default', name: { en: 'Default' }, colorScheme: 'light' }]
+        }]
+      }`
+    )
+
+    expect((await loadConfig(cwd)).themes[0]?.name).toEqual({ zh: '柔和拟态', en: 'Soft UI' })
+  })
+
+  it('rejects the retired mixed-responsibility theme object', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-retired-theme-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { theme: { logo: '/logo.svg', baseColor: 'paper', sidebarWidth: 280 } }`
+    )
+
+    await expect(loadConfig(cwd)).rejects.toThrow('Unrecognized key')
   })
 
   it('validates the component demo engine lifecycle', async () => {
@@ -64,7 +126,11 @@ describe('loadConfig', () => {
 
     const config = await loadConfig(cwd)
 
-    expect(config.layout).toEqual({ header: false })
+    expect(config.layout).toEqual({
+      header: false,
+      sidebarWidth: '17.5rem',
+      outlineWidth: '18.75rem'
+    })
   })
 
   it('loads code overflow and robots crawler policy', async () => {
@@ -322,20 +388,6 @@ describe('loadConfig', () => {
     await expect(loadConfig(misspelledGroup)).rejects.toThrow('Unrecognized key')
   })
 
-  it('deep merges theme token overrides', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
-    await writeFile(
-      join(cwd, 'canofold.config.ts'),
-      `export default { theme: { tokens: { colors: { light: { primary: '#123456' } }, typography: { sansFont: 'Inter, sans-serif' } } } }`
-    )
-
-    const config = await loadConfig(cwd)
-
-    expect(config.theme.tokens.colors?.light?.primary).toBe('#123456')
-    expect(config.theme.tokens.colors?.dark).toEqual({})
-    expect(config.theme.tokens.typography?.sansFont).toBe('Inter, sans-serif')
-  })
-
   it('loads project CSS paths without sharing the default array', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
     await writeFile(
@@ -362,7 +414,7 @@ describe('loadConfig', () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
     await writeFile(
       join(cwd, 'canofold.config.ts'),
-      `export default { theme: { sidebarWitdh: 300 }, markdown: { classNames: { copySnipet: 'broken' } } }`
+      `export default { layout: { sidebarWitdh: 300 }, markdown: { classNames: { copySnipet: 'broken' } } }`
     )
 
     await expect(loadConfig(cwd)).rejects.toThrow('Unrecognized key')
@@ -461,16 +513,20 @@ describe('loadConfig', () => {
     const darkLogo = await mkdtemp(join(tmpdir(), 'canofold-config-'))
     await writeFile(
       join(darkLogo, 'canofold.config.ts'),
-      `export default { theme: { logo: '/logo.svg', logoDark: '/logo-dark.svg' } }`
+      `import { neumorphism } from '@canofold/themes'; export default { themes: [neumorphism], branding: { logo: '/logo.svg', logoDark: '/logo-dark.svg' } }`
     )
-    await expect(loadConfig(darkLogo)).rejects.toThrow('theme.logoDark requires theme.darkMode: true')
+    await expect(loadConfig(darkLogo)).rejects.toThrow(
+      'branding.logoDark requires a configured theme with a dark appearance'
+    )
 
     const missingLogo = await mkdtemp(join(tmpdir(), 'canofold-config-'))
     await writeFile(
       join(missingLogo, 'canofold.config.ts'),
-      `export default { theme: { logoDark: '/logo-dark.svg', darkMode: true } }`
+      `export default {
+        branding: { logoDark: '/logo-dark.svg' }
+      }`
     )
-    await expect(loadConfig(missingLogo)).rejects.toThrow('theme.logoDark requires theme.logo')
+    await expect(loadConfig(missingLogo)).rejects.toThrow('branding.logoDark requires branding.logo')
   })
 
   it('passes imported Markdown plugins through with their functions intact', async () => {

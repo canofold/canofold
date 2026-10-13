@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import { Braces, Clipboard, ExternalLink, Heading2, SunMoon, Table2, Workflow, X } from 'lucide-react'
+import { Braces, Clipboard, ExternalLink, Heading2, Palette, Table2, Workflow, X } from 'lucide-react'
 import { SearchIcon } from './LayoutHeader'
 import { markdownGroupHash, type LayoutModel } from './model'
+import { themeSelections } from '../theme'
 
 function QuickAction({
   href,
@@ -42,6 +43,7 @@ function SearchModal({ model }: { model: LayoutModel }) {
   const { config, page, home, labels, content, markdownShowcaseHref, hasMarkdownShowcase } = model
   const groups = content.markdownElementGroups
   const quickActions = content.quickActions
+  const hasThemeChoices = themeSelections(config.themes, page.locale).length > 1
 
   if (!config.search.enabled) return null
   return (
@@ -121,10 +123,10 @@ function SearchModal({ model }: { model: LayoutModel }) {
                 description={quickActions.sourceDescription}
               />
             ) : null}
-            {config.theme.darkMode ? (
+            {hasThemeChoices ? (
               <QuickAction
                 action="theme"
-                icon={<SunMoon size={17} strokeWidth={2} />}
+                icon={<Palette size={17} strokeWidth={2} />}
                 title={labels.theme}
                 description={quickActions.themeDescription}
               />

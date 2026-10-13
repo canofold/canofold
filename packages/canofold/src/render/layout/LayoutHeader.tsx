@@ -1,7 +1,9 @@
-import { ChevronDown, Languages, Moon, PanelLeft, Search, Sun } from 'lucide-react'
+import { ChevronDown, Languages, Palette, PanelLeft, Search } from 'lucide-react'
 import { localeNameFor } from '../layoutContent'
+import { themeSelections } from '../theme'
 import { publicPathFor } from '../../seo/urls'
 import type { LayoutModel } from './model'
+import type { NavItem } from '../../content/types'
 
 function BrandMark() {
   return (
@@ -64,21 +66,14 @@ function SearchIcon({ size = 16 }: { size?: number }) {
   return <Search size={size} strokeWidth={2} aria-hidden="true" />
 }
 
-function ThemeIcon() {
-  return (
-    <>
-      <Sun className="cf-icon-sun" size={18} strokeWidth={2} aria-hidden="true" />
-      <Moon className="cf-icon-moon" size={18} strokeWidth={2} aria-hidden="true" />
-    </>
-  )
-}
-
-export function navItemIsActive(model: LayoutModel, routePath: string): boolean {
+export function navItemIsActive(model: LayoutModel, item: NavItem): boolean {
+  const { routePath } = item
   const navSegments = routePath.split('/').filter(Boolean)
   return (
     routePath.startsWith('/') &&
     (model.page.routePath === routePath ||
-      model.page.routePath.startsWith(routePath) ||
+      item.activePaths?.includes(model.page.routePath) ||
+      (routePath !== '/' && model.page.routePath.startsWith(routePath)) ||
       (model.page.group !== '' && navSegments.includes(model.page.group)))
   )
 }
@@ -96,9 +91,10 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
     languageOptions,
     hasSidebarItems
   } = model
+  const themeOptions = themeSelections(config.themes, page.locale)
 
   return (
-    <header className={home ? 'cf-header cf-header-home' : 'cf-header'}>
+    <header className="cf-header">
       <div className="cf-header-inner">
         {!home && hasSidebarItems ? (
           <button
@@ -114,17 +110,17 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
           </button>
         ) : null}
         <a className="cf-brand" href={localeRoot} aria-label={config.title}>
-          {config.theme.logo ? (
+          {config.branding.logo ? (
             <>
               <img
-                className={config.theme.logoDark ? 'cf-brand-logo cf-brand-logo-light' : 'cf-brand-logo'}
-                src={publicPathFor(config, config.theme.logo)}
+                className={config.branding.logoDark ? 'cf-brand-logo cf-brand-logo-light' : 'cf-brand-logo'}
+                src={publicPathFor(config, config.branding.logo)}
                 alt={config.title}
               />
-              {config.theme.logoDark ? (
+              {config.branding.logoDark ? (
                 <img
                   className="cf-brand-logo cf-brand-logo-dark"
-                  src={publicPathFor(config, config.theme.logoDark)}
+                  src={publicPathFor(config, config.branding.logoDark)}
                   alt={config.title}
                 />
               ) : null}
@@ -152,7 +148,7 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
           {navItems.length > 0 ? (
             <nav className="cf-header-nav" aria-label={labels.primaryNavigation}>
               {navItems.map((item) => {
-                const active = navItemIsActive(model, item.routePath)
+                const active = navItemIsActive(model, item)
                 const external = /^https?:\/\//.test(item.routePath)
                 return (
                   <a
@@ -204,8 +200,8 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
                     key={option.locale}
                     className={
                       option.locale === page.locale
-                        ? 'cf-menu-item cf-language-menu-item cf-menu-item-active'
-                        : `cf-menu-item cf-language-menu-item${option.hasPage ? '' : ' cf-menu-item-unavailable'}`
+                        ? 'cf-menu-item cf-menu-item-active'
+                        : `cf-menu-item${option.hasPage ? '' : ' cf-menu-item-unavailable'}`
                     }
                     href={publicPathFor(config, option.routePath)}
                     lang={option.locale}
@@ -219,15 +215,26 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
             </details>
           ) : null}
 
-          {config.theme.darkMode ? (
-            <button
-              className="cf-icon-button"
-              type="button"
-              data-canofold-theme-toggle=""
-              aria-label={labels.theme}
-            >
-              <ThemeIcon />
-            </button>
+          {themeOptions.length > 1 ? (
+            <details className="cf-menu cf-theme-menu" data-canofold-menu="">
+              <summary className="cf-icon-button" aria-label={labels.theme}>
+                <Palette size={18} strokeWidth={2} aria-hidden="true" />
+              </summary>
+              <div className="cf-menu-list" role="group" aria-label={labels.theme}>
+                {themeOptions.map((option, index) => (
+                  <button
+                    key={option.value}
+                    className="cf-menu-item cf-theme-option"
+                    type="button"
+                    data-canofold-theme-option={option.value}
+                    data-canofold-theme-scheme={option.colorScheme}
+                    aria-pressed={index === 0}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </details>
           ) : null}
 
           {config.github ? (

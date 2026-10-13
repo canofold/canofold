@@ -1,0 +1,143 @@
+/* Notebook doodles: ruled paper, dashed ink and cheerful marker-color offsets. */
+html[data-cf-theme='hand-drawn-doodle'] {
+  color-scheme: light;
+  --cf-canvas: #fffef5;
+  --cf-ink: #2c2c2c;
+  --cf-ink-body: #343434;
+  --cf-ink-secondary: #565656;
+  --cf-ink-tertiary: #6b625a;
+  --cf-surface: #fffef5;
+  --cf-surface-secondary: #fff5c7;
+  --cf-surface-soft: #eef9f7;
+  --cf-surface-elevated: #ffffff;
+  --cf-surface-code: #f3f8f7;
+  --cf-code-ink: #2c2c2c;
+  --cf-border: #2c2c2c;
+  --cf-border-strong: #2c2c2c;
+  --cf-hairline: #77a9c0;
+  --cf-accent-500: #ff6b6b;
+  --cf-accent-strong: #d94f4f;
+  --cf-accent-deep: #a93737;
+  --cf-accent-secondary: #13877f;
+  --cf-info: #267a91;
+  --cf-info-deep: #1d5c6d;
+  --cf-success: #287a49;
+  --cf-success-deep: #1d5d36;
+  --cf-warning: #9a7000;
+  --cf-warning-deep: #725300;
+  --cf-danger: #c43f4f;
+  --cf-danger-deep: #922d3a;
+  --cf-yellow: #ffd93d;
+  --cf-overlay: rgb(44 44 44 / 66%);
+  --cf-on-accent: #2c2c2c;
+  --cf-shadow-raised: 5px 5px 0 #4ecdc4;
+  --cf-shadow-raised-sm: 3px 3px 0 #4ecdc4;
+  --cf-shadow-inset: inset 0 0 0 2px rgb(44 44 44 / 14%);
+  --cf-block-shell-shadow: var(--cf-shadow-raised);
+  --cf-font-display: 'Comic Sans MS', 'Segoe Print', 'Kaiti SC', sans-serif;
+  --cf-font-sans: 'Comic Sans MS', 'Segoe Print', 'Kaiti SC', sans-serif;
+  --cf-radius-sm: 5px;
+  --cf-radius-md: 7px;
+  --cf-radius-lg: 9px;
+  --cf-radius-full: 12px;
+  --cf-duration-fast: 160ms;
+  --cf-duration-normal: 200ms;
+  --cf-easing-default: steps(2, end);
+  --cf-easing-spring: steps(2, end);
+  --cf-glass-blur: 0px;
+  --cf-focus-ring: 0 0 0 3px rgb(78 205 196 / 34%);
+  --cf-nav-item-hover-ink: #2c2c2c;
+  --cf-nav-item-hover-surface: #ffd93d;
+  --cf-nav-item-hover-shadow: 3px 3px 0 #4ecdc4;
+  --cf-nav-item-active-ink: #a93737;
+  --cf-nav-item-active-surface: transparent;
+  --cf-nav-item-active-shadow: none;
+}
+
+html[data-cf-theme='hand-drawn-doodle'] :where(body, .cf-main, .cf-content) {
+  background-color: var(--cf-canvas);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    rgb(86 154 183 / 16%) 28px,
+    transparent 29px
+  );
+}
+
+html[data-cf-theme='hand-drawn-doodle']
+  :where(.cf-content h1, .cf-content h2, .cf-content h3, .cf-hero-title) {
+  text-decoration-color: #ff6b6b;
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 0.2em;
+}
+
+html[data-cf-theme='hand-drawn-doodle']
+  :where(.cf-menu-list, .cf-search-panel, .cf-source-panel, .cf-table-preview-card, .cf-diagram-dialog),
+html[data-cf-theme='hand-drawn-doodle']
+  :is(
+    .cf-content .cf-demo,
+    .cf-content .cf-callout,
+    .cf-content details,
+    .cf-content .cf-code,
+    .cf-content .cf-table-window,
+    .cf-content .cf-file-tree,
+    .cf-content .cf-link-card
+  ) {
+  border: 2px dashed var(--cf-border);
+  background: var(--cf-surface-elevated);
+  box-shadow: var(--cf-shadow-raised);
+}
+
+html[data-cf-theme='hand-drawn-doodle']
+  :is(
+    .cf-menu-list,
+    .cf-content .cf-demo,
+    .cf-content .cf-callout,
+    .cf-content details,
+    .cf-content .cf-code,
+    .cf-content .cf-table-window,
+    .cf-content .cf-file-tree,
+    .cf-content .cf-link-card
+  ) {
+  transform: rotate(-0.18deg);
+}
+
+html[data-cf-theme='hand-drawn-doodle']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ) {
+  border: 2px dashed var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-raised-sm);
+  transform: rotate(0.45deg);
+}
+
+html[data-cf-theme='hand-drawn-doodle']
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-btn
+  ):hover {
+  color: var(--cf-ink);
+  background: var(--cf-yellow);
+  box-shadow: 4px 4px 0 #ff6b6b;
+  transform: translate(-1px, -1px) rotate(-0.45deg);
+}
+
+html[data-cf-theme='hand-drawn-doodle'] :where(.cf-search-field, .cf-source-panel textarea) {
+  border: 2px dashed var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-inset);
+}

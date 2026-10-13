@@ -1,0 +1,316 @@
+/*
+ * Shared visual treatment for Canofold's expressive single-appearance themes.
+ * Theme files provide the variables below; Core and Markdown continue to own
+ * layout, sizing, hit areas, state semantics, and accessibility.
+ */
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(.cf-header, .cf-sidebar, .cf-outline) {
+  background: var(--cf-theme-shell-surface, var(--cf-surface));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  .cf-header {
+  border-bottom: 0;
+  box-shadow: var(--cf-theme-header-shadow, var(--cf-header-shadow));
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(.cf-sidebar, .cf-outline) {
+  box-shadow: var(--cf-theme-rail-shadow, none);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(
+    .cf-search-trigger,
+    .cf-sidebar-toggle,
+    .cf-icon-button,
+    .cf-version-badge,
+    .cf-search-close,
+    .cf-diagram-dialog-close,
+    .cf-content .cf-demo-action,
+    .cf-diagram-actions button,
+    .cf-diagram-zoom-controls button
+  ) {
+  border: var(--cf-theme-control-border, 0);
+  color: var(--cf-theme-control-ink, var(--cf-ink-secondary));
+  background: var(--cf-theme-control-surface, transparent);
+  box-shadow: var(--cf-theme-control-shadow, none);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition:
+    color var(--cf-duration-fast) var(--cf-easing-default),
+    background var(--cf-duration-fast) var(--cf-easing-default),
+    box-shadow var(--cf-duration-fast) var(--cf-easing-default),
+    transform var(--cf-duration-fast) var(--cf-easing-default);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(
+    .cf-search-trigger:hover,
+    .cf-sidebar-toggle:hover,
+    .cf-icon-button:hover,
+    .cf-version-badge:hover,
+    .cf-search-close:hover,
+    .cf-diagram-dialog-close:hover,
+    .cf-content .cf-demo-action:hover,
+    .cf-content .cf-demo-action:focus-visible,
+    .cf-diagram-actions button:hover,
+    .cf-diagram-zoom-controls button:hover:not(:disabled)
+  ) {
+  color: var(--cf-theme-control-hover-ink, var(--cf-accent-deep));
+  background: var(--cf-theme-control-hover-surface, var(--cf-accent-soft));
+  box-shadow: var(--cf-theme-control-hover-shadow, var(--cf-theme-control-shadow, none));
+  transform: var(--cf-theme-control-hover-transform, none);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(
+    .cf-search-trigger:active,
+    .cf-sidebar-toggle:active,
+    .cf-icon-button:active,
+    .cf-version-badge:active,
+    .cf-search-close:active,
+    .cf-diagram-dialog-close:active,
+    .cf-content .cf-demo-action:active,
+    .cf-content .cf-demo-source-toggle[aria-expanded='true'],
+    .cf-diagram-actions button:active,
+    .cf-diagram-zoom-controls button:active:not(:disabled)
+  ),
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  .cf-menu[open]
+  > summary {
+  color: var(--cf-theme-control-active-ink, var(--cf-theme-control-hover-ink));
+  background: var(--cf-theme-control-active-surface, var(--cf-theme-control-hover-surface));
+  box-shadow: var(--cf-theme-control-active-shadow, none);
+  transform: var(--cf-theme-control-active-transform, none);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  .cf-menu-list {
+  border: var(--cf-theme-panel-border, 0);
+  background: var(--cf-theme-panel-surface, var(--cf-surface-elevated));
+  box-shadow: var(--cf-theme-panel-shadow, var(--cf-shadow-raised));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :is(
+    .cf-content .cf-demo,
+    .cf-feature,
+    .cf-doc-pagination-link,
+    .cf-content .cf-callout,
+    .cf-content .cf-aside,
+    .cf-content details,
+    .cf-content .cf-code,
+    .cf-content .cf-code-group,
+    .cf-content .cf-table-window,
+    .cf-content .cf-api-block,
+    .cf-content .cf-file-tree,
+    .cf-content .cf-link-card,
+    .cf-diagram-window
+  ) {
+  border: var(--cf-theme-block-border, 0);
+  box-shadow: var(--cf-theme-block-shadow, var(--cf-block-shell-shadow));
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(
+    .cf-content .cf-demo-details,
+    .cf-content .cf-demo-toolbar,
+    .cf-block-toolbar,
+    .cf-code-bar,
+    .cf-table-window > .cf-block-toolbar,
+    .cf-diagram-window > .cf-diagram-toolbar
+  ) {
+  border-color: var(--cf-border);
+  background: var(--cf-theme-toolbar-surface, var(--cf-surface));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  .cf-btn {
+  border: var(--cf-theme-button-border, var(--cf-theme-control-border, 0));
+  box-shadow: var(--cf-theme-button-shadow, var(--cf-theme-control-shadow, none));
+  transition:
+    color var(--cf-duration-fast) var(--cf-easing-default),
+    background var(--cf-duration-fast) var(--cf-easing-default),
+    box-shadow var(--cf-duration-fast) var(--cf-easing-default),
+    transform var(--cf-duration-fast) var(--cf-easing-default);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  .cf-btn:hover {
+  color: var(--cf-theme-button-hover-ink, var(--cf-on-accent));
+  background: var(--cf-theme-button-hover-surface, var(--cf-accent-deep));
+  box-shadow: var(--cf-theme-button-hover-shadow, var(--cf-theme-button-shadow));
+  transform: var(--cf-theme-button-hover-transform, none);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  .cf-btn:active {
+  box-shadow: var(--cf-theme-button-active-shadow, none);
+  transform: var(--cf-theme-button-active-transform, none);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(.cf-search-panel, .cf-source-panel, .cf-table-preview-card, .cf-diagram-dialog) {
+  border: var(--cf-theme-panel-border, 0);
+  background: var(--cf-theme-panel-surface, var(--cf-surface-elevated));
+  box-shadow: var(--cf-theme-panel-shadow, var(--cf-shadow-raised));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(.cf-search-backdrop, .cf-source-backdrop, .cf-table-preview-backdrop) {
+  background: var(--cf-overlay);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  .cf-diagram-dialog::backdrop {
+  background: var(--cf-overlay);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  :where(.cf-search-field, .cf-source-panel textarea) {
+  border: var(--cf-theme-input-border, var(--cf-theme-control-border, 0));
+  background: var(--cf-theme-input-surface, var(--cf-surface));
+  box-shadow: var(--cf-theme-input-shadow, none);
+}
+
+html:is(
+    [data-cf-theme='memphis'],
+    [data-cf-theme='cyber-chinese'],
+    [data-cf-theme='pixel-anime'],
+    [data-cf-theme='dopamine-design'],
+    [data-cf-theme='shoujo-manga'],
+    [data-cf-theme='outrun']
+  )
+  .cf-search-field:focus-within {
+  box-shadow: var(--cf-theme-input-focus-shadow, var(--cf-focus-ring));
+}

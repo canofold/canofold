@@ -33,6 +33,15 @@ const RESOLVED_CLIENT_ID = `\0${PUBLIC_CLIENT_ID}`
 const PUBLIC_MARKDOWN_CLIENT_ID = 'virtual:canofold-markdown-client'
 const RESOLVED_MARKDOWN_CLIENT_ID = `\0${PUBLIC_MARKDOWN_CLIENT_ID}`
 const PACKAGE_MODULE_PATH = fileURLToPath(import.meta.url)
+const BROWSER_RUNTIME_DEPENDENCIES = [
+  'react',
+  'react/jsx-runtime',
+  'react/jsx-dev-runtime',
+  'react-dom',
+  'react-dom/client',
+  '@canofold/vite > @canofold/markdown > hast-util-to-jsx-runtime',
+  '@canofold/vite > @canofold/markdown > lucide-react'
+] as const
 const PROJECT_METADATA_FILES = [
   'package.json',
   'pnpm-lock.yaml',
@@ -320,8 +329,14 @@ function inlineConfig(
     options.configFile === false ? false : options.configFile ? resolve(cwd, options.configFile) : undefined
   const optimizeDeps: VersionedOptimizeDeps =
     Number.parseInt(viteVersion, 10) >= 8
-      ? { rolldownOptions: { transform: { target: 'esnext' } } }
-      : { esbuildOptions: { target: 'esnext' } }
+      ? {
+          include: [...BROWSER_RUNTIME_DEPENDENCIES],
+          rolldownOptions: { transform: { target: 'esnext' } }
+        }
+      : {
+          include: [...BROWSER_RUNTIME_DEPENDENCIES],
+          esbuildOptions: { target: 'esnext' }
+        }
   return {
     root: canonicalPath(options.root ? resolve(cwd, options.root) : cwd),
     configFile,

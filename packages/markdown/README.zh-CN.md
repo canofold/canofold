@@ -2,18 +2,18 @@
 
 [English](./README.md) | 简体中文
 
-`@canofold/markdown` 是可独立使用的 Markdown SDK。它提供 React 渲染、Markdown 与可信 MDX 的构建或 SSR、内容分析、共享主题 Token 和按行为加载的浏览器增强。
+`@canofold/markdown` 是可独立使用的 Markdown SDK。它提供 React 渲染、Markdown 与可信 MDX 的构建或 SSR、内容分析、结构样式和按行为加载的浏览器增强。视觉主题由 `@canofold/themes` 提供。
 
 ## 安装与渲染
 
 ```bash
-pnpm add @canofold/markdown react react-dom
+pnpm add @canofold/markdown @canofold/themes react react-dom
 ```
 
 ```tsx
 import { Markdown } from '@canofold/markdown'
 import '@canofold/markdown/base.css'
-import '@canofold/markdown/theme.css'
+import '@canofold/themes/canofold.css'
 
 export function Article({ source }: { source: string }) {
   return <Markdown source={source} />
@@ -26,8 +26,8 @@ export function Article({ source }: { source: string }) {
 - `@canofold/markdown/server` 提供 Markdown 与可信 MDX 的构建或 SSR 渲染器。
 - `@canofold/markdown/server/analyze` 只分析文档能力，不执行渲染。
 - `@canofold/markdown/client` 增强已经生成的静态 HTML。
-- `@canofold/markdown/theme` 提供共享主题契约。
-- `@canofold/markdown/base.css` 和 `@canofold/markdown/theme.css` 是公开样式入口。
+- `@canofold/markdown/base.css` 提供 Markdown 结构与交互样式。
+- `@canofold/themes` 提供主题契约和官方视觉主题；在 `base.css` 之后引入其中一个主题 CSS 入口。
 
 在 Vite 等 bundler 中导入 `@canofold/markdown/client` 时，React 与 React DOM 继续由宿主应用的 peer dependency 提供，不会隐藏内置另一份 React。Canofold CLI 生成不依赖 bundler 的独立静态站点时，会自动选择自包含的本地浏览器资源；两种消费方式使用同一个公开入口，不需要用户配置 alias、import map 或运行时路径。
 
@@ -41,7 +41,7 @@ pnpm add @canofold/plugins
 import { Markdown } from '@canofold/markdown'
 import { math } from '@canofold/plugins'
 import '@canofold/markdown/base.css'
-import '@canofold/markdown/theme.css'
+import '@canofold/themes/canofold.css'
 import '@canofold/plugins/math.css'
 
 <Markdown source={source} options={{ plugins: [math()] }} />

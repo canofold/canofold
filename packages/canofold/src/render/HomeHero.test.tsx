@@ -35,7 +35,11 @@ describe('HomeHero', () => {
         config={{
           ...defaultConfig,
           basePath: '/project/',
-          theme: { ...defaultConfig.theme, logo: '/logo.svg', logoDark: '/logo-dark.svg' }
+          branding: {
+            ...defaultConfig.branding,
+            logo: '/logo.svg',
+            logoDark: '/logo-dark.svg'
+          }
         }}
       />
     )

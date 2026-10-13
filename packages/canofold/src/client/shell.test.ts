@@ -27,6 +27,8 @@ afterEach(() => {
   delete window.__canofoldApplyPageDocument
   document.body.innerHTML = ''
   document.documentElement.className = ''
+  document.documentElement.removeAttribute('data-cf-theme')
+  document.documentElement.removeAttribute('data-cf-theme-appearance')
   document.documentElement.removeAttribute('dir')
   localStorage.clear()
   history.replaceState(null, '', '/')
@@ -36,15 +38,36 @@ afterEach(() => {
 })
 
 describe('typed browser shell', () => {
-  it('manages theme, mobile sidebar and outside-menu dismissal', () => {
-    document.body.innerHTML =
-      '<header class="cf-header-home"></header><button data-canofold-theme-toggle></button><button data-canofold-sidebar-open data-canofold-sidebar-open-label="Open" data-canofold-sidebar-close-label="Close"></button><aside data-canofold-sidebar></aside><div data-canofold-sidebar-backdrop hidden></div><details data-canofold-menu open><summary>Menu</summary></details><div data-canofold-progress></div>'
+  it('switches only the configured visual themes and persists the selected mode', () => {
+    document.documentElement.dataset.cfTheme = 'canofold'
+    document.documentElement.dataset.cfThemeAppearance = 'light'
+    document.body.innerHTML = `<details data-canofold-menu open>
+      <summary>Theme</summary>
+      <button data-canofold-theme-option="canofold:light" data-canofold-theme-scheme="light"></button>
+      <button data-canofold-theme-option="canofold:dark" data-canofold-theme-scheme="dark"></button>
+      <button data-canofold-theme-option="neumorphism:default" data-canofold-theme-scheme="light"></button>
+    </details>`
     bootstrapShell()
-    click('[data-canofold-theme-toggle]')
+    click('[data-canofold-theme-option="canofold:dark"]')
     expect(document.documentElement.classList.contains('dark')).toBe(true)
-    expect(localStorage.getItem('canofold-theme')).toBe('dark')
-    click('[data-canofold-theme-toggle]')
-    expect(localStorage.getItem('canofold-theme')).toBe('light')
+    expect(localStorage.getItem('canofold-visual-theme')).toBe('canofold:dark')
+    expect(document.querySelector('details')?.open).toBe(false)
+    expect(document.activeElement).toBe(document.querySelector('summary'))
+    click('[data-canofold-theme-option="neumorphism:default"]')
+    expect(document.documentElement.dataset.cfTheme).toBe('neumorphism')
+    expect(document.documentElement.dataset.cfThemeAppearance).toBe('default')
+    expect(document.documentElement.classList.contains('dark')).toBe(false)
+    expect(
+      document
+        .querySelector('[data-canofold-theme-option="neumorphism:default"]')
+        ?.getAttribute('aria-pressed')
+    ).toBe('true')
+  })
+
+  it('manages mobile sidebar and outside-menu dismissal', () => {
+    document.body.innerHTML =
+      '<header class="cf-header"></header><button data-canofold-sidebar-open data-canofold-sidebar-open-label="Open" data-canofold-sidebar-close-label="Close"></button><aside data-canofold-sidebar></aside><div data-canofold-sidebar-backdrop hidden></div><details data-canofold-menu open><summary>Menu</summary></details><div data-canofold-progress></div>'
+    bootstrapShell()
     click('[data-canofold-sidebar-open]')
     expect(document.querySelector('[data-canofold-sidebar]')?.getAttribute('data-open')).toBe('true')
     expect(document.querySelector('[data-canofold-sidebar-open]')?.getAttribute('aria-label')).toBe('Close')
@@ -55,8 +78,6 @@ describe('typed browser shell', () => {
     window.dispatchEvent(new Event('resize'))
     key('Escape')
     window.__canofoldShellDispose?.()
-    click('[data-canofold-theme-toggle]')
-    expect(localStorage.getItem('canofold-theme')).toBe('light')
   })
 
   it('opens and traps focus in source, copies and restores feedback and focus', async () => {

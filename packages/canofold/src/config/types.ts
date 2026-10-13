@@ -5,18 +5,19 @@ import type {
   MarkdownLabels,
   MarkdownPlugin
 } from '@canofold/markdown'
-import type { MarkdownThemeInput } from '@canofold/markdown/theme'
+import type { ThemeDefinition } from '@canofold/themes'
 import type { SearchProvider } from '../search/types'
 import type { CanofoldDemoEngine } from '../demos/types'
 import type { CheckRuleId, CheckRuleLevel } from '../check/rules'
-import { CANOFOLD_MARKDOWN_ELEMENT_GROUP_IDS, THEME_BASE_COLORS } from './constants'
+import { CANOFOLD_MARKDOWN_ELEMENT_GROUP_IDS } from './constants'
 
-export type ThemeBaseColor = (typeof THEME_BASE_COLORS)[number]
 export type CanofoldMarkdownElementGroupId = (typeof CANOFOLD_MARKDOWN_ELEMENT_GROUP_IDS)[number]
 
 export interface CanofoldNavigationItem {
   text: string
   link: string
+  /** Additional flat document routes that belong to this navigation item. */
+  activePaths?: string[]
 }
 
 export interface CanofoldVersionItem {
@@ -107,6 +108,7 @@ export interface CanofoldNotFoundMessages {
 }
 
 export interface CanofoldLocaleMessages {
+  /** Localized interface copy only; theme metadata belongs to ThemeDefinition. */
   labels?: Partial<CanofoldLayoutLabels>
   brandTagline?: string
   quickActions?: Partial<CanofoldQuickActionMessages>
@@ -148,14 +150,20 @@ export interface CanofoldConfigInput {
   outputDir?: string
   /** Publish a raw Markdown mirror beside each HTML page. */
   markdownMirror?: boolean
+  /** Project-wide CSS overrides appended after Core and all configured theme styles. */
   styles?: string[]
+  /** Theme definitions in menu order; the first appearance is the initial selection. */
+  themes?: ThemeDefinition[]
   demos?: {
     engine?: CanofoldDemoEngine
     /** Optional project module that wraps every interactive demo with shared providers. */
     setup?: string
   }
   layout?: {
+    /** Structural site-shell settings; visual treatment belongs to themes. */
     header?: boolean
+    sidebarWidth?: number | string
+    outlineWidth?: number | string
   }
   seo?: {
     robots?: 'allow' | 'disallow'
@@ -168,17 +176,11 @@ export interface CanofoldConfigInput {
     /** Trusted build plugins; name, version and cacheKey identify their cached output. */
     plugins?: readonly MarkdownPlugin[]
   }
-  theme?: {
+  branding?: {
+    /** Brand assets shared by every configured theme. */
     logo?: string
     logoDark?: string
     favicon?: string
-    accentColor?: string
-    darkMode?: boolean
-    radius?: number | string
-    baseColor?: ThemeBaseColor
-    sidebarWidth?: number | string
-    outlineWidth?: number | string
-    tokens?: MarkdownThemeInput
   }
   search?: {
     enabled?: boolean
@@ -200,6 +202,7 @@ export interface CanofoldConfigInput {
     defaultLocale?: string
     locales?: string[]
     localeNames?: Record<string, string>
+    /** Per-locale interface copy. Theme and appearance names live in ThemeDefinition. */
     messages?: Record<string, CanofoldLocaleMessages>
   }
   ai?: Partial<CanofoldAiConfig>
@@ -217,12 +220,15 @@ export interface CanofoldConfig {
   outputDir: string
   markdownMirror: boolean
   styles: string[]
+  themes: ThemeDefinition[]
   demos: {
     engine?: CanofoldDemoEngine
     setup?: string
   }
   layout: {
     header: boolean
+    sidebarWidth: number | string
+    outlineWidth: number | string
   }
   seo: {
     robots: 'allow' | 'disallow'
@@ -234,17 +240,10 @@ export interface CanofoldConfig {
     labels: Partial<MarkdownLabels>
     plugins: readonly MarkdownPlugin[]
   }
-  theme: {
+  branding: {
     logo?: string
     logoDark?: string
     favicon?: string
-    accentColor: string
-    darkMode: boolean
-    radius: number | string
-    baseColor: ThemeBaseColor
-    sidebarWidth: number | string
-    outlineWidth: number | string
-    tokens: MarkdownThemeInput
   }
   search: CanofoldSearchConfig
   checks: {

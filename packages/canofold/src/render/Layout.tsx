@@ -8,7 +8,7 @@ import { LayoutHeader } from './layout/LayoutHeader'
 import { createLayoutModel } from './layout/model'
 import { LayoutOverlays } from './layout/LayoutOverlays'
 import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
-import { noFlashScript } from './shellScripts'
+import { themeBootScript } from './shellScripts'
 
 export function Layout({
   config,
@@ -39,17 +39,25 @@ export function Layout({
     publicPathFor(config, `/assets/canofold-plugins/${asset.id}.js`)
   )
   const canonicalUrl = siteUrlFor(config, page.routePath)
-  const faviconPath = publicPathFor(config, config.theme.favicon ?? DEFAULT_BRAND_ASSET_PATHS.favicon)
+  const faviconPath = publicPathFor(config, config.branding.favicon ?? DEFAULT_BRAND_ASSET_PATHS.favicon)
+  const initialTheme = config.themes[0]
+  const initialAppearance = initialTheme?.appearances[0]
   const documentClassName = [
     config.layout.header ? undefined : 'cf-header-hidden',
-    page.frontmatter.layout === 'playground' ? 'cf-playground-page' : undefined
+    page.frontmatter.layout === 'playground' ? 'cf-playground-page' : undefined,
+    initialAppearance?.colorScheme === 'dark' ? 'dark' : undefined
   ]
     .filter(Boolean)
     .join(' ')
   const isPlayground = page.frontmatter.layout === 'playground'
 
   return (
-    <html lang={page.locale} className={documentClassName || undefined}>
+    <html
+      lang={page.locale}
+      className={documentClassName || undefined}
+      data-cf-theme={initialTheme?.id}
+      data-cf-theme-appearance={initialAppearance?.id}
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -103,7 +111,7 @@ export function Layout({
         {demoStyleUrls.map((url) => (
           <link key={url} rel="stylesheet" href={url} />
         ))}
-        {config.theme.darkMode ? <script dangerouslySetInnerHTML={{ __html: noFlashScript }} /> : null}
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript(config.themes) }} />
       </head>
       <body>
         <div

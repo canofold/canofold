@@ -99,11 +99,59 @@ async function filesUnder(directory) {
 }
 
 try {
+  const themesPackage = await pack(join(workspace, 'packages/themes'))
   const markdownPackage = await pack(join(workspace, 'packages/markdown'))
   const canofoldPackage = await pack(join(workspace, 'packages/canofold'))
   const vitePackage = await pack(join(workspace, 'packages/vite'))
   const pluginsPackage = await pack(join(workspace, 'packages/plugins'))
   await mkdir(consumerRoot)
+
+  await write(
+    'third-party-theme/package.json',
+    `${JSON.stringify(
+      {
+        name: '@fixture/canofold-theme',
+        version: '1.0.0',
+        type: 'module',
+        exports: {
+          '.': { types: './index.d.ts', import: './index.js' },
+          './theme.css': './theme.css'
+        },
+        peerDependencies: {
+          [themesPackage.manifest.name]: themesPackage.manifest.version
+        }
+      },
+      null,
+      2
+    )}\n`
+  )
+  await write(
+    'third-party-theme/index.js',
+    `import { defineTheme } from '@canofold/themes'
+
+export default defineTheme({
+  id: 'aurora',
+  name: { en: 'Aurora', zh: '极光' },
+  styles: ['@fixture/canofold-theme/theme.css'],
+  appearances: [
+    { id: 'default', name: { en: 'Default', zh: '默认' }, colorScheme: 'light' }
+  ]
+})
+`
+  )
+  await write(
+    'third-party-theme/index.d.ts',
+    `import type { ThemeDefinition } from '@canofold/themes'
+
+declare const theme: ThemeDefinition
+export default theme
+`
+  )
+  await write(
+    'third-party-theme/theme.css',
+    `[data-cf-theme='aurora'] { --cf-theme-fixture: third-party-package; }
+`
+  )
 
   await write(
     'package.json',
@@ -113,6 +161,8 @@ try {
         private: true,
         type: 'module',
         dependencies: {
+          '@fixture/canofold-theme': 'file:./third-party-theme',
+          [themesPackage.manifest.name]: `file:${portableRelativePath(consumerRoot, themesPackage.tarball)}`,
           [markdownPackage.manifest.name]:
             `file:${portableRelativePath(consumerRoot, markdownPackage.tarball)}`,
           [canofoldPackage.manifest.name]:
@@ -134,6 +184,7 @@ try {
     'pnpm-workspace.yaml',
     `packages: []
 overrides:
+  '${themesPackage.manifest.name}@${themesPackage.manifest.version}': file:${portableRelativePath(consumerRoot, themesPackage.tarball)}
   '${markdownPackage.manifest.name}@${markdownPackage.manifest.version}': file:${portableRelativePath(consumerRoot, markdownPackage.tarball)}
   '${canofoldPackage.manifest.name}@${canofoldPackage.manifest.version}': file:${portableRelativePath(consumerRoot, canofoldPackage.tarball)}
   '${vitePackage.manifest.name}@${vitePackage.manifest.version}': file:${portableRelativePath(consumerRoot, vitePackage.tarball)}
@@ -206,6 +257,33 @@ overrides:
   ]) {
     await assertExists(declaration)
   }
+  for (const themeCss of [
+    'shared.css',
+    'canofold.css',
+    'canofold-site.css',
+    'expressive.css',
+    'neo-brutalist.css',
+    'neumorphism.css',
+    'glassmorphism.css',
+    'sketch-style.css',
+    'hand-drawn-doodle.css',
+    'minimalist-flat.css',
+    'bauhaus.css',
+    'memphis.css',
+    'cyber-chinese.css',
+    'pixel-anime.css',
+    'dopamine-design.css',
+    'shoujo-manga.css',
+    'outrun.css'
+  ]) {
+    const specifier = `@canofold/themes/${themeCss}`
+    const resolved = run(process.execPath, [
+      '--input-type=module',
+      '-e',
+      `console.log(import.meta.resolve('${specifier}'))`
+    ]).trim()
+    await access(fileURLToPath(resolved))
+  }
   const expectedLucideVersion = markdownPackage.manifest.dependencies['lucide-react']
   assert.equal(typeof expectedLucideVersion, 'string')
   for (const packageName of ['@canofold/markdown', 'canofold']) {
@@ -221,19 +299,26 @@ overrides:
   await write(
     'canofold.config.mts',
     `import { pagefind } from '@canofold/plugins/pagefind'
+import { canofold, neoBrutalist, neumorphism } from '@canofold/themes'
 import { vite } from '@canofold/vite'
 import type { CanofoldConfigInput } from 'canofold'
+import aurora from '@fixture/canofold-theme'
 
 export default {
   title: 'Packed RC',
   description: 'Packed release candidate fixture',
   requiredVersion: '${canofoldPackage.manifest.version}',
+  themes: [aurora, neumorphism, canofold, neoBrutalist],
+  layout: { sidebarWidth: '18rem', outlineWidth: '19rem' },
   demos: { engine: vite() },
   seo: { robots: 'disallow' },
   markdown: { code: { overflow: 'scroll' } },
   search: { provider: pagefind() },
   extensions: [{ resolve: './release-extension.ts', options: { marker: 'packed' } }],
-  i18n: { defaultLocale: 'en', locales: ['en', 'zh'] },
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'zh']
+  },
   versions: {
     current: 'current',
     items: [
@@ -496,6 +581,18 @@ export default function PackedButtonDemo() {
   await assert.rejects(access(join(demoRoot, 'styles.css')))
   await assert.rejects(access(join(consumerRoot, '.canofold/dist/assets/canofold-markdown')))
   const siteCss = await readFile(join(consumerRoot, '.canofold/dist/assets/canofold.css'), 'utf8')
+  assert.match(siteCss, /data-cf-theme='neumorphism'/)
+  assert.match(siteCss, /data-cf-theme='neo-brutalist'/)
+  assert.match(siteCss, /data-cf-theme='canofold'/)
+  assert.match(siteCss, /data-cf-theme='aurora'/)
+  assert.match(siteCss, /--cf-theme-fixture: third-party-package/)
+  assert.match(siteCss, /--cf-sidebar-width: 18rem/)
+  assert.match(siteCss, /--cf-outline-width: 19rem/)
+  assert.match(
+    await readFile(join(consumerRoot, '.canofold/dist/index.html'), 'utf8'),
+    /data-cf-theme="aurora"/
+  )
+  assert.match(homeHtml, /Neumorphism/)
   assert.doesNotMatch(siteCss, /\.cf-content \.cf-demo-preview\{[^}]*linear-gradient/)
   assert.equal(
     await readFile(join(consumerRoot, '.canofold/dist/robots.txt'), 'utf8'),

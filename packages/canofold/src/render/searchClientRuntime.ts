@@ -175,7 +175,7 @@ export function bootstrapSearch() {
           document.querySelector<HTMLElement>('[data-canofold-source-open]')?.click()
         }
         if (action === 'theme') {
-          document.querySelector<HTMLElement>('[data-canofold-theme-toggle]')?.click()
+          document.querySelector<HTMLElement>('.cf-theme-menu > summary')?.click()
         }
       })
     )

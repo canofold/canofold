@@ -62,7 +62,7 @@ function Sidebar({ model }: { model: LayoutModel }) {
       {navItems.length > 0 ? (
         <nav className="cf-sidebar-primary-nav" aria-label={labels.primaryNavigation}>
           {navItems.map((item) => {
-            const active = navItemIsActive(model, item.routePath)
+            const active = navItemIsActive(model, item)
             const external = /^https?:\/\//.test(item.routePath)
             return (
               <a

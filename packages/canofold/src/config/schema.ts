@@ -1,16 +1,9 @@
 import type { MarkdownFeatureOptions, MarkdownLabels, MarkdownPlugin } from '@canofold/markdown'
-import type {
-  MarkdownThemeColors,
-  MarkdownThemeGeometry,
-  MarkdownThemeLayout,
-  MarkdownThemeMotion,
-  MarkdownThemeTypography
-} from '@canofold/markdown/theme'
+import { defineTheme, type ThemeDefinition } from '@canofold/themes'
 import { z } from 'zod'
 import { assertRoutePath, canonicalRoutePath } from '../content/routes'
 import type { SearchProvider } from '../search/types'
 import type { CanofoldDemoEngine } from '../demos/types'
-import { THEME_BASE_COLORS } from './constants'
 import { publicResourceSchema } from './publicResource'
 import { CHECK_RULE_IDS } from '../check/rules'
 import {
@@ -29,104 +22,6 @@ type OptionalStringShape<T> = {
 type OptionalBooleanShape<T> = {
   [Key in keyof T]-?: z.ZodOptional<z.ZodBoolean>
 }
-
-const themeColorsSchema = z
-  .object({
-    canvas: z.string().optional(),
-    foreground: z.string().optional(),
-    text: z.string().optional(),
-    muted: z.string().optional(),
-    mutedSubtle: z.string().optional(),
-    surface: z.string().optional(),
-    surfaceSecondary: z.string().optional(),
-    surfaceSoft: z.string().optional(),
-    surfaceElevated: z.string().optional(),
-    border: z.string().optional(),
-    borderStrong: z.string().optional(),
-    hairline: z.string().optional(),
-    primary: z.string().optional(),
-    primarySoft: z.string().optional(),
-    primaryForeground: z.string().optional(),
-    primaryDeep: z.string().optional(),
-    accent: z.string().optional(),
-    info: z.string().optional(),
-    infoDeep: z.string().optional(),
-    success: z.string().optional(),
-    successDeep: z.string().optional(),
-    warning: z.string().optional(),
-    warningDeep: z.string().optional(),
-    danger: z.string().optional(),
-    dangerDeep: z.string().optional(),
-    codeBackground: z.string().optional(),
-    codeForeground: z.string().optional(),
-    overlay: z.string().optional(),
-    shadow: z.string().optional(),
-    shadowSmall: z.string().optional()
-  } satisfies OptionalStringShape<MarkdownThemeColors>)
-  .strict()
-  .optional()
-
-const themeTypographySchema = z
-  .object({
-    displayFont: z.string().min(1).optional(),
-    sansFont: z.string().min(1).optional(),
-    monoFont: z.string().min(1).optional(),
-    bodySize: z.string().min(1).optional(),
-    bodyLineHeight: z.string().min(1).optional(),
-    headingLineHeight: z.string().min(1).optional(),
-    heading1Size: z.string().min(1).optional(),
-    heading2Size: z.string().min(1).optional(),
-    heading3Size: z.string().min(1).optional(),
-    heading4Size: z.string().min(1).optional(),
-    heading5Size: z.string().min(1).optional(),
-    heading6Size: z.string().min(1).optional()
-  } satisfies OptionalStringShape<MarkdownThemeTypography>)
-  .strict()
-  .optional()
-
-const themeLayoutSchema = z
-  .object({
-    readingWidth: z.string().min(1).optional(),
-    contentWidth: z.string().min(1).optional(),
-    gutter: z.string().min(1).optional()
-  } satisfies OptionalStringShape<MarkdownThemeLayout>)
-  .strict()
-  .optional()
-
-const themeGeometrySchema = z
-  .object({
-    radiusSmall: z.string().min(1).optional(),
-    radiusMedium: z.string().min(1).optional(),
-    radiusLarge: z.string().min(1).optional(),
-    radiusFull: z.string().min(1).optional()
-  } satisfies OptionalStringShape<MarkdownThemeGeometry>)
-  .strict()
-  .optional()
-
-const themeMotionSchema = z
-  .object({
-    durationFast: z.string().min(1).optional(),
-    durationNormal: z.string().min(1).optional(),
-    easing: z.string().min(1).optional()
-  } satisfies OptionalStringShape<MarkdownThemeMotion>)
-  .strict()
-  .optional()
-
-const markdownThemeSchema = z
-  .object({
-    colors: z
-      .object({
-        light: themeColorsSchema,
-        dark: themeColorsSchema
-      })
-      .strict()
-      .optional(),
-    typography: themeTypographySchema,
-    layout: themeLayoutSchema,
-    geometry: themeGeometrySchema,
-    motion: themeMotionSchema
-  })
-  .strict()
 
 const markdownCodeSchema = z
   .object({
@@ -379,6 +274,18 @@ const markdownPluginSchema = z.custom<MarkdownPlugin>(
   'markdown.plugins entries must be plugin objects with a lowercase kebab-case name'
 )
 
+const themeDefinitionSchema = z.unknown().transform((value, context): ThemeDefinition => {
+  try {
+    return defineTheme(value as ThemeDefinition)
+  } catch (error) {
+    context.addIssue({
+      code: 'custom',
+      message: error instanceof Error ? error.message : 'Invalid theme definition'
+    })
+    return z.NEVER
+  }
+})
+
 const extensionSchema = z
   .object({
     resolve: z
@@ -413,7 +320,9 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
       .optional(),
     layout: z
       .object({
-        header: z.boolean().optional()
+        header: z.boolean().optional(),
+        sidebarWidth: z.union([z.number(), z.string()]).optional(),
+        outlineWidth: z.union([z.number(), z.string()]).optional()
       })
       .strict()
       .optional(),
@@ -433,18 +342,12 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
       })
       .strict()
       .optional(),
-    theme: z
+    themes: z.array(themeDefinitionSchema).min(1).optional(),
+    branding: z
       .object({
         logo: publicResourceSchema.optional(),
         logoDark: publicResourceSchema.optional(),
-        favicon: publicResourceSchema.optional(),
-        accentColor: z.string().optional(),
-        darkMode: z.boolean().optional(),
-        radius: z.union([z.number(), z.string()]).optional(),
-        baseColor: z.enum(THEME_BASE_COLORS).optional(),
-        sidebarWidth: z.union([z.number(), z.string()]).optional(),
-        outlineWidth: z.union([z.number(), z.string()]).optional(),
-        tokens: markdownThemeSchema.optional()
+        favicon: publicResourceSchema.optional()
       })
       .strict()
       .optional(),
@@ -463,7 +366,8 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
           z
             .object({
               text: z.string().min(1),
-              link: publicResourceSchema
+              link: publicResourceSchema,
+              activePaths: z.array(absoluteRouteSchema).optional()
             })
             .strict()
         )

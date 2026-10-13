@@ -35,6 +35,7 @@ export interface SidebarGroup {
 export interface NavItem {
   title: string
   routePath: string
+  activePaths?: string[]
 }
 
 export interface DocPage extends Pick<MarkdownContentAnalysis, 'headings' | 'codeExamples' | 'excerpt'> {

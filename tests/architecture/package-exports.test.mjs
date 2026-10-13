@@ -28,7 +28,12 @@ async function importInChild(importPath, expression = 'true') {
 }
 
 test('target package export maps point to existing and loadable artifacts', async () => {
-  for (const packageDirectory of ['packages/markdown', 'packages/canofold', 'packages/plugins']) {
+  for (const packageDirectory of [
+    'packages/markdown',
+    'packages/canofold',
+    'packages/plugins',
+    'packages/themes'
+  ]) {
     const directory = join(root, packageDirectory)
     const manifest = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
 
@@ -57,10 +62,30 @@ test('published JavaScript entry points expose only the documented runtime API',
       'packages/canofold/dist/index.js',
       [
         'CANOFOLD_EXTENSION_API_VERSION',
+        'canofoldVersion',
         'defineConfig',
         'defineExtension',
-        'defineSearchProvider',
-        'canofoldVersion'
+        'defineSearchProvider'
+      ]
+    ],
+    [
+      'packages/themes/dist/index.js',
+      [
+        'bauhaus',
+        'canofold',
+        'cyberChinese',
+        'defineTheme',
+        'dopamineDesign',
+        'glassmorphism',
+        'handDrawnDoodle',
+        'memphis',
+        'minimalistFlat',
+        'neoBrutalist',
+        'neumorphism',
+        'outrun',
+        'pixelAnime',
+        'sketchStyle',
+        'shoujoManga'
       ]
     ],
     [
@@ -74,16 +99,6 @@ test('published JavaScript entry points expose only the documented runtime API',
     [
       'packages/markdown/dist/server/analyze.js',
       ['analyzeMarkdown', 'analyzeMdxModuleBoundary', 'detectMarkdownAssets']
-    ],
-    [
-      'packages/markdown/dist/theme.js',
-      [
-        'DEFAULT_MARKDOWN_THEME',
-        'DEFAULT_SEMANTIC_COLORS',
-        'MARKDOWN_THEME_VARIABLES',
-        'markdownThemeDeclarations',
-        'resolveMarkdownTheme'
-      ]
     ]
   ])
 
@@ -100,7 +115,7 @@ test('published JavaScript entry points expose only the documented runtime API',
 test('Canofold config declarations expose the contract without bundling the Zod schema', async () => {
   const declarations = await readFile(join(root, 'packages/canofold/dist/index.d.ts'), 'utf8')
   assert.doesNotMatch(declarations, /from ['"]zod['"]|\bZod[A-Z]/)
-  assert.ok(Buffer.byteLength(declarations) < 15 * 1024, 'canofold declarations must stay below 15 KB')
+  assert.ok(Buffer.byteLength(declarations) < 16 * 1024, 'canofold declarations must stay below 16 KB')
 })
 
 test('plugin declarations do not require the Canofold runtime package', async () => {

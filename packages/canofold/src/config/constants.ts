@@ -1,5 +1,3 @@
-export const THEME_BASE_COLORS = ['paper', 'neutral', 'slate', 'zinc', 'stone'] as const
-
 export const CANOFOLD_MARKDOWN_ELEMENT_GROUP_IDS = [
   'headings',
   'inline',

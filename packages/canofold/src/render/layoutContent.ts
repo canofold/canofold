@@ -90,7 +90,7 @@ const zhContent: LayoutContent = {
     diagramTitle: 'Mermaid、PlantUML 与数学公式',
     diagramDescription: '图表预览、源码与缩放',
     sourceDescription: '打开当前页面的 Markdown 原文',
-    themeDescription: '在浅色与深色阅读模式间切换'
+    themeDescription: '在站点配置的阅读主题间切换'
   }
 }
 
@@ -169,7 +169,7 @@ const enContent: LayoutContent = {
     diagramTitle: 'Mermaid, PlantUML, and math',
     diagramDescription: 'Diagram preview, source, and scale',
     sourceDescription: 'Open the current page Markdown source',
-    themeDescription: 'Switch between light and dark reading modes'
+    themeDescription: 'Switch between the configured reading themes'
   }
 }
 

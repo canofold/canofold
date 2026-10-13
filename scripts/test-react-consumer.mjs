@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url'
 import { execPnpmSync } from './lib/packageManager.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
-const packageRoot = join(workspace, 'packages/markdown')
+const markdownPackageRoot = join(workspace, 'packages/markdown')
+const themesPackageRoot = join(workspace, 'packages/themes')
 const versions = process.env.REACT_VERSION
   ? [process.env.REACT_VERSION]
   : ['18.2.0', '18.3.1', '19.2.0', '19.3.0']
@@ -20,11 +21,17 @@ function runPnpm(args, cwd) {
   execPnpmSync(args, { cwd, stdio: 'inherit', env: { ...process.env, CI: 'true' } })
 }
 
+async function pack(packageRoot, destination) {
+  await mkdir(destination, { recursive: true })
+  runPnpm(['pack', '--pack-destination', destination], packageRoot)
+  const tarballName = (await readdir(destination)).find((name) => name.endsWith('.tgz'))
+  if (!tarballName) throw new Error(`${packageRoot} package tarball was not created`)
+  return join(destination, tarballName)
+}
+
 try {
-  runPnpm(['pack', '--pack-destination', temporaryRoot], packageRoot)
-  const tarballName = (await readdir(temporaryRoot)).find((name) => name.endsWith('.tgz'))
-  if (!tarballName) throw new Error('Markdown package tarball was not created')
-  const tarball = join(temporaryRoot, tarballName)
+  const markdownTarball = await pack(markdownPackageRoot, join(temporaryRoot, 'markdown'))
+  const themesTarball = await pack(themesPackageRoot, join(temporaryRoot, 'themes'))
 
   for (const version of versions) {
     const consumerRoot = join(temporaryRoot, `react-${version}`)
@@ -36,15 +43,20 @@ try {
           private: true,
           type: 'module',
           dependencies: {
-            '@canofold/markdown': `file:${tarball}`,
+            '@canofold/markdown': `file:${markdownTarball}`,
+            '@canofold/themes': `file:${themesTarball}`,
             react: version,
             'react-dom': version,
-            vite: '6.4.3'
+            vite: '8.3.0'
           }
         },
         null,
         2
       )
+    )
+    await writeFile(
+      join(consumerRoot, 'pnpm-workspace.yaml'),
+      `packages: []\noverrides:\n  '@canofold/themes': file:${themesTarball}\n`
     )
     await writeFile(
       join(consumerRoot, 'test.mjs'),

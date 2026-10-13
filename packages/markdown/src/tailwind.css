@@ -1,3 +1,3 @@
-/* Shared Markdown/site design system. */
-@import './tokens.css';
+/* Structural Markdown styles; import a visual theme from @canofold/themes separately. */
+@import '@canofold/themes/shared.css';
 @import './styles.css';
