@@ -2,14 +2,14 @@ import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import { deflateSync, strToU8 } from 'fflate'
 
 import { diagramFence } from '../shared/diagram'
-import { externalDiagramServiceGate } from '../shared/externalDiagramService'
+import { externalDiagramServiceGate, resolveExternalDiagramServer } from '../shared/externalDiagramService'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
 const PLUGIN_VERSION = '4'
 
 export interface PlantUmlOptions {
-  /** PlantUML server base URL. Set to false to keep source-only output. */
-  server?: string | false
+  /** PlantUML server base URL. Omit it to keep source-only output. */
+  server?: string
   /** Let the browser host render the source through the public client enhancer. */
   renderer?: 'client'
 }
@@ -20,12 +20,6 @@ function encode6Bit(value: number) {
   if (normalized < 36) return String.fromCharCode(65 + normalized - 10)
   if (normalized < 62) return String.fromCharCode(97 + normalized - 36)
   return normalized === 62 ? '-' : '_'
-}
-
-function stripTrailingSlashes(value: string) {
-  let end = value.length
-  while (end > 0 && value[end - 1] === '/') end -= 1
-  return value.slice(0, end)
 }
 
 function encodePlantUml(source: string) {
@@ -46,7 +40,7 @@ function encodePlantUml(source: string) {
 
 /** Enable PlantUML fenced code blocks as an opt-in official plugin. */
 export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
-  const server = options.server === false ? '' : stripTrailingSlashes(options.server?.trim() ?? '')
+  const server = resolveExternalDiagramServer('PlantUML', options.server)
   if (server && options.renderer === 'client') {
     throw new Error('PlantUML cannot use server and client rendering at the same time.')
   }
@@ -64,7 +58,7 @@ export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
     browserCompiler: {
       module: '@canofold/plugins/plantuml',
       exportName: 'plantUml',
-      options: { server: server || false, ...(clientRenderer ? { renderer: 'client' as const } : {}) }
+      options: { ...(server ? { server } : {}), ...(clientRenderer ? { renderer: 'client' as const } : {}) }
     },
     fenceLanguages: ['plantuml', 'puml'],
     appliesTo,

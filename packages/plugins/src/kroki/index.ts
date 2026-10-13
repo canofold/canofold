@@ -2,11 +2,10 @@ import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import { strToU8, zlibSync } from 'fflate'
 
 import { diagramFence } from '../shared/diagram'
-import { externalDiagramServiceGate } from '../shared/externalDiagramService'
+import { externalDiagramServiceGate, resolveExternalDiagramServer } from '../shared/externalDiagramService'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
 const PLUGIN_VERSION = '4'
-const DEFAULT_SERVER = 'https://kroki.io'
 const DEFAULT_LANGUAGES: Record<string, string> = {
   graphviz: 'graphviz',
   dot: 'graphviz',
@@ -15,8 +14,8 @@ const DEFAULT_LANGUAGES: Record<string, string> = {
 }
 
 export interface KrokiOptions {
-  /** Kroki-compatible server URL. Set to false to keep source local. */
-  server?: string | false
+  /** Kroki-compatible server URL. Omit it to keep source local. */
+  server?: string
   /** Let the browser host render the source through the public client enhancer. */
   renderer?: 'client'
   /** Map Markdown fence labels to Kroki diagram types. */
@@ -30,25 +29,17 @@ function encodeKroki(source: string) {
   return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
 }
 
-function stripTrailingSlashes(value: string) {
-  let end = value.length
-  while (end > 0 && value[end - 1] === '/') end -= 1
-  return value.slice(0, end)
-}
-
 function krokiUrl(server: string, type: string, format: 'svg' | 'png', source: string) {
   return `${server}/${encodeURIComponent(type)}/${format}/${encodeKroki(source)}`
 }
 
 /** Render plugin-owned diagram fences through a Kroki-compatible server. */
 export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
-  const configuredServer =
-    typeof options.server === 'string' ? stripTrailingSlashes(options.server.trim()) : ''
-  if (configuredServer && options.renderer === 'client') {
+  const clientRenderer = options.renderer === 'client'
+  const server = resolveExternalDiagramServer('Kroki', options.server)
+  if (server && clientRenderer) {
     throw new Error('Kroki cannot use server and client rendering at the same time.')
   }
-  const clientRenderer = options.renderer === 'client'
-  const server = clientRenderer || options.server === false ? '' : configuredServer || DEFAULT_SERVER
   const languages = { ...DEFAULT_LANGUAGES, ...options.languages }
   const format = options.format === 'png' ? 'png' : 'svg'
   if (clientRenderer && format !== 'svg') {
@@ -73,7 +64,7 @@ export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
       module: '@canofold/plugins/kroki',
       exportName: 'kroki',
       options: {
-        server: server || false,
+        ...(server ? { server } : {}),
         languages: languageMap,
         format,
         ...(clientRenderer ? { renderer: 'client' as const } : {})

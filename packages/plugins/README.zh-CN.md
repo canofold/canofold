@@ -75,15 +75,15 @@ renderer 会收到 `kind`、原始围栏 `language`、映射后的 `diagramType`
 
 Worker、本地进程或编辑器消息桥由宿主负责。`@canofold/plugins` 不启动可执行程序，也不定义 VS Code 协议；`@canofold/markdown` 不感知具体图表运行时。
 
-为保持补丁版本兼容，`kroki()` 仍默认使用 `https://kroki.io`，因此会把图表源码发送到该服务。需要源码留在本地时，可以用 `server: false` 只显示源码、显式配置可信服务，或选择上文的宿主 renderer：
+`kroki()` 默认把图表源码留在本地。远程渲染必须显式配置可信的 Kroki 兼容服务；需要由宿主在本地渲染时使用上文的 renderer：
 
 ```ts
-kroki({ server: false })
+kroki()
 kroki({ server: 'https://kroki.example' })
 kroki({ renderer: 'client' })
 ```
 
-`plantUml({ renderer: 'client' })` 通过 `@canofold/plugins/client/plantuml` 使用同一套客户端契约。两个工厂都不允许同时设置远程 `server` 和 `renderer: 'client'`。
+`plantUml({ renderer: 'client' })` 通过 `@canofold/plugins/client/plantuml` 使用同一套客户端契约。两个工厂都不允许同时设置远程 `server` 和 `renderer: 'client'`。server 必须是没有查询参数或片段的 HTTP(S) 基础 URL。
 
 ### 公式隔离与依赖边界
 

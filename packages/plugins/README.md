@@ -75,15 +75,15 @@ Calling the enhancer with a renderer also upgrades diagram shells that the Canof
 
 The host owns any worker, native process, or editor messaging bridge. `@canofold/plugins` does not start executables or define a VS Code protocol, and `@canofold/markdown` remains unaware of diagram runtimes.
 
-For patch-version compatibility, `kroki()` continues to use `https://kroki.io` by default and therefore sends diagram source to that service. Use `server: false` for a source-only shell, configure a trusted service explicitly, or select the host renderer shown above when source must remain local:
+`kroki()` keeps diagram source local by default. Remote rendering must be enabled explicitly with a trusted Kroki-compatible server; use the host renderer when the host should render locally:
 
 ```ts
-kroki({ server: false })
+kroki()
 kroki({ server: 'https://kroki.example' })
 kroki({ renderer: 'client' })
 ```
 
-`plantUml({ renderer: 'client' })` uses the same client contract through `@canofold/plugins/client/plantuml`. For both factories, a remote `server` and `renderer: 'client'` cannot be enabled together.
+`plantUml({ renderer: 'client' })` uses the same client contract through `@canofold/plugins/client/plantuml`. For both factories, a remote `server` and `renderer: 'client'` cannot be enabled together. A server must be an HTTP(S) base URL without a query or fragment.
 
 ### Math isolation and dependency boundaries
 

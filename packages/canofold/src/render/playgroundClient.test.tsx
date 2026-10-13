@@ -8,6 +8,8 @@ type PlaygroundRuntime = typeof window & {
   __canofoldMarkdownReady?: Promise<void>
 }
 
+let disposePlaygrounds: (() => void) | undefined
+
 function renderPlayground(source = '# First', previewHtml = '<article data-old-preview>First</article>') {
   document.body.innerHTML = `
     <div
@@ -22,14 +24,17 @@ function renderPlayground(source = '# First', previewHtml = '<article data-old-p
         <div data-canofold-playground-preview>${previewHtml}</div>
       </section>
     </div>`
-  mountPlaygrounds({ basePath: '/', markdown: {} })
+  disposePlaygrounds = mountPlaygrounds({ basePath: '/', markdown: {} })
   return {
+    dispose: disposePlaygrounds,
     source: document.querySelector<HTMLTextAreaElement>('[data-canofold-playground-source]')!,
     preview: document.querySelector<HTMLElement>('[data-canofold-playground-preview]')!
   }
 }
 
 afterEach(() => {
+  disposePlaygrounds?.()
+  disposePlaygrounds = undefined
   const runtime = window as PlaygroundRuntime
   delete runtime.__canofoldBootstrapMarkdown
   delete runtime.__canofoldEnhanceMarkdown
@@ -251,5 +256,68 @@ describe('playground client', () => {
     expect(
       document.querySelector('[data-canofold-playground]')?.hasAttribute('data-canofold-playground-ready')
     ).toBe(true)
+  })
+
+  it('cancels pending renders and detaches editor listeners when disposed', async () => {
+    vi.useFakeTimers()
+    const runtime = window as PlaygroundRuntime
+    runtime.__canofoldMarkdownReady = Promise.resolve()
+    runtime.__canofoldEnhanceMarkdown = vi.fn(async () => () => undefined)
+    const { dispose, preview, source } = renderPlayground('# Title')
+
+    source.value = '# Pending'
+    source.dispatchEvent(new Event('input', { bubbles: true }))
+    dispose?.()
+    await vi.advanceTimersByTimeAsync(120)
+
+    expect(preview.querySelector('.cf-playground-live-preview')).toBeNull()
+    expect(runtime.__canofoldEnhanceMarkdown).not.toHaveBeenCalled()
+    expect(
+      document.querySelector('[data-canofold-playground]')?.hasAttribute('data-canofold-playground-ready')
+    ).toBe(false)
+
+    const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    source.dispatchEvent(tab)
+    expect(tab.defaultPrevented).toBe(false)
+    expect(source.value).toBe('# Pending')
+  })
+
+  it('cleans an enhancement that finishes after its playground was disposed', async () => {
+    const enhancementDispose = vi.fn()
+    let finishEnhancement: (() => void) | undefined
+    const runtime = window as PlaygroundRuntime
+    runtime.__canofoldMarkdownReady = Promise.resolve()
+    runtime.__canofoldEnhanceMarkdown = vi.fn(
+      () =>
+        new Promise<() => void>((resolve) => {
+          finishEnhancement = () => resolve(enhancementDispose)
+        })
+    )
+    const { dispose, preview, source } = renderPlayground('# Title')
+
+    source.value = '# In flight'
+    source.dispatchEvent(new Event('input', { bubbles: true }))
+    await vi.waitFor(() => expect(runtime.__canofoldEnhanceMarkdown).toHaveBeenCalledOnce())
+    dispose?.()
+    finishEnhancement?.()
+
+    await vi.waitFor(() => expect(enhancementDispose).toHaveBeenCalledOnce())
+    expect(preview.querySelector('.cf-playground-live-preview')).toBeNull()
+  })
+
+  it('disposes an active enhancement and unmounts its preview', async () => {
+    const enhancementDispose = vi.fn()
+    const runtime = window as PlaygroundRuntime
+    runtime.__canofoldMarkdownReady = Promise.resolve()
+    runtime.__canofoldEnhanceMarkdown = vi.fn(async () => enhancementDispose)
+    const { dispose, preview, source } = renderPlayground('# Title')
+
+    source.value = '# Active'
+    source.dispatchEvent(new Event('input', { bubbles: true }))
+    await vi.waitFor(() => expect(preview.querySelector('h1')?.textContent).toBe('Active'))
+    dispose?.()
+
+    expect(enhancementDispose).toHaveBeenCalledOnce()
+    expect(preview.querySelector('.cf-playground-live-preview')).toBeNull()
   })
 })
