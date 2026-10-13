@@ -516,6 +516,17 @@ test('Canofold typechecks every public Markdown code entry from source', async (
   }
 })
 
+test('workspace source mappings include transitive public theme types', async () => {
+  const [canofoldTsconfig, pluginsTsconfig] = await Promise.all(
+    ['canofold', 'plugins'].map((packageName) =>
+      readFile(join(root, `packages/${packageName}/tsconfig.json`), 'utf8').then(JSON.parse)
+    )
+  )
+
+  assert.ok(canofoldTsconfig.compilerOptions?.paths?.['@canofold/themes'])
+  assert.ok(pluginsTsconfig.compilerOptions?.paths?.['@canofold/themes'])
+})
+
 test('Markdown benchmark uses a self-contained representative corpus', async () => {
   const rootPackage = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
   const benchmark = await readFile(join(root, 'packages/markdown/scripts/benchmark.mjs'), 'utf8')
