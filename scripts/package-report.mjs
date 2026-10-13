@@ -40,9 +40,9 @@ const packages = [
     name: '@canofold/plugins',
     root: join(workspace, 'packages/plugins'),
     compressedBudget: 400 * 1024,
-    // Twenty KaTeX fonts plus one declaration and runtime per public plugin
-    // subpath. The build intentionally emits no shared chunks or source maps.
-    fileCountBudget: 50
+    // Twenty KaTeX fonts plus public plugin/client declarations and runtimes.
+    // JavaScript entries remain self-contained; declarations may share one type-only file.
+    fileCountBudget: 52
   }
 ]
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-package-report-'))

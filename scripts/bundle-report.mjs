@@ -46,9 +46,10 @@ const canofoldNodeEntries = ['cli.js', 'index.js', 'demo-engine.js']
 const canofoldBrowserEntries = ['playground-client.js', 'search-client.js', 'shell-client.js']
 const pluginDist = join(process.cwd(), 'packages/plugins/dist')
 const pluginClientBudgets = {
-  'client/kroki.js': 3 * 1024,
+  // Host-rendered entries include cancellation, object-URL cleanup, and DOM restoration.
+  'client/kroki.js': 3.5 * 1024,
   'client/mermaid.js': 6 * 1024,
-  'client/plantuml.js': 3 * 1024
+  'client/plantuml.js': 3.5 * 1024
 }
 
 async function relativeFiles(directory) {

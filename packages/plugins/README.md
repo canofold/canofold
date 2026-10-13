@@ -45,7 +45,45 @@ export default defineConfig({
 
 When using the plugins directly with `@canofold/markdown` in a React application, install them as regular application dependencies. A React host that enables `math()` must also import `@canofold/plugins/math.css`.
 
-Package-root and focused factory entries such as `@canofold/plugins/math` are public. Browser and CSS entries are consumed by generated sites and should not be treated as plugin factories.
+Package-root and focused factory entries such as `@canofold/plugins/math` are public. Generated sites load the browser and CSS entries automatically. Direct React or editor hosts may use the typed diagram client entries described below; they are lifecycle enhancers, not plugin factories.
+
+## Host-provided local diagram rendering
+
+PlantUML and Kroki can delegate rendering to a browser host without sending source to an external service. Select the client renderer while compiling Markdown, then pass one renderer function to the matching client enhancer after the Markdown DOM is mounted:
+
+```ts
+import { kroki } from '@canofold/plugins/kroki'
+import { enhance, type DiagramRenderer } from '@canofold/plugins/client/kroki'
+
+export const diagramPlugin = kroki({ renderer: 'client' })
+
+const renderer: DiagramRenderer = async ({ diagramType, source, signal }) => {
+  const svg = await renderLocally({ diagramType, source, signal })
+  return { svg }
+}
+
+const diagrams = enhance(markdownRoot, { renderer })
+await diagrams.ready
+
+// Run when the mounted Markdown content is replaced or removed.
+diagrams.dispose()
+```
+
+The renderer receives `kind`, the authored `language`, the mapped `diagramType`, `source`, and an `AbortSignal`. It must return a non-empty SVG string. The enhancer presents the SVG through a revocable `blob:` image URL, keeps the source and zoom controls working, displays a localized failure state, and restores the original DOM on disposal. A restrictive host CSP must therefore allow `blob:` in `img-src`.
+
+Calling the enhancer with a renderer also upgrades diagram shells that the Canofold page runtime already enhanced without one; controls are not duplicated. The host still owns the returned lifecycle and must dispose it when replacing or unmounting the rendered content.
+
+The host owns any worker, native process, or editor messaging bridge. `@canofold/plugins` does not start executables or define a VS Code protocol, and `@canofold/markdown` remains unaware of diagram runtimes.
+
+For patch-version compatibility, `kroki()` continues to use `https://kroki.io` by default and therefore sends diagram source to that service. Use `server: false` for a source-only shell, configure a trusted service explicitly, or select the host renderer shown above when source must remain local:
+
+```ts
+kroki({ server: false })
+kroki({ server: 'https://kroki.example' })
+kroki({ renderer: 'client' })
+```
+
+`plantUml({ renderer: 'client' })` uses the same client contract through `@canofold/plugins/client/plantuml`. For both factories, a remote `server` and `renderer: 'client'` cannot be enabled together.
 
 ### Math isolation and dependency boundaries
 

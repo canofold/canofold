@@ -22,7 +22,7 @@ export default defineConfig((overrideOptions): Options[] => [
     platform: 'node',
     target: 'node22',
     dts: true,
-    clean: !overrideOptions.watch,
+    clean: false,
     // Each public subpath is self-contained so publishing focused entries does
     // not create a second layer of generated shared chunks and source maps.
     splitting: false,
@@ -42,8 +42,8 @@ export default defineConfig((overrideOptions): Options[] => [
     format: ['esm'],
     platform: 'browser',
     target: 'es2022',
-    dts: false,
-    clean: false,
+    dts: true,
+    clean: !overrideOptions.watch,
     // Client shells stay self-contained. Large package runtimes are declared as
     // plugin resources and copied by the Canofold host instead of entering npm tarballs.
     splitting: false,

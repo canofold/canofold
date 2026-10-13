@@ -111,7 +111,7 @@ describe('diagram client lifecycle', () => {
     const dispose = enhanceDiagrams(document, 'mermaid', async () => {
       throw new Error('invalid diagram')
     })
-    await Promise.resolve()
+    await dispose.ready
 
     expect(figure.dataset.cfRenderError).toBe('true')
     expect(error).toHaveBeenCalledWith('[canofold] mermaid render failed:', expect.any(Error))

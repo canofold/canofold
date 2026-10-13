@@ -5,7 +5,7 @@ import { diagramFence } from '../shared/diagram'
 import { externalDiagramServiceGate } from '../shared/externalDiagramService'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
-const PLUGIN_VERSION = '3'
+const PLUGIN_VERSION = '4'
 const DEFAULT_SERVER = 'https://kroki.io'
 const DEFAULT_LANGUAGES: Record<string, string> = {
   graphviz: 'graphviz',
@@ -15,7 +15,10 @@ const DEFAULT_LANGUAGES: Record<string, string> = {
 }
 
 export interface KrokiOptions {
-  server?: string
+  /** Kroki-compatible server URL. Set to false to keep source local. */
+  server?: string | false
+  /** Let the browser host render the source through the public client enhancer. */
+  renderer?: 'client'
   /** Map Markdown fence labels to Kroki diagram types. */
   languages?: Readonly<Record<string, string>>
   format?: 'svg' | 'png'
@@ -39,27 +42,42 @@ function krokiUrl(server: string, type: string, format: 'svg' | 'png', source: s
 
 /** Render plugin-owned diagram fences through a Kroki-compatible server. */
 export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
-  const server = (options.server ? stripTrailingSlashes(options.server) : '') || DEFAULT_SERVER
+  const configuredServer =
+    typeof options.server === 'string' ? stripTrailingSlashes(options.server.trim()) : ''
+  if (configuredServer && options.renderer === 'client') {
+    throw new Error('Kroki cannot use server and client rendering at the same time.')
+  }
+  const clientRenderer = options.renderer === 'client'
+  const server = clientRenderer || options.server === false ? '' : configuredServer || DEFAULT_SERVER
   const languages = { ...DEFAULT_LANGUAGES, ...options.languages }
   const format = options.format === 'png' ? 'png' : 'svg'
+  if (clientRenderer && format !== 'svg') {
+    throw new Error('Kroki client rendering only supports SVG output.')
+  }
   const languageMap = Object.fromEntries(
     Object.entries(languages)
       .map(([language, type]) => [language.trim().toLowerCase(), type.trim().toLowerCase()] as const)
       .filter(([language, type]) => language && type)
   )
-  const appliesTo = externalDiagramServiceGate({
-    plugin: 'Kroki',
-    appliesTo: ({ source }) => hasMarkdownFenceLanguage(source, new Set(Object.keys(languageMap)))
-  })
+  const hasKrokiFence = ({ source }: { source: string }) =>
+    hasMarkdownFenceLanguage(source, new Set(Object.keys(languageMap)))
+  const appliesTo = server
+    ? externalDiagramServiceGate({ plugin: 'Kroki', appliesTo: hasKrokiFence })
+    : hasKrokiFence
 
   return defineMarkdownPlugin({
     name: 'kroki',
     version: PLUGIN_VERSION,
-    cacheKey: { server, languages: languageMap, format },
+    cacheKey: { server, renderer: clientRenderer ? 'client' : false, languages: languageMap, format },
     browserCompiler: {
       module: '@canofold/plugins/kroki',
       exportName: 'kroki',
-      options: { server, languages: languageMap, format }
+      options: {
+        server: server || false,
+        languages: languageMap,
+        format,
+        ...(clientRenderer ? { renderer: 'client' as const } : {})
+      }
     },
     fenceLanguages: Object.keys(languageMap),
     appliesTo,
@@ -72,7 +90,14 @@ export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
         languages: new Set(Object.keys(languageMap)),
         kind: 'kroki',
         filename: (language) => `diagram.${languageMap[language] ?? language}`,
-        imageUrl: (source, language) => krokiUrl(server, languageMap[language] ?? language, format, source)
+        diagramType: (language) => languageMap[language] ?? language,
+        clientRenderer,
+        ...(server
+          ? {
+              imageUrl: (source: string, language: string) =>
+                krokiUrl(server, languageMap[language] ?? language, format, source)
+            }
+          : {})
       })
     ]
   })

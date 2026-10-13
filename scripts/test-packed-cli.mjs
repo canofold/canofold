@@ -170,6 +170,8 @@ export default theme
           [vitePackage.manifest.name]: `file:${portableRelativePath(consumerRoot, vitePackage.tarball)}`,
           [pluginsPackage.manifest.name]:
             `file:${portableRelativePath(consumerRoot, pluginsPackage.tarball)}`,
+          '@types/react': markdownPackage.manifest.devDependencies['@types/react'],
+          '@types/react-dom': markdownPackage.manifest.devDependencies['@types/react-dom'],
           pagefind: pluginsPackage.manifest.peerDependencies.pagefind,
           react: reactVersion ?? canofoldPackage.manifest.dependencies.react,
           'react-dom': reactVersion ?? canofoldPackage.manifest.dependencies['react-dom'],
@@ -253,10 +255,57 @@ overrides:
     'node_modules/@canofold/markdown/dist/index.d.ts',
     'node_modules/canofold/dist/index.d.ts',
     'node_modules/@canofold/vite/dist/index.d.ts',
-    'node_modules/@canofold/plugins/dist/index.d.ts'
+    'node_modules/@canofold/plugins/dist/index.d.ts',
+    'node_modules/@canofold/plugins/dist/client/kroki.d.ts',
+    'node_modules/@canofold/plugins/dist/client/plantuml.d.ts'
   ]) {
     await assertExists(declaration)
   }
+  run(process.execPath, [
+    '--input-type=module',
+    '-e',
+    "import { enhance as kroki } from '@canofold/plugins/client/kroki'; import { enhance as plantuml } from '@canofold/plugins/client/plantuml'; if (typeof kroki !== 'function' || typeof plantuml !== 'function') throw new Error('Diagram client enhancers are unavailable')"
+  ])
+  await write(
+    'diagram-client.ts',
+    `import { kroki } from '@canofold/plugins/kroki'
+import { enhance as enhanceKroki, type DiagramRenderer } from '@canofold/plugins/client/kroki'
+import { enhance as enhancePlantUml } from '@canofold/plugins/client/plantuml'
+
+const renderer: DiagramRenderer = async ({ diagramType, source, signal }) => {
+  if (signal.aborted) throw new Error('aborted')
+  return { svg: \`<svg data-type="\${diagramType}"><text>\${source}</text></svg>\` }
+}
+
+kroki({ renderer: 'client' })
+declare const root: ParentNode
+enhanceKroki(root, { renderer }).dispose()
+enhancePlantUml(root, { renderer }).dispose()
+`
+  )
+  await write(
+    'tsconfig.diagram.json',
+    `${JSON.stringify(
+      {
+        compilerOptions: {
+          lib: ['ES2022', 'DOM', 'ESNext.Disposable'],
+          module: 'ESNext',
+          moduleResolution: 'Bundler',
+          noEmit: true,
+          strict: true,
+          target: 'ES2022'
+        },
+        files: ['diagram-client.ts']
+      },
+      null,
+      2
+    )}\n`
+  )
+  run(process.execPath, [
+    join(workspace, 'node_modules/typescript/bin/tsc'),
+    '--project',
+    'tsconfig.diagram.json'
+  ])
   for (const themeCss of [
     'shared.css',
     'canofold.css',

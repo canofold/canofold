@@ -15,6 +15,32 @@ const DIAGRAM_SCALE_MIN = 0.5
 const DIAGRAM_SCALE_MAX = 2
 const DIAGRAM_SCALE_STEP = 0.25
 
+export interface DiagramRenderRequest {
+  kind: string
+  language: string
+  diagramType: string
+  source: string
+  signal: AbortSignal
+}
+
+export interface DiagramRenderResult {
+  svg: string
+}
+
+export type DiagramRenderer = (
+  request: DiagramRenderRequest
+) => DiagramRenderResult | Promise<DiagramRenderResult>
+
+export interface DiagramClientOptions {
+  renderer?: DiagramRenderer
+}
+
+type DiagramRenderCleanup = () => void
+type DiagramRender = (
+  figure: HTMLElement,
+  signal: AbortSignal
+) => void | DiagramRenderCleanup | Promise<void | DiagramRenderCleanup>
+
 async function copyText(value: string) {
   if (navigator.clipboard) {
     try {
@@ -180,31 +206,62 @@ function setupActions(figure: HTMLElement) {
   }
 }
 
-export function enhanceDiagrams(
-  root: ParentNode,
-  kind: string,
-  render?: (figure: HTMLElement) => Promise<void>
-) {
+export function enhanceDiagrams(root: ParentNode, kind: string, render?: DiagramRender) {
   let active = true
   let disposed = false
-  const figures = Array.from(root.querySelectorAll<HTMLElement>(`[data-cf-plugin-diagram="${kind}"]`)).filter(
-    (figure) => figure.dataset.cfEnhanced !== 'true'
-  )
-  const renderErrorStates = figures.map(
-    (figure) => [figure, figure.getAttribute('data-cf-render-error')] as const
-  )
+  const figures = Array.from(root.querySelectorAll<HTMLElement>(`[data-cf-plugin-diagram="${kind}"]`))
+  const actionFigures = figures.filter((figure) => figure.dataset.cfEnhanced !== 'true')
+  const renderFigures = render ? figures.filter((figure) => figure.dataset.cfRenderEnhanced !== 'true') : []
+  const renderStates = renderFigures.map((figure) => {
+    const placeholder = figure.querySelector<HTMLElement>('.cf-diagram-placeholder')
+    return {
+      figure,
+      renderError: figure.getAttribute('data-cf-render-error'),
+      rendering: figure.getAttribute('data-cf-rendering'),
+      placeholder,
+      placeholderText: placeholder?.textContent ?? ''
+    }
+  })
   const cleanups: Array<() => void> = []
   const renders: Promise<void>[] = []
-  for (const figure of figures) {
+  for (const figure of actionFigures) {
     figure.dataset.cfEnhanced = 'true'
     cleanups.push(setupActions(figure))
-    if (render) {
+  }
+  if (render) {
+    for (const figure of renderFigures) {
+      figure.dataset.cfRenderEnhanced = 'true'
+      const controller = new AbortController()
+      let renderCleanup: DiagramRenderCleanup | undefined
+      cleanups.push(() => {
+        controller.abort()
+        renderCleanup?.()
+      })
+      figure.dataset.cfRendering = 'true'
       renders.push(
-        render(figure).catch((error: unknown) => {
-          if (!active) return
-          figure.dataset.cfRenderError = 'true'
-          console.error(`[canofold] ${kind} render failed:`, error)
-        })
+        Promise.resolve(render(figure, controller.signal))
+          .then((cleanup) => {
+            if (typeof cleanup !== 'function') return
+            if (!active || controller.signal.aborted) cleanup()
+            else renderCleanup = cleanup
+          })
+          .then(() => {
+            if (!active || controller.signal.aborted) return
+            delete figure.dataset.cfRenderError
+          })
+          .catch((error: unknown) => {
+            if (!active || controller.signal.aborted) return
+            figure.dataset.cfRenderError = 'true'
+            const placeholder = figure.querySelector<HTMLElement>('.cf-diagram-placeholder')
+            if (placeholder) {
+              placeholder.textContent =
+                placeholder.dataset.cfRenderErrorLabel ?? 'Diagram preview could not be rendered.'
+            }
+            console.error(`[canofold] ${kind} render failed:`, error)
+          })
+          .finally(() => {
+            if (active && !controller.signal.aborted) delete figure.dataset.cfRendering
+          })
       )
     }
   }
@@ -213,14 +270,54 @@ export function enhanceDiagrams(
     disposed = true
     active = false
     cleanups.reverse().forEach((cleanup) => cleanup())
-    renderErrorStates.forEach(([figure, renderError]) => {
-      delete figure.dataset.cfEnhanced
+    actionFigures.forEach((figure) => delete figure.dataset.cfEnhanced)
+    renderStates.forEach(({ figure, renderError, rendering, placeholder, placeholderText }) => {
+      delete figure.dataset.cfRenderEnhanced
       if (renderError === null) figure.removeAttribute('data-cf-render-error')
       else figure.setAttribute('data-cf-render-error', renderError)
+      if (rendering === null) figure.removeAttribute('data-cf-rendering')
+      else figure.setAttribute('data-cf-rendering', rendering)
+      if (placeholder) placeholder.textContent = placeholderText
     })
   }
   return Object.assign(dispose, {
     ready: Promise.all(renders).then(() => undefined),
     dispose
   })
+}
+
+export function renderWithClientRenderer(kind: string, renderer: DiagramRenderer): DiagramRender {
+  return async (figure, signal) => {
+    const preview = figure.querySelector<HTMLElement>('.cf-diagram-preview')
+    if (!preview) return
+
+    const result = await renderer({
+      kind,
+      language: figure.dataset.cfDiagramLanguage ?? kind,
+      diagramType: figure.dataset.cfDiagramType ?? kind,
+      source: figure.dataset.cfSource ?? '',
+      signal
+    })
+    if (signal.aborted) return
+    if (!result || typeof result.svg !== 'string' || result.svg.trim() === '') {
+      throw new TypeError('Diagram renderer must return a non-empty SVG string.')
+    }
+
+    const objectUrl = URL.createObjectURL(new Blob([result.svg], { type: 'image/svg+xml' }))
+    const image = figure.ownerDocument.createElement('img')
+    image.className = 'cf-diagram-img'
+    image.src = objectUrl
+    image.alt = figure.dataset.cfImageAlt ?? ''
+    image.loading = 'lazy'
+    const originalChildren = Array.from(preview.childNodes)
+    preview.replaceChildren(image)
+
+    let cleaned = false
+    return () => {
+      if (cleaned) return
+      cleaned = true
+      preview.replaceChildren(...originalChildren)
+      URL.revokeObjectURL(objectUrl)
+    }
+  }
 }

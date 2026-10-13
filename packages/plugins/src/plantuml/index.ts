@@ -5,11 +5,13 @@ import { diagramFence } from '../shared/diagram'
 import { externalDiagramServiceGate } from '../shared/externalDiagramService'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
-const PLUGIN_VERSION = '3'
+const PLUGIN_VERSION = '4'
 
 export interface PlantUmlOptions {
   /** PlantUML server base URL. Set to false to keep source-only output. */
   server?: string | false
+  /** Let the browser host render the source through the public client enhancer. */
+  renderer?: 'client'
 }
 
 function encode6Bit(value: number) {
@@ -45,6 +47,10 @@ function encodePlantUml(source: string) {
 /** Enable PlantUML fenced code blocks as an opt-in official plugin. */
 export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
   const server = options.server === false ? '' : stripTrailingSlashes(options.server?.trim() ?? '')
+  if (server && options.renderer === 'client') {
+    throw new Error('PlantUML cannot use server and client rendering at the same time.')
+  }
+  const clientRenderer = options.renderer === 'client'
   const hasPlantUmlFence = ({ source }: { source: string }) =>
     hasMarkdownFenceLanguage(source, new Set(['plantuml', 'puml']))
   const appliesTo = server
@@ -54,11 +60,11 @@ export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
   return defineMarkdownPlugin({
     name: 'plantuml',
     version: PLUGIN_VERSION,
-    cacheKey: { server },
+    cacheKey: { server, renderer: clientRenderer ? 'client' : false },
     browserCompiler: {
       module: '@canofold/plugins/plantuml',
       exportName: 'plantUml',
-      options: { server: server || false }
+      options: { server: server || false, ...(clientRenderer ? { renderer: 'client' as const } : {}) }
     },
     fenceLanguages: ['plantuml', 'puml'],
     appliesTo,
@@ -71,6 +77,8 @@ export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
         languages: new Set(['plantuml', 'puml']),
         kind: 'plantuml',
         filename: () => 'diagram.puml',
+        diagramType: () => 'plantuml',
+        clientRenderer,
         ...(server ? { imageUrl: (source) => `${server}/${encodePlantUml(source)}` } : {})
       })
     ]
