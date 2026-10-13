@@ -725,7 +725,7 @@ describe('renderSite', () => {
     expect(notFound).toContain('Page not found')
     expect(notFound).toContain('/en/')
     expect(notFound).toContain('document.documentElement.lang=m.locale')
-    const inlineScripts = [...notFound.matchAll(/<script>([\s\S]*?)<\/script>/g)].flatMap(([, source]) =>
+    const inlineScripts = [...notFound.matchAll(/<script>([\s\S]*?)<\/script>/gi)].flatMap(([, source]) =>
       source ? [source] : []
     )
     expect(inlineScripts).not.toHaveLength(0)
