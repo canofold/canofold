@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 - 2026-10-13
+
+- Add a typed host-renderer contract for PlantUML and Kroki diagrams. React, editor, and webview hosts can select `renderer: 'client'`, pass an asynchronous SVG renderer to the matching client enhancer, receive the authored language and mapped diagram type, cancel outstanding work through `AbortSignal`, and dispose generated object URLs without coupling `@canofold/markdown` to a native runtime.
+- Keep Kroki diagram source local by default. Sites that intentionally use a remote Kroki-compatible service must now configure its URL explicitly, for example `kroki({ server: 'https://kroki.io' })`; `server` and `renderer: 'client'` are mutually exclusive for both Kroki and PlantUML.
+- Publish TypeScript declarations for diagram client entries and retain localized loading, failure, source, zoom, and expanded-preview behavior for host-rendered SVG output.
+
 ## 0.6.0 - 2026-10-13
 
 - Add `@canofold/themes` with the `canofold`, `glassmorphism`, `sketch-style`, `hand-drawn-doodle`, `minimalist-flat`, `bauhaus`, `neo-brutalist`, `neumorphism`, `memphis`, `cyber-chinese`, `pixel-anime`, `dopamine-design`, `shoujo-manga`, and `outrun` visual themes plus a public `ThemeDefinition` contract. Official and third-party packages now provide the same localized metadata, CSS entries, and appearances directly to `themes`; the first appearance is the default and readers can switch without reloading.

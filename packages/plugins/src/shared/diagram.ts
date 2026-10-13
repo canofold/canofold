@@ -5,7 +5,9 @@ export interface DiagramFenceOptions {
   kind: string
   languages: ReadonlySet<string>
   filename(language: string): string
+  diagramType?(language: string): string
   imageUrl?(source: string, language: string): string | undefined
+  clientRenderer?: boolean
   moduleUrl?: string
 }
 
@@ -21,6 +23,7 @@ interface DiagramLabels {
   zoomIn: string
   imageAlt(kind: string): string
   loadingPreview: string
+  renderError: string
 }
 
 function displayKind(kind: string) {
@@ -40,7 +43,8 @@ const DIAGRAM_LABELS: Record<'en' | 'zh', DiagramLabels> = {
     zoomReset: 'Reset zoom',
     zoomIn: 'Zoom in',
     imageAlt: (kind) => `${displayKind(kind)} diagram`,
-    loadingPreview: 'Diagram preview loads in the browser.'
+    loadingPreview: 'Diagram preview loads in the browser.',
+    renderError: 'Diagram preview could not be rendered.'
   },
   zh: {
     copy: '复制图表源码',
@@ -53,7 +57,8 @@ const DIAGRAM_LABELS: Record<'en' | 'zh', DiagramLabels> = {
     zoomReset: '重置图表缩放',
     zoomIn: '放大图表',
     imageAlt: (kind) => `${displayKind(kind)} 图表`,
-    loadingPreview: '图表预览将在浏览器中加载。'
+    loadingPreview: '图表预览将在浏览器中加载。',
+    renderError: '无法渲染图表预览。'
   }
 }
 
@@ -110,7 +115,8 @@ export function diagramFence(options: DiagramFenceOptions) {
       const fence = languageOf(node)
       if (!fence || !options.languages.has(fence.language)) return
       const imageUrl = options.imageUrl?.(fence.source, fence.language)
-      const hasVisualPreview = Boolean(imageUrl || options.kind === 'mermaid')
+      const imageAlt = labels.imageAlt(options.kind)
+      const hasVisualPreview = Boolean(imageUrl || options.clientRenderer || options.kind === 'mermaid')
       const preview: Element = imageUrl
         ? {
             type: 'element',
@@ -118,7 +124,7 @@ export function diagramFence(options: DiagramFenceOptions) {
             properties: {
               className: ['cf-diagram-img'],
               src: imageUrl,
-              alt: labels.imageAlt(options.kind),
+              alt: imageAlt,
               loading: 'lazy'
             },
             children: []
@@ -126,7 +132,11 @@ export function diagramFence(options: DiagramFenceOptions) {
         : {
             type: 'element',
             tagName: 'div',
-            properties: { className: ['cf-diagram-placeholder'] },
+            properties: {
+              className: ['cf-diagram-placeholder'],
+              ariaLive: 'polite',
+              dataCfRenderErrorLabel: labels.renderError
+            },
             children: [{ type: 'text', value: labels.loadingPreview }]
           }
 
@@ -136,6 +146,9 @@ export function diagramFence(options: DiagramFenceOptions) {
         properties: {
           className: ['cf-diagram-window'],
           dataCfPluginDiagram: options.kind,
+          dataCfDiagramLanguage: fence.language,
+          dataCfDiagramType: options.diagramType?.(fence.language) ?? options.kind,
+          dataCfImageAlt: imageAlt,
           dataCfSource: fence.source,
           ...(options.moduleUrl ? { dataCfModuleUrl: options.moduleUrl } : {})
         },

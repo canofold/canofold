@@ -38,6 +38,26 @@ describe('plantUml plugin', () => {
     warning.mockRestore()
   })
 
+  it('prepares a local preview shell when a host renderer is selected', async () => {
+    const plugin = plantUml({ renderer: 'client' })
+    const result = await createMarkdownRenderer().render('```puml\nA -> B\n```', {
+      markdown: { plugins: [plugin] }
+    })
+    const html = renderToStaticMarkup(result.content)
+
+    expect(html).toContain('data-cf-diagram-language="puml"')
+    expect(html).toContain('data-cf-diagram-type="plantuml"')
+    expect(html).toContain('class="cf-diagram-zoom-controls"')
+    expect(html).not.toContain('<img')
+    expect(plugin.browserCompiler?.options).toEqual({ renderer: 'client', server: false })
+  })
+
+  it('rejects simultaneous remote and client renderers', () => {
+    expect(() => plantUml({ server: 'https://plantuml.example/svg', renderer: 'client' })).toThrow(
+      'PlantUML cannot use server and client rendering at the same time.'
+    )
+  })
+
   it('localizes generated image alternative text', async () => {
     const result = await createMarkdownRenderer().render('```puml\nA -> B\n```', {
       markdown: { locale: 'zh', plugins: [plantUml({ server: 'https://plantuml.example/svg' })] }

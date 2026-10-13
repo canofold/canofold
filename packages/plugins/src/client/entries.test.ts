@@ -20,6 +20,96 @@ afterEach(() => {
 })
 
 describe('diagram client entries', () => {
+  it('renders Kroki figures through a host renderer and releases the object URL on dispose', async () => {
+    document.body.innerHTML = `
+      <figure
+        data-cf-plugin-diagram="kroki"
+        data-cf-diagram-language="dot"
+        data-cf-diagram-type="graphviz"
+        data-cf-image-alt="Kroki diagram"
+        data-cf-source="digraph G { a -&gt; b }"
+      >
+        <div class="cf-diagram-preview"><div class="cf-diagram-placeholder">Loading</div></div>
+      </figure>`
+    const createObjectURL = vi.fn(() => 'blob:canofold-diagram')
+    const revokeObjectURL = vi.fn()
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL })
+    let renderSignal: AbortSignal | undefined
+    const renderer = vi.fn(async (request) => {
+      renderSignal = request.signal
+      return { svg: '<svg viewBox="0 0 10 10"></svg>' }
+    })
+
+    const diagrams = enhanceKroki(document, { renderer })
+    await diagrams.ready
+
+    expect(renderer).toHaveBeenCalledWith({
+      kind: 'kroki',
+      language: 'dot',
+      diagramType: 'graphviz',
+      source: 'digraph G { a -> b }',
+      signal: expect.any(AbortSignal)
+    })
+    const image = document.querySelector<HTMLImageElement>('.cf-diagram-img')
+    expect(image?.src).toBe('blob:canofold-diagram')
+    expect(image?.alt).toBe('Kroki diagram')
+
+    diagrams.dispose()
+    expect(renderSignal?.aborted).toBe(true)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:canofold-diagram')
+    expect(document.querySelector('.cf-diagram-placeholder')?.textContent).toBe('Loading')
+    vi.unstubAllGlobals()
+  })
+
+  it('renders PlantUML figures through the same public renderer contract', async () => {
+    document.body.innerHTML = `
+      <figure
+        data-cf-plugin-diagram="plantuml"
+        data-cf-diagram-language="puml"
+        data-cf-diagram-type="plantuml"
+        data-cf-source="A -&gt; B"
+      ><div class="cf-diagram-preview"></div></figure>`
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:plantuml'),
+      revokeObjectURL: vi.fn()
+    })
+    const renderer = vi.fn(async () => ({ svg: '<svg></svg>' }))
+
+    const diagrams = enhancePlantuml(document, { renderer })
+    await diagrams.ready
+
+    expect(renderer).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'plantuml', language: 'puml', diagramType: 'plantuml' })
+    )
+    diagrams.dispose()
+    vi.unstubAllGlobals()
+  })
+
+  it('shows and restores a localized client-renderer failure', async () => {
+    document.body.innerHTML = `
+      <figure data-cf-plugin-diagram="kroki" data-cf-source="a -&gt; b">
+        <div class="cf-diagram-preview">
+          <div class="cf-diagram-placeholder" data-cf-render-error-label="无法渲染图表预览。">正在渲染</div>
+        </div>
+      </figure>`
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const diagrams = enhanceKroki(document, {
+      renderer: async () => {
+        throw new Error('renderer unavailable')
+      }
+    })
+
+    await diagrams.ready
+
+    const figure = document.querySelector<HTMLElement>('figure')!
+    expect(figure.dataset.cfRenderError).toBe('true')
+    expect(document.querySelector('.cf-diagram-placeholder')?.textContent).toBe('无法渲染图表预览。')
+    diagrams.dispose()
+    expect(figure.dataset.cfRenderError).toBeUndefined()
+    expect(document.querySelector('.cf-diagram-placeholder')?.textContent).toBe('正在渲染')
+    error.mockRestore()
+  })
+
   it('normalizes CSS Color 4 sRGB values for Mermaid', () => {
     expect(normalizeMermaidColor('color(srgb 0.890196 0.890196 0.909804 / 0.12)', '#d2d2d7')).toBe(
       'rgba(227, 227, 232, 0.12)'

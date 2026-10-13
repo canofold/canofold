@@ -21,3 +21,9 @@ export type { PlantUmlOptions } from './plantuml/index'
 export { readingTime } from './reading-time/index'
 export type { ReadingTimeCounts, ReadingTimeOptions } from './reading-time/index'
 export type { MarkdownPlugin } from '@canofold/markdown'
+export type {
+  DiagramClientOptions,
+  DiagramRenderer,
+  DiagramRenderRequest,
+  DiagramRenderResult
+} from './client/shared'

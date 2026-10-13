@@ -45,7 +45,41 @@ export default defineConfig({
 
 在 React 应用中直接配合 `@canofold/markdown` 使用时，应把插件安装为普通应用依赖。启用 `math()` 的 React 宿主还需要导入 `@canofold/plugins/math.css`。
 
-包根入口和 `@canofold/plugins/math` 等工厂子路径属于公共 API。浏览器与 CSS 入口由生成站点消费，不是插件工厂。
+包根入口和 `@canofold/plugins/math` 等工厂子路径属于公共 API。生成站点会自动加载浏览器与 CSS 入口。直接使用 React 或编辑器的宿主可以调用下文带类型的图表客户端入口；它们是生命周期增强器，不是插件工厂。
+
+## 由宿主提供本地图表渲染
+
+PlantUML 和 Kroki 可以把渲染交给浏览器宿主，而不把源码发送给外部服务。编译 Markdown 时选择客户端 renderer，并在 Markdown DOM 挂载后把一个 renderer 函数传给对应的客户端增强器：
+
+```ts
+import { kroki } from '@canofold/plugins/kroki'
+import { enhance, type DiagramRenderer } from '@canofold/plugins/client/kroki'
+
+export const diagramPlugin = kroki({ renderer: 'client' })
+
+const renderer: DiagramRenderer = async ({ diagramType, source, signal }) => {
+  const svg = await renderLocally({ diagramType, source, signal })
+  return { svg }
+}
+
+const diagrams = enhance(markdownRoot, { renderer })
+await diagrams.ready
+
+// Markdown 内容被替换或卸载时执行。
+diagrams.dispose()
+```
+
+renderer 会收到 `kind`、原始围栏 `language`、映射后的 `diagramType`、`source` 和 `AbortSignal`，并且必须返回非空 SVG 字符串。增强器通过可回收的 `blob:` 图片 URL 展示 SVG，保留源码切换、缩放和放大预览，在失败时显示本地化状态，并在销毁时还原原始 DOM。因此，使用严格 CSP 的宿主需要在 `img-src` 中允许 `blob:`。
+
+Worker、本地进程或编辑器消息桥由宿主负责。`@canofold/plugins` 不启动可执行程序，也不定义 VS Code 协议；`@canofold/markdown` 不感知具体图表运行时。
+
+`kroki()` 现在默认把源码保留在本地，只输出源码壳。只有明确接受发送图表源码时才配置远程服务：
+
+```ts
+kroki({ server: 'https://kroki.io' })
+```
+
+`plantUml({ renderer: 'client' })` 通过 `@canofold/plugins/client/plantuml` 使用同一套客户端契约。两个工厂都不允许同时设置远程 `server` 和 `renderer: 'client'`。
 
 ### 公式隔离与依赖边界
 

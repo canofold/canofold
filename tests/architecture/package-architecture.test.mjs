@@ -486,6 +486,11 @@ test('workspace exposes core, renderer, Vite engine, plugins, and themes', async
     './diagram.css',
     './math.css'
   ])
+  for (const clientEntry of ['./client/kroki', './client/mermaid', './client/plantuml']) {
+    assert.equal(pluginsPackage.exports[clientEntry].types, `./dist/${clientEntry.slice(2)}.d.ts`)
+    assert.equal(pluginsPackage.exports[clientEntry].import, `./dist/${clientEntry.slice(2)}.js`)
+    assert.equal(pluginsPackage.exports[clientEntry].default, `./dist/${clientEntry.slice(2)}.js`)
+  }
   for (const pluginDirectory of [
     'external-links',
     'reading-time',

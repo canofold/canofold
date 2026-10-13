@@ -13,7 +13,7 @@ async function render(source: string, plugin = kroki()) {
 describe('kroki plugin', () => {
   it('encodes a Kroki-compatible zlib payload', async () => {
     const source = 'digraph G { a -> b }'
-    const html = await render(`\`\`\`dot\n${source}\n\`\`\``)
+    const html = await render(`\`\`\`dot\n${source}\n\`\`\``, kroki({ server: 'https://kroki.io' }))
     const encoded = html.match(/kroki\.io\/graphviz\/svg\/([^"/]+)/)?.[1]
 
     expect(encoded).toBeDefined()
@@ -26,7 +26,7 @@ describe('kroki plugin', () => {
 
   it('turns Graphviz fences into Kroki images and warns once about the external service', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    const plugin = kroki()
+    const plugin = kroki({ server: 'https://kroki.io' })
     const html = await render('```dot\ndigraph G { a -> b }\n```', plugin)
     await render('```d2\na -> b\n```', plugin)
 
@@ -40,6 +40,45 @@ describe('kroki plugin', () => {
       '[canofold/plugins] Kroki sends diagram source to its configured external service. Use a trusted self-hosted service for private content.'
     )
     warning.mockRestore()
+  })
+
+  it('keeps diagram source local by default', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const plugin = kroki()
+    const html = await render('```dot\ndigraph G { a -> b }\n```', plugin)
+
+    expect(html).toContain('data-cf-plugin-diagram="kroki"')
+    expect(html).not.toContain('<img')
+    expect(html).not.toContain('class="cf-diagram-zoom-controls"')
+    expect(plugin.browserCompiler?.options).toEqual({
+      format: 'svg',
+      languages: { graphviz: 'graphviz', dot: 'graphviz', gv: 'graphviz', d2: 'd2' },
+      server: false
+    })
+    expect(warning).not.toHaveBeenCalled()
+    warning.mockRestore()
+  })
+
+  it('prepares mapped metadata for a host-provided renderer', async () => {
+    const plugin = kroki({ renderer: 'client' })
+    const html = await render('```dot\ndigraph G { a -> b }\n```', plugin)
+
+    expect(html).toContain('data-cf-diagram-language="dot"')
+    expect(html).toContain('data-cf-diagram-type="graphviz"')
+    expect(html).toContain('class="cf-diagram-zoom-controls"')
+    expect(html).not.toContain('<img')
+  })
+
+  it('rejects simultaneous remote and client renderers', () => {
+    expect(() => kroki({ server: 'https://kroki.example', renderer: 'client' })).toThrow(
+      'Kroki cannot use server and client rendering at the same time.'
+    )
+  })
+
+  it('rejects PNG output for an SVG-only client renderer', () => {
+    expect(() => kroki({ renderer: 'client', format: 'png' })).toThrow(
+      'Kroki client rendering only supports SVG output.'
+    )
   })
 
   it('maps d2 fences, declares owned languages, and honors a custom server', async () => {

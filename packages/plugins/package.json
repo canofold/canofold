@@ -1,6 +1,6 @@
 {
   "name": "@canofold/plugins",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Official plugins and providers for Canofold and @canofold/markdown.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -61,9 +61,21 @@
       "types": "./dist/pagefind.d.ts",
       "import": "./dist/pagefind.js"
     },
-    "./client/kroki": "./dist/client/kroki.js",
-    "./client/mermaid": "./dist/client/mermaid.js",
-    "./client/plantuml": "./dist/client/plantuml.js",
+    "./client/kroki": {
+      "types": "./dist/client/kroki.d.ts",
+      "import": "./dist/client/kroki.js",
+      "default": "./dist/client/kroki.js"
+    },
+    "./client/mermaid": {
+      "types": "./dist/client/mermaid.d.ts",
+      "import": "./dist/client/mermaid.js",
+      "default": "./dist/client/mermaid.js"
+    },
+    "./client/plantuml": {
+      "types": "./dist/client/plantuml.d.ts",
+      "import": "./dist/client/plantuml.js",
+      "default": "./dist/client/plantuml.js"
+    },
     "./diagram.css": "./dist/diagram.css",
     "./math.css": "./dist/math.css"
   },
