@@ -71,12 +71,16 @@ diagrams.dispose()
 
 The renderer receives `kind`, the authored `language`, the mapped `diagramType`, `source`, and an `AbortSignal`. It must return a non-empty SVG string. The enhancer presents the SVG through a revocable `blob:` image URL, keeps the source and zoom controls working, displays a localized failure state, and restores the original DOM on disposal. A restrictive host CSP must therefore allow `blob:` in `img-src`.
 
+Calling the enhancer with a renderer also upgrades diagram shells that the Canofold page runtime already enhanced without one; controls are not duplicated. The host still owns the returned lifecycle and must dispose it when replacing or unmounting the rendered content.
+
 The host owns any worker, native process, or editor messaging bridge. `@canofold/plugins` does not start executables or define a VS Code protocol, and `@canofold/markdown` remains unaware of diagram runtimes.
 
-`kroki()` now keeps source local and renders a source-only shell by default. Configure a remote service only when sending diagram source is intentional:
+For patch-version compatibility, `kroki()` continues to use `https://kroki.io` by default and therefore sends diagram source to that service. Use `server: false` for a source-only shell, configure a trusted service explicitly, or select the host renderer shown above when source must remain local:
 
 ```ts
-kroki({ server: 'https://kroki.io' })
+kroki({ server: false })
+kroki({ server: 'https://kroki.example' })
+kroki({ renderer: 'client' })
 ```
 
 `plantUml({ renderer: 'client' })` uses the same client contract through `@canofold/plugins/client/plantuml`. For both factories, a remote `server` and `renderer: 'client'` cannot be enabled together.

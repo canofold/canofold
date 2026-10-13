@@ -63,4 +63,34 @@ describe('diagram fences', () => {
     expect(html).toContain('Kroki 图表')
     expect(html).toContain('cf-diagram-zoom-controls')
   })
+
+  it('renders source-only diagrams as source without inactive preview controls', () => {
+    const diagramCode: Element = {
+      type: 'element',
+      tagName: 'pre',
+      properties: {},
+      children: [
+        {
+          type: 'element',
+          tagName: 'code',
+          properties: { className: ['language-dot'] },
+          children: [{ type: 'text', value: 'digraph G { a -> b }' }]
+        }
+      ]
+    }
+    const tree: Root = { type: 'root', children: [diagramCode] }
+
+    diagramFence({
+      kind: 'kroki',
+      languages: new Set(['dot']),
+      filename: () => 'diagram.graphviz'
+    })()(tree, { data: { canofoldLocale: 'en' } })
+
+    const html = JSON.stringify(tree.children[0])
+    expect(html).toContain('cf-diagram-source')
+    expect(html).not.toContain('cf-diagram-placeholder')
+    expect(html).not.toContain('cf-diagram-zoom-controls')
+    expect(html).not.toContain('dataCfDiagramAction":"source')
+    expect(html).not.toContain('dataCfDiagramAction":"expand')
+  })
 })

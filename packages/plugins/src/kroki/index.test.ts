@@ -42,19 +42,35 @@ describe('kroki plugin', () => {
     warning.mockRestore()
   })
 
-  it('keeps diagram source local by default', async () => {
+  it('keeps the existing public Kroki service default for patch-version compatibility', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const plugin = kroki()
     const html = await render('```dot\ndigraph G { a -> b }\n```', plugin)
 
     expect(html).toContain('data-cf-plugin-diagram="kroki"')
-    expect(html).not.toContain('<img')
-    expect(html).not.toContain('class="cf-diagram-zoom-controls"')
+    expect(html).toContain('src="https://kroki.io/graphviz/svg/')
     expect(plugin.browserCompiler?.options).toEqual({
       format: 'svg',
       languages: { graphviz: 'graphviz', dot: 'graphviz', gv: 'graphviz', d2: 'd2' },
-      server: false
+      server: 'https://kroki.io'
     })
+    expect(warning).toHaveBeenCalledOnce()
+    warning.mockRestore()
+  })
+
+  it('shows source instead of an endless loading preview when remote rendering is disabled', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const plugin = kroki({ server: false })
+    const html = await render('```dot\ndigraph G { a -> b }\n```', plugin)
+
+    expect(html).toContain('data-cf-plugin-diagram="kroki"')
+    expect(html).not.toContain('<img')
+    expect(html).not.toContain('cf-diagram-placeholder')
+    expect(html).not.toContain('class="cf-diagram-zoom-controls"')
+    expect(html).not.toContain('data-cf-diagram-action="source"')
+    expect(html).not.toContain('data-cf-diagram-action="expand"')
+    expect(html).toContain('class="cf-diagram-source"')
+    expect(html).not.toContain('class="cf-diagram-source" hidden=""')
     expect(warning).not.toHaveBeenCalled()
     warning.mockRestore()
   })

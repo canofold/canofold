@@ -6,6 +6,7 @@ import { externalDiagramServiceGate } from '../shared/externalDiagramService'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
 const PLUGIN_VERSION = '4'
+const DEFAULT_SERVER = 'https://kroki.io'
 const DEFAULT_LANGUAGES: Record<string, string> = {
   graphviz: 'graphviz',
   dot: 'graphviz',
@@ -14,7 +15,7 @@ const DEFAULT_LANGUAGES: Record<string, string> = {
 }
 
 export interface KrokiOptions {
-  /** Kroki-compatible server URL. Omit or set to false to keep source local. */
+  /** Kroki-compatible server URL. Set to false to keep source local. */
   server?: string | false
   /** Let the browser host render the source through the public client enhancer. */
   renderer?: 'client'
@@ -41,11 +42,13 @@ function krokiUrl(server: string, type: string, format: 'svg' | 'png', source: s
 
 /** Render plugin-owned diagram fences through a Kroki-compatible server. */
 export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
-  const server = options.server === false ? '' : stripTrailingSlashes(options.server?.trim() ?? '')
-  if (server && options.renderer === 'client') {
+  const configuredServer =
+    typeof options.server === 'string' ? stripTrailingSlashes(options.server.trim()) : ''
+  if (configuredServer && options.renderer === 'client') {
     throw new Error('Kroki cannot use server and client rendering at the same time.')
   }
   const clientRenderer = options.renderer === 'client'
+  const server = clientRenderer || options.server === false ? '' : configuredServer || DEFAULT_SERVER
   const languages = { ...DEFAULT_LANGUAGES, ...options.languages }
   const format = options.format === 'png' ? 'png' : 'svg'
   if (clientRenderer && format !== 'svg') {

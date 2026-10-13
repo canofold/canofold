@@ -209,10 +209,10 @@ function setupActions(figure: HTMLElement) {
 export function enhanceDiagrams(root: ParentNode, kind: string, render?: DiagramRender) {
   let active = true
   let disposed = false
-  const figures = Array.from(root.querySelectorAll<HTMLElement>(`[data-cf-plugin-diagram="${kind}"]`)).filter(
-    (figure) => figure.dataset.cfEnhanced !== 'true'
-  )
-  const renderStates = figures.map((figure) => {
+  const figures = Array.from(root.querySelectorAll<HTMLElement>(`[data-cf-plugin-diagram="${kind}"]`))
+  const actionFigures = figures.filter((figure) => figure.dataset.cfEnhanced !== 'true')
+  const renderFigures = render ? figures.filter((figure) => figure.dataset.cfRenderEnhanced !== 'true') : []
+  const renderStates = renderFigures.map((figure) => {
     const placeholder = figure.querySelector<HTMLElement>('.cf-diagram-placeholder')
     return {
       figure,
@@ -224,10 +224,13 @@ export function enhanceDiagrams(root: ParentNode, kind: string, render?: Diagram
   })
   const cleanups: Array<() => void> = []
   const renders: Promise<void>[] = []
-  for (const figure of figures) {
+  for (const figure of actionFigures) {
     figure.dataset.cfEnhanced = 'true'
     cleanups.push(setupActions(figure))
-    if (render) {
+  }
+  if (render) {
+    for (const figure of renderFigures) {
+      figure.dataset.cfRenderEnhanced = 'true'
       const controller = new AbortController()
       let renderCleanup: DiagramRenderCleanup | undefined
       cleanups.push(() => {
@@ -267,8 +270,9 @@ export function enhanceDiagrams(root: ParentNode, kind: string, render?: Diagram
     disposed = true
     active = false
     cleanups.reverse().forEach((cleanup) => cleanup())
+    actionFigures.forEach((figure) => delete figure.dataset.cfEnhanced)
     renderStates.forEach(({ figure, renderError, rendering, placeholder, placeholderText }) => {
-      delete figure.dataset.cfEnhanced
+      delete figure.dataset.cfRenderEnhanced
       if (renderError === null) figure.removeAttribute('data-cf-render-error')
       else figure.setAttribute('data-cf-render-error', renderError)
       if (rendering === null) figure.removeAttribute('data-cf-rendering')

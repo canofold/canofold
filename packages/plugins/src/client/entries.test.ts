@@ -20,6 +20,40 @@ afterEach(() => {
 })
 
 describe('diagram client entries', () => {
+  it('upgrades an automatically enhanced shell when the host supplies a renderer later', async () => {
+    document.body.innerHTML = `
+      <figure
+        data-cf-plugin-diagram="kroki"
+        data-cf-diagram-language="dot"
+        data-cf-diagram-type="graphviz"
+        data-cf-source="digraph G { a -&gt; b }"
+      >
+        <div class="cf-diagram-preview"><div class="cf-diagram-placeholder">Loading</div></div>
+      </figure>`
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:upgraded-diagram'),
+      revokeObjectURL: vi.fn()
+    })
+    const automaticEnhancement = enhanceKroki(document)
+    const renderer = vi.fn(async () => ({ svg: '<svg data-upgraded="true"></svg>' }))
+
+    const hostEnhancement = enhanceKroki(document, { renderer })
+    await hostEnhancement.ready
+
+    expect(renderer).toHaveBeenCalledOnce()
+    expect(document.querySelector<HTMLImageElement>('.cf-diagram-img')?.src).toBe('blob:upgraded-diagram')
+    expect(document.querySelector('figure')?.getAttribute('data-cf-enhanced')).toBe('true')
+    expect(document.querySelector('figure')?.getAttribute('data-cf-render-enhanced')).toBe('true')
+
+    hostEnhancement.dispose()
+    expect(document.querySelector('.cf-diagram-placeholder')?.textContent).toBe('Loading')
+    expect(document.querySelector('figure')?.getAttribute('data-cf-enhanced')).toBe('true')
+    expect(document.querySelector('figure')?.getAttribute('data-cf-render-enhanced')).toBeNull()
+    automaticEnhancement.dispose()
+    expect(document.querySelector('figure')?.getAttribute('data-cf-enhanced')).toBeNull()
+    vi.unstubAllGlobals()
+  })
+
   it('renders Kroki figures through a host renderer and releases the object URL on dispose', async () => {
     document.body.innerHTML = `
       <figure

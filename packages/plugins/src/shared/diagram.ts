@@ -168,11 +168,13 @@ export function diagramFence(options: DiagramFenceOptions) {
                 type: 'element',
                 tagName: 'span',
                 properties: { className: ['cf-diagram-actions'] },
-                children: [
-                  action('copy', labels.copy),
-                  action('source', labels.source, { dataCfDiagramPreviewLabel: labels.preview }),
-                  action('expand', labels.expand, { dataCfDiagramCloseLabel: labels.close })
-                ]
+                children: hasVisualPreview
+                  ? [
+                      action('copy', labels.copy),
+                      action('source', labels.source, { dataCfDiagramPreviewLabel: labels.preview }),
+                      action('expand', labels.expand, { dataCfDiagramCloseLabel: labels.close })
+                    ]
+                  : [action('copy', labels.copy)]
               }
             ]
           },
@@ -181,16 +183,23 @@ export function diagramFence(options: DiagramFenceOptions) {
             tagName: 'div',
             properties: { className: ['cf-diagram-stage'] },
             children: [
-              {
-                type: 'element',
-                tagName: 'div',
-                properties: { className: ['cf-diagram-preview'] },
-                children: [preview]
-              },
+              ...(hasVisualPreview
+                ? [
+                    {
+                      type: 'element' as const,
+                      tagName: 'div',
+                      properties: { className: ['cf-diagram-preview'] },
+                      children: [preview]
+                    }
+                  ]
+                : []),
               {
                 type: 'element',
                 tagName: 'pre',
-                properties: { className: ['cf-diagram-source'], hidden: true },
+                properties: {
+                  className: ['cf-diagram-source'],
+                  ...(hasVisualPreview ? { hidden: true } : {})
+                },
                 children: [
                   {
                     type: 'element',

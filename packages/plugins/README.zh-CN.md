@@ -71,12 +71,16 @@ diagrams.dispose()
 
 renderer 会收到 `kind`、原始围栏 `language`、映射后的 `diagramType`、`source` 和 `AbortSignal`，并且必须返回非空 SVG 字符串。增强器通过可回收的 `blob:` 图片 URL 展示 SVG，保留源码切换、缩放和放大预览，在失败时显示本地化状态，并在销毁时还原原始 DOM。因此，使用严格 CSP 的宿主需要在 `img-src` 中允许 `blob:`。
 
+即使 Canofold 页面运行时已经先执行过不带 renderer 的增强，再传入 renderer 也会升级现有图表壳，不会重复绑定控件。宿主仍然拥有新返回的生命周期，并且必须在替换或卸载渲染内容时执行 dispose。
+
 Worker、本地进程或编辑器消息桥由宿主负责。`@canofold/plugins` 不启动可执行程序，也不定义 VS Code 协议；`@canofold/markdown` 不感知具体图表运行时。
 
-`kroki()` 现在默认把源码保留在本地，只输出源码壳。只有明确接受发送图表源码时才配置远程服务：
+为保持补丁版本兼容，`kroki()` 仍默认使用 `https://kroki.io`，因此会把图表源码发送到该服务。需要源码留在本地时，可以用 `server: false` 只显示源码、显式配置可信服务，或选择上文的宿主 renderer：
 
 ```ts
-kroki({ server: 'https://kroki.io' })
+kroki({ server: false })
+kroki({ server: 'https://kroki.example' })
+kroki({ renderer: 'client' })
 ```
 
 `plantUml({ renderer: 'client' })` 通过 `@canofold/plugins/client/plantuml` 使用同一套客户端契约。两个工厂都不允许同时设置远程 `server` 和 `renderer: 'client'`。
