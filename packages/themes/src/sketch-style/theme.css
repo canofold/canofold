@@ -93,7 +93,7 @@ html[data-cf-theme='sketch-style']
     .cf-version-badge,
     .cf-search-close,
     .cf-diagram-dialog-close,
-    .cf-btn
+    .cf-btn:not(.cf-btn-primary)
   ) {
   border: 2px dashed var(--cf-border);
   background: transparent;
@@ -109,7 +109,7 @@ html[data-cf-theme='sketch-style']
     .cf-version-badge,
     .cf-search-close,
     .cf-diagram-dialog-close,
-    .cf-btn
+    .cf-btn:not(.cf-btn-primary)
   ):hover {
   color: var(--cf-surface);
   background: var(--cf-ink);

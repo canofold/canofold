@@ -44,6 +44,25 @@ function contrastRatio(foreground: string, background: string) {
 }
 
 describe('@canofold/themes CSS contract', () => {
+  it('keeps neumorphism button hover text readable on its neutral surface', async () => {
+    const css = await readFile(new URL('./src/neumorphism/theme.css', import.meta.url), 'utf8')
+    const hover = css.match(/\.cf-btn:hover\s*\{([^}]*)\}/)?.[1] ?? ''
+    const foreground = hover.match(/color:\s*var\(--cf-([^)]*)\)/)?.[1]
+    expect(foreground).toBeDefined()
+    expect(contrastRatio(colorToken(css, foreground!), colorToken(css, 'surface'))).toBeGreaterThanOrEqual(
+      4.5
+    )
+  })
+
+  it.each(['glassmorphism', 'sketch-style', 'bauhaus'])(
+    'keeps %s neutral control paint from overriding primary buttons',
+    async (theme) => {
+      const css = await readFile(new URL(`./src/${theme}/theme.css`, import.meta.url), 'utf8')
+      expect(css).not.toMatch(/\.cf-btn\s*\n\s*\)/)
+      expect(css).toContain('.cf-btn:not(.cf-btn-primary)')
+    }
+  )
+
   it('owns the shared geometry and the Canofold semantic palette', async () => {
     const [canofoldTokens, sharedTokens] = await Promise.all([
       readFile(canofoldTokensUrl, 'utf8'),

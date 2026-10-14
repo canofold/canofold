@@ -93,7 +93,7 @@ html[data-cf-theme='bauhaus']
     .cf-version-badge,
     .cf-search-close,
     .cf-diagram-dialog-close,
-    .cf-btn
+    .cf-btn:not(.cf-btn-primary)
   ) {
   border: 3px solid var(--cf-border);
   background: var(--cf-surface);
@@ -114,7 +114,7 @@ html[data-cf-theme='bauhaus']
     .cf-version-badge,
     .cf-search-close,
     .cf-diagram-dialog-close,
-    .cf-btn
+    .cf-btn:not(.cf-btn-primary)
   ):hover {
   color: #000000;
   background: #ffcc00;

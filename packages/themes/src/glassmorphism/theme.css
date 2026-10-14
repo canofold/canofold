@@ -120,7 +120,7 @@ html[data-cf-theme='glassmorphism']
     .cf-version-badge,
     .cf-search-close,
     .cf-diagram-dialog-close,
-    .cf-btn
+    .cf-btn:not(.cf-btn-primary)
   ) {
   border-color: var(--cf-border);
   background: rgb(255 255 255 / 8%);
@@ -143,7 +143,7 @@ html[data-cf-theme='glassmorphism']
     .cf-version-badge,
     .cf-search-close,
     .cf-diagram-dialog-close,
-    .cf-btn
+    .cf-btn:not(.cf-btn-primary)
   ):hover {
   border-color: var(--cf-border-strong);
   background: rgb(255 255 255 / 13%);
