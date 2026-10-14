@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.4 - 2026-10-15
+
+- Preserve primary button foreground/background pairs in Glassmorphism, Sketch Style, and Bauhaus. Neutral-control material no longer overrides the primary action's accent background or hover colors.
+
 ## 0.6.3 - 2026-10-14
 
 - Fit diagrams to their intrinsic size and available container width instead of stretching small diagrams. Preserve zoom limits, refit on container changes, and release resize observers when enhancements are disposed.
