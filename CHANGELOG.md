@@ -3,6 +3,7 @@
 ## 0.6.4 - 2026-10-15
 
 - Preserve primary button foreground/background pairs in Glassmorphism, Sketch Style, and Bauhaus. Neutral-control material no longer overrides the primary action's accent background or hover colors.
+- Keep Neumorphism button hover text readable against its neutral surface without changing its shadow treatment.
 
 ## 0.6.3 - 2026-10-14
 

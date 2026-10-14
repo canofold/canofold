@@ -181,7 +181,7 @@ html[data-cf-theme='neumorphism'] .cf-btn {
 }
 
 html[data-cf-theme='neumorphism'] .cf-btn:hover {
-  color: var(--cf-accent-500);
+  color: var(--cf-accent-deep);
   background: var(--cf-surface);
   box-shadow: var(--cf-shadow-raised-sm);
 }
