@@ -1,6 +1,6 @@
 {
   "name": "@canofold/plugins",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Official plugins and providers for Canofold and @canofold/markdown.",
   "license": "MIT",
   "author": "Canofold Contributors",
@@ -105,7 +105,7 @@
     "unist-util-visit": "^5.1.0"
   },
   "peerDependencies": {
-    "mermaid": "^11.12.0",
+    "mermaid": "^11.12.0 || ^12.0.0",
     "pagefind": "^1.5.2"
   },
   "peerDependenciesMeta": {
@@ -126,7 +126,7 @@
     "@types/react-dom": "^19.3.0",
     "canofold": "workspace:*",
     "esbuild": "^0.28.2",
-    "mermaid": "^11.17.2",
+    "mermaid": "^12.2.0",
     "pagefind": "^1.5.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

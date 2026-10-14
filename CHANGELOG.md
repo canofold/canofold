@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.5 - 2026-10-15
+
+- Support Mermaid 12 as an optional peer and validate packed-site consumption with Mermaid 12.2.0 and its patched KaTeX dependency. Mermaid remains opt-in rather than being added to the Markdown runtime.
+- Keep diagrams on Dagre layout and the Classic look by default across supported Mermaid versions, with theme colors supplied by Canofold. Authored diagram configuration can still select another layout or look.
+- Schedule diagram resize writes outside ResizeObserver delivery and cancel pending frames on disposal, preventing resize-loop errors during SVG loading in WebKit.
+- Mermaid 12 requires Node 22.12+ for installation and Safari 17.4+ (or equivalent ES2024 browser support). Existing Mermaid 11 installations remain supported; new installations should use Mermaid 12.
+
 ## 0.6.4 - 2026-10-15
 
 - Preserve primary button foreground/background pairs in Glassmorphism, Sketch Style, and Bauhaus. Neutral-control material no longer overrides the primary action's accent background or hover colors.

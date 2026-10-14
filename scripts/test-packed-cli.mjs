@@ -173,6 +173,7 @@ export default theme
           '@types/react': markdownPackage.manifest.devDependencies['@types/react'],
           '@types/react-dom': markdownPackage.manifest.devDependencies['@types/react-dom'],
           pagefind: pluginsPackage.manifest.peerDependencies.pagefind,
+          mermaid: pluginsPackage.manifest.devDependencies.mermaid,
           react: reactVersion ?? canofoldPackage.manifest.dependencies.react,
           'react-dom': reactVersion ?? canofoldPackage.manifest.dependencies['react-dom'],
           vite: viteVersion ?? vitePackage.manifest.devDependencies.vite.replace('^', '')
@@ -348,6 +349,7 @@ enhancePlantUml(root, { renderer }).dispose()
   await write(
     'canofold.config.mts',
     `import { pagefind } from '@canofold/plugins/pagefind'
+import { mermaid } from '@canofold/plugins/mermaid'
 import { canofold, neoBrutalist, neumorphism } from '@canofold/themes'
 import { vite } from '@canofold/vite'
 import type { CanofoldConfigInput } from 'canofold'
@@ -361,7 +363,7 @@ export default {
   layout: { sidebarWidth: '18rem', outlineWidth: '19rem' },
   demos: { engine: vite() },
   seo: { robots: 'disallow' },
-  markdown: { code: { overflow: 'scroll' } },
+  markdown: { plugins: [mermaid()], code: { overflow: 'scroll' } },
   search: { provider: pagefind() },
   extensions: [{ resolve: './release-extension.ts', options: { marker: 'packed' } }],
   i18n: {
@@ -486,7 +488,7 @@ export default defineExtension((options) => ({
   const longText = `${'Bounded AI output. '.repeat(1400)}\n`
   await write(
     'docs/index.md',
-    `---\ntitle: Packed home\ndescription: Release candidate home\n---\n\n# Packed home\n\nPACKED_TOKEN\n\n::demo[Packed button]{src="/src/button.demo.tsx"}\n\n::demo[Packed iframe]{src="/src/button.demo.tsx" sandbox="iframe"}\n\n\`\`\`ts\nconst packedReleaseCandidate = 'a deliberately long code line used to verify configured horizontal scrolling'\n\`\`\`\n\n${longText}`
+    `---\ntitle: Packed home\ndescription: Release candidate home\n---\n\n# Packed home\n\nPACKED_TOKEN\n\n::demo[Packed button]{src="/src/button.demo.tsx"}\n\n::demo[Packed iframe]{src="/src/button.demo.tsx" sandbox="iframe"}\n\n\`\`\`mermaid\nflowchart LR\n  Packed --> Mermaid\n\`\`\`\n\n\`\`\`ts\nconst packedReleaseCandidate = 'a deliberately long code line used to verify configured horizontal scrolling'\n\`\`\`\n\n${longText}`
   )
   await write(
     'src/button.demo.tsx',
@@ -531,6 +533,8 @@ export default function PackedButtonDemo() {
     '.canofold/dist/assets/canofold-brand/favicon.webp',
     '.canofold/dist/assets/canofold-demos/index.js',
     '.canofold/dist/assets/canofold-shell.js',
+    '.canofold/dist/assets/canofold-plugins/mermaid.js',
+    '.canofold/dist/assets/canofold-plugins/mermaid/mermaid.esm.min.mjs',
     '.canofold/dist/assets/canofold-demos/markdown.js',
     '.canofold/dist/ai/manifest.json',
     '.canofold/dist/llms-full.txt',

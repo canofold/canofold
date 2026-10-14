@@ -106,6 +106,8 @@ async function renderMermaid(figure: HTMLElement) {
     mermaidApi.initialize({
       startOnLoad: false,
       securityLevel: 'strict',
+      layout: 'dagre',
+      look: 'classic',
       theme: 'base',
       themeVariables: {
         background: surface,

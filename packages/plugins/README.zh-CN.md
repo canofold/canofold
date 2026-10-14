@@ -18,6 +18,8 @@ pnpm add -D @canofold/plugins
 pnpm add -D mermaid pagefind
 ```
 
+支持 Mermaid 11 和 12，新项目建议使用 Mermaid 12；它要求 Node 22.12+ 和 Safari 17.4+ 或具备同等 ES2024 支持的浏览器。Canofold 默认保留 Dagre 布局和 Classic 外观，作者仍可在图表配置中选择其他布局或外观。运行时从站点安装的 `mermaid` 包构建，不内置于 `@canofold/plugins`。
+
 ```ts
 import { externalLinks, math, mermaid, pagefind } from '@canofold/plugins'
 import { defineConfig } from 'canofold'
@@ -91,11 +93,9 @@ kroki({ renderer: 'client' })
 
 从 0.4.1 起，发布包包含官方 Markdown 公式适配器，并统一使用直接声明的 KaTeX 0.18.x 渲染器及配套 CSS、字体。消费方不需要添加依赖覆盖规则。
 
-可选 Mermaid 使用其自身的上游运行时，不与 `math()` 共用 KaTeX。当前 Mermaid 11 的上游仍包含 KaTeX 0.16.x，存在 [GHSA-238p-pmpm-9mq7](https://github.com/advisories/GHSA-238p-pmpm-9mq7) 低危告警（利用前提是已经发生原型污染）。这不是已消除的风险；不应通过忽略审计或跨版本强制覆盖来掩盖。工作区中的公式适配器构建依赖也仍会显示同一上游告警，但不会将旧 KaTeX 交付给普通 `math()` 消费方。
+可选 Mermaid 使用其自身的上游运行时，不与 `math()` 共用 KaTeX。Mermaid 12.2.0 已声明 KaTeX 0.18.x，应使用它或更新的受支持版本，不跨版本强制覆盖依赖。Canofold 从安装的包入口构建运行时，并保留 `securityLevel: 'strict'`。
 
-2026-10-08 核查：Mermaid 最新正式版 12.1.0 仍声明 `katex: ^0.16.47`，而该告警的修复版本是 KaTeX 0.18.2。当前交付的 Mermaid 11 浏览器预构建文件还内嵌了旧 KaTeX，因此仅修改锁文件或强制覆盖依赖，不能替换浏览器实际执行的代码。Canofold 保留 Mermaid 的 `securityLevel: 'strict'`，但这不等于消除了上游漏洞。
-
-关闭这项风险需要上游发布包含修复的浏览器运行时，再验证普通图表、公式标签和安全行为。若必须在上游修复前消除告警，则需要另外维护并验证替代构建及其依赖，不能将其当作无风险的小版本升级；本版本没有采用私有补丁、替换预构建文件或忽略审计。
+Mermaid 11 的 API 仍受支持，但它包含 KaTeX 0.16.x，存在 [GHSA-238p-pmpm-9mq7](https://github.com/advisories/GHSA-238p-pmpm-9mq7) 低危告警（利用前提是已经发生原型污染）。仅升级 `@canofold/plugins` 不会升级站点的可选 Mermaid Peer；需要安装 `mermaid@^12.2.0` 才能离开受影响的依赖范围，并满足前述浏览器和 Node 要求。
 
 选项、完整示例、生命周期区别和验证方法见[官方插件指南](https://canofold.dev/guide/site/plugins/)。
 
