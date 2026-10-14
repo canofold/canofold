@@ -91,8 +91,18 @@ function setupActions(figure: HTMLElement) {
   }))
   const updateScale = () => {
     if (!preview) return
-    preview.style.setProperty('--cf-diagram-zoom-width', `${scale * 100}%`)
-    preview.style.setProperty('--cf-diagram-zoom-max-width', `${56.25 * scale}rem`)
+    const media = preview.querySelector<HTMLImageElement | SVGSVGElement>('img, svg')
+    const intrinsicWidth =
+      media instanceof HTMLImageElement
+        ? media.naturalWidth
+        : media?.viewBox.baseVal.width || media?.width.baseVal.value || 0
+    if (intrinsicWidth > 0 && preview.clientWidth > 0) {
+      const width = `${Math.min(intrinsicWidth, preview.clientWidth) * scale}px`
+      if (preview.style.getPropertyValue('--cf-diagram-zoom-width') !== width) {
+        preview.style.setProperty('--cf-diagram-zoom-width', width)
+        preview.style.setProperty('--cf-diagram-zoom-max-width', 'none')
+      }
+    }
     preview.dataset.cfScale = String(scale)
     for (const button of buttons) {
       const action = button.dataset.cfDiagramAction
@@ -101,7 +111,12 @@ function setupActions(figure: HTMLElement) {
       if (action === 'zoom-reset') button.disabled = scale === 1
     }
   }
-  if (zoomControls) updateScale()
+  const resize = zoomControls && preview ? new ResizeObserver(updateScale) : undefined
+  if (zoomControls && preview) {
+    preview.addEventListener('load', updateScale, { capture: true, signal: controller.signal })
+    resize!.observe(preview)
+    updateScale()
+  }
   for (const button of buttons) {
     const action = button.dataset.cfDiagramAction as keyof typeof ICONS
     button.innerHTML = ICONS[action] ?? ''
@@ -178,6 +193,7 @@ function setupActions(figure: HTMLElement) {
   }
   return () => {
     controller.abort()
+    resize?.disconnect()
     copyTimers.forEach((timer) => window.clearTimeout(timer))
     dialogs.forEach((dialog) => dialog.remove())
     copyTimers.clear()
@@ -308,7 +324,6 @@ export function renderWithClientRenderer(kind: string, renderer: DiagramRenderer
     image.className = 'cf-diagram-img'
     image.src = objectUrl
     image.alt = figure.dataset.cfImageAlt ?? ''
-    image.loading = 'lazy'
     const originalChildren = Array.from(preview.childNodes)
     preview.replaceChildren(image)
 

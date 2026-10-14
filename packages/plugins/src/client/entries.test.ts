@@ -87,6 +87,8 @@ describe('diagram client entries', () => {
     const image = document.querySelector<HTMLImageElement>('.cf-diagram-img')
     expect(image?.src).toBe('blob:canofold-diagram')
     expect(image?.alt).toBe('Kroki diagram')
+    // The SVG is already generated locally; delaying its decoding can leave updated previews empty.
+    expect(image?.loading).not.toBe('lazy')
 
     diagrams.dispose()
     expect(renderSignal?.aborted).toBe(true)
@@ -175,7 +177,7 @@ describe('diagram client entries', () => {
       initialize() {},
       async render() {
         globalThis.__canofoldMermaidRenders = (globalThis.__canofoldMermaidRenders || 0) + 1;
-        return { svg: '<svg data-rendered="true"></svg>' };
+        return { svg: '<svg data-rendered="true" viewBox="0 0 10 10" style="max-width: 10px"></svg>' };
       }
     }`
     const moduleUrl = `data:text/javascript,${encodeURIComponent(moduleSource)}`
@@ -188,6 +190,7 @@ describe('diagram client entries', () => {
     expect(
       (globalThis as typeof globalThis & { __canofoldMermaidRenders?: number }).__canofoldMermaidRenders
     ).toBe(1)
+    expect(document.querySelector<SVGSVGElement>('.cf-diagram-preview svg')?.style.maxWidth).toBe('')
 
     dispose()
     document.documentElement.classList.toggle('dark')
