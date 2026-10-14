@@ -11,11 +11,13 @@ afterEach(() => {
     __canofoldMermaidRenders?: number
     __canofoldMermaidActive?: number
     __canofoldMermaidMaxActive?: number
+    __canofoldMermaidConfig?: Record<string, unknown>
   }
   delete runtime.__canofoldFinishMermaid
   delete runtime.__canofoldMermaidRenders
   delete runtime.__canofoldMermaidActive
   delete runtime.__canofoldMermaidMaxActive
+  delete runtime.__canofoldMermaidConfig
   vi.restoreAllMocks()
 })
 
@@ -174,7 +176,7 @@ describe('diagram client entries', () => {
 
   it('renders Mermaid from its configured self-hosted module and stops observing after disposal', async () => {
     const moduleSource = `export default {
-      initialize() {},
+      initialize(config) { globalThis.__canofoldMermaidConfig = config },
       async render() {
         globalThis.__canofoldMermaidRenders = (globalThis.__canofoldMermaidRenders || 0) + 1;
         return { svg: '<svg data-rendered="true" viewBox="0 0 10 10" style="max-width: 10px"></svg>' };
@@ -191,6 +193,16 @@ describe('diagram client entries', () => {
       (globalThis as typeof globalThis & { __canofoldMermaidRenders?: number }).__canofoldMermaidRenders
     ).toBe(1)
     expect(document.querySelector<SVGSVGElement>('.cf-diagram-preview svg')?.style.maxWidth).toBe('')
+    expect(
+      (globalThis as typeof globalThis & { __canofoldMermaidConfig?: Record<string, unknown> })
+        .__canofoldMermaidConfig
+    ).toMatchObject({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      layout: 'dagre',
+      look: 'classic',
+      theme: 'base'
+    })
 
     dispose()
     document.documentElement.classList.toggle('dark')

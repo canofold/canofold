@@ -23,6 +23,14 @@ afterEach(() => {
 describe('diagram client lifecycle', () => {
   it('zooms images from their fitted intrinsic width and refits them when the container changes', () => {
     let resized: (() => void) | undefined
+    let frame: FrameRequestCallback | undefined
+    const schedule = vi.fn((callback: FrameRequestCallback) => {
+      frame = callback
+      return 42
+    })
+    const cancel = vi.fn()
+    vi.stubGlobal('requestAnimationFrame', schedule)
+    vi.stubGlobal('cancelAnimationFrame', cancel)
     const disconnect = vi.fn()
     vi.stubGlobal(
       'ResizeObserver',
@@ -51,9 +59,15 @@ describe('diagram client lifecycle', () => {
     expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('150px')
     containerWidth = 80
     resized?.()
+    resized?.()
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('150px')
+    expect(schedule).toHaveBeenCalledOnce()
+    frame?.(0)
     expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('100px')
+    resized?.()
     dispose()
     expect(disconnect).toHaveBeenCalledOnce()
+    expect(cancel).toHaveBeenCalledWith(42)
     expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('')
   })
   it('does not report the enhancement ready until asynchronous diagrams finish rendering', async () => {

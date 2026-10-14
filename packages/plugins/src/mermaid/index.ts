@@ -6,7 +6,7 @@ import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 const PLUGIN_VERSION = '4'
 
 export interface MermaidOptions {
-  /** Optional browser ESM module. The bundled Mermaid runtime is used by default. */
+  /** Optional browser ESM module. By default the site bundles its installed Mermaid peer. */
   moduleUrl?: string
 }
 

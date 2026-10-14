@@ -111,7 +111,18 @@ function setupActions(figure: HTMLElement) {
       if (action === 'zoom-reset') button.disabled = scale === 1
     }
   }
-  const resize = zoomControls && preview ? new ResizeObserver(updateScale) : undefined
+  let resizeFrame: number | undefined
+  const resize =
+    zoomControls && preview
+      ? new ResizeObserver(() => {
+          if (resizeFrame !== undefined) return
+          // Size writes can change the observed preview's height; commit outside observer delivery.
+          resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = undefined
+            updateScale()
+          })
+        })
+      : undefined
   if (zoomControls && preview) {
     preview.addEventListener('load', updateScale, { capture: true, signal: controller.signal })
     resize!.observe(preview)
@@ -194,6 +205,7 @@ function setupActions(figure: HTMLElement) {
   return () => {
     controller.abort()
     resize?.disconnect()
+    if (resizeFrame !== undefined) cancelAnimationFrame(resizeFrame)
     copyTimers.forEach((timer) => window.clearTimeout(timer))
     dialogs.forEach((dialog) => dialog.remove())
     copyTimers.clear()
