@@ -114,9 +114,9 @@
 .cf-diagram-preview svg,
 .cf-diagram-img {
   display: block;
-  width: var(--cf-diagram-zoom-width, min(100%, 56.25rem));
+  width: var(--cf-diagram-zoom-width, auto);
   height: auto;
-  max-width: var(--cf-diagram-zoom-max-width, 56.25rem);
+  max-width: var(--cf-diagram-zoom-max-width, 100%);
   max-height: none;
   object-fit: contain;
   transition: width 160ms ease;
@@ -178,6 +178,11 @@
 
 .cf-diagram-dialog::backdrop {
   background: rgb(0 0 0 / 52%);
+}
+
+.cf-diagram-dialog .cf-diagram-preview svg,
+.cf-diagram-dialog .cf-diagram-img {
+  max-height: calc(100dvh - 5.5rem);
 }
 
 .cf-diagram-dialog-close {

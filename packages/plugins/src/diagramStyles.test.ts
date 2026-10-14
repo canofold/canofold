@@ -4,6 +4,14 @@ import { describe, expect, it } from 'vitest'
 const diagramStylesUrl = new URL('./diagram.css', import.meta.url)
 
 describe('diagram styles', () => {
+  it('fits expanded diagrams inside the viewport including dialog padding', async () => {
+    const styles = await readFile(diagramStylesUrl, 'utf8')
+
+    expect(styles).toMatch(
+      /\.cf-diagram-dialog \.cf-diagram-preview svg,\s*\.cf-diagram-dialog \.cf-diagram-img\s*\{[^}]*max-height:\s*calc\(100dvh - 5\.5rem\);/
+    )
+  })
+
   it('keeps the toolbar flush with the diagram shell', async () => {
     const styles = await readFile(diagramStylesUrl, 'utf8')
 

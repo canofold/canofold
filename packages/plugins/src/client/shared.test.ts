@@ -1,15 +1,61 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { enhanceDiagrams } from './shared'
+
+beforeEach(() => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    }
+  )
+})
 
 afterEach(() => {
   Reflect.deleteProperty(navigator, 'clipboard')
   Reflect.deleteProperty(document, 'execCommand')
   vi.useRealTimers()
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
 
 describe('diagram client lifecycle', () => {
+  it('zooms images from their fitted intrinsic width and refits them when the container changes', () => {
+    let resized: (() => void) | undefined
+    const disconnect = vi.fn()
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: () => void) {
+          resized = callback
+        }
+        observe() {}
+        disconnect = disconnect
+      }
+    )
+    document.body.innerHTML = `<figure data-cf-plugin-diagram="plantuml">
+      <div class="cf-diagram-preview"><img class="cf-diagram-img"></div>
+      <div class="cf-diagram-zoom-controls">
+        <button data-cf-diagram-action="zoom-in"></button>
+        <button data-cf-diagram-action="zoom-reset"></button>
+      </div></figure>`
+    const preview = document.querySelector<HTMLElement>('.cf-diagram-preview')!
+    const image = document.querySelector<HTMLImageElement>('img')!
+    Object.defineProperty(image, 'naturalWidth', { value: 120 })
+    let containerWidth = 600
+    Object.defineProperty(preview, 'clientWidth', { get: () => containerWidth })
+    const dispose = enhanceDiagrams(document, 'plantuml')
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('120px')
+    document.querySelector<HTMLButtonElement>('[data-cf-diagram-action="zoom-in"]')!.click()
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('150px')
+    containerWidth = 80
+    resized?.()
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('100px')
+    dispose()
+    expect(disconnect).toHaveBeenCalledOnce()
+    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('')
+  })
   it('does not report the enhancement ready until asynchronous diagrams finish rendering', async () => {
     document.body.innerHTML = '<figure data-cf-plugin-diagram="mermaid"></figure>'
     let finishRender: (() => void) | undefined
@@ -84,13 +130,13 @@ describe('diagram client lifecycle', () => {
     const zoomIn = document.querySelector<HTMLButtonElement>('[data-cf-diagram-action="zoom-in"]')!
     const reset = document.querySelector<HTMLButtonElement>('[data-cf-diagram-action="zoom-reset"]')!
 
-    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('100%')
+    expect(preview.dataset.cfScale).toBe('1')
     expect(reset.disabled).toBe(true)
     zoomIn.click()
-    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('125%')
+    expect(preview.dataset.cfScale).toBe('1.25')
     expect(reset.disabled).toBe(false)
     reset.click()
-    expect(preview.style.getPropertyValue('--cf-diagram-zoom-width')).toBe('100%')
+    expect(preview.dataset.cfScale).toBe('1')
 
     source.click()
     expect(controls.hidden).toBe(true)

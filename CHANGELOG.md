@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.3 - 2026-10-14
+
+- Fit diagrams to their intrinsic size and available container width instead of stretching small diagrams. Preserve zoom limits, refit on container changes, and release resize observers when enhancements are disposed.
+- Let the shared diagram stylesheet own Mermaid sizing so generated inline width caps do not prevent zooming. Decode host-rendered SVG images immediately instead of delaying updated previews with lazy loading.
+- Keep expanded diagrams within the viewport height, including dialog padding, so tall SVG diagrams remain fully visible on desktop and narrow screens.
+
 ## 0.6.2 - 2026-10-13
 
 - Keep Kroki source local by default. Remote rendering now requires an explicit trusted `server`, while `renderer: 'client'` continues to delegate SVG rendering to the host.

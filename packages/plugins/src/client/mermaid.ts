@@ -134,6 +134,8 @@ async function renderMermaid(figure: HTMLElement) {
   })
   if (!result || !isCurrent()) return
   preview.innerHTML = result.svg
+  // The shared diagram stylesheet owns sizing and zoom, not Mermaid's intrinsic-width cap.
+  preview.querySelector<SVGSVGElement>('svg')?.style.removeProperty('max-width')
   delete figure.dataset.cfRenderError
 }
 
