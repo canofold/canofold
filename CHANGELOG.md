@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.7 - 2026-10-16
+
+- Keep same-page fragment history changes native instead of fetching and rebuilding the current page. Preserve reading progress, interactive content, and browser anchor history; cancel a pending cross-page navigation when history returns to the page already being displayed. Path or query changes still use page navigation and restore saved positions.
+
 ## 0.6.6 - 2026-10-15
 
 - Restore transparent-to-frosted homepage navigation on scroll across themes, without a homepage divider; keep document header materials theme-specific.

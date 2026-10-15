@@ -370,40 +370,80 @@ describe('typed browser shell', () => {
     ).toBe(false)
   })
 
-  it('uses popstate history positions and leaves native link behavior intact', async () => {
-    document.body.innerHTML =
-      '<div data-canofold-page-root><a href="/" id="top">Top</a><a href="#section" id="hash">Hash</a><a href="/file" download id="download">Download</a><a href="https://example.test" id="external">External</a><a href="/next" target="_blank" id="blank">Blank</a></div>'
-    bootstrapShell()
-    click('#top')
-    expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
-    for (const id of ['hash', 'download', 'external', 'blank']) {
-      const event = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: id === 'external' })
-      let intercepted = true
-      window.addEventListener(
-        'click',
-        (event) => {
-          intercepted = event.defaultPrevented
-          event.preventDefault()
-        },
-        { once: true }
+  it.each(['/back/', '/?version=previous'])(
+    'restores page history at %s and leaves native links intact',
+    async (backUrl) => {
+      document.body.innerHTML =
+        '<div data-canofold-page-root><a href="/" id="top">Top</a><a href="#section" id="hash">Hash</a><a href="/file" download id="download">Download</a><a href="https://example.test" id="external">External</a><a href="/next" target="_blank" id="blank">Blank</a></div>'
+      bootstrapShell()
+      click('#top')
+      expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
+      for (const id of ['hash', 'download', 'external', 'blank']) {
+        const event = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: id === 'external' })
+        let intercepted = true
+        window.addEventListener(
+          'click',
+          (event) => {
+            intercepted = event.defaultPrevented
+            event.preventDefault()
+          },
+          { once: true }
+        )
+        document.getElementById(id)!.dispatchEvent(event)
+        expect(intercepted).toBe(false)
+      }
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(
+          async () =>
+            new Response('<div data-canofold-page-root>Back</div>', {
+              headers: { 'content-type': 'text/html' }
+            })
+        )
       )
-      document.getElementById(id)!.dispatchEvent(event)
-      expect(intercepted).toBe(false)
+      history.replaceState(null, '', backUrl)
+      window.dispatchEvent(
+        new PopStateEvent('popstate', { state: { __canofold: { scrollY: 230, sidebarScrollTop: 30 } } })
+      )
+      await vi.waitFor(() => expect(document.body.textContent).toBe('Back'))
+      expect(window.scrollTo).toHaveBeenCalledWith({ top: 230, behavior: 'instant' })
     }
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(
-        async () =>
-          new Response('<div data-canofold-page-root>Back</div>', {
-            headers: { 'content-type': 'text/html' }
+  )
+
+  it('keeps the current page and its interactions for fragment history changes', async () => {
+    history.replaceState(null, '', '/guide/?version=current')
+    document.body.innerHTML = '<div data-canofold-page-root><h2 id="section">Section</h2></div>'
+    const page = document.querySelector('[data-canofold-page-root]')
+    const fetchPage = vi.fn(async () => new Response('Unexpected page fetch'))
+    vi.stubGlobal('fetch', fetchPage)
+    bootstrapShell()
+    history.pushState(null, '', '#section')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await Promise.resolve()
+    expect(fetchPage).not.toHaveBeenCalled()
+    expect(document.querySelector('[data-canofold-page-root]')).toBe(page)
+    expect(window.scrollTo).not.toHaveBeenCalled()
+  })
+
+  it('cancels a pending page navigation when fragment history returns to the rendered page', async () => {
+    document.body.innerHTML = '<div data-canofold-page-root><a href="/next/">Next</a></div>'
+    const fetchPage = vi.fn(
+      (_url: URL, options: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          options.signal!.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), {
+            once: true
           })
-      )
+        })
     )
-    window.dispatchEvent(
-      new PopStateEvent('popstate', { state: { __canofold: { scrollY: 230, sidebarScrollTop: 30 } } })
-    )
-    await vi.waitFor(() => expect(document.body.textContent).toBe('Back'))
-    expect(window.scrollTo).toHaveBeenCalledWith({ top: 230, behavior: 'instant' })
+    vi.stubGlobal('fetch', fetchPage)
+    bootstrapShell()
+    click('a')
+    history.pushState(null, '', '#section')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await Promise.resolve()
+    expect(fetchPage).toHaveBeenCalledOnce()
+    expect(fetchPage.mock.calls[0]?.[1].signal?.aborted).toBe(true)
+    expect(document.querySelector('[data-canofold-page-root]')?.textContent).toBe('Next')
   })
 
   it('tracks outline reading position, scrolling its panel and cleaning listeners', () => {
