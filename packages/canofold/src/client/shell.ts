@@ -46,6 +46,7 @@ export function bootstrapShell() {
   ) => target.addEventListener(event, listener as EventListener, { ...options, signal })
   const d = document
   const root = d.documentElement
+  const pageUrl = new URL(location.href)
   const q = <T extends HTMLElement = HTMLElement>(selector: string, parent: ParentNode = d) =>
     parent.querySelector<T>(selector)
   const qa = <T extends HTMLElement = HTMLElement>(selector: string, parent: ParentNode = d) =>
@@ -628,6 +629,10 @@ export function bootstrapShell() {
   on(window, 'popstate', (event) => {
     const state = event.state?.__canofold || { scrollY: 0, sidebarScrollTop: 0 }
     const url = new URL(location.href)
+    if (url.pathname === pageUrl.pathname && url.search === pageUrl.search) {
+      navigationController?.abort()
+      return
+    }
     void navigatePage(url, { push: false, state })
       .then((applied) => {
         if (!applied) location.reload()
