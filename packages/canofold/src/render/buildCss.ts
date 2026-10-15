@@ -10,12 +10,12 @@ function resolveFromModule(specifier: string): string {
   return require.resolve(specifier)
 }
 
-function resolveFromProject(specifier: string): string {
+function resolveFromProject(specifier: string, cwd: string): string {
   try {
-    return require.resolve(specifier, { paths: [process.cwd()] })
+    return require.resolve(specifier, { paths: [cwd] })
   } catch (error) {
     throw new Error(
-      `Cannot resolve ${specifier} from ${process.cwd()}. Install @canofold/plugins to include math styles.`,
+      `Cannot resolve ${specifier} from ${cwd}. Install @canofold/plugins to include math styles.`,
       { cause: error }
     )
   }
@@ -38,8 +38,8 @@ async function readInputCss(): Promise<string> {
 }
 
 /** Fonts referenced relative to @canofold/plugins/math.css. */
-export function mathFontsDir(): string {
-  return join(dirname(resolveFromProject('@canofold/plugins/math.css')), 'fonts')
+export function mathFontsDir(cwd = process.cwd()): string {
+  return join(dirname(resolveFromProject('@canofold/plugins/math.css', cwd)), 'fonts')
 }
 
 /** File icons referenced relative to @canofold/markdown/base.css. */
@@ -47,16 +47,19 @@ export function markdownFileIconsDir(): string {
   return join(dirname(resolveFromModule('@canofold/markdown/base.css')), 'file-icons')
 }
 
-async function readPublishedCss(specifier: string, fromProject = false): Promise<string> {
-  return readFile(fromProject ? resolveFromProject(specifier) : resolveFromModule(specifier), 'utf8')
+async function readPublishedCss(specifier: string, cwd?: string): Promise<string> {
+  return readFile(cwd ? resolveFromProject(specifier, cwd) : resolveFromModule(specifier), 'utf8')
 }
 
 /** Assemble theme-independent Markdown structure, optional math, and the site shell. */
-export async function compileCss({ math = false }: { math?: boolean } = {}): Promise<string> {
+export async function compileCss({
+  math = false,
+  cwd = process.cwd()
+}: { math?: boolean; cwd?: string } = {}): Promise<string> {
   const [shell, base, mathCss] = await Promise.all([
     readInputCss(),
     readPublishedCss('@canofold/markdown/base.css'),
-    math ? readPublishedCss('@canofold/plugins/math.css', true) : undefined
+    math ? readPublishedCss('@canofold/plugins/math.css', cwd) : undefined
   ])
   return `/* Markdown base */\n${base}\n${mathCss ? `/* Math */\n${mathCss}\n` : ''}/* Canofold shell */\n${shell}\n`
 }

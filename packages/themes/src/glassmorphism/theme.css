@@ -1,5 +1,8 @@
 /* Nocturne glass: a colorless frosted material over a deep, directional night scene. */
 html[data-cf-theme='glassmorphism'] {
+  --cf-header-surface: rgb(255 255 255 / 8%);
+  --cf-header-shadow: var(--cf-shadow-raised);
+  --cf-header-backdrop: blur(40px) saturate(180%);
   color-scheme: dark;
   --cf-canvas: #0b1322;
   --cf-ink: #ffffff;
@@ -66,7 +69,6 @@ html[data-cf-theme='glassmorphism'] :where(body, .cf-main, .cf-content) {
 
 html[data-cf-theme='glassmorphism']
   :where(
-    .cf-header,
     .cf-sidebar,
     .cf-outline,
     .cf-search-panel,

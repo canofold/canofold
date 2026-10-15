@@ -184,6 +184,8 @@ export interface RenderMarkdownOptions {
    * MDX remains executable trusted code and does not support safe HTML modes.
    */
   html?: MarkdownHtmlPolicy
+  /** Invalid rich directives fail by default; authoring previews may retain them as inert source text. */
+  directives?: { invalid?: 'error' | 'literal' }
   code?: MarkdownCodeOptions
   features?: MarkdownFeatureOptions
   labels?: Partial<MarkdownLabels>

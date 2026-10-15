@@ -49,4 +49,6 @@ import '@canofold/plugins/math.css'
 
 渲染选项、MDX、写作语法、主题和浏览器增强见 [Markdown SDK 文档](https://canofold.dev/markdown/)。
 
+编写预览可设置 `options={{ directives: { invalid: 'literal' } }}`，把格式错误或未知的富内容指令显示为转义后的原文，其余文档照常渲染。默认值仍为 `error`，构建时继续检查指令拼写。`format:check` 这样的普通冒号文本会保留为文本，除非该指令名属于内置语法或已由插件明确声明。此策略不会吞掉插件异常，也不会放宽 HTML 清理、媒体 URL 校验或 MDX 执行边界。
+
 许可证：MIT

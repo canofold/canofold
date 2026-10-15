@@ -35,6 +35,16 @@ describe('content routes', () => {
     expect(routeOutputPathFor('/%E6%97%A7%E7%89%88/')).toBe('旧版/index.html')
   })
 
+  it.each(['/旧版/', '/v%201/', '/literal%2520/'])(
+    'keeps encoded version routes and filesystem output consistent: %s',
+    (base) => {
+      const route = routePathFor('en', 'zh', 'guide/start.md', base)
+      const output = routeOutputPathFor(route)
+      expect(htmlOutputPathFor('en', 'zh', 'guide/start.md', base)).toBe(output)
+      expect(markdownOutputPathFor('en', 'zh', 'guide/start.md', base)).toBe(output.replace(/\.html$/, '.md'))
+    }
+  )
+
   it('encodes each source path segment without collapsing literal percent escapes', () => {
     expect(routePathFor('zh', 'zh', 'foo bar.md')).toBe('/foo%20bar/')
     expect(routePathFor('zh', 'zh', 'foo%20bar.md')).toBe('/foo%2520bar/')

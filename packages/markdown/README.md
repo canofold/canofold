@@ -49,4 +49,6 @@ import '@canofold/plugins/math.css'
 
 See the [Markdown SDK documentation](https://canofold.dev/en/markdown/) for renderer options, MDX, syntax, theming, and browser enhancement.
 
+Authoring previews can set `options={{ directives: { invalid: 'literal' } }}` to display malformed or unknown rich directives as escaped source while rendering the rest of the document. The default is `error`, so builds still catch directive typos. Bare colon words such as `format:check` remain text unless the directive name is built in or explicitly owned by a plugin. This policy does not suppress plugin failures or relax HTML sanitization, media URL validation, or MDX execution boundaries.
+
 License: MIT

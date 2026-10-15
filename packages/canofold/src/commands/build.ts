@@ -38,7 +38,7 @@ import { captureBuildOutputs, copyBuildOutputs, verifyBuildOutputs } from '../bu
 import { buildPageKey, createBuildManifest } from '../build/state'
 import type { BuildMode, PageBuildState } from '../build/types'
 import { createBuildReport, type BuildReport } from '../build/report'
-import { resolveSafeOutputRoot } from '../build/safety'
+import { outputBackupRoot, resolveSafeOutputRoot } from '../build/safety'
 import { loadExtensionHost, type ExtensionHost } from '../extensions/host'
 import { prepareDemoManifest } from '../demos/prepare'
 import type { CanofoldDemoManifest } from '../demos/types'
@@ -144,10 +144,6 @@ async function writeBuildOutputs({
       JSON.stringify({ maxRssBytes: process.resourceUsage().maxRSS * 1024 })
     )
   }
-}
-
-function outputBackupRoot(outputRoot: string) {
-  return join(dirname(outputRoot), `.${basename(outputRoot)}.backup`)
 }
 
 async function recoverInterruptedOutputReplacement(outputRoot: string) {

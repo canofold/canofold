@@ -38,6 +38,7 @@ html[data-cf-theme='neumorphism'] {
   --cf-overlay: rgb(51 51 51 / 0.36);
   --cf-shadow-raised: 8px 8px 16px #b8bcc2, -8px -8px 16px #ffffff;
   --cf-shadow-raised-sm: 4px 4px 8px #b8bcc2, -4px -4px 8px #ffffff;
+  --cf-header-shadow: var(--cf-shadow-raised-sm);
   --cf-shadow-inset: inset 8px 8px 16px #b8bcc2, inset -8px -8px 16px #ffffff;
   --cf-neumorphic-shadow-input: inset 6px 6px 12px #b8bcc2, inset -6px -6px 12px #ffffff;
   --cf-neumorphic-shadow-input-focus: inset 2px 2px 4px #b8bcc2, inset -2px -2px 4px #ffffff;
@@ -65,14 +66,9 @@ html[data-cf-theme='neumorphism'] {
   --cf-glass-blur: 0px;
 }
 
-html[data-cf-theme='neumorphism'] :where(.cf-header, .cf-sidebar) {
+html[data-cf-theme='neumorphism'] .cf-sidebar {
   border-color: transparent;
   background: var(--cf-canvas);
-}
-
-html[data-cf-theme='neumorphism'] .cf-header {
-  border-bottom: 0;
-  box-shadow: var(--cf-shadow-raised-sm);
 }
 
 html[data-cf-theme='neumorphism'] .cf-search-trigger {

@@ -75,8 +75,23 @@ a {
   width: 100%;
   height: var(--cf-header-height);
   border-bottom: 0;
-  background: var(--cf-surface);
+  background: var(--cf-header-surface, var(--cf-surface));
   box-shadow: var(--cf-header-shadow);
+  backdrop-filter: var(--cf-header-backdrop, none);
+  -webkit-backdrop-filter: var(--cf-header-backdrop, none);
+  transition:
+    background var(--cf-duration-fast) var(--cf-easing-default),
+    backdrop-filter var(--cf-duration-fast) var(--cf-easing-default);
+}
+
+.cf-header-home {
+  --cf-header-surface-mix: 0%;
+  --cf-header-backdrop-blur: 0px;
+  --cf-header-backdrop-saturation: 100%;
+  background: color-mix(in srgb, var(--cf-surface) var(--cf-header-surface-mix), transparent);
+  box-shadow: none;
+  backdrop-filter: blur(var(--cf-header-backdrop-blur)) saturate(var(--cf-header-backdrop-saturation));
+  -webkit-backdrop-filter: blur(var(--cf-header-backdrop-blur)) saturate(var(--cf-header-backdrop-saturation));
 }
 
 .cf-header-inner {

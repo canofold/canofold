@@ -191,6 +191,28 @@ describe('resolveRequestPath', () => {
     }
   })
 
+  it('rejects malformed request targets without an unhandled rejection or a hanging connection', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-static-target-'))
+    await writeFile(join(cwd, 'index.html'), 'Healthy')
+    const server = await startStaticServer({ root: cwd, port: 0 })
+    try {
+      const status = await new Promise<number>((resolve, reject) => {
+        const outgoing = request({ hostname: '127.0.0.1', port: server.port, path: '//[' }, (response) => {
+          response.resume()
+          response.on('end', () => resolve(response.statusCode ?? 0))
+        })
+        outgoing.on('error', reject)
+        outgoing.setTimeout(1000, () => outgoing.destroy(new Error('Request was left unanswered')))
+        outgoing.end()
+      })
+      expect(status).toBe(400)
+      expect((await requestStaticServer(server.port, '/')).body).toBe('Healthy')
+    } finally {
+      await server.close()
+      await rm(cwd, { recursive: true, force: true })
+    }
+  })
+
   it('maps requests under basePath and reads the generated 404 page', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-static-base-'))
     await writeFile(join(cwd, '404.html'), '<html><body>Custom missing</body></html>')

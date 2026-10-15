@@ -54,7 +54,7 @@ html[data-cf-theme='minimalist-flat'] {
   --cf-nav-item-active-shadow: none;
 }
 
-html[data-cf-theme='minimalist-flat'] :where(.cf-header, .cf-sidebar, .cf-outline, .cf-menu-list) {
+html[data-cf-theme='minimalist-flat'] :where(.cf-sidebar, .cf-outline, .cf-menu-list) {
   background: var(--cf-surface);
   box-shadow: none;
   backdrop-filter: none;

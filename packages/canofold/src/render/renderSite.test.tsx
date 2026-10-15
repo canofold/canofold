@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, readdir, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { createMockGraph, createMockPage, trackedMkdtemp as mkdtemp } from '../../test/fixtures'
 import { defaultConfig } from '../config/defaults'
@@ -610,6 +611,12 @@ describe('renderSite', () => {
     })
 
     const mathOutputDir = '.canofold/math'
+    await mkdir(join(cwd, 'node_modules/@canofold'), { recursive: true })
+    await symlink(
+      fileURLToPath(new URL('../../../plugins', import.meta.url)),
+      join(cwd, 'node_modules/@canofold/plugins'),
+      'junction'
+    )
     const mathPage = {
       ...basePage,
       routePath: '/formula/',
@@ -707,7 +714,7 @@ describe('renderSite', () => {
     const html = await readFile(join(cwd, outputDir, 'index.html'), 'utf8')
     expect(html).toContain('AUTHORED HOME BODY')
     expect(html).toContain('class="cf-home" tabindex="-1" data-pagefind-body=""')
-    expect(html).toContain('<header class="cf-header">')
+    expect(html).toContain('<header class="cf-header cf-header-home">')
     expect(html).not.toContain('class="cf-route-progress"')
     expect(html).toContain('data-cf-root="markdown"')
     expect(html).toContain('aria-label="メインナビゲーション"')

@@ -179,7 +179,7 @@ export async function renderSite({
           ).math
       )
     const [css, themes, customStyles] = await Promise.all([
-      compileCss({ math: needsMath }),
+      compileCss({ math: needsMath, cwd }),
       compileThemes(config.themes, cwd),
       readCustomStyles(cwd, config.styles)
     ])
@@ -198,7 +198,7 @@ export async function renderSite({
     })
     const outputFonts = join(outputRoot, 'assets/fonts')
     if (needsMath) {
-      const fontsDir = mathFontsDir()
+      const fontsDir = mathFontsDir(cwd)
       await copyRequiredMathFonts(fontsDir, outputFonts)
     } else {
       await rm(outputFonts, { recursive: true, force: true })

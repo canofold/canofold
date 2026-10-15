@@ -94,7 +94,7 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
   const themeOptions = themeSelections(config.themes, page.locale)
 
   return (
-    <header className="cf-header">
+    <header className={home ? 'cf-header cf-header-home' : 'cf-header'}>
       <div className="cf-header-inner">
         {!home && hasSidebarItems ? (
           <button

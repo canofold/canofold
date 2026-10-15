@@ -58,7 +58,11 @@ export function createMarkdownPluginPlan(
   )
   const remarkPlugins: PluggableList = [remarkDefinitionList, remarkGfm]
   remarkPlugins.push(remarkDirective)
-  remarkPlugins.push([remarkValidateRichDirectives, markdownPluginDirectiveNames(options.plugins)])
+  remarkPlugins.push([
+    remarkValidateRichDirectives,
+    markdownPluginDirectiveNames(options.plugins),
+    options.invalidDirective
+  ])
 
   if (features.tabs || features.codeGroups) remarkPlugins.push([remarkTabGroups, options])
   if (features.steps) remarkPlugins.push([remarkSteps, options])

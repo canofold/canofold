@@ -4,6 +4,12 @@ import { createMarkdownRenderer } from '../server/createMarkdownRenderer'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 describe('analyzeMarkdown', () => {
+  it('does not report bare colon words as unknown directives', () => {
+    const result = analyzeMarkdown('## format:check\n\nRun npm:test and format:check.')
+    expect(result.directiveIssues).toEqual([])
+    expect(result.headings[0]?.text).toBe('format:check')
+    expect(result.text).toContain('npm:test')
+  })
   it.each([
     '[^note]:\n    ## Note heading\n\n# Body\n\nText[^note]',
     '# Body[^note]\n\n[^note]:\n    ## Note heading',

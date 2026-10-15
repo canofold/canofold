@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.6 - 2026-10-15
+
+- Restore transparent-to-frosted homepage navigation on scroll across themes, without a homepage divider; keep document header materials theme-specific.
+- Restore the Canofold hero illustration animation by fixing theme-variable specificity, while respecting reduced-motion preferences.
+- Reuse short-lived sidebar navigation intent requests and normal HTTP caching, restore reading position without cross-page smooth scrolling, and prevent obsolete requests or enhancements from affecting a newer page.
+- Keep ordinary colon words such as `format:check` as text. Add opt-in `directives.invalid: 'literal'` for authoring previews to retain invalid rich directives as inert source without discarding valid neighboring content; builds remain strict by default.
+- Preserve malformed structured containers as complete inert source in literal mode, so invalid tabs, steps, gallery entries, or code groups cannot silently lose their contents during transformation.
+- Keep encoded version URLs aligned with decoded HTML and Markdown output paths, including Unicode, spaces, and literal percent escapes.
+- Resolve math styles and fonts from the build's project directory instead of the invoking process's working directory.
+- Reject source, style, and output paths that overlap temporary build files or interrupted-build backups. Ignore the same canonical backup directory in development watchers to avoid redundant rebuilds.
+- Return HTTP 400 for malformed static-server request URLs instead of leaving requests unanswered with an unhandled rejection.
+- Refresh Mermaid diagrams when the selected theme or appearance changes, including switches between themes with the same light or dark color scheme.
+
 ## 0.6.5 - 2026-10-15
 
 - Support Mermaid 12 as an optional peer and validate packed-site consumption with Mermaid 12.2.0 and its patched KaTeX dependency. Mermaid remains opt-in rather than being added to the Markdown runtime.

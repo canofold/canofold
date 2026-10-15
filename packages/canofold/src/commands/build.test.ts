@@ -1,6 +1,7 @@
 import { access, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import { runBuild, versionSatisfies } from './build'
 import { runCheck } from './check'
@@ -788,7 +789,13 @@ describe('runBuild', () => {
   })
 
   it('falls back to clean builds when the site-level math resource fact changes', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'canofold-incremental-math-'))
+    const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-incremental-math-'))
+    await mkdir(join(cwd, 'node_modules/@canofold'), { recursive: true })
+    await symlink(
+      fileURLToPath(new URL('../../../plugins', import.meta.url)),
+      join(cwd, 'node_modules/@canofold/plugins'),
+      'junction'
+    )
     await mkdir(join(cwd, 'docs/zh'), { recursive: true })
     await writeFile(join(cwd, 'docs/zh/index.md'), '# Home')
     const guidePath = join(cwd, 'docs/zh/guide.md')

@@ -1,7 +1,7 @@
-import type { Image, ImageReference, Paragraph, Root } from 'mdast'
+import type { Image, ImageReference, Paragraph, Root, Text } from 'mdast'
 import type { ContainerDirective, Directives } from 'mdast-util-directive'
 import type { Node, Parent } from 'unist'
-import { visit } from 'unist-util-visit'
+import { SKIP, visit } from 'unist-util-visit'
 
 export interface MarkdownDirectiveIssue {
   message: string
@@ -15,19 +15,16 @@ interface LocatedDirectiveIssue extends MarkdownDirectiveIssue {
 
 const BADGE_TONES = new Set(['accent', 'success', 'warning', 'danger'])
 const MEDIA_DIRECTIVES = new Set(['audio', 'video', 'embed'])
+const STRUCTURED_CONTAINERS = new Set(['gallery', 'card-grid', 'tabs', 'code-group', 'steps'])
 const CONTAINER_DIRECTIVES = new Set([
+  ...STRUCTURED_CONTAINERS,
   'aside',
   'file-tree',
-  'gallery',
-  'card-grid',
   'card',
   'api',
   'response',
   'details',
-  'tabs',
   'tab',
-  'code-group',
-  'steps',
   'step',
   'info',
   'tip',
@@ -37,6 +34,52 @@ const CONTAINER_DIRECTIVES = new Set([
 const TEXT_DIRECTIVES = new Set(['badge', 'copy'])
 const SAFE_LINK_PROTOCOLS = new Set(['http', 'https', 'irc', 'ircs', 'mailto', 'tel', 'xmpp'])
 const SAFE_MEDIA_PROTOCOLS = new Set(['http', 'https'])
+
+function isDirectiveNode(node: Node): node is Directives {
+  return node.type === 'containerDirective' || node.type === 'leafDirective' || node.type === 'textDirective'
+}
+
+/** Restore unclaimed bare colon words and, in preview mode, invalid nodes without executing them. */
+export function restoreLiteralDirectives(
+  tree: Root,
+  source: string,
+  pluginDirectiveNames: ReadonlySet<string>,
+  invalidNodes?: ReadonlySet<Node>
+) {
+  visit(tree, (candidate, index, parent) => {
+    if (index === undefined || !parent || !isDirectiveNode(candidate)) return
+    const node = candidate
+    const start = node.position?.start.offset
+    const end = node.position?.end.offset
+    const literal = start === undefined || end === undefined ? undefined : source.slice(start, end)
+    const bareWord =
+      node.type === 'textDirective' &&
+      literal === `:${node.name}` &&
+      ((!CONTAINER_DIRECTIVES.has(node.name) &&
+        !TEXT_DIRECTIVES.has(node.name) &&
+        !MEDIA_DIRECTIVES.has(node.name)) ||
+        (start !== undefined && /[\p{L}\p{N}_-]/u.test(source[start - 1] ?? ''))) &&
+      !pluginDirectiveNames.has(node.name)
+    if (!bareWord && !invalidNodes?.has(node)) return
+    if (literal === undefined) return
+    const text = { type: 'text' as const, value: literal, position: node.position }
+    if (node.type === 'textDirective') {
+      const previous = parent.children[index - 1] as Text | undefined
+      const next = parent.children[index + 1] as Text | undefined
+      const before = previous?.type === 'text' ? 1 : 0
+      const after = next?.type === 'text' ? 1 : 0
+      text.value = (before ? previous!.value : '') + text.value + (after ? next!.value : '')
+      text.position = {
+        start: (before ? previous?.position?.start : node.position?.start)!,
+        end: (after ? next?.position?.end : node.position?.end)!
+      }
+      parent.children.splice(index - before, 1 + before + after, text)
+      return [SKIP, index - before + 1]
+    }
+    parent.children[index] = { type: 'paragraph', children: [text], position: node.position } as Paragraph
+    return SKIP
+  })
+}
 
 function isParent(node: Node): node is Node & Parent {
   return 'children' in node && Array.isArray(node.children)
@@ -84,11 +127,7 @@ function body(node: ContainerDirective) {
 }
 
 function isDirective(node: Node | undefined, name: string): node is Directives {
-  return Boolean(
-    node &&
-    (node.type === 'containerDirective' || node.type === 'leafDirective' || node.type === 'textDirective') &&
-    (node as Directives).name === name
-  )
+  return Boolean(node && isDirectiveNode(node) && node.name === name)
 }
 
 function isImageParagraph(node: Node): node is Paragraph {
@@ -134,14 +173,8 @@ export function collectRichDirectiveIssues(
   const issues: LocatedDirectiveIssue[] = []
 
   visit(tree, (candidate, _index, parent) => {
-    if (
-      candidate.type !== 'containerDirective' &&
-      candidate.type !== 'leafDirective' &&
-      candidate.type !== 'textDirective'
-    ) {
-      return
-    }
-    const node = candidate as Directives
+    if (!isDirectiveNode(candidate)) return
+    const node = candidate
     const known =
       CONTAINER_DIRECTIVES.has(node.name) || TEXT_DIRECTIVES.has(node.name) || MEDIA_DIRECTIVES.has(node.name)
     if (!known) {
@@ -328,9 +361,27 @@ export function collectRichDirectiveIssues(
 }
 
 /** Stop rendering malformed core directives before a transform can discard content. */
-export const remarkValidateRichDirectives = (pluginDirectiveNames: ReadonlySet<string> = new Set()) => {
-  return (tree: Root, file: { fail(message: string, node?: Node): never }) => {
-    const issue = collectRichDirectiveIssues(tree, pluginDirectiveNames)[0]
-    if (issue) file.fail(issue.message, issue.node)
+export const remarkValidateRichDirectives = (
+  pluginDirectiveNames: ReadonlySet<string> = new Set(),
+  invalid: 'error' | 'literal' = 'error'
+) => {
+  return (tree: Root, file: { value: unknown; fail(message: string, node?: Node): never }) => {
+    const source = String(file.value ?? '')
+    restoreLiteralDirectives(tree, source, pluginDirectiveNames)
+    const issues = collectRichDirectiveIssues(tree, pluginDirectiveNames)
+    if (invalid === 'literal') {
+      const invalidNodes = new Set(issues.map((issue) => issue.node))
+      const owners = new Map<Node, Node>()
+      const recover = new Set<Node>()
+      visit(tree, (node, _index, parent) => {
+        // These containers accept only specific child shapes. Replacing one of
+        // those children with prose would let the next transform discard it.
+        const ownsChildren = parent && isDirectiveNode(parent) && STRUCTURED_CONTAINERS.has(parent.name)
+        const owner = isDirectiveNode(node) && !ownsChildren ? node : parent && owners.get(parent)
+        if (owner) owners.set(node, owner)
+        if (invalidNodes.has(node)) recover.add(owner ?? node)
+      })
+      restoreLiteralDirectives(tree, source, pluginDirectiveNames, recover)
+    } else if (issues[0]) file.fail(issues[0].message, issues[0].node)
   }
 }

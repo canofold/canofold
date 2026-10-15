@@ -57,6 +57,7 @@ html[data-cf-theme='neo-brutalist'] {
   --cf-demo-divider-width: 4px;
   --cf-neo-control-border: 2px solid #000000;
   --cf-neo-header-rule: inset 0 -4px 0 #000000;
+  --cf-header-shadow: var(--cf-neo-header-rule);
   --cf-neo-sidebar-rule: inset -4px 0 0 #000000;
   --cf-neo-outline-rule: inset 4px 0 0 #000000;
   --cf-nav-item-hover-ink: var(--cf-ink);
@@ -67,14 +68,10 @@ html[data-cf-theme='neo-brutalist'] {
   --cf-nav-item-active-shadow: inset 0 0 0 2px #000000;
 }
 
-html[data-cf-theme='neo-brutalist'] :where(.cf-header, .cf-sidebar, .cf-outline) {
+html[data-cf-theme='neo-brutalist'] :where(.cf-sidebar, .cf-outline) {
   background: var(--cf-surface);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-}
-
-html[data-cf-theme='neo-brutalist'] .cf-header {
-  box-shadow: var(--cf-neo-header-rule);
 }
 
 html[data-cf-theme='neo-brutalist'] .cf-sidebar {

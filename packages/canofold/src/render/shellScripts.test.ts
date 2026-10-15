@@ -145,12 +145,27 @@ describe('browser shell scripts', () => {
     )
   })
 
-  it('does not mutate the home header appearance as the page scrolls', () => {
-    document.body.innerHTML = '<header class="cf-header"></header>'
+  it('fades only the home header as the page scrolls and cleans its listener', () => {
+    document.body.innerHTML = '<header class="cf-header cf-header-home"></header>'
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 })
     bootstrapShell()
     const header = document.querySelector<HTMLElement>('.cf-header')
+    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('0%')
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 80 })
     window.dispatchEvent(new Event('scroll'))
-    expect(header?.getAttribute('style')).toBeNull()
+    const halfway = Number.parseFloat(header?.style.getPropertyValue('--cf-header-surface-mix') || '')
+    expect(halfway).toBeGreaterThan(0)
+    expect(halfway).toBeLessThan(68)
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 1000 })
+    window.dispatchEvent(new Event('scroll'))
+    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('68%')
+    window.__canofoldShellDispose?.()
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 })
+    window.dispatchEvent(new Event('scroll'))
+    expect(header?.style.getPropertyValue('--cf-header-surface-mix')).toBe('68%')
+    document.body.innerHTML = '<header class="cf-header"></header>'
+    bootstrapShell()
+    expect(document.querySelector('.cf-header')?.getAttribute('style')).toBeNull()
   })
 
   it('keeps repeated same-page fragment links under native anchor scrolling', () => {
@@ -323,6 +338,8 @@ describe('browser shell scripts', () => {
 
     await vi.waitFor(() => expect(document.querySelector('#canofold-main')?.textContent).toBe('Next page'))
     expect(sidebar.scrollTop).toBe(137)
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'instant' })
+    expect(document.activeElement).toBe(document.querySelector('#canofold-main'))
     finishPageModule()
     await vi.waitFor(() => expect(bootstrapPlayground).toHaveBeenCalledOnce())
     expect(fetchPage).toHaveBeenCalledWith(
@@ -344,7 +361,7 @@ describe('browser shell scripts', () => {
     expect(document.querySelector('link[href="/assets/canofold-plugins/old.css"]')).toBeNull()
     expect(loadPageModule).toHaveBeenCalledWith('/assets/canofold-playground/index.js')
     expect(disposePlayground).toHaveBeenCalledOnce()
-    expect(scrollTo).toHaveBeenCalledWith(0, 0)
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'instant' })
     replaceWith.mockRestore()
   })
 

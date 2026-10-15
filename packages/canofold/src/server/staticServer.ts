@@ -205,7 +205,14 @@ export async function startStaticServer({
       response.end('Method not allowed')
       return
     }
-    const url = new URL(request.url ?? '/', 'http://127.0.0.1')
+    let url: URL
+    try {
+      url = new URL(request.url ?? '/', 'http://127.0.0.1')
+    } catch {
+      response.statusCode = 400
+      response.end(request.method === 'HEAD' ? undefined : 'Bad request')
+      return
+    }
     const currentBasePath = typeof basePath === 'function' ? basePath() : basePath
     const basePrefix = currentBasePath === '/' ? '' : currentBasePath.replace(/\/$/, '')
     const eventsPath = `${basePrefix}/__canofold/events`
