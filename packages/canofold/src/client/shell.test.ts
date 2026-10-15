@@ -38,6 +38,179 @@ afterEach(() => {
 })
 
 describe('typed browser shell', () => {
+  it('reuses a single sidebar intent request without bypassing the HTTP cache', async () => {
+    document.body.innerHTML =
+      '<div data-canofold-page-root><a data-canofold-sidebar-link href="/next/">Next</a><main id="canofold-main">Old</main></div>'
+    const fetchPage = vi.fn(
+      async (_url: URL, _options?: RequestInit) =>
+        new Response('<div data-canofold-page-root><main id="canofold-main">Next page</main></div>', {
+          headers: { 'content-type': 'text/html' }
+        })
+    )
+    vi.stubGlobal('fetch', fetchPage)
+    bootstrapShell()
+    const link = document.querySelector('a')!
+    link.dispatchEvent(new MouseEvent('pointerover', { bubbles: true }))
+    link.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
+    expect(fetchPage).toHaveBeenCalledOnce()
+    expect(fetchPage.mock.calls[0]?.[1]).not.toHaveProperty('cache', 'no-store')
+    link.click()
+    await vi.waitFor(() => expect(document.querySelector('main')?.textContent).toBe('Next page'))
+    expect(fetchPage).toHaveBeenCalledOnce()
+  })
+
+  it('aborts superseded intent and prevents a stale response from replacing the latest navigation', async () => {
+    document.body.innerHTML =
+      '<div data-canofold-page-root><a data-canofold-sidebar-link href="/slow/">Slow</a><a data-canofold-sidebar-link href="/fast/">Fast</a><main id="canofold-main">Old</main></div>'
+    let finishSlow!: (text: string) => void
+    const slowText = new Promise<string>((resolve) => {
+      finishSlow = resolve
+    })
+    const signals: AbortSignal[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: URL, options: RequestInit) => {
+        signals.push(options.signal as AbortSignal)
+        return {
+          ok: true,
+          headers: new Headers({ 'content-type': 'text/html' }),
+          text: () =>
+            url.pathname === '/slow/'
+              ? slowText
+              : Promise.resolve('<div data-canofold-page-root><main id="canofold-main">Fast</main></div>')
+        }
+      })
+    )
+    bootstrapShell()
+    const slow = document.querySelector<HTMLAnchorElement>('a[href="/slow/"]')!
+    const fast = document.querySelector<HTMLAnchorElement>('a[href="/fast/"]')!
+    slow.dispatchEvent(new MouseEvent('pointerover', { bubbles: true }))
+    fast.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
+    expect(signals[0]?.aborted).toBe(true)
+    fast.click()
+    await vi.waitFor(() => expect(document.querySelector('main')?.textContent).toBe('Fast'))
+    finishSlow('<div data-canofold-page-root><main id="canofold-main">Stale</main></div>')
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(document.querySelector('main')?.textContent).toBe('Fast')
+    expect(location.pathname).toBe('/fast/')
+  })
+
+  it('does not prefetch external, opted-out, download, query or same-page sidebar links', () => {
+    document.body.innerHTML =
+      '<div data-canofold-page-root><a data-canofold-sidebar-link href="https://other.test/">External</a><a data-canofold-sidebar-link data-canofold-no-navigation href="/native/">Native</a><a data-canofold-sidebar-link download href="/file/">Download</a><a data-canofold-sidebar-link href="/dynamic/?query=one">Query</a><a data-canofold-sidebar-link href="#local">Local</a></div>'
+    const fetchPage = vi.fn()
+    vi.stubGlobal('fetch', fetchPage)
+    bootstrapShell()
+    document
+      .querySelectorAll('a')
+      .forEach((link) => link.dispatchEvent(new MouseEvent('pointerover', { bubbles: true })))
+    expect(fetchPage).not.toHaveBeenCalled()
+  })
+
+  it('retries a failed speculative request on click and disposes unused intent', async () => {
+    document.body.innerHTML =
+      '<div data-canofold-page-root><a data-canofold-sidebar-link href="/retry/">Retry</a></div>'
+    const fetchPage = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Offline during hover'))
+      .mockResolvedValueOnce(
+        new Response('<div data-canofold-page-root>Recovered</div>', {
+          headers: { 'content-type': 'text/html' }
+        })
+      )
+    vi.stubGlobal('fetch', fetchPage)
+    bootstrapShell()
+    const link = document.querySelector('a')!
+    link.dispatchEvent(new MouseEvent('pointerover', { bubbles: true }))
+    await Promise.resolve()
+    link.click()
+    await vi.waitFor(() => expect(document.body.textContent).toBe('Recovered'))
+    expect(fetchPage).toHaveBeenCalledTimes(2)
+    document.body.innerHTML = '<a data-canofold-sidebar-link href="/unused/">Unused</a>'
+    bootstrapShell()
+    document.querySelector('a')!.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
+    const signal = fetchPage.mock.calls.at(-1)?.[1].signal
+    window.__canofoldShellDispose?.()
+    expect(signal.aborted).toBe(true)
+  })
+
+  it('does not turn an old intent response into a long-lived route cache', async () => {
+    document.body.innerHTML =
+      '<div data-canofold-page-root><a data-canofold-sidebar-link href="/fresh/">Fresh</a></div>'
+    const now = vi.spyOn(Date, 'now').mockReturnValue(0)
+    const fetchPage = vi.fn(
+      async () =>
+        new Response('<div data-canofold-page-root>Fresh</div>', {
+          headers: { 'content-type': 'text/html' }
+        })
+    )
+    vi.stubGlobal('fetch', fetchPage)
+    bootstrapShell()
+    const link = document.querySelector('a')!
+    link.dispatchEvent(new MouseEvent('pointerover', { bubbles: true }))
+    await Promise.resolve()
+    now.mockReturnValue(6000)
+    link.click()
+    await vi.waitFor(() => expect(document.body.textContent).toBe('Fresh'))
+    expect(fetchPage).toHaveBeenCalledTimes(2)
+  })
+
+  it('ignores a superseded clicked navigation even when its body finishes late', async () => {
+    document.body.innerHTML =
+      '<div data-canofold-page-root><a href="/slow/">Slow</a><a href="/latest/">Latest</a><main>Old</main></div>'
+    let finishSlow!: (body: string) => void
+    const slow = new Promise<string>((resolve) => {
+      finishSlow = resolve
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: URL) => ({
+        ok: true,
+        headers: new Headers({ 'content-type': 'text/html' }),
+        text: () =>
+          url.pathname === '/slow/'
+            ? slow
+            : Promise.resolve('<div data-canofold-page-root><main>Latest</main></div>')
+      }))
+    )
+    bootstrapShell()
+    click('a[href="/slow/"]')
+    click('a[href="/latest/"]')
+    await vi.waitFor(() => expect(document.querySelector('main')?.textContent).toBe('Latest'))
+    finishSlow('<div data-canofold-page-root><main>Stale</main></div>')
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(document.querySelector('main')?.textContent).toBe('Latest')
+    expect(location.pathname).toBe('/latest/')
+  })
+
+  it('does not bootstrap a replacement page twice when old enhancements finish late', async () => {
+    document.body.innerHTML = '<div data-canofold-page-root>Initial</div>'
+    let finishOld!: () => void
+    const oldEnhancement = new Promise<void>((resolve) => {
+      finishOld = resolve
+    })
+    window.__canofoldBootstrapMarkdown = vi
+      .fn()
+      .mockReturnValueOnce(oldEnhancement)
+      .mockResolvedValue(undefined)
+    window.__canofoldLoadPageModule = vi.fn(async () => {})
+    window.__canofoldBootstrapDemos = vi.fn(async () => {})
+    bootstrapShell()
+    const old = window.__canofoldApplyPageDocument!(
+      parse('<div data-canofold-page-root data-canofold-demo-client-url="/old.js">Old</div>')
+    )
+    await window.__canofoldApplyPageDocument!(
+      parse('<div data-canofold-page-root data-canofold-demo-client-url="/new.js">New</div>')
+    )
+    finishOld()
+    await old
+    expect(window.__canofoldLoadPageModule).toHaveBeenCalledExactlyOnceWith('/new.js')
+    expect(window.__canofoldBootstrapDemos).toHaveBeenCalledOnce()
+    expect(document.body.textContent).toBe('New')
+  })
+
   it('switches only the configured visual themes and persists the selected mode', () => {
     document.documentElement.dataset.cfTheme = 'canofold'
     document.documentElement.dataset.cfThemeAppearance = 'light'
@@ -62,6 +235,49 @@ describe('typed browser shell', () => {
         .querySelector('[data-canofold-theme-option="neumorphism:default"]')
         ?.getAttribute('aria-pressed')
     ).toBe('true')
+  })
+
+  it('ignores a detached page enhancement failure but still reports current-page failures', async () => {
+    document.body.innerHTML = '<div data-canofold-page-root>Initial</div>'
+    let failOld!: (error: Error) => void
+    window.__canofoldBootstrapMarkdown = vi
+      .fn()
+      .mockReturnValueOnce(
+        new Promise<void>((_resolve, reject) => {
+          failOld = reject
+        })
+      )
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('Current page failed'))
+    bootstrapShell()
+    const old = window.__canofoldApplyPageDocument!(parse('<div data-canofold-page-root>Old</div>'))
+    const oldResult = expect(old).resolves.toBe(true)
+    await window.__canofoldApplyPageDocument!(parse('<div data-canofold-page-root>New</div>'))
+    failOld(new Error('Old page failed'))
+    await oldResult
+    expect(document.body.textContent).toBe('New')
+    await expect(
+      window.__canofoldApplyPageDocument!(parse('<div data-canofold-page-root>Current</div>'))
+    ).rejects.toThrow('Current page failed')
+  })
+
+  it('does not restore a live-update scroll position after another page replaces it', async () => {
+    const frames: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => frames.push(callback))
+    document.body.innerHTML = '<div data-canofold-page-root><h1 id="heading">Old</h1></div>'
+    bootstrapShell()
+    await window.__canofoldApplyPageDocument!(
+      parse('<div data-canofold-page-root><h1 id="heading">Update</h1></div>'),
+      { mode: 'update' }
+    )
+    await window.__canofoldApplyPageDocument!(
+      parse('<div data-canofold-page-root><h1 id="heading">New</h1></div>'),
+      { mode: 'navigation' }
+    )
+    vi.mocked(window.scrollTo).mockClear()
+    frames.forEach((callback) => callback(0))
+    expect(window.scrollBy).not.toHaveBeenCalled()
+    expect(window.scrollTo).not.toHaveBeenCalled()
   })
 
   it('manages mobile sidebar and outside-menu dismissal', () => {
@@ -187,7 +403,7 @@ describe('typed browser shell', () => {
       new PopStateEvent('popstate', { state: { __canofold: { scrollY: 230, sidebarScrollTop: 30 } } })
     )
     await vi.waitFor(() => expect(document.body.textContent).toBe('Back'))
-    expect(window.scrollTo).toHaveBeenCalledWith(0, 230)
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 230, behavior: 'instant' })
   })
 
   it('tracks outline reading position, scrolling its panel and cleaning listeners', () => {

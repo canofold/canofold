@@ -83,12 +83,13 @@ export async function prepareMarkdown(
     syntax,
     syntaxHighlighter
   })
-  const tree = processor.parse(normalizeCallouts(source))
+  const value = normalizeCallouts(source)
+  const tree = processor.parse(value)
   const data = {
     canofoldLocale: options?.locale?.trim() || undefined,
     canofoldCodeExamples: [] as MarkdownCodeExample[]
   }
-  const document = (await processor.run(tree, { data })) as PreparedMarkdown['document']
+  const document = (await processor.run(tree, { value, data })) as PreparedMarkdown['document']
   return {
     document,
     analysis: analyzeDocument(document, data.canofoldCodeExamples),

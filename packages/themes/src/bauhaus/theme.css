@@ -60,7 +60,7 @@ html[data-cf-theme='bauhaus'] :where(.cf-content h1, .cf-content h2, .cf-content
   text-transform: uppercase;
 }
 
-html[data-cf-theme='bauhaus'] :where(.cf-header, .cf-sidebar, .cf-outline, .cf-menu-list) {
+html[data-cf-theme='bauhaus'] :where(.cf-sidebar, .cf-outline, .cf-menu-list) {
   border-color: var(--cf-border);
   background: var(--cf-surface);
   box-shadow: none;

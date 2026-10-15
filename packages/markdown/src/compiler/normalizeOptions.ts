@@ -35,6 +35,7 @@ function normalizeCodeLanguages(languages: NonNullable<RenderMarkdownOptions['co
 
 export interface NormalizedMarkdownOptions {
   htmlPolicy: MarkdownHtmlPolicy
+  invalidDirective: 'error' | 'literal'
   codeThemes: {
     light: string | ThemeRegistration
     dark: string | ThemeRegistration
@@ -51,6 +52,7 @@ export interface NormalizedMarkdownOptions {
 export function normalizeOptions(options: RenderMarkdownOptions = {}): NormalizedMarkdownOptions {
   return {
     htmlPolicy: options.html ?? 'strip',
+    invalidDirective: options.directives?.invalid ?? 'error',
     codeThemes: {
       light: options.code?.themes?.light ?? DEFAULT_CODE_THEMES.light,
       dark: options.code?.themes?.dark ?? DEFAULT_CODE_THEMES.dark

@@ -1,6 +1,6 @@
 /* The branded homepage treatment belongs to the Canofold visual theme,
    not to the site shell shared by every theme. */
-:where(html:not([data-cf-theme]), html[data-cf-theme='canofold']) {
+:root:where(:not([data-cf-theme]), [data-cf-theme='canofold']) {
   --cf-hero-visual-filter: drop-shadow(
     0 2rem 3rem color-mix(in oklab, var(--cf-accent-500) 16%, transparent)
   );

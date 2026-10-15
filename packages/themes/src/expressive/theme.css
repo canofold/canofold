@@ -11,23 +11,22 @@ html:is(
     [data-cf-theme='shoujo-manga'],
     [data-cf-theme='outrun']
   )
-  :where(.cf-header, .cf-sidebar, .cf-outline) {
+  :where(.cf-sidebar, .cf-outline) {
   background: var(--cf-theme-shell-surface, var(--cf-surface));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
 html:is(
-    [data-cf-theme='memphis'],
-    [data-cf-theme='cyber-chinese'],
-    [data-cf-theme='pixel-anime'],
-    [data-cf-theme='dopamine-design'],
-    [data-cf-theme='shoujo-manga'],
-    [data-cf-theme='outrun']
-  )
-  .cf-header {
-  border-bottom: 0;
-  box-shadow: var(--cf-theme-header-shadow, var(--cf-header-shadow));
+  [data-cf-theme='memphis'],
+  [data-cf-theme='cyber-chinese'],
+  [data-cf-theme='pixel-anime'],
+  [data-cf-theme='dopamine-design'],
+  [data-cf-theme='shoujo-manga'],
+  [data-cf-theme='outrun']
+) {
+  --cf-header-surface: var(--cf-theme-shell-surface, var(--cf-surface));
+  --cf-header-shadow: var(--cf-theme-header-shadow);
 }
 
 html:is(

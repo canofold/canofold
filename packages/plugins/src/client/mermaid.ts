@@ -163,7 +163,7 @@ export function enhance(root: ParentNode = document) {
   })
   observer.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['class', 'data-theme', 'style']
+    attributeFilter: ['class', 'data-cf-theme', 'data-cf-theme-appearance', 'style']
   })
 
   let disposed = false

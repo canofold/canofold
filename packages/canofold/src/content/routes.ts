@@ -106,7 +106,11 @@ export function localeRootPath(locale: string, defaultLocale: string, base = '/'
 }
 
 function localeOutputPrefix(locale: string, defaultLocale: string, base = '/') {
-  const basePrefix = normalizedBase(base).replace(/^\/|\/$/g, '')
+  const basePrefix = normalizedBase(base)
+    .replace(/^\/|\/$/g, '')
+    .split('/')
+    .map(decodeURIComponent)
+    .join('/')
   return [basePrefix, locale === defaultLocale ? '' : locale].filter(Boolean).join('/')
 }
 

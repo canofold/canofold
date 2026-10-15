@@ -1,22 +1,37 @@
 import type { CanofoldConfig } from '../config/types'
+import { basename, dirname, join } from 'node:path'
+import { resolveBuildTemporaryRoot } from './cache'
 import { assertDisjointPaths, assertProjectPath, resolveOutputRoot, resolveProjectPath } from '../utils/paths'
+
+export function outputBackupRoot(outputRoot: string) {
+  return join(dirname(outputRoot), `.${basename(outputRoot)}.backup`)
+}
 
 export async function resolveSafeOutputRoot(cwd: string, config: CanofoldConfig, cacheRoot: string) {
   const outputRoot = resolveOutputRoot(cwd, config.outputDir)
   await assertProjectPath(cwd, outputRoot, 'outputDir')
-  await assertProjectPath(cwd, cacheRoot, 'build cache')
-  await assertDisjointPaths(outputRoot, cacheRoot, 'build cache')
-  for (const version of config.versions.items) {
-    const docsRoot = resolveProjectPath(cwd, version.docsDir, `versions.items[${version.id}].docsDir`)
-    await assertProjectPath(cwd, docsRoot, `versions.items[${version.id}].docsDir`)
-    await assertDisjointPaths(outputRoot, docsRoot, `versions.items[${version.id}].docsDir`)
-    await assertDisjointPaths(cacheRoot, docsRoot, `versions.items[${version.id}].docsDir`, 'build cache')
+  const workPaths = [
+    [cacheRoot, 'build cache'],
+    [resolveBuildTemporaryRoot(cwd), 'temporary build files'],
+    [outputBackupRoot(outputRoot), 'interrupted build backup']
+  ] as const
+  for (const [path, field] of workPaths) {
+    await assertProjectPath(cwd, path, field)
+    await assertDisjointPaths(outputRoot, path, field)
   }
-  for (const [index, style] of config.styles.entries()) {
-    const stylePath = resolveProjectPath(cwd, style, `styles[${index}]`)
-    await assertProjectPath(cwd, stylePath, `styles[${index}]`)
-    await assertDisjointPaths(outputRoot, stylePath, `styles[${index}]`)
-    await assertDisjointPaths(cacheRoot, stylePath, `styles[${index}]`, 'build cache')
+  const inputs = [
+    ...config.versions.items.map(
+      (version) => [version.docsDir, `versions.items[${version.id}].docsDir`] as const
+    ),
+    ...config.styles.map((style, index) => [style, `styles[${index}]`] as const)
+  ]
+  for (const [path, field] of inputs) {
+    const source = resolveProjectPath(cwd, path, field)
+    await assertProjectPath(cwd, source, field)
+    await assertDisjointPaths(outputRoot, source, field)
+    for (const [workPath, workField] of workPaths) {
+      await assertDisjointPaths(workPath, source, field, workField)
+    }
   }
   return outputRoot
 }

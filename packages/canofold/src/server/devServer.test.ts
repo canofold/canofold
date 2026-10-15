@@ -190,6 +190,7 @@ describe('startDevServer', () => {
     const resultWithEngine = (cacheKey: string, startDev: typeof firstStartDev): BuildResult =>
       buildResult({
         config: createMockConfig({
+          outputDir: 'dist',
           demos: { engine: { id: 'fixture', version: '1', cacheKey, prepare, startDev } }
         }),
         demoManifest: { clientUrl: '/demo.js', demos: {}, dependencyPaths: ['/shared/vite.config.ts'] }
@@ -220,6 +221,11 @@ describe('startDevServer', () => {
     const firstContext = firstStartDev.mock.calls[0]?.[0]
     expect(firstContext?.shouldIgnorePath('/project/.canofold/dist/index.html')).toBe(true)
     expect(firstContext?.shouldIgnorePath('/project/.dist.tmp-build/index.html')).toBe(true)
+    expect(firstContext?.shouldIgnorePath('/project/.dist.backup/index.html')).toBe(true)
+    const ignored = mocks.watch.mock.calls[0]?.[1].ignored
+    expect(ignored('dist/index.html')).toBe(true)
+    expect(ignored('.dist.backup/index.html')).toBe(true)
+    expect(ignored('docs/backup.md')).toBe(false)
     expect(firstContext?.shouldIgnorePath('/project/src/button.tsx')).toBe(false)
 
     onFileEvent?.('change', 'canofold.config.ts')

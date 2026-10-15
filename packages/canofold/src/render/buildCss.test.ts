@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as fs from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { trackedMkdtemp } from '../../test/fixtures'
 import { canofold, defineTheme, memphis, neoBrutalist, neumorphism, outrun } from '@canofold/themes'
 import { compileCss, compileThemes, markdownFileIconsDir, mathFontsDir } from './buildCss'
 
@@ -34,6 +37,22 @@ describe('buildCss', () => {
     const css = await compileCss({ math: true })
     expect(css).toContain('/* Math */')
     expect(css).toContain('.katex')
+  })
+
+  it('resolves optional math assets from the build project rather than the process directory', async () => {
+    const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-project-math-'))
+    const pluginRoot = join(cwd, 'node_modules/@canofold/plugins')
+    await fs.mkdir(pluginRoot, { recursive: true })
+    await fs.writeFile(
+      join(pluginRoot, 'package.json'),
+      JSON.stringify({
+        name: '@canofold/plugins',
+        exports: { './math.css': './math.css' }
+      })
+    )
+    await fs.writeFile(join(pluginRoot, 'math.css'), '.project-math { color: red }')
+    expect(await compileCss({ math: true, cwd })).toContain('.project-math')
+    expect(mathFontsDir(cwd)).toBe(join(await fs.realpath(pluginRoot), 'fonts'))
   })
 
   it('outputs only styles owned by the configured theme definitions', async () => {

@@ -3,6 +3,7 @@ const OUTLINE_TOP_PADDING_PX = 48
 const OUTLINE_BOTTOM_PADDING_PX = 24
 const DEFAULT_HEADER_HEIGHT_PX = 58
 const PAGE_END_TOLERANCE_PX = 2
+const NAVIGATION_INTENT_MAX_AGE_MS = 5000
 
 interface NavigationState {
   scrollY: number
@@ -50,7 +51,26 @@ export function bootstrapShell() {
   const qa = <T extends HTMLElement = HTMLElement>(selector: string, parent: ParentNode = d) =>
     Array.from(parent.querySelectorAll<T>(selector))
   let navigationController: AbortController | undefined
+  let intent:
+    | {
+        href: string
+        createdAt: number
+        controller: AbortController
+        document: Promise<Document | undefined>
+      }
+    | undefined
   const actionTimers = new Map<HTMLElement, ReturnType<typeof setTimeout>>()
+
+  const homeHeader = q('.cf-header-home')
+  function syncHomeHeader() {
+    if (!homeHeader) return
+    const progress = Math.min(1, Math.max(0, window.scrollY / 96))
+    homeHeader.style.setProperty('--cf-header-surface-mix', progress * 68 + '%')
+    homeHeader.style.setProperty('--cf-header-backdrop-blur', progress * 22 + 'px')
+    homeHeader.style.setProperty('--cf-header-backdrop-saturation', 100 + progress * 60 + '%')
+  }
+  syncHomeHeader()
+  on(window, 'scroll', syncHomeHeader, { passive: true })
 
   function disposePage() {
     window.__canofoldSearchDispose?.()
@@ -62,21 +82,24 @@ export function bootstrapShell() {
   }
 
   async function bootstrapPage() {
+    const pageRoot = q('[data-canofold-page-root]')
     window.__canofoldBootstrapShell?.()
     window.__canofoldBootstrapOutline?.()
     window.__canofoldBootstrapSearch?.()
     await window.__canofoldBootstrapMarkdown?.()
-    const pageRoot = q('[data-canofold-page-root]')
+    if (!pageRoot?.isConnected) return
     const pageModule = pageRoot?.getAttribute('data-canofold-playground-client-url')
     if (pageModule) {
       const loadModule = window.__canofoldLoadPageModule || ((url) => import(url))
       await loadModule(pageModule)
+      if (!pageRoot.isConnected) return
       window.__canofoldBootstrapPlayground?.()
     }
     const demoModule = pageRoot?.getAttribute('data-canofold-demo-client-url')
     if (demoModule) {
       const loadModule = window.__canofoldLoadPageModule || ((url) => import(url))
       await loadModule(demoModule)
+      if (!pageRoot.isConnected) return
       await window.__canofoldBootstrapDemos?.()
     }
   }
@@ -121,8 +144,9 @@ export function bootstrapShell() {
     })
   }
 
-  function restoreReadingPosition(state: ReturnType<typeof captureUpdateState>) {
+  function restoreReadingPosition(pageRoot: HTMLElement, state: ReturnType<typeof captureUpdateState>) {
     requestAnimationFrame(() => {
+      if (!pageRoot.isConnected) return
       const anchor = state.anchorId && d.getElementById(state.anchorId)
       if (anchor) {
         window.scrollBy(0, anchor.getBoundingClientRect().top - state.anchorTop)
@@ -229,21 +253,27 @@ export function bootstrapShell() {
     if (updateState) restoreUpdateStructure(imported, updateState)
     const nextSidebar = q('[data-canofold-sidebar]', imported)
     if (!updateState && nextSidebar) nextSidebar.scrollTop = sidebarScrollTop
-    await bootstrapPage()
+    if (!updateState) {
+      if (!options.hash) window.scrollTo({ top: options.scrollY ?? 0, behavior: 'instant' })
+      if (options.focus) q('#canofold-main', imported)?.focus({ preventScroll: true })
+    }
+    try {
+      await bootstrapPage()
+    } catch (error) {
+      if (imported.isConnected) throw error
+    }
+    if (!imported.isConnected) return true
     if (updateState) {
       restoreUpdateTabs(imported, updateState)
-      restoreReadingPosition(updateState)
+      restoreReadingPosition(imported, updateState)
     } else {
       if (nextSidebar) nextSidebar.scrollTop = sidebarScrollTop
-      if (options.focus) q('#canofold-main', imported)?.focus({ preventScroll: true })
       if (options.hash) {
         let id = options.hash.slice(1)
         try {
           id = decodeURIComponent(id)
         } catch {}
-        d.getElementById(id)?.scrollIntoView()
-      } else {
-        window.scrollTo(0, options.scrollY ?? 0)
+        d.getElementById(id)?.scrollIntoView({ behavior: 'instant' })
       }
     }
     return true
@@ -273,15 +303,17 @@ export function bootstrapShell() {
     { push = true, state }: { push?: boolean; state?: NavigationState } = {}
   ) {
     navigationController?.abort()
-    navigationController = new AbortController()
-    const response = await fetch(url, {
-      cache: 'no-store',
-      headers: { accept: 'text/html' },
-      signal: navigationController.signal
-    })
-    if (!response.ok || !(response.headers.get('content-type') || '').includes('text/html')) return false
-    const nextDocument = new DOMParser().parseFromString(await response.text(), 'text/html')
-    if (!q('[data-canofold-page-root]', nextDocument)) return false
+    const pending =
+      intent?.href === url.href && Date.now() - intent.createdAt <= NAVIGATION_INTENT_MAX_AGE_MS
+        ? intent
+        : undefined
+    if (!pending) intent?.controller.abort()
+    intent = undefined
+    navigationController = pending?.controller ?? new AbortController()
+    const { signal } = navigationController
+    const nextDocument = (await pending?.document) ?? (await loadPageDocument(url, signal))
+    signal.throwIfAborted()
+    if (!nextDocument) return false
     const navigationState = state || {
       scrollY: 0,
       sidebarScrollTop: q('[data-canofold-sidebar]')?.scrollTop || 0
@@ -298,6 +330,46 @@ export function bootstrapShell() {
       focus: push
     })
   }
+
+  async function loadPageDocument(url: URL, signal: AbortSignal) {
+    const response = await fetch(url, { headers: { accept: 'text/html' }, signal })
+    if (!response.ok || !(response.headers.get('content-type') || '').includes('text/html')) return
+    const text = await response.text()
+    signal.throwIfAborted()
+    const nextDocument = new DOMParser().parseFromString(text, 'text/html')
+    return q('[data-canofold-page-root]', nextDocument) ? nextDocument : undefined
+  }
+
+  function prefetchSidebar(event: Event) {
+    if (!(event.target instanceof Element)) return
+    const anchor = event.target.closest<HTMLAnchorElement>('a[data-canofold-sidebar-link][href]')
+    if (
+      !anchor ||
+      anchor.hasAttribute('download') ||
+      anchor.hasAttribute('data-canofold-no-navigation') ||
+      (anchor.target && anchor.target !== '_self')
+    )
+      return
+    const url = new URL(anchor.href, location.href)
+    if (
+      url.origin !== location.origin ||
+      !['http:', 'https:'].includes(url.protocol) ||
+      url.search ||
+      url.pathname === location.pathname ||
+      (intent?.href === url.href && Date.now() - intent.createdAt <= NAVIGATION_INTENT_MAX_AGE_MS)
+    )
+      return
+    intent?.controller.abort()
+    const controller = new AbortController()
+    intent = {
+      href: url.href,
+      createdAt: Date.now(),
+      controller,
+      document: loadPageDocument(url, controller.signal).catch(() => undefined)
+    }
+  }
+  on(d, 'pointerover', prefetchSidebar)
+  on(d, 'focusin', prefetchSidebar)
 
   function markAction(button: HTMLElement, text: string) {
     if (!button) return
@@ -586,6 +658,8 @@ export function bootstrapShell() {
   })
   window.__canofoldShellDispose = () => {
     controller.abort()
+    intent?.controller.abort()
+    navigationController?.abort()
     actionTimers.forEach((timer) => clearTimeout(timer))
     actionTimers.clear()
     root.classList.remove('cf-source-open')

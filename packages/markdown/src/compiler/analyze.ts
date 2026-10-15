@@ -22,7 +22,11 @@ import type { Directives } from 'mdast-util-directive'
 import type { Node, Parent } from 'unist'
 import { srcSetCandidates } from '../utils/srcSet'
 import { normalizeCallouts } from './plugins/directives'
-import { collectRichDirectiveIssues, type MarkdownDirectiveIssue } from './directiveValidation'
+import {
+  collectRichDirectiveIssues,
+  restoreLiteralDirectives,
+  type MarkdownDirectiveIssue
+} from './directiveValidation'
 import { activeMarkdownPlugins, markdownPluginDirectiveNames, normalizeMarkdownPlugins } from './plugins'
 import type { MarkdownPlugin } from './types'
 
@@ -239,7 +243,13 @@ function nodeText(node: Node): string {
 /** Source-only syntax diagnostics. Use renderer.analyze() for plugin-transformed content facts. */
 export function analyzeMarkdown(source: string, options: AnalyzeMarkdownOptions = {}): MarkdownAnalysis {
   const processor = unified().use(remarkParse).use(remarkDefinitionList).use(remarkGfm).use(remarkDirective)
-  const tree = processor.parse(normalizeCallouts(source))
+  const value = normalizeCallouts(source)
+  const tree = processor.parse(value)
+  const activePlugins = activeMarkdownPlugins(normalizeMarkdownPlugins(options.plugins), {
+    source,
+    mode: options.mode ?? 'markdown'
+  })
+  restoreLiteralDirectives(tree, value, markdownPluginDirectiveNames(activePlugins))
   const headings: MarkdownHeading[] = []
   // The parser always produces a root, which toHast preserves.
   const renderedTree = toHast(tree) as HastRoot
@@ -337,11 +347,6 @@ export function analyzeMarkdown(source: string, options: AnalyzeMarkdownOptions 
         ...(directive.position?.end.offset === undefined ? {} : { endOffset: directive.position.end.offset })
       })
     }
-  })
-
-  const activePlugins = activeMarkdownPlugins(normalizeMarkdownPlugins(options.plugins), {
-    source,
-    mode: options.mode ?? 'markdown'
   })
 
   return {

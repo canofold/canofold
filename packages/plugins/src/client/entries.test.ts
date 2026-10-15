@@ -204,12 +204,27 @@ describe('diagram client entries', () => {
       theme: 'base'
     })
 
+    document.documentElement.dataset.cfTheme = 'neumorphism'
+    await vi.waitFor(() =>
+      expect(
+        (globalThis as typeof globalThis & { __canofoldMermaidRenders?: number }).__canofoldMermaidRenders
+      ).toBe(2)
+    )
+    document.documentElement.dataset.cfThemeAppearance = 'light'
+    await vi.waitFor(() =>
+      expect(
+        (globalThis as typeof globalThis & { __canofoldMermaidRenders?: number }).__canofoldMermaidRenders
+      ).toBe(3)
+    )
+
     dispose()
+    delete document.documentElement.dataset.cfTheme
+    delete document.documentElement.dataset.cfThemeAppearance
     document.documentElement.classList.toggle('dark')
     await new Promise((resolve) => requestAnimationFrame(resolve))
     expect(
       (globalThis as typeof globalThis & { __canofoldMermaidRenders?: number }).__canofoldMermaidRenders
-    ).toBe(1)
+    ).toBe(3)
   })
 
   it('does not observe a detached document without a browsing context', () => {

@@ -18,6 +18,114 @@ async function renderPreparedHtml(source: string, options?: RenderMarkdownOption
 }
 
 describe('renderPreparedHtml', () => {
+  it('preserves ordinary colon-separated words instead of treating them as directives', async () => {
+    const source =
+      '# Commands\n\n验收：format:check、lint、check 均通过。Run npm:copy.\n\n## After\n\nStill visible.'
+    const html = await renderPreparedHtml(source)
+    expect(html).toContain('format:check、lint、check')
+    expect(html).toContain('npm:copy')
+    expect(html).toContain('id="after"')
+    expect(html).toContain('Still visible.')
+  })
+
+  it('recovers only invalid directive nodes as escaped authored text when requested', async () => {
+    const source = [
+      '# Before',
+      '',
+      ':unknown[<img src=x onerror=alert(1)>]{href="javascript:alert(1)"}',
+      '',
+      ':::galery[Unknown block]',
+      'Body **kept as source**',
+      ':::',
+      '',
+      '::embed[Unsafe]{src="javascript:alert(1)"}',
+      '',
+      ':::tip[Valid]',
+      'Still **formatted**.',
+      ':::',
+      '',
+      '## After',
+      '',
+      'Normal [link](/guide).'
+    ].join('\n')
+    const html = await renderPreparedHtml(source, { html: 'sanitize', directives: { invalid: 'literal' } })
+    expect(html).toContain('id="before"')
+    expect(html).toContain(':unknown[&lt;img')
+    expect(html).toContain(':::galery[Unknown block]')
+    expect(html).toContain('Body **kept as source**')
+    expect(html).toContain('::embed[Unsafe]')
+    expect(html).not.toContain('<iframe')
+    expect(html).not.toContain('<img')
+    expect(html).toContain('cf-callout-tip')
+    expect(html).toMatch(/<strong[^>]*>formatted<\/strong>/)
+    expect(html).toContain('id="after"')
+    expect(html).toContain('href="/guide"')
+  })
+
+  it('does not swallow plugin failures in directive recovery mode', async () => {
+    await expect(
+      prepareMarkdown('Normal content', {
+        directives: { invalid: 'literal' },
+        plugins: [
+          {
+            name: 'broken',
+            remarkPlugins: [
+              () => () => {
+                throw new Error('Plugin failed')
+              }
+            ]
+          }
+        ]
+      })
+    ).rejects.toThrow('Plugin failed')
+  })
+
+  it.each([':unknown[]', ':unknown{}', ':copy'])(
+    'keeps explicit malformed syntax strict: %s',
+    async (source) => {
+      await expect(prepareMarkdown(source)).rejects.toThrow()
+    }
+  )
+
+  it('preserves a malformed rich container and valid neighboring content in preview mode', async () => {
+    const html = await renderPreparedHtml(
+      ':::gallery[Preview]\nNot an image.\n:::\n\n## Kept\n\n:badge[Ready]{tone="success"}',
+      {
+        directives: { invalid: 'literal' }
+      }
+    )
+    expect(html).toContain(':::gallery[Preview]')
+    expect(html).toContain('Not an image.')
+    expect(html).toContain('id="kept"')
+    expect(html).toContain('cf-badge-success')
+  })
+
+  it('keeps nested recovery local and retains CRLF and Unicode source offsets', async () => {
+    const source =
+      '::::tip[保留外层]\r\n\r\n:::gallery[坏块]\r\n不是图片。\r\n:::\r\n\r\n**后续正文**\r\n::::\r\n\r\n## 末尾'
+    const html = await renderPreparedHtml(source, { directives: { invalid: 'literal' } })
+    expect(html).toContain('cf-callout-tip')
+    expect(html).toContain(':::gallery[坏块]\r\n不是图片。\r\n:::')
+    expect(html).toMatch(/<strong[^>]*>后续正文<\/strong>/)
+    expect(html).toContain('id="末尾"')
+  })
+
+  it.each([
+    ['tabs', 'tab[Bad]{unsupported="true"}', ':::tab[Valid]\nValid sibling.\n:::'],
+    ['steps', 'step[Bad]{unsupported="true"}', ':::step[Valid]\nValid sibling.\n:::'],
+    ['gallery', 'tip[Unexpected child]', '![Valid sibling](/image.png)'],
+    ['code-group', 'tip[Unexpected child]', '```text\nValid sibling.\n```']
+  ])(
+    'preserves malformed children inside %s instead of silently dropping them',
+    async (container, child, valid) => {
+      const source = `::::${container}\n:::${child}\nContent must survive.\n:::\n\n${valid}\n::::\n\n## After`
+      const html = await renderPreparedHtml(source, { directives: { invalid: 'literal' } })
+      expect(html).toContain('Content must survive.')
+      expect(html).toContain(`:::${child.replaceAll('"', '&quot;')}`)
+      expect(html).toContain('id="after"')
+    }
+  )
+
   it('prepares a serializable document and asset hints before stringification', async () => {
     const prepared = await prepareMarkdown(['# Title', '', '```ts', 'const value = true', '```'].join('\n'))
 

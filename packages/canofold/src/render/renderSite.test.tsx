@@ -707,7 +707,7 @@ describe('renderSite', () => {
     const html = await readFile(join(cwd, outputDir, 'index.html'), 'utf8')
     expect(html).toContain('AUTHORED HOME BODY')
     expect(html).toContain('class="cf-home" tabindex="-1" data-pagefind-body=""')
-    expect(html).toContain('<header class="cf-header">')
+    expect(html).toContain('<header class="cf-header cf-header-home">')
     expect(html).not.toContain('class="cf-route-progress"')
     expect(html).toContain('data-cf-root="markdown"')
     expect(html).toContain('aria-label="メインナビゲーション"')

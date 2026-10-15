@@ -4,6 +4,7 @@ import { startStaticServer, type DevReloadUpdate } from './staticServer'
 import { createMarkdownRenderer } from '@canofold/markdown/server'
 import { relative, resolve, sep } from 'node:path'
 import { resolveBuildCacheRoot } from '../build/cache'
+import { outputBackupRoot } from '../build/safety'
 import { isInside, resolveOutputRoot } from '../utils/paths'
 import { publicPathFor } from '../seo/urls'
 import { logError } from '../utils/logger'
@@ -22,8 +23,10 @@ function shouldIgnoreGeneratedPath(cwd: string, outputDir: string, path: string)
   if (segments.includes('node_modules') || segments.includes('.git')) return true
   if (segments.includes('.canofold')) return true
   if (segments.some((segment) => /^\..+\.(?:tmp|backup)-/.test(segment))) return true
+  const outputRoot = resolveOutputRoot(cwd, outputDir)
   return (
-    isInside(resolveOutputRoot(cwd, outputDir), absolutePath) ||
+    isInside(outputRoot, absolutePath) ||
+    isInside(outputBackupRoot(outputRoot), absolutePath) ||
     isInside(resolveBuildCacheRoot(cwd), absolutePath)
   )
 }
