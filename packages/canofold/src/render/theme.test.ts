@@ -279,6 +279,8 @@ describe('visual themes', () => {
     expect(css).toMatch(
       /@media \(max-width: 52\.5rem\)[\s\S]*\.cf-sidebar-primary-nav\s*\{[^}]*display: grid;/s
     )
+    expect(css).toMatch(/\.cf-primary-menu\s*\{[^}]*display: none;/s)
+    expect(css).toMatch(/@media \(max-width: 52\.5rem\)[\s\S]*\.cf-primary-menu\s*\{[^}]*display: block;/s)
     expect(css).toMatch(/\.cf-outline-link-3\s*\{[^}]*padding-inline-start: 1\.125rem;/s)
     expect(css).toMatch(/\.cf-outline-link-6\s*\{[^}]*padding-inline-start: 3rem;/s)
   })

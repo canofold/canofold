@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { navItemIsActive } from './LayoutHeader'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { createElement } from 'react'
+import { LayoutHeader, navItemIsActive } from './LayoutHeader'
 import type { LayoutModel } from './model'
 
 describe('navItemIsActive', () => {
@@ -22,5 +24,50 @@ describe('navItemIsActive', () => {
     const home = { title: 'Home', routePath: '/' }
     expect(navItemIsActive(model('/'), home)).toBe(true)
     expect(navItemIsActive(model('/guide/'), home)).toBe(false)
+  })
+})
+
+describe('mobile primary navigation', () => {
+  const model = (
+    home: boolean,
+    hasSidebarItems: boolean,
+    navItems = [{ title: 'Skills', routePath: '/skills/' }]
+  ) =>
+    ({
+      config: { title: 'Docs', basePath: '/', themes: [], search: { enabled: false }, branding: {} },
+      page: { routePath: '/skills/', locale: 'en' },
+      home,
+      hasSidebarItems,
+      navItems,
+      localeRoot: '/',
+      versionLabel: 'current',
+      versionOptions: [{ id: 'current' }],
+      languageOptions: [{ locale: 'en' }],
+      labels: { primaryNavigation: 'Primary navigation', openSidebar: 'Open sidebar' }
+    }) as unknown as LayoutModel
+
+  it.each([
+    [true, true],
+    [true, false],
+    [false, false]
+  ])('provides a menu without a usable sidebar: home=%s sidebar=%s', (home, sidebar) => {
+    const html = renderToStaticMarkup(createElement(LayoutHeader, { model: model(home, sidebar) }))
+    expect(html).toContain('cf-primary-menu')
+    expect(html).toMatch(/<summary[^>]+aria-label="Primary navigation"/)
+    expect(html).toMatch(
+      /class="cf-menu-item cf-menu-item-active"[^>]+href="\/skills\/"[^>]+aria-current="page"/
+    )
+  })
+
+  it('retains the existing sidebar entry point on document pages', () => {
+    const html = renderToStaticMarkup(createElement(LayoutHeader, { model: model(false, true) }))
+    expect(html).not.toContain('cf-primary-menu')
+    expect(html).toContain('data-canofold-sidebar-open')
+  })
+
+  it('does not render an empty menu', () => {
+    expect(
+      renderToStaticMarkup(createElement(LayoutHeader, { model: model(true, false, []) }))
+    ).not.toContain('cf-primary-menu')
   })
 })
