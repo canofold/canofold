@@ -27,7 +27,7 @@ function canonicalValue(value: unknown, seen: WeakSet<object>): CanonicalValue {
       return value.map((item) => canonicalValue(item, seen))
     }
     const entries = Object.entries(value as Record<string, unknown>)
-      .sort(([left], [right]) => left.localeCompare(right))
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
       .map(([key, item]) => [key, canonicalValue(item, seen)] as const)
     return Object.fromEntries(entries)
   } finally {

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0 - 2026-10-17
+
+- Version the page index and full-content manifest as schema 2. Publish document identity, authored/transformed source fingerprints, content revisions, explicit body/static-analysis representations, output capabilities and a shared collection snapshot. Preserve independent output controls and include page inventories in full manifests when the page index is disabled.
+- Add optional `ai.contentSpace` for explicitly named collections across deployment locations. Default identities remain source-local; file moves create a departure and an addition, while title/body edits retain identity. Hash authored bytes during the existing file scan and include their revisions in build invalidation.
+- Normalize logical source paths to Unicode NFC before deriving identities, preserving case and literal percent characters without renaming files or changing routes. Reject canonically duplicate source identities.
+- Bind content records to document identities and full manifests to the optional page index using byte counts and SHA-256. Document complete-snapshot comparison, unknown differences, AI exclusion and schema-1 migration instead of treating unavailable data as deletion.
+- Include logical source-path words in Compact candidate generation without deployment, locale or version-prefix noise; retain the existing relevance ranking and scope isolation.
+- Make structured fingerprint key ordering independent of the system locale. Extend existing packed-theme and performance fixtures with explicitly installed font/image assets and incremental/deletion measurements.
+- Commit lazy Markdown island hydration before the enhancement readiness boundary, so immediate navigation or disposal cannot interrupt an uncommitted React root. Keep React out of the static Markdown entry graph.
+
+Machine consumers must support schema 2 before upgrading their producer, then establish a new trusted baseline. HTML/Markdown routes, existing output switches and the Markdown/MDX authoring boundary retain their meanings.
+
 ## 0.6.8 - 2026-10-16
 
 - Keep primary navigation reachable on narrow screens for homepages and pages without sidebar entries. Reuse the configured links, active states, theme menu materials, and dismissal behavior without changing the existing sidebar navigation on document pages.

@@ -59,12 +59,16 @@ export async function enhanceRichMarkdown(
         if (hydratedRoots.has(element)) return
         const pending = pendingRoots.get(element)
         if (pending) return pending
-        const task = loaders[name]()
-          .then((island) => {
+        const task = Promise.all([loaders[name](), import('react-dom')])
+          .then(([island, { flushSync }]) => {
             // Disposal invalidates this request; a later owner has its own task.
             if (pendingRoots.get(element) !== task) return
-            const reactRoot = island.hydrate(element, renderOptions)
-            if (reactRoot) hydratedRoots.set(element, reactRoot)
+            // The imperative host may dispose as soon as ready resolves. Commit
+            // hydration before exposing that boundary, including fast navigation.
+            flushSync(() => {
+              const reactRoot = island.hydrate(element, renderOptions)
+              if (reactRoot) hydratedRoots.set(element, reactRoot)
+            })
           })
           .finally(() => {
             if (pendingRoots.get(element) === task) pendingRoots.delete(element)

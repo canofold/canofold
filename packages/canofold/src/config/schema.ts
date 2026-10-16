@@ -413,6 +413,13 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
       .optional(),
     ai: z
       .object({
+        contentSpace: z
+          .string()
+          .trim()
+          .min(1)
+          .max(200)
+          .regex(/^[a-zA-Z0-9][a-zA-Z0-9._:-]*$/)
+          .optional(),
         pageIndex: z.boolean().optional(),
         fullContent: z.boolean().optional(),
         llmsTxt: z.boolean().optional(),

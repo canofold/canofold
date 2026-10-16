@@ -40,6 +40,8 @@ export interface NavItem {
 
 export interface DocPage extends Pick<MarkdownContentAnalysis, 'headings' | 'codeExamples' | 'excerpt'> {
   sourcePath: string
+  /** SHA-256 of the authored file before trusted source transformations. */
+  sourceRevision: string
   /** Complete extension-transformed source. */
   transformedSource: string
   /** Project-relative source path. */

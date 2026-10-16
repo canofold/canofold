@@ -5,8 +5,29 @@ import { describe, expect, it } from 'vitest'
 import { createMockGraph, createMockPage, trackedMkdtemp as mkdtemp } from '../../test/fixtures'
 import { defaultConfig } from '../config/defaults'
 import { defineSearchProvider, searchProviderClient, searchProviderFor, writeSearchIndexes } from './index'
+import { queryCompactIndex } from './queryCompact'
 
 describe('writeSearchIndexes', () => {
+  it('recalls encoded route-only words without indexing deployment or version noise', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-search-routes-'))
+    const graph = createMockGraph({
+      pages: [
+        createMockPage({
+          title: 'Installation',
+          description: '',
+          searchText: 'Install the tool',
+          relativePath: 'reference/quartz-中文.md',
+          routePath: '/reference/quartz-%E4%B8%AD%E6%96%87/'
+        })
+      ]
+    })
+    await writeSearchIndexes(cwd, { ...defaultConfig, basePath: '/deployment-9876/' }, graph)
+    const index = JSON.parse(await readFile(join(cwd, '.canofold/dist/search/zh.json'), 'utf8'))
+    expect(queryCompactIndex('quartz', index)[0]?.routePath).toContain('quartz-')
+    expect(queryCompactIndex('中文', index)[0]?.routePath).toContain('quartz-')
+    expect(queryCompactIndex('deployment', index)).toEqual([])
+    expect(queryCompactIndex('9876', index)).toEqual([])
+  })
   it('keeps compact built in and explains how to migrate the legacy Pagefind option', () => {
     expect(searchProviderFor('compact').id).toBe('compact')
     expect(searchProviderClient('compact')).toBe('compact')

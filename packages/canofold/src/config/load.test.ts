@@ -466,6 +466,24 @@ describe('loadConfig', () => {
     await expect(loadConfig(invalid)).rejects.toThrow()
   })
 
+  it('validates explicit machine content spaces without inventing a namespace by default', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-content-space-'))
+    expect((await loadConfig(cwd)).ai.contentSpace).toBeUndefined()
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { ai: { contentSpace: ' project.docs:v1 ' } }`
+    )
+    expect((await loadConfig(cwd)).ai.contentSpace).toBe('project.docs:v1')
+    for (const value of ['', '../private', 'a/b', 'x'.repeat(201)]) {
+      const invalid = await mkdtemp(join(tmpdir(), 'canofold-content-space-invalid-'))
+      await writeFile(
+        join(invalid, 'canofold.config.ts'),
+        `export default { ai: { contentSpace: ${JSON.stringify(value)} } }`
+      )
+      await expect(loadConfig(invalid)).rejects.toThrow()
+    }
+  })
+
   it('loads independent output switches without changing other defaults', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
     await writeFile(

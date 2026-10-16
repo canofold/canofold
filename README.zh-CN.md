@@ -10,6 +10,7 @@ Canofold 是一个静态优先、低侵入、可扩展的知识文档平台。�
 |---|---|
 | `canofold` | 构建并发布完整文档站点 |
 | `@canofold/markdown` | 在 React 应用中渲染 Canofold Markdown |
+| `@canofold/themes` | 使用官方视觉主题，或开发遵循共同契约的第三方主题 |
 | `@canofold/vite` | 在已有 Vite 项目中运行实时组件示例 |
 | `@canofold/plugins` | 使用官方 Markdown 插件或 Pagefind 搜索 Provider |
 
@@ -47,9 +48,13 @@ pnpm docs:dev
 - [参考](https://canofold.dev/reference/)：站点字段、Frontmatter、CLI、React API、构建产物和项目资源。
 - [Markdown SDK](https://canofold.dev/markdown/)：`@canofold/markdown` 的能力边界、接入方式和写作语法。
 - [Playground](https://canofold.dev/markdown/playground/)：对照查看 Markdown 源码、标准元素和扩展组件的渲染效果。
+- [编辑器扩展](https://canofold.dev/vscode/)：在 VS Code 中预览 Markdown。
+- [Skills](https://canofold.dev/skills/)：实验中的内容创作、维护和知识读取工作流。
 - [安全边界](https://canofold.dev/reference/output/security/)：可信 Markdown、MDX、扩展和私有站点要求。
 
 Canofold 构建的是完整静态 HTML，默认使用内置 compact 本地搜索，也可通过 `@canofold/plugins` 启用 Pagefind；同时可生成 `llms.txt`、Markdown 原文、页面索引和分片语料。输出目录默认是 `.canofold/dist/`，可发布到任意静态托管平台。
+
+0.7 机器格式提供与部署 URL 分离的文档身份，区分作者源文、转换后正文和编译静态事实，并支持校验完整的消费快照。[机器消费契约](./packages/canofold/README.zh-CN.md#机器消费契约07) 说明 schema 2、身份、修订和迁移规则。已发布的 0.6.x 产物使用 schema 1，消费者必须检查格式版本。
 
 ## 开发与贡献
 

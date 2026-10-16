@@ -22,6 +22,7 @@ export function createMockPage(overrides: Partial<DocPage> = {}): DocPage {
   const routeOutput = routePath === '/' ? '' : routePath.replace(/^\/+|\/+$/g, '')
   return {
     sourcePath: `docs/${relativePath}`,
+    sourceRevision: '0'.repeat(64),
     transformedSource: '# Guide',
     sourceRelativePath: `docs/${relativePath}`,
     relativePath,

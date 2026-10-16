@@ -8,6 +8,7 @@ describe('build fingerprints', () => {
     )
     expect(fingerprint({ a: 1, b: 2 })).toBe(fingerprint({ b: 2, a: 1 }))
     expect(fingerprint({ list: [1, 2] })).not.toBe(fingerprint({ list: [2, 1] }))
+    expect(stableJson({ a: 1, A: 2, _: 3 })).toBe('{"A":2,"_":3,"a":1}')
   })
 
   it('hashes byte content independently from object serialization', () => {

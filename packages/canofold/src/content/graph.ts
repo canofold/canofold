@@ -280,6 +280,7 @@ async function scanVersionPages(
 
     const page: DocPage = {
       sourcePath: join(docsRoot, file.path),
+      sourceRevision: file.revision,
       transformedSource,
       sourceRelativePath,
       relativePath,

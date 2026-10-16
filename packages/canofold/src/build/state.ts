@@ -96,6 +96,7 @@ async function supportFingerprint(cwd: string, config: CanofoldConfig, pageDepen
 function serializablePage(page: DocPage) {
   return {
     sourceRelativePath: page.sourceRelativePath,
+    sourceRevision: page.sourceRevision,
     relativePath: page.relativePath,
     version: page.version,
     versionBase: page.versionBase,

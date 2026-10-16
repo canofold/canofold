@@ -2,6 +2,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tokenize } from './tokenize'
 import type { SearchProvider, SearchProviderContext } from './types'
+import { localeRelativePathFor } from '../content/routes'
 
 const SEARCH_EXCERPT_LENGTH = 320
 
@@ -18,7 +19,10 @@ function createSearchIndex(context: SearchProviderContext, version: string, loca
         .map((example) => example.code.slice(0, 300))
         .join(' ')
         .slice(0, 2000)
-      const searchable = `${page.title} ${page.description} ${tags.join(' ')} ${page.searchText} ${codeSnippet}`
+      const pathWords = localeRelativePathFor(page.relativePath, page.locale)
+        .replace(/\.(?:md|mdx)$/i, '')
+        .replace(/(?:^|\/)(?:v?\d+(?:[.-]\d+)*)(?=\/|$)/g, '/')
+      const searchable = `${page.title} ${page.description} ${tags.join(' ')} ${page.searchText} ${codeSnippet} ${pathWords}`
       for (const token of tokenize(searchable)) {
         const documents = postings.get(token)
         if (documents) documents.push(documentId)
