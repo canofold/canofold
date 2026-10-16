@@ -36,11 +36,11 @@
   },
   "devDependencies": {
     "@canofold/plugins": "workspace:*",
-    "@types/node": "^22.20.3",
+    "@types/node": "^22.20.5",
     "@vitest/coverage-v8": "4.1.11",
     "canofold": "workspace:*",
     "esbuild": "^0.28.2",
-    "prettier": "3.9.6",
+    "prettier": "3.9.10",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"
   }
