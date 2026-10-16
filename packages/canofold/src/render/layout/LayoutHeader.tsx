@@ -1,4 +1,4 @@
-import { ChevronDown, Languages, Palette, PanelLeft, Search } from 'lucide-react'
+import { ChevronDown, Languages, Menu, Palette, PanelLeft, Search } from 'lucide-react'
 import { localeNameFor } from '../layoutContent'
 import { themeSelections } from '../theme'
 import { publicPathFor } from '../../seo/urls'
@@ -92,6 +92,23 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
     hasSidebarItems
   } = model
   const themeOptions = themeSelections(config.themes, page.locale)
+  const renderNavItems = (menu = false) =>
+    navItems.map((item) => {
+      const active = navItemIsActive(model, item)
+      const external = /^https?:\/\//.test(item.routePath)
+      const className = menu ? 'cf-menu-item' : 'cf-header-link'
+      return (
+        <a
+          key={item.routePath}
+          className={active ? `${className} ${className}-active` : className}
+          href={publicPathFor(config, item.routePath)}
+          aria-current={active ? 'page' : undefined}
+          {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
+        >
+          {item.title}
+        </a>
+      )
+    })
 
   return (
     <header className={home ? 'cf-header cf-header-home' : 'cf-header'}>
@@ -147,22 +164,19 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
         <div className="cf-header-right">
           {navItems.length > 0 ? (
             <nav className="cf-header-nav" aria-label={labels.primaryNavigation}>
-              {navItems.map((item) => {
-                const active = navItemIsActive(model, item)
-                const external = /^https?:\/\//.test(item.routePath)
-                return (
-                  <a
-                    key={item.routePath}
-                    className={active ? 'cf-header-link cf-header-link-active' : 'cf-header-link'}
-                    href={publicPathFor(config, item.routePath)}
-                    aria-current={active ? 'page' : undefined}
-                    {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
-                  >
-                    {item.title}
-                  </a>
-                )
-              })}
+              {renderNavItems()}
             </nav>
+          ) : null}
+
+          {navItems.length > 0 && (home || !hasSidebarItems) ? (
+            <details className="cf-menu cf-primary-menu" data-canofold-menu="">
+              <summary className="cf-icon-button" aria-label={labels.primaryNavigation}>
+                <Menu size={18} strokeWidth={2} aria-hidden="true" />
+              </summary>
+              <nav className="cf-menu-list" aria-label={labels.primaryNavigation}>
+                {renderNavItems(true)}
+              </nav>
+            </details>
           ) : null}
 
           {versionOptions.length > 1 ? (

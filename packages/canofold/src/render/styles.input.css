@@ -177,6 +177,10 @@ a {
   display: none;
 }
 
+.cf-primary-menu {
+  display: none;
+}
+
 .cf-sidebar-toggle,
 .cf-icon-button {
   width: 36px;
@@ -1602,6 +1606,10 @@ html[data-cf-demo-standalone] body {
 }
 
 @media (max-width: 52.5rem) {
+  .cf-primary-menu {
+    display: block;
+  }
+
   .cf-sidebar-toggle {
     display: inline-flex;
   }
