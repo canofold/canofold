@@ -9,7 +9,7 @@ interface RootEnhancementState {
 const rootEnhancements = new WeakMap<ParentNode, RootEnhancementState>()
 
 export interface MarkdownEnhancement {
-  /** Resolves when all requested rich behaviors have loaded. */
+  /** Resolves after the requested rich behaviors have loaded and committed hydration. */
   ready: Promise<void>
   /** Removes native listeners and unmounts rich behavior roots. */
   dispose(): void

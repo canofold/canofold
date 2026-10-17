@@ -10,6 +10,7 @@ Canofold is a static-first, minimally invasive, and extensible knowledge and doc
 |---|---|
 | `canofold` | You want to build and publish a complete documentation site |
 | `@canofold/markdown` | You want to render Canofold Markdown inside a React application |
+| `@canofold/themes` | You want official visual themes or the shared third-party theme contract |
 | `@canofold/vite` | You want live component demos powered by an existing Vite project |
 | `@canofold/plugins` | You need official Markdown plugins or the Pagefind search provider |
 
@@ -47,9 +48,13 @@ The package manager resolves bare `canofold` inside scripts from `node_modules/.
 - [Reference](https://canofold.dev/en/reference/): site fields, frontmatter, CLI, React API, build output, and project resources.
 - [Markdown SDK](https://canofold.dev/en/markdown/): `@canofold/markdown` boundaries, integration, and authoring syntax.
 - [Markdown Playground](https://canofold.dev/en/markdown/playground/): compare Markdown source with standard elements and extension-component output.
+- [Editor Extension](https://canofold.dev/en/vscode/): preview Markdown in VS Code.
+- [Skills](https://canofold.dev/en/skills/): experimental authoring, maintenance and knowledge-reading workflows.
 - [Security boundaries](https://canofold.dev/en/reference/output/security/): trusted Markdown, MDX, extensions, and private sites.
 
 Canofold emits complete static HTML, uses its built-in compact local search by default, and offers Pagefind through `@canofold/plugins`. It can also generate `llms.txt`, Markdown sources, page indexes, and bounded corpus shards. The default output directory is `.canofold/dist/`, ready for any static host.
+
+The 0.7 machine format identifies documents independently of deployment URLs, distinguishes authored source from transformed bodies and compiled static facts, and supports verified collection snapshots. See the [machine-consumption contract](./packages/canofold/README.md#machine-consumption-contract-07) for schema 2, identity, revision and migration rules. Published 0.6.x artifacts use schema 1; consumers must check the format version.
 
 ## Development and contribution
 

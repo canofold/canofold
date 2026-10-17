@@ -13,13 +13,18 @@ const searchBudgetMs = Number(process.env.CANOFOLD_SEARCH_P95_BUDGET_MS || 50)
 const searchColdBudgetMs = Number(process.env.CANOFOLD_SEARCH_COLD_BUDGET_MS || 1500)
 const indexBudgetBytes = Number(process.env.CANOFOLD_SEARCH_INDEX_BUDGET_BYTES || 25 * 1024 * 1024)
 const memoryBudgetBytes = Number(process.env.CANOFOLD_MEMORY_BUDGET_BYTES || 768 * 1024 * 1024)
+const profileDirectory = process.env.CANOFOLD_BENCHMARK_PROFILE_DIR
 
 async function runBuild(fixture) {
   const started = performance.now()
   await new Promise((resolveDone, reject) => {
     execFile(
       process.execPath,
-      [join(root, 'packages/canofold/dist/cli.js'), 'build'],
+      [
+        ...(profileDirectory ? ['--cpu-prof', `--cpu-prof-dir=${resolve(profileDirectory)}`] : []),
+        join(root, 'packages/canofold/dist/cli.js'),
+        'build'
+      ],
       { cwd: fixture, env: { ...process.env, CANOFOLD_BENCHMARK_REPORT: '1' } },
       (error, stdout, stderr) => {
         if (error) reject(new Error(`${stderr || stdout || error.message}`))
@@ -88,10 +93,28 @@ export default {
   const pagefindSizes = await Promise.all(pagefindFiles.map((path) => stat(path)))
   const indexBytes = pagefindSizes.reduce((total, file) => total + file.size, 0)
   const search = await benchmarkPagefind(pagefindRoot)
+  const changes = {}
+  if (pageCount > 1) {
+    const changedPath = join(docsRoot, 'page-0001.md')
+    await writeFile(changedPath, `${await readFile(changedPath, 'utf8')}\n\nUpdated benchmark content.`)
+    const incremental = await runBuild(fixture)
+    if (incremental.buildReport.mode !== 'incremental') throw new Error('Expected incremental content update')
+    await rm(changedPath)
+    const deleted = await runBuild(fixture)
+    if (deleted.buildReport.pages !== pageCount - 1) throw new Error('Deleted page remains in build report')
+    for (const result of [incremental, deleted]) {
+      if (result.elapsedMs > buildBudgetMs || result.maxRssBytes > memoryBudgetBytes) {
+        throw new Error('Incremental build exceeded existing time or memory budget')
+      }
+    }
+    changes.incrementalBuildMs = Math.round(incremental.elapsedMs)
+    changes.deletedPageBuildMs = Math.round(deleted.elapsedMs)
+  }
   const report = {
     pages: generatedPages,
     buildMs: Math.round(build.elapsedMs),
     cachedBuildMs: Math.round(cachedBuild.elapsedMs),
+    ...changes,
     maxRssMb: build.maxRssBytes ? Math.round(build.maxRssBytes / 1024 / 1024) : null,
     searchIndexMb: Number((indexBytes / 1024 / 1024).toFixed(2)),
     searchColdMs: Number(search.coldMs.toFixed(2)),

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve, sep } from 'node:path'
@@ -115,7 +116,8 @@ try {
         type: 'module',
         exports: {
           '.': { types: './index.d.ts', import: './index.js' },
-          './theme.css': './theme.css'
+          './theme.css': './theme.css',
+          './assets/*': './assets/*'
         },
         peerDependencies: {
           [themesPackage.manifest.name]: themesPackage.manifest.version
@@ -149,8 +151,15 @@ export default theme
   )
   await write(
     'third-party-theme/theme.css',
-    `[data-cf-theme='aurora'] { --cf-theme-fixture: third-party-package; }
+    `@font-face { font-family: AuroraFixture; src: url('../theme-assets/fixture.woff2') format('woff2'); }
+[data-cf-theme='aurora'] { --cf-theme-fixture: third-party-package; --cf-font-sans: AuroraFixture, serif; background-image: url('../theme-assets/picture.svg'); }
 `
+  )
+  const themeFont = await readFile(join(workspace, 'packages/plugins/dist/fonts/KaTeX_Main-Regular.woff2'))
+  await write('third-party-theme/assets/fixture.woff2', themeFont)
+  await write(
+    'third-party-theme/assets/picture.svg',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="2" height="2" fill="#eef"/></svg>'
   )
 
   await write(
@@ -195,6 +204,14 @@ overrides:
   )
 
   runPnpm(['install', '--prefer-offline', '--ignore-scripts', '--store-dir', workspaceStore])
+  // Theme assets are explicitly installed into the project's public namespace.
+  // CSS URLs resolve from assets/canofold.css at both root and subpath deployments.
+  for (const name of ['fixture.woff2', 'picture.svg']) {
+    await write(
+      `docs/public/theme-assets/${name}`,
+      await readFile(join(consumerRoot, 'node_modules/@fixture/canofold-theme/assets', name))
+    )
+  }
   const consumerLock = await readFile(join(consumerRoot, 'pnpm-lock.yaml'), 'utf8')
   assert.doesNotMatch(
     consumerLock,
@@ -572,6 +589,46 @@ export default function PackedButtonDemo() {
   assert.doesNotMatch(JSON.stringify(initialReport), /PACKED_TOKEN/)
 
   await assert.rejects(access(join(consumerRoot, '.canofold/dist/pagefind/pagefind-ui.js')))
+  const aiRoot = join(consumerRoot, '.canofold/dist')
+  const collection = JSON.parse(await readFile(join(aiRoot, 'ai/manifest.json'), 'utf8'))
+  assert.equal(collection.schemaVersion, 2)
+  assert.equal(collection.pages.length, 6)
+  assert.match(collection.snapshotRevision, /^[a-f0-9]{64}$/)
+  const pageIndexBytes = await readFile(join(aiRoot, 'ai/pages.json'))
+  assert.equal(pageIndexBytes.length, collection.pageIndex.bytes)
+  assert.equal(createHash('sha256').update(pageIndexBytes).digest('hex'), collection.pageIndex.fingerprint)
+  assert.deepEqual(JSON.parse(pageIndexBytes).pages, collection.pages)
+  const pageBodies = new Map()
+  for (const partition of collection.partitions) {
+    for (const shard of partition.shards) {
+      const bytes = await readFile(join(aiRoot, shard.path.slice(1)))
+      assert.equal(bytes.length, shard.bytes)
+      assert.equal(createHash('sha256').update(bytes).digest('hex'), shard.fingerprint)
+      const records = bytes.toString('utf8').trimEnd().split('\n').map(JSON.parse)
+      assert.equal(records.length, shard.records)
+      for (const record of records) {
+        const parts = pageBodies.get(record.documentId) ?? []
+        parts.push(record)
+        pageBodies.set(record.documentId, parts)
+      }
+    }
+  }
+  for (const page of collection.pages) {
+    const parts = pageBodies.get(page.id).sort((a, b) => a.part - b.part)
+    assert.equal(parts.length, parts[0].parts)
+    assert.deepEqual(
+      parts.map((part) => part.part),
+      parts.map((_, index) => index + 1)
+    )
+    const body = parts.map((part) => part.content).join('')
+    assert.equal(createHash('sha256').update(body).digest('hex'), page.representation.fingerprint)
+    assert.equal(page.representation.body, 'extension-transformed-source-body')
+    assert.match(page.source.revision, /^[a-f0-9]{64}$/)
+    if (page.routePath === '/') {
+      assert.match(body, /Extension transformed/)
+      assert.doesNotMatch(body, /PACKED_TOKEN/)
+    }
+  }
   const homeHtml = await readFile(join(consumerRoot, '.canofold/dist/index.html'), 'utf8')
   assert.match(homeHtml, /Extension transformed/)
   assert.match(homeHtml, /data-cf-component="demo"/)
@@ -639,6 +696,17 @@ export default function PackedButtonDemo() {
   assert.match(siteCss, /data-cf-theme='canofold'/)
   assert.match(siteCss, /data-cf-theme='aurora'/)
   assert.match(siteCss, /--cf-theme-fixture: third-party-package/)
+  assert.match(siteCss, /\.\.\/theme-assets\/fixture\.woff2/)
+  assert.match(siteCss, /\.\.\/theme-assets\/picture\.svg/)
+  assert.deepEqual(await readFile(join(consumerRoot, '.canofold/dist/theme-assets/fixture.woff2')), themeFont)
+  await assertExists('.canofold/dist/theme-assets/picture.svg')
+  for (const base of ['/', '/project/']) {
+    const cssUrl = new URL(`${base}assets/canofold.css`, 'https://fixture.invalid')
+    assert.equal(
+      new URL('../theme-assets/fixture.woff2', cssUrl).pathname,
+      `${base}theme-assets/fixture.woff2`
+    )
+  }
   assert.match(siteCss, /--cf-sidebar-width: 18rem/)
   assert.match(siteCss, /--cf-outline-width: 19rem/)
   assert.match(

@@ -43,6 +43,25 @@ async function Markdown({
 }
 
 describe('Markdown React Islands', () => {
+  it('can dispose immediately after readiness without interrupting hydration', async () => {
+    const element = await Markdown({ source: '| Value |\n| --- |\n| One |' })
+    const container = document.createElement('div')
+    container.innerHTML = renderToStaticMarkup(element)
+    document.body.append(container)
+    const warning = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    try {
+      await act(async () => {
+        const enhancement = enhanceMarkdown(container, { behaviors: ['table'] })
+        await enhancement.ready
+        enhancement.dispose()
+        container.remove()
+      })
+      expect(warning).not.toHaveBeenCalled()
+    } finally {
+      warning.mockRestore()
+    }
+  })
+
   it('can reattach while a disposed enhancement is still loading', async () => {
     const element = await Markdown({ source: '| Value |\n| --- |\n| Two |\n| One |' })
     const container = document.createElement('div')

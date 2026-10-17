@@ -120,6 +120,8 @@ export interface CanofoldLocaleMessages {
 }
 
 interface CanofoldAiConfig {
+  /** Stable namespace for cross-location consumers; omitted means source-local identity. */
+  contentSpace?: string
   pageIndex: boolean
   fullContent: boolean
   llmsTxt: boolean

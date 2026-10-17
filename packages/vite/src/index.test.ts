@@ -4,6 +4,7 @@ import {
   mkdtemp as createMkdtemp,
   readFile,
   realpath,
+  rename,
   rm,
   symlink,
   writeFile
@@ -323,10 +324,14 @@ describe('@canofold/vite', () => {
     await new Promise((resolve) => setTimeout(resolve, 150))
     expect((globalThis as Record<string, unknown>)[counterKey]).toBe(2)
     await thirdEngine.prepare(context)
+    // Replace complete metadata atomically: Vite's optimizer can read it in the
+    // background, even after its module requests have become idle.
+    const nextPackagePath = join(cwd, 'package.json.next')
     await writeFile(
-      join(cwd, 'package.json'),
+      nextPackagePath,
       JSON.stringify({ name: '@fixture/dev-components', type: 'module', dependencies: { react: '19.3.0' } })
     )
+    await rename(nextPackagePath, join(cwd, 'package.json'))
     const fourthEngine = vite()
     const fourthManifest = await fourthEngine.prepare(context)
 

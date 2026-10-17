@@ -1,5 +1,6 @@
 import { access, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
@@ -186,6 +187,12 @@ describe('runBuild', () => {
           excerpt: 'Published heading Published prose Read Picture'
         })
         const metadata = JSON.parse(await readFile(join(output, 'ai/pages.json'), 'utf8'))
+        const document = metadata.pages.find((page: { routePath: string }) => page.routePath === '/guide/')
+        expect(document.source.revision).toBe(createHash('sha256').update(source).digest('hex'))
+        expect(document.representation).toMatchObject({
+          body: 'extension-transformed-source-body',
+          analysis: extension === 'mdx' ? 'mdx-static-only' : 'markdown-static'
+        })
         expect(
           metadata.pages.find((page: { routePath: string }) => page.routePath === '/guide/').headings
         ).toEqual([{ level: 1, text: 'Published heading', slug: 'final-heading' }])
@@ -434,6 +441,18 @@ describe('runBuild', () => {
     expect(
       JSON.parse(await readFile(join(cwd, '.canofold/dist/extensions/release/metadata.json'), 'utf8'))
     ).toEqual({ label: 'beta', pages: 1 })
+
+    const indexPath = join(cwd, '.canofold/dist/ai/pages.json')
+    const before = JSON.parse(await readFile(indexPath, 'utf8')).pages[0]
+    // The Extension produces identical content, but authored bytes still changed.
+    await writeFile(join(cwd, 'docs/index.md'), '# Home\n\nbeta')
+    expect(await runBuild({ cwd })).toMatchObject({ mode: 'incremental' })
+    const after = JSON.parse(await readFile(indexPath, 'utf8')).pages[0]
+    expect(after.id).toBe(before.id)
+    expect(after.source.revision).not.toBe(before.source.revision)
+    expect(after.source.transformedRevision).toBe(before.source.transformedRevision)
+    expect(after.representation.fingerprint).toBe(before.representation.fingerprint)
+    expect(after.revision).not.toBe(before.revision)
   })
 
   it('invalidates only MDX pages that import a changed project-local component', async () => {
@@ -727,6 +746,38 @@ describe('runBuild', () => {
     await writeFile(source, `import Broken from 'not-a-canofold-component'\n\n# Broken output`)
     await expect(runBuild({ cwd })).rejects.toThrow()
     await expect(readFile(output, 'utf8')).resolves.toBe(previous)
+  })
+
+  it('preserves schema 2 outputs and cached state when the AI writer fails, then recovers', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-ai-atomic-'))
+    await mkdir(join(cwd, 'docs'))
+    const sourcePath = join(cwd, 'docs/index.md')
+    const stableSource = '# Stable knowledge'
+    await writeFile(sourcePath, stableSource)
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      'export default { ai: { llmsFullMaxBytes: 16384, llmsFullOverflow: "error" } }'
+    )
+    await runBuild({ cwd })
+    const paths = [
+      '.canofold/dist/index.html',
+      '.canofold/dist/ai/pages.json',
+      '.canofold/dist/ai/manifest.json',
+      '.canofold/dist/ai/content/current/zh/0001.jsonl',
+      '.canofold/cache/build-manifest.json',
+      '.canofold/cache/build-report.json'
+    ]
+    const before = await Promise.all(paths.map((path) => readFile(join(cwd, path), 'utf8')))
+    await writeFile(sourcePath, '# Overflow\n\n' + 'knowledge '.repeat(4000))
+    await expect(runBuild({ cwd })).rejects.toThrow('exceeding ai.llmsFullMaxBytes')
+    expect(await Promise.all(paths.map((path) => readFile(join(cwd, path), 'utf8')))).toEqual(before)
+    await writeFile(sourcePath, stableSource)
+    expect((await runBuild({ cwd })).mode).toBe('cached')
+    await writeFile(sourcePath, '# Recovered knowledge')
+    expect((await runBuild({ cwd })).mode).toBe('incremental')
+    const recovered = JSON.parse(await readFile(join(cwd, paths[1]!), 'utf8'))
+    expect(recovered.pages[0].id).toBe(JSON.parse(before[1]!).pages[0].id)
+    expect(recovered.pages[0].source.revision).not.toBe(JSON.parse(before[1]!).pages[0].source.revision)
   })
 
   it('recovers the previous output after an interrupted directory swap', async () => {

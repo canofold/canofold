@@ -1,38 +1,16 @@
-import { mkdir, open, rm, writeFile } from 'node:fs/promises'
+import { mkdir, open, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, posix } from 'node:path'
 import { fingerprintBytes } from '../build/fingerprint'
 import type { CanofoldConfig } from '../config/types'
-import { publicFrontmatterFor } from '../content/frontmatter'
 import type { ContentGraph, DocPage } from '../content/types'
 import { publicPathFor } from '../seo/urls'
 import { logInfo } from '../utils/logger'
 import { resolveOutputRoot } from '../utils/paths'
 import { createDeterministicSummary } from './summaries'
-
-const AI_MANIFEST_SCHEMA_VERSION = 1
+import { createContentCollection } from './contentContract'
 
 function markdownLinkLabel(value: string) {
   return value.replace(/\r?\n/g, ' ').replace(/([\\[\]])/g, '\\$1')
-}
-
-function pageMetadata(config: CanofoldConfig, page: DocPage) {
-  const markdownRoute = `${page.routePath}index.md`
-  return {
-    title: page.title,
-    description: page.description,
-    routePath: publicPathFor(config, page.routePath),
-    markdownPath: config.markdownMirror ? publicPathFor(config, markdownRoute) : undefined,
-    version: page.version,
-    locale: page.locale,
-    status: page.status,
-    tags: Array.isArray(page.frontmatter.tags)
-      ? page.frontmatter.tags.filter((tag): tag is string => typeof tag === 'string')
-      : [],
-    owner: typeof page.frontmatter.owner === 'string' ? page.frontmatter.owner : undefined,
-    headings: page.headings,
-    ...(page.lastUpdated ? { lastUpdated: page.lastUpdated } : {}),
-    frontmatter: publicFrontmatterFor(page.frontmatter)
-  }
 }
 
 async function writePieces(path: string, pieces: Iterable<string> | AsyncIterable<string>) {
@@ -45,9 +23,9 @@ async function writePieces(path: string, pieces: Iterable<string> | AsyncIterabl
   }
 }
 
-async function writeJsonArray<T>(path: string, key: string, values: Iterable<T>) {
+async function writeJsonArray<T>(path: string, key: string, values: Iterable<T>, envelope?: object) {
   async function* pieces() {
-    yield `{"${key}":[`
+    yield envelope ? `${JSON.stringify(envelope).slice(0, -1)},"${key}":[` : `{"${key}":[`
     let first = true
     for (const value of values) {
       yield `${first ? '' : ','}\n${JSON.stringify(value, null, 2)}`
@@ -58,13 +36,8 @@ async function writeJsonArray<T>(path: string, key: string, values: Iterable<T>)
   await writePieces(path, pieces())
 }
 
-function selectedPages(config: CanofoldConfig, graph: ContentGraph) {
-  return graph.pages.filter(
-    (page) => page.ai && (config.ai.versions === 'all' || page.version === graph.currentVersion)
-  )
-}
-
 interface ContentRecordBase {
+  documentId: string
   routePath: string
   markdownPath?: string
   title: string
@@ -137,7 +110,8 @@ async function writePartition(
   config: CanofoldConfig,
   version: string,
   locale: string,
-  pages: readonly DocPage[]
+  pages: readonly DocPage[],
+  metadataByRoute: Map<string, ReturnType<typeof createContentCollection>['pages'][number]>
 ) {
   const directory = posix.join('ai', 'content', version, locale)
   const shards: AiContentShard[] = []
@@ -162,8 +136,9 @@ async function writePartition(
 
   await mkdir(join(outputRoot, directory), { recursive: true })
   for (const page of pages) {
-    const metadata = pageMetadata(config, page)
+    const metadata = metadataByRoute.get(publicPathFor(config, page.routePath))!
     const base: ContentRecordBase = {
+      documentId: metadata.id,
       routePath: metadata.routePath,
       markdownPath: metadata.markdownPath,
       title: page.title,
@@ -199,8 +174,10 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
   await mkdir(aiDir, { recursive: true })
   await rm(contentRoot, { recursive: true, force: true })
 
-  const aiPages = selectedPages(config, graph)
-  const pages = aiPages.map((page) => pageMetadata(config, page))
+  const collection = createContentCollection(config, graph)
+  const { pages, ...envelope } = collection
+  const metadataByRoute = new Map(pages.map((page) => [page.routePath, page]))
+  const aiPages = graph.pages.filter((page) => metadataByRoute.has(publicPathFor(config, page.routePath)))
   const partitionManifest = []
   if (config.ai.fullContent) {
     const partitions = new Map<string, DocPage[]>()
@@ -212,7 +189,14 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
     }
     for (const [key, partitionPages] of partitions) {
       const [version = '', locale = ''] = key.split('\u0000')
-      const shards = await writePartition(outputRoot, config, version, locale, partitionPages)
+      const shards = await writePartition(
+        outputRoot,
+        config,
+        version,
+        locale,
+        partitionPages,
+        metadataByRoute
+      )
       partitionManifest.push({
         version,
         locale,
@@ -223,7 +207,17 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
     }
   }
 
-  if (config.ai.pageIndex) await writeJsonArray(join(aiDir, 'pages.json'), 'pages', pages)
+  let pageIndex: { path: string; bytes: number; fingerprint: string } | null = null
+  if (config.ai.pageIndex) {
+    const path = join(aiDir, 'pages.json')
+    await writeJsonArray(path, 'pages', pages, envelope)
+    const bytes = await readFile(path)
+    pageIndex = {
+      path: publicPathFor(config, '/ai/pages.json'),
+      bytes: bytes.length,
+      fingerprint: fingerprintBytes(bytes)
+    }
+  }
   if (config.ai.pageSummaries) {
     await writeJsonArray(
       join(aiDir, 'summaries.json'),
@@ -303,7 +297,8 @@ export async function writeAiOutputs(cwd: string, config: CanofoldConfig, graph:
       join(aiDir, 'manifest.json'),
       JSON.stringify(
         {
-          schemaVersion: AI_MANIFEST_SCHEMA_VERSION,
+          ...collection,
+          pageIndex,
           currentVersion: graph.currentVersion,
           includedVersions: config.ai.versions,
           totals: {
