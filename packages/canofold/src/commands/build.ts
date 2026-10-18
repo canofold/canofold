@@ -14,7 +14,7 @@ import { renderSite, type PreviousPageOutput } from '../render/renderSite'
 import { writeSearchIndexes } from '../search/index'
 import { writeRobots } from '../seo/robots'
 import { writeSitemap } from '../seo/sitemap'
-import { logInfo } from '../utils/logger'
+import { logSuccess } from '../utils/logger'
 import {
   assertProjectPath,
   pathExists,
@@ -83,20 +83,10 @@ function assertRequiredVersion(config: CanofoldConfig) {
   }
 }
 
-function logBuildReport(outputDir: string, report: BuildReport) {
-  const bytesFor = (ids: string[]) =>
-    report.outputs.filter((output) => ids.includes(output.id)).reduce((sum, output) => sum + output.bytes, 0)
-  const size = (bytes: number) => `${(bytes / 1024).toFixed(1)} KiB`
-  logInfo(
-    `Built ${outputDir} (${report.mode}: ${report.reason}; ${report.pages} pages; ` +
-      `${report.locales.join(', ')}; versions ${report.versions.join(', ')}; ${report.durationMs} ms)`
-  )
-  logInfo(
-    `Outputs: search ${size(bytesFor(['search']))}, Markdown ${size(bytesFor(['markdownMirror']))}, ` +
-      `AI ${size(bytesFor(['aiPageIndex', 'aiFullContent', 'aiMarkdownIndex', 'aiSummaries', 'aiCodeExamples', 'llmsTxt', 'llmsFullTxt']))}; ` +
-      `${report.additionalOutputs.files} additional files; ` +
-      `${report.removalBaseline ? `${report.removedPaths.length} removed` : 'removals not compared'}; ` +
-      `report .canofold/cache/build-report.json`
+function logBuildReport(options: BuildOptions, report: BuildReport, outputDir: string) {
+  if (options.demoMode === 'dev' && report.cacheHit) return
+  logSuccess(
+    `${report.cacheHit ? 'Reused' : 'Built'} ${outputDir} · ${report.pages} pages · ${report.durationMs} ms (${report.mode})`
   )
 }
 
@@ -251,7 +241,7 @@ async function runBuildLocked(
       durationMs: performance.now() - startedAt
     })
     await writeBuildCacheJson(cacheRoot, 'build-report', report)
-    logBuildReport(config.outputDir, report)
+    logBuildReport(options, report, config.outputDir)
     return {
       config,
       graph,
@@ -360,7 +350,7 @@ async function runBuildLocked(
     durationMs: performance.now() - startedAt
   })
   await writeBuildCacheJson(cacheRoot, 'build-report', report)
-  logBuildReport(config.outputDir, report)
+  logBuildReport(options, report, config.outputDir)
   return {
     config,
     graph,

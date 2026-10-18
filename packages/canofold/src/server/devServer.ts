@@ -2,15 +2,16 @@ import chokidar from 'chokidar'
 import { runBuild } from '../commands/build'
 import { startStaticServer, type DevReloadUpdate } from './staticServer'
 import { createMarkdownRenderer } from '@canofold/markdown/server'
-import { relative, resolve, sep } from 'node:path'
+import { dirname, relative, resolve, sep } from 'node:path'
 import { resolveBuildCacheRoot } from '../build/cache'
 import { outputBackupRoot } from '../build/safety'
-import { isInside, resolveOutputRoot } from '../utils/paths'
+import { assertProjectPath, isInside, resolveOutputRoot } from '../utils/paths'
 import { publicPathFor } from '../seo/urls'
 import { logError } from '../utils/logger'
 import type { CanofoldDemoDevRuntime } from '../demos/types'
 import { createServer } from 'node:http'
 import { realpath } from 'node:fs/promises'
+import { acquireProjectLock } from '../utils/projectLock'
 
 interface BuildScheduler {
   schedule(): void
@@ -101,165 +102,181 @@ export function createBuildScheduler<Update = void>({
 
 export async function startDevServer({ cwd, port }: { cwd: string; port: number }) {
   cwd = await realpath(cwd)
-  const renderer = createMarkdownRenderer()
-  const httpServer = createServer()
-  let buildState: Awaited<ReturnType<typeof runBuild>>
+  const lockRoot = dirname(resolveBuildCacheRoot(cwd))
+  await assertProjectPath(cwd, lockRoot, 'development session')
+  const session = await acquireProjectLock(lockRoot, 'dev')
   try {
-    buildState = await runBuild({ cwd, renderer, demoMode: 'dev', demoServer: httpServer })
-  } catch (error) {
-    // Also emits close before listen(), releasing tooling owned by this host.
-    httpServer.close()
-    throw error
-  }
-  let demoRuntime: CanofoldDemoDevRuntime | undefined
-  let demoRuntimeKey: string | undefined
-
-  const runtimeKeyForCurrentBuild = () => {
-    const engine = buildState.config.demos.engine
-    if (!buildState.demoManifest || !engine?.startDev) return undefined
-    return JSON.stringify({
-      id: engine.id,
-      version: engine.version ?? '',
-      cacheKey: engine.cacheKey ?? null,
-      basePath: buildState.config.basePath,
-      outputDir: buildState.config.outputDir,
-      setup: buildState.config.demos.setup ?? null
-    })
-  }
-
-  const createDemoRuntime = async () => {
-    const engine = buildState.config.demos.engine
-    if (!buildState.demoManifest || !engine?.startDev) return undefined
-    return engine.startDev({
-      cwd,
-      basePath: buildState.config.basePath,
-      setup: buildState.config.demos.setup,
-      server: httpServer,
-      getDemos: () => Object.values(buildState.demoManifest?.demos ?? {}),
-      shouldIgnorePath: (path) => shouldIgnoreGeneratedPath(cwd, buildState.config.outputDir, path)
-    })
-  }
-
-  const refreshDemoRuntime = async () => {
-    const nextKey = runtimeKeyForCurrentBuild()
-    if (nextKey === demoRuntimeKey) {
-      await demoRuntime?.update?.()
-      return
+    const renderer = createMarkdownRenderer()
+    const httpServer = createServer()
+    let buildState: Awaited<ReturnType<typeof runBuild>>
+    try {
+      buildState = await runBuild({ cwd, renderer, demoMode: 'dev', demoServer: httpServer })
+    } catch (error) {
+      // Also emits close before listen(), releasing tooling owned by this host.
+      httpServer.close()
+      throw error
     }
-    const nextRuntime = await createDemoRuntime()
-    const previousRuntime = demoRuntime
-    demoRuntime = nextRuntime
-    demoRuntimeKey = nextKey
-    if (previousRuntime !== nextRuntime) await previousRuntime?.close()
-  }
+    let demoRuntime: CanofoldDemoDevRuntime | undefined
+    let demoRuntimeKey: string | undefined
 
-  const server = await startStaticServer({
-    root: () => resolveOutputRoot(cwd, buildState.config.outputDir),
-    port,
-    server: httpServer,
-    liveReload: true,
-    basePath: () => buildState.config.basePath,
-    configureServer: async () => {
-      demoRuntime = await createDemoRuntime()
-      demoRuntimeKey = runtimeKeyForCurrentBuild()
-      return {
-        middleware(request, response, next) {
-          if (!demoRuntime?.middleware) {
-            next()
-            return
-          }
-          demoRuntime.middleware(request, response, () => next())
-        },
-        close: () => demoRuntime?.close()
-      }
-    }
-  }).catch(async (error: unknown) => {
-    await demoRuntime?.close()
-    httpServer.close()
-    throw error
-  })
-  const watcher = chokidar.watch(['.', ...(buildState.demoManifest?.dependencyPaths ?? [])], {
-    cwd,
-    ignoreInitial: true,
-    ignored: (path) => shouldIgnoreGeneratedPath(cwd, buildState.config.outputDir, path)
-  })
-  let forceCleanNextBuild = false
-  const changedPaths = new Set<string>()
-  const scheduler = createBuildScheduler({
-    build: async () => {
-      const batch = [...changedPaths]
-      changedPaths.clear()
-      const demoSources = new Set(
-        Object.values(buildState.demoManifest?.demos ?? {}).map((demo) => resolve(demo.modulePath))
-      )
-      const sourcesOnly = batch.length > 0 && batch.every((path) => demoSources.has(path))
-      const forceClean = forceCleanNextBuild
-      forceCleanNextBuild = false
-      try {
-        buildState = await runBuild({
-          cwd,
-          renderer,
-          demoMode: 'dev',
-          demoServer: httpServer,
-          ...(forceClean ? { forceClean: true } : {})
-        })
-        await refreshDemoRuntime()
-        watcher.add(buildState.demoManifest?.dependencyPaths ?? [])
-      } catch (error) {
-        batch.forEach((path) => changedPaths.add(path))
-        if (forceClean) forceCleanNextBuild = true
-        throw error
-      }
-      const routes = buildState.changedPages.flatMap((key) => {
-        const page = buildState.graph.pages.find((candidate) => candidate.sourceRelativePath === key)
-        return page ? [publicPathFor(buildState.config, page.routePath)] : []
+    const runtimeKeyForCurrentBuild = () => {
+      const engine = buildState.config.demos.engine
+      if (!buildState.demoManifest || !engine?.startDev) return undefined
+      return JSON.stringify({
+        id: engine.id,
+        version: engine.version ?? '',
+        cacheKey: engine.cacheKey ?? null,
+        basePath: buildState.config.basePath,
+        outputDir: buildState.config.outputDir,
+        setup: buildState.config.demos.setup ?? null
       })
-      return {
-        protocol: 1,
-        type: 'update',
-        mode:
-          sourcesOnly && !forceClean
-            ? 'demo-source'
-            : buildState.partialReload && routes.length === 1
-              ? 'page'
-              : 'full',
-        routes
-      } satisfies DevReloadUpdate
-    },
-    reload: (update) => server.reload(update),
-    onBuildError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error)
-      logError('Build error:', message)
-      server.sendBuildError(message)
-    },
-    onBuildOk: () => server.sendBuildOk()
-  })
-  watcher.on('all', (_event, path) => {
-    const absolutePath = resolve(cwd, path)
-    const isDemoSource = Object.values(buildState.demoManifest?.demos ?? {}).some(
-      (demo) => resolve(demo.modulePath) === absolutePath
-    )
-    const isEngineDependency = buildState.demoManifest?.dependencyPaths?.includes(absolutePath)
-    if (!isDemoSource && !isEngineDependency && demoRuntime?.handlesFile?.(absolutePath)) return
-    changedPaths.add(absolutePath)
-    scheduler.schedule()
-  })
-  watcher.on('error', (error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error)
-    logError('File watcher error:', message)
-    server.sendBuildError(message)
-  })
-
-  return {
-    port: server.port,
-    refresh: () => {
-      forceCleanNextBuild = true
-      scheduler.schedule()
-    },
-    close: async () => {
-      await watcher.close()
-      await scheduler.close()
-      await server.close()
     }
+
+    const createDemoRuntime = async () => {
+      const engine = buildState.config.demos.engine
+      if (!buildState.demoManifest || !engine?.startDev) return undefined
+      return engine.startDev({
+        cwd,
+        basePath: buildState.config.basePath,
+        setup: buildState.config.demos.setup,
+        server: httpServer,
+        getDemos: () => Object.values(buildState.demoManifest?.demos ?? {}),
+        shouldIgnorePath: (path) => shouldIgnoreGeneratedPath(cwd, buildState.config.outputDir, path)
+      })
+    }
+
+    const refreshDemoRuntime = async () => {
+      const nextKey = runtimeKeyForCurrentBuild()
+      if (nextKey === demoRuntimeKey) {
+        await demoRuntime?.update?.()
+        return
+      }
+      const nextRuntime = await createDemoRuntime()
+      const previousRuntime = demoRuntime
+      demoRuntime = nextRuntime
+      demoRuntimeKey = nextKey
+      if (previousRuntime !== nextRuntime) await previousRuntime?.close()
+    }
+
+    const server = await startStaticServer({
+      root: () => resolveOutputRoot(cwd, buildState.config.outputDir),
+      port,
+      server: httpServer,
+      liveReload: true,
+      basePath: () => buildState.config.basePath,
+      configureServer: async () => {
+        demoRuntime = await createDemoRuntime()
+        demoRuntimeKey = runtimeKeyForCurrentBuild()
+        return {
+          middleware(request, response, next) {
+            if (!demoRuntime?.middleware) {
+              next()
+              return
+            }
+            demoRuntime.middleware(request, response, () => next())
+          },
+          close: () => demoRuntime?.close()
+        }
+      }
+    }).catch(async (error: unknown) => {
+      await demoRuntime?.close()
+      httpServer.close()
+      throw error
+    })
+    const watcher = chokidar.watch(['.', ...(buildState.demoManifest?.dependencyPaths ?? [])], {
+      cwd,
+      ignoreInitial: true,
+      ignored: (path) => shouldIgnoreGeneratedPath(cwd, buildState.config.outputDir, path)
+    })
+    let forceCleanNextBuild = false
+    const changedPaths = new Set<string>()
+    const scheduler = createBuildScheduler({
+      build: async () => {
+        await session.assertOwned()
+        const batch = [...changedPaths]
+        changedPaths.clear()
+        const demoSources = new Set(
+          Object.values(buildState.demoManifest?.demos ?? {}).map((demo) => resolve(demo.modulePath))
+        )
+        const sourcesOnly = batch.length > 0 && batch.every((path) => demoSources.has(path))
+        const forceClean = forceCleanNextBuild
+        forceCleanNextBuild = false
+        try {
+          buildState = await runBuild({
+            cwd,
+            renderer,
+            demoMode: 'dev',
+            demoServer: httpServer,
+            ...(forceClean ? { forceClean: true } : {})
+          })
+          await refreshDemoRuntime()
+          watcher.add(buildState.demoManifest?.dependencyPaths ?? [])
+        } catch (error) {
+          batch.forEach((path) => changedPaths.add(path))
+          if (forceClean) forceCleanNextBuild = true
+          throw error
+        }
+        if (buildState.cached) return undefined
+        const routes = buildState.changedPages.flatMap((key) => {
+          return buildState.graph.pages
+            .filter((candidate) => candidate.sourceRelativePath === key)
+            .map((page) => publicPathFor(buildState.config, page.routePath))
+        })
+        return {
+          protocol: 1,
+          type: 'update',
+          mode:
+            sourcesOnly && !forceClean
+              ? 'demo-source'
+              : buildState.partialReload && routes.length === 1
+                ? 'page'
+                : 'full',
+          routes
+        } satisfies DevReloadUpdate
+      },
+      reload: (update) => {
+        if (update) server.reload(update)
+      },
+      onBuildError: (error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error)
+        logError('Build error:', message)
+        server.sendBuildError(message)
+      },
+      onBuildOk: () => server.sendBuildOk()
+    })
+    watcher.on('all', (_event, path) => {
+      const absolutePath = resolve(cwd, path)
+      const isDemoSource = Object.values(buildState.demoManifest?.demos ?? {}).some(
+        (demo) => resolve(demo.modulePath) === absolutePath
+      )
+      const isEngineDependency = buildState.demoManifest?.dependencyPaths?.includes(absolutePath)
+      if (!isDemoSource && !isEngineDependency && demoRuntime?.handlesFile?.(absolutePath)) return
+      changedPaths.add(absolutePath)
+      scheduler.schedule()
+    })
+    watcher.on('error', (error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error)
+      logError('File watcher error:', message)
+      server.sendBuildError(message)
+    })
+
+    let closing: Promise<void> | undefined
+    return {
+      port: server.port,
+      basePath: buildState.config.basePath,
+      refresh: () => {
+        forceCleanNextBuild = true
+        scheduler.schedule()
+      },
+      close: () =>
+        (closing ??= watcher
+          .close()
+          .finally(() => scheduler.close())
+          .finally(() => server.close())
+          .finally(() => session.release()))
+    }
+  } catch (error) {
+    await session.release()
+    throw error
   }
 }

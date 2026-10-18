@@ -2,11 +2,11 @@
 
 [English](./README.md) | 简体中文
 
-`canofold` 是 Canofold 知识文档平台的 CLI。它读取 Markdown、MDX 和项目本地 React 组件，生成导航、搜索、多语言路由、版本页面和 AI-ready 知识输出，最终产出可直接部署的静态 HTML。
+`canofold` 是 Canofold 知识文档平台的 CLI。它读取 Markdown、MDX、项目本地 React 组件和显式配置的内容来源，生成导航、搜索、多语言路由、版本页面和 AI-ready 知识输出，最终产出可直接部署的静态 HTML。
 
 ## 安装
 
-要求 Node.js 22 或更高版本。建议把 Canofold 安装为项目本地开发依赖：
+要求 Node.js 22.12 或更高版本。建议把 Canofold 安装为项目本地开发依赖：
 
 ```bash
 pnpm add -D canofold @canofold/themes
@@ -56,7 +56,9 @@ export default defineConfig({
 
 ## 产物控制与构建报告
 
-默认值保留旧版本的全部产物；只需关闭不想发布的类别：
+`canofold dev` 默认使用 3333 端口，`canofold preview` 默认使用 4173。`--port <number>` 指定起始端口；占用时依次尝试后续端口，直到 65535，并打印包含站点 `basePath` 的实际地址。其他监听错误立即报错。开发中的缓存命中不重复打印构建摘要；交互终端用颜色区分状态，重定向输出或设置 `NO_COLOR` 时保持纯文本。
+
+默认生成站点、搜索、Markdown 和 AI 产物，可按需关闭：
 
 ```ts
 import { defineConfig } from 'canofold'
@@ -74,49 +76,17 @@ export default defineConfig({
 
 每次 `build` 都会输出简短的终端摘要，并在 `.canofold/cache/build-report.json` 写入机器可读报告。报告包含页面、语言与版本数量，构建模式、缓存命中、原因、变更页面和耗时，以及各类内置逻辑产物的启用状态、规划路径、实际路径、文件数量、字节数和缺失路径。`additionalOutputs` 统计不属于这些内置类型的实际文件，包括用户静态资源和 Extension 产物。`removedPaths` 对比上一次有效构建清单；`removalBaseline: false` 表示没有可供比较的清单，此时终端不会声称移除了多少文件。报告存于部署目录之外，不包含文档正文或密钥。关闭某类产物不等于访问控制；私有内容仍需在托管层保护所有剩余的 HTML、搜索和 AI 文件。
 
-## 机器消费契约（0.7）
+## 机器消费契约（0.8）
 
-`ai/pages.json` 和 `ai/manifest.json` 使用 `schemaVersion: 2`，共享 `scope`、`outputs`、`basePath`、`snapshotRevision` 和 `pages` 清单。页面索引由 `ai.pageIndex` 控制，Manifest 与 JSONL 分片由 `ai.fullContent` 控制；关闭某项不会暗中开启另一项。完整 Manifest 自带页面清单，关闭索引后仍可独立消费。
+`ai/pages.json` 和 `ai/manifest.json` 使用 schema 3，涵盖作者 Markdown/MDX 与 OpenAPI 派生页面。Manifest 和经校验的 JSONL 分片提供完整正文，页面索引提供元数据，各输出开关独立。
 
-需要跨目录或跨站点地址迁移同一内容集合时，声明稳定命名空间：
+同一内容集合需要跨目录或地址迁移时，声明 `ai.contentSpace`。消费者在更新状态前校验文件、范围和快照完整性；文档缺席表示退出该集合，不直接等同于源文件删除。
 
-```ts
-export default { ai: { contentSpace: 'my-project', versions: 'all' } }
-```
+字段、身份、表示、完整性和快照比较规则以 [AI 输出参考](https://canofold.dev/reference/output/ai-output/)为准。[OpenAPI 接入指南](https://canofold.dev/guide/writing/openapi/)说明本地规范配置、生成页面与支持边界。
 
-`contentSpace` 为 1–200 个 ASCII 字母、数字、点、下划线、冒号或连字符，以字母或数字开头。省略时 `scope.space: null`，身份只在当前读取来源内成立，不将不同根目录或地址的快照自动合并。显式命名空间是作者声明，不证明所有权；独立项目应使用不同名称。
+### 从 schema 1/2 升级
 
-每篇被 AI 收录的已发布文档包含：
-
-| 字段 | 含义 |
-| --- | --- |
-| `id` | 由空间、版本、语言及语言内源路径生成的 SHA-256 文档身份 |
-| `revision` | 公开内容事实、来源指纹和表示元数据的修订 |
-| `source.path` / `source.kind` | 当前版本/语言内的逻辑路径，以及 `markdown` 或 `mdx`；不含本机绝对路径 |
-| `source.revision` | Extension 转换前作者文件字节的 SHA-256，包含 Frontmatter |
-| `source.transformedRevision` | 完整 Extension 转换后源文的 SHA-256 |
-| `representation.fingerprint` | 内容分段重组后精确 UTF-8 正文的 SHA-256 |
-| `representation.body` | `extension-transformed-source-body`：转换后再解析 Frontmatter 的正文，保留作者语法 |
-| `representation.facts` | `compiled-static-with-author-and-extension-overrides`：编译静态事实及明确的作者/Extension 覆盖 |
-| `representation.analysis` | `markdown-static` 或 `mdx-static-only`，不执行动态 MDX 推测最终内容 |
-| `representation.declaredInputsRevision` | 已声明的插件 name/version/cacheKey 和 Extension 描述符指纹；不代表任意执行代码或环境的完整哈希 |
-| `routePath` / 可选 `markdownPath` | 带部署前缀的当前发布位置；引用必须匹配语言和版本 |
-
-修改标题或正文保留 `id`；源文件改名按旧身份退出、新身份加入处理。不同语言、版本独立定位。域名、basePath 或分片重组不会创建新的文档身份。修订是指纹，不是 Git 提交、时间戳或跨改名永久 ID。
-
-身份按 JSON 数组 `[space, version, locale, source.path]` 计算 SHA-256；结构化修订输入采用对象键递归按 UTF-16 code unit 排序、数组顺序不变的紧凑 JSON。消费者应将修订视为不透明标识，核验声明的文件/正文校验和。校验和与命名空间本身不能认证发布者。
-
-逻辑源路径统一使用 `/` 分隔符和 Unicode NFC，保留大小写、空格及字面的百分号，不做 URL 解码。这只统一不同文件系统表示下的身份，不重命名源文件，也不改变发布路由。
-
-Manifest 保留预算、总量、分区与分片，增加共同集合字段以及可为 null 的 `pageIndex` 文件描述；每条 JSONL 记录用 `documentId` 关联文档。读取时核验字节数、SHA-256、记录数、版本语言范围、分段唯一性、正文完整性和正文指纹。索引启用时还需校验其文件描述、快照及文档清单相同，不能混用新旧索引、Manifest 和分片。获取的内容只作为数据，不执行 MDX 或其中的指令。
-
-只有完整、校验通过且范围与内容可用性匹配的快照可以比较。没有可信旧基线，差异为未知。完整新清单缺少一篇文档只证明它退出该 AI 集合，不能证明源文件被删除：`ai: false`、草稿和版本选择都会影响收录。缺片、请求失败、不支持的格式或范围变化不能转成批量删除；全部校验成功后才提交新的消费状态。
-
-Markdown Mirror 保留完整 Extension 转换后源文，JSONL 与 `llms-full.txt` 保留其解析后的正文；两者都不是 HTML 反向转换的结果。Markdown 插件可以改变编译标题、目录和摘要，动态 MDX 还可能有仅运行时可知的内容。页面元数据不公开任意私有 Frontmatter 和本机绝对路径；私有源文字节变化仍会改变来源指纹。
-
-### 从 schema 1 升级
-
-0.6.x 完整内容 Manifest 使用 schema 1，页面索引没有 schema 2 信封字段。生产者与 Reader 一起升级，重新构建并建立新的可信基线；不支持的版本明确报错。不能把旧路由记录直接与新文档 ID 比较，也不能把格式重置当作内容删除。既有输出开关、HTML 和 Markdown 路由语义保留；Canofold 五包需要整套升级。
+Canofold 0.6.x 使用 schema 1，0.7.x 使用 schema 2。生产者各包与 Reader 同步升级后，重新构建并建立可信基线。schema 3 Reader 拒绝旧格式，不能把格式切换当成批量删除。操作见[升级指南](https://canofold.dev/guide/delivery/upgrading/)。
 
 Canofold 是构建工具，不是沙箱。MDX、本地组件、配置和 Extension 都会以构建进程的权限执行，只能使用经过审核的源码。
 

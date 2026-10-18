@@ -19,7 +19,11 @@ function createSearchIndex(context: SearchProviderContext, version: string, loca
         .map((example) => example.code.slice(0, 300))
         .join(' ')
         .slice(0, 2000)
-      const pathWords = localeRelativePathFor(page.relativePath, page.locale)
+      const pathWords = (
+        page.origin
+          ? `${page.origin.id} ${page.origin.key}`
+          : localeRelativePathFor(page.relativePath, page.locale)
+      )
         .replace(/\.(?:md|mdx)$/i, '')
         .replace(/(?:^|\/)(?:v?\d+(?:[.-]\d+)*)(?=\/|$)/g, '/')
       const searchable = `${page.title} ${page.description} ${tags.join(' ')} ${page.searchText} ${codeSnippet} ${pathWords}`

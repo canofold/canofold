@@ -20,15 +20,15 @@ import type {
 import type { Root as HastRoot, Element } from 'hast'
 import type { Directives } from 'mdast-util-directive'
 import type { Node, Parent } from 'unist'
-import { srcSetCandidates } from '../utils/srcSet'
-import { normalizeCallouts } from './plugins/directives'
+import { srcSetCandidates } from '../utils/srcSet.js'
+import { normalizeCallouts } from './plugins/directives.js'
 import {
   collectRichDirectiveIssues,
   restoreLiteralDirectives,
   type MarkdownDirectiveIssue
-} from './directiveValidation'
-import { activeMarkdownPlugins, markdownPluginDirectiveNames, normalizeMarkdownPlugins } from './plugins'
-import type { MarkdownPlugin } from './types'
+} from './directiveValidation.js'
+import { activeMarkdownPlugins, markdownPluginDirectiveNames, normalizeMarkdownPlugins } from './plugins.js'
+import type { MarkdownPlugin } from './types.js'
 
 export interface MarkdownHeading {
   level: number

@@ -1,6 +1,6 @@
-import type { MarkdownBehaviorName } from './compiler/assets'
+import type { MarkdownBehaviorName } from './compiler/assets.js'
 import type { Root } from 'react-dom/client'
-import type { MarkdownIslandRenderOptions } from './islands/options'
+import type { MarkdownIslandRenderOptions } from './islands/options.js'
 
 interface IslandModule {
   hydrate(root: HTMLElement, options?: MarkdownIslandRenderOptions): Root | undefined
@@ -22,9 +22,9 @@ const selectors: Record<RichBehaviorName, string> = {
 }
 
 const loaders: Record<RichBehaviorName, () => Promise<IslandModule>> = {
-  gallery: () => import('./islands/gallery'),
-  image: () => import('./islands/image'),
-  table: () => import('./islands/table')
+  gallery: () => import('./islands/gallery.js'),
+  image: () => import('./islands/image.js'),
+  table: () => import('./islands/table.js')
 }
 
 const hydratedRoots = new WeakMap<HTMLElement, Root>()

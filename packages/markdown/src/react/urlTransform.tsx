@@ -1,5 +1,5 @@
 import { createContext, createElement, useContext, useMemo, type ReactNode } from 'react'
-import { srcSetCandidates } from '../utils/srcSet'
+import { srcSetCandidates } from '../utils/srcSet.js'
 
 export type MarkdownUrlProperty = 'href' | 'src' | 'poster' | 'srcSet'
 export type MarkdownUrlTransform = (value: string, property: MarkdownUrlProperty) => string

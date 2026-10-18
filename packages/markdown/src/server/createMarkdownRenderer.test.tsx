@@ -275,10 +275,15 @@ describe('Markdown server renderer', () => {
       const first = createMarkdownRenderer()
       await first.render(source)
       await first.render(source)
+      await first.renderMdx(source)
+      expect(warning).toHaveBeenCalledTimes(1)
+      first.clear()
+      await first.renderMdx(source)
+      expect(warning).toHaveBeenCalledTimes(2)
       const second = createMarkdownRenderer()
       await second.render(source)
 
-      expect(warning).toHaveBeenCalledTimes(2)
+      expect(warning).toHaveBeenCalledTimes(3)
     } finally {
       warning.mockRestore()
     }

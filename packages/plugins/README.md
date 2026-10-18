@@ -49,6 +49,30 @@ When using the plugins directly with `@canofold/markdown` in a React application
 
 Package-root and focused factory entries such as `@canofold/plugins/math` are public. Generated sites load the browser and CSS entries automatically. Direct React or editor hosts may use the typed diagram client entries described below; they are lifecycle enhancers, not plugin factories.
 
+## Local OpenAPI content source
+
+Use the separate server-only entry, not `markdown.plugins`:
+
+```ts
+import { openapi } from '@canofold/plugins/openapi'
+
+export default {
+  i18n: { defaultLocale: 'en', locales: ['en'] },
+  sources: [openapi({
+    id: 'pet-api', root: 'docs/api', entry: 'docs/api/openapi.yaml',
+    version: 'current', locale: 'en', base: '/api/'
+  })]
+}
+```
+
+Local OpenAPI 3.0.x/3.1.x JSON/YAML creates an overview and one page per selected path operation, alongside a normal Markdown/MDX homepage. `root` and `entry` are project-relative, all references must stay inside `root`, and version/locale must be configured. `base` is a locale-relative prefix; `info.version` is the API version, not the documentation version. Optional exact `include.paths` and any-matching `include.tags` intersect when both are set. Empty, duplicate or unmatched selectors fail.
+
+URLs use lowercase method and lossless UTF-8 hexadecimal path segments, at most 64 characters each; `GET /pets` under `/api/` is `/api/get/2f70657473/`. Path input is limited to 1,024 UTF-8 bytes. Tags affect display grouping, never duplicate identity. Parameters, request/response media types, examples, authentication, servers, deprecation and original schema composition feed the same site/search/machine outputs. Descriptions/examples are inert data, not executable Markdown or requests.
+
+No remote reference is fetched; local URI schema identifiers do not authorize network access. Symlinks, traversal, missing references and ambiguous Path Item siblings fail. Limits: 16 MiB/file, 64 MiB and 512 files/source, JSON depth 128 and one million nodes, YAML alias expansion 50, 10,000 operations plus overview, 64 MiB generated bodies/facts and 16 MiB referenced schemas/page. Failures preserve the prior complete build, not truncated facts. Swagger 2.0/3.2, remote sync, Try-it-out, SDK generation and independent callback/webhook pages are outside this adapter.
+
+Historical entry/ref inputs must remain inside that version's `docsDir`; snapshots copy version-local files but do not rewrite source bindings. Browser/Markdown imports do not load the parsers. Strict JSON validation uses Microsoft's MIT-licensed `jsonc-parser` visitor with comments/trailing commas disabled and duplicate keys rejected; YAML uses `yaml`, and grammar validation uses MIT-licensed Redocly 2.x. Canofold 0.8 requires Node 22.12 or newer. See [OpenAPI integration](https://canofold.dev/en/guide/writing/openapi/) for complete setup and boundaries.
+
 ## Host-provided local diagram rendering
 
 PlantUML and Kroki can delegate rendering to a browser host without sending source to an external service. Select the client renderer while compiling Markdown, then pass one renderer function to the matching client enhancer after the Markdown DOM is mounted:
@@ -86,6 +110,8 @@ kroki({ renderer: 'client' })
 ```
 
 `plantUml({ renderer: 'client' })` uses the same client contract through `@canofold/plugins/client/plantuml`. For both factories, a remote `server` and `renderer: 'client'` cannot be enabled together. A server must be an HTTP(S) base URL without a query or fragment.
+
+Configuring `server` embeds remote image URLs: the browser sends diagram source to that service when loading the image. Use a trusted self-hosted service for private content, or select a local client renderer. This explicit configuration is not repeated as a warning on each build.
 
 ### Math isolation and dependency boundaries
 

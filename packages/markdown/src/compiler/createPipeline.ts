@@ -2,12 +2,12 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import { unified, type Pluggable, type Plugin, type Transformer } from 'unified'
 import type { Root as HastRoot } from 'hast'
-import type { MarkdownAssetCollector } from './assets'
-import type { NormalizedMarkdownOptions } from './normalizeOptions'
-import { createMarkdownPluginPlan } from './pluginPlan'
-import type { MarkdownSyntaxFeatures } from './syntaxFeatures'
+import type { MarkdownAssetCollector } from './assets.js'
+import type { NormalizedMarkdownOptions } from './normalizeOptions.js'
+import { createMarkdownPluginPlan } from './pluginPlan.js'
+import type { MarkdownSyntaxFeatures } from './syntaxFeatures.js'
 import type { Options as SanitizeOptions } from 'rehype-sanitize'
-import { createCompilerSanitizeBoundary } from './sanitizeBoundary'
+import { createCompilerSanitizeBoundary } from './sanitizeBoundary.js'
 
 interface CreateMarkdownProcessorOptions {
   assets: MarkdownAssetCollector

@@ -1,15 +1,13 @@
-import { markdownPluginsIdentity } from '../compiler/plugins'
-import { prepareMarkdown } from '../compiler/prepareMarkdown'
-import { stableJson } from '../compiler/stableJson'
+import { markdownPluginsIdentity } from '../compiler/plugins.js'
+import { prepareMarkdown } from '../compiler/prepareMarkdown.js'
+import { stableJson } from '../compiler/stableJson.js'
 import { createHash } from 'node:crypto'
-import type { PreparedMarkdown, RenderMarkdownOptions } from '../compiler/types'
-import { prepareMdx } from '../compiler/mdxPlugins'
+import type { PreparedMarkdown, RenderMarkdownOptions } from '../compiler/types.js'
+import { prepareMdx } from '../compiler/mdxPlugins.js'
 
 export interface MarkdownServerContextOptions {
   /** Maximum number of prepared entries retained per format (Markdown and MDX). */
   maxEntries?: number
-  /** @internal Warning state shared by one renderer's Markdown and MDX paths. */
-  warningState?: Set<string>
 }
 
 interface MarkdownServerContext {
@@ -66,9 +64,9 @@ function cached<T>(
  * graph, while safe single-page dev rebuilds can retain hot entries.
  */
 export function createMarkdownServerContext({
-  maxEntries = 64,
-  warningState = new Set<string>()
+  maxEntries = 64
 }: MarkdownServerContextOptions = {}): MarkdownServerContext {
+  const warningState = new Set<string>()
   const limit = Number.isFinite(maxEntries) && maxEntries > 0 ? Math.floor(maxEntries) : 64
   const prepared = new Map<string, Promise<PreparedMarkdown>>()
   const mdx = new Map<string, ReturnType<typeof prepareMdx>>()

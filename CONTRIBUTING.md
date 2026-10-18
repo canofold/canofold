@@ -3,14 +3,14 @@
 Thanks for helping improve Canofold. The repository is a pnpm workspace with five publishable packages:
 
 - `@canofold/themes` — the public theme-definition contract, official visual themes, shared tokens, and site appearance.
-- `@canofold/markdown` — Markdown/MDX React renderer, client enhancer, and shared theme contract.
+- `@canofold/markdown` — Markdown/MDX React renderer, compiler, and client enhancer.
 - `canofold` — static documentation CLI and site generator.
 - `@canofold/vite` — official Vite Demo Engine for component documentation.
-- `@canofold/plugins` — official Markdown plugins and search providers.
+- `@canofold/plugins` — official Markdown plugins and search providers, plus server-only content adapters.
 
 ## Development
 
-Requirements: Node.js 22+ and pnpm 11.9+.
+Runtime minimum: Node.js 22.12. Development with pnpm 11.9 requires Node.js 22.13+; the minimum-runtime CI job uses pnpm's official standalone distribution so project scripts still run on Node.js 22.12.
 
 ```bash
 corepack enable
@@ -19,7 +19,11 @@ pnpm typecheck
 pnpm test
 ```
 
-Use `pnpm dev` for local package development. The repository builds and tests with Vite 8; `@canofold/vite` also supports Vite 6 and 7 in packed consumer projects, verified separately in CI. The command runs the existing pnpm, Vite, tsup, TypeScript, and Tailwind watch modes directly; the repository does not maintain a second process supervisor or polling build system. Keep generated output, coverage, and local preview artifacts out of commits. Website development and deployment live in the [`canofold/website`](https://github.com/canofold/website) repository.
+Use `pnpm dev` to watch the local packages. For integrated Core source development with the sibling `../vite-component-playground` checkout, use `pnpm dev:playground`. This repository-only tool starts the package watchers, waits for completed output, and restarts or refreshes the preview when the relevant package changes. Its lifecycle check is `pnpm test:dev:playground`; stop other previews and package watchers before running it. Ordinary documentation and component authoring in the Playground uses `canofold dev` directly and does not require a separate startup script. After a fresh checkout, run `pnpm build` here before consuming linked packages.
+
+Keep product behavior in its owning package. Repository scripts may orchestrate builds, development and verification, but must reuse package behavior rather than implement parallel configuration, validation, cache or server lifecycles. README files introduce the project or package and link to usage documentation; this file owns contributor workflows. User guides and configuration references live in Website, release behavior and migrations in `CHANGELOG.md`. Keep transient debugging and approval records out of these documents.
+
+The repository builds and tests with Vite 8; `@canofold/vite` also supports Vite 6 and 7 in packed consumer projects, verified separately in CI. Keep generated output, coverage, and local preview artifacts out of commits. Website development and deployment live in the [`canofold/website`](https://github.com/canofold/website) repository.
 
 ## Changes
 
@@ -62,7 +66,7 @@ For a release-impacting change, run `pnpm test:release`, update `CHANGELOG.md`, 
 4. The `Release` workflow verifies metadata, rebuilds and tests the repository, and stages `@canofold/themes`, `@canofold/markdown`, `canofold`, `@canofold/vite`, and `@canofold/plugins` in dependency order with provenance.
 5. Review the five staged packages on npm and approve them with 2FA. The workflow creates the GitHub release only after all five versions are publicly available.
 
-The first `v0.1.0` publication used a temporary bypass-2FA token because npm cannot stage or configure Trusted Publishing for package records that do not yet exist. Bootstrap the new `@canofold/themes` package this way exactly once, then remove the token and repository secret immediately after verifying the package and provenance. Existing package records must use `release.yml` as their GitHub Actions Trusted Publisher with stage-only permission; CI authenticates through OIDC, and a maintainer must review and approve every staged package with npm 2FA before it becomes public.
+All five package records use `release.yml` as their GitHub Actions Trusted Publisher with stage-only permission. CI authenticates through OIDC; a maintainer reviews and approves every staged package with npm 2FA before it becomes public.
 
 ## Pull requests
 

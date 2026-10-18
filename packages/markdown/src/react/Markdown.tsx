@@ -11,11 +11,15 @@ import {
   type ReactNode
 } from 'react'
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime'
-import { createMarkdownComponentMap, type MarkdownClassNames, type MarkdownComponents } from './componentMap'
-import { stableJson } from '../compiler/stableJson'
-import type { PreparedMarkdown, RenderMarkdownOptions } from '../compiler/types'
-import { MarkdownSlotsProvider, type MarkdownSlots } from './slots'
-import { MarkdownUrlTransformProvider, type MarkdownUrlTransform } from './urlTransform'
+import {
+  createMarkdownComponentMap,
+  type MarkdownClassNames,
+  type MarkdownComponents
+} from './componentMap.js'
+import { stableJson } from '../compiler/stableJson.js'
+import type { PreparedMarkdown, RenderMarkdownOptions } from '../compiler/types.js'
+import { MarkdownSlotsProvider, type MarkdownSlots } from './slots.js'
+import { MarkdownUrlTransformProvider, type MarkdownUrlTransform } from './urlTransform.js'
 
 export interface MarkdownRootProps extends Omit<
   HTMLAttributes<HTMLElement>,
@@ -145,7 +149,7 @@ async function prepareForClient(
   optionsKey: string | undefined
 ) {
   const create = () =>
-    import('../compiler/prepareMarkdown').then(({ prepareMarkdown }) => prepareMarkdown(source, options))
+    import('../compiler/prepareMarkdown.js').then(({ prepareMarkdown }) => prepareMarkdown(source, options))
   const key = clientCacheKey(source, optionsKey)
   if (key === undefined) return create()
   const existing = clientPreparationCache.get(key)

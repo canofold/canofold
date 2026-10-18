@@ -1,8 +1,8 @@
 import { SKIP, visit } from 'unist-util-visit'
 import type { Element, Root } from 'hast'
-import type { MarkdownAssetCollector } from '../assets'
-import type { NormalizedMarkdownOptions } from '../normalizeOptions'
-import { serializeMarkdownNode } from '../../protocol/serializedNode'
+import type { MarkdownAssetCollector } from '../assets.js'
+import type { NormalizedMarkdownOptions } from '../normalizeOptions.js'
+import { serializeMarkdownNode } from '../../protocol/serializedNode.js'
 
 function isComponent(node: unknown, component: string) {
   if (!node || typeof node !== 'object' || !('properties' in node)) return false

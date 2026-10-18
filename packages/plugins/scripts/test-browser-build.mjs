@@ -15,7 +15,8 @@ const result = await build({
   target: 'es2022',
   treeShaking: true,
   minify: true,
-  write: false
+  write: false,
+  metafile: true
 })
 
 const source = result.outputFiles[0]?.text ?? ''
@@ -24,4 +25,11 @@ if (!source.includes('__canofoldPluginBrowserSmoke')) {
 }
 if (/node:(?:fs|path|zlib)|Pagefind did not return an index/.test(source)) {
   throw new Error('Plugin browser consumer bundle retained Node-only provider code')
+}
+if (
+  Object.keys(result.metafile.inputs).some((path) =>
+    /(?:\/openapi\.js$|node_modules\/(?:@redocly\/|yaml\/|jsonc-parser\/))/.test(path)
+  )
+) {
+  throw new Error('The Markdown plugin browser entry includes the server-only OpenAPI parser')
 }

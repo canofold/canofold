@@ -225,7 +225,7 @@ export function checkDuplicateHeadings(page: DocPage): CheckIssue[] {
 function translationRows(graph: ContentGraph) {
   const byVersion = new Map<string, Map<string, Map<string, DocPage>>>()
   for (const page of graph.pages) {
-    if (page.status === 'draft') continue
+    if (page.status === 'draft' || page.origin) continue
     const paths = byVersion.get(page.version) ?? new Map<string, Map<string, DocPage>>()
     const path = localeRelativePathFor(page.relativePath, page.locale)
     const locales = paths.get(path) ?? new Map<string, DocPage>()

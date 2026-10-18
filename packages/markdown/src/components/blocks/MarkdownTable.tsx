@@ -1,7 +1,7 @@
 import { cloneElement, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from 'react'
-import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels'
-import { MarkdownCopyButton, MarkdownDownloadButton } from '../shared/MarkdownActions'
-import { MarkdownIcon } from '../shared/MarkdownIcon'
+import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
+import { MarkdownCopyButton, MarkdownDownloadButton } from '../shared/MarkdownActions.js'
+import { MarkdownIcon } from '../shared/MarkdownIcon.js'
 import {
   elementChildren,
   elementTag,
@@ -9,9 +9,9 @@ import {
   mergeMarkdownClasses,
   reactText,
   stringProp
-} from '../shared/reactText'
-import type { MarkdownReactElement } from '../shared/reactText'
-import { MarkdownDialogPortal, useMarkdownDialog } from '../shared/MarkdownDialog'
+} from '../shared/reactText.js'
+import type { MarkdownReactElement } from '../shared/reactText.js'
+import { MarkdownDialogPortal, useMarkdownDialog } from '../shared/MarkdownDialog.js'
 
 export interface MarkdownTableProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
   children?: ReactNode

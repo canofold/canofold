@@ -4,8 +4,8 @@ import type { Pluggable, PluggableList } from 'unified'
 import { defListHastHandlers, remarkDefinitionList } from 'remark-definition-list'
 import remarkDirective from 'remark-directive'
 import remarkGfm from 'remark-gfm'
-import type { MarkdownAssetCollector } from './assets'
-import type { NormalizedMarkdownOptions } from './normalizeOptions'
+import type { MarkdownAssetCollector } from './assets.js'
+import type { NormalizedMarkdownOptions } from './normalizeOptions.js'
 import {
   remarkFenceMetadata,
   rehypeFenceMetadata,
@@ -13,7 +13,7 @@ import {
   remarkMdxRichBlocks,
   rehypeCodeBlocks,
   rehypeRichFences
-} from './plugins/code'
+} from './plugins/code.js'
 import {
   rehypeStepGroup,
   rehypeStepItem,
@@ -24,13 +24,13 @@ import {
   remarkSteps,
   remarkTabGroups,
   rehypeRichDirectives
-} from './plugins/directives'
-import { rehypeDocumentBlocks } from './plugins/documentBlocks'
-import { rehypeTables } from './plugins/tables'
-import type { MarkdownSyntaxFeatures } from './syntaxFeatures'
-import { remarkValidateRichDirectives } from './directiveValidation'
-import { markdownPluginDirectiveNames } from './plugins'
-import { remarkCollectCodeExamples } from './analyze'
+} from './plugins/directives.js'
+import { rehypeDocumentBlocks } from './plugins/documentBlocks.js'
+import { rehypeTables } from './plugins/tables.js'
+import type { MarkdownSyntaxFeatures } from './syntaxFeatures.js'
+import { remarkValidateRichDirectives } from './directiveValidation.js'
+import { markdownPluginDirectiveNames } from './plugins.js'
+import { remarkCollectCodeExamples } from './analyze.js'
 
 export interface MarkdownPluginPlan {
   remarkPlugins: PluggableList

@@ -2,7 +2,7 @@ import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import { strToU8, zlibSync } from 'fflate'
 
 import { diagramFence } from '../shared/diagram'
-import { externalDiagramServiceGate, resolveExternalDiagramServer } from '../shared/externalDiagramService'
+import { resolveExternalDiagramServer } from '../shared/externalDiagramService'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
 const PLUGIN_VERSION = '4'
@@ -52,9 +52,6 @@ export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
   )
   const hasKrokiFence = ({ source }: { source: string }) =>
     hasMarkdownFenceLanguage(source, new Set(Object.keys(languageMap)))
-  const appliesTo = server
-    ? externalDiagramServiceGate({ plugin: 'Kroki', appliesTo: hasKrokiFence })
-    : hasKrokiFence
 
   return defineMarkdownPlugin({
     name: 'kroki',
@@ -71,7 +68,7 @@ export function kroki(options: KrokiOptions = {}): MarkdownPlugin {
       }
     },
     fenceLanguages: Object.keys(languageMap),
-    appliesTo,
+    appliesTo: hasKrokiFence,
     assets: {
       clients: [{ id: 'kroki', module: '@canofold/plugins/client/kroki' }],
       styles: [{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }]

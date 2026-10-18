@@ -1,5 +1,5 @@
-import type { MarkdownPlugin, MarkdownPluginContext } from './types'
-import { stableJson } from './stableJson'
+import type { MarkdownPlugin, MarkdownPluginContext } from './types.js'
+import { stableJson } from './stableJson.js'
 
 const PLUGIN_NAME_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 const JAVASCRIPT_EXPORT_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/

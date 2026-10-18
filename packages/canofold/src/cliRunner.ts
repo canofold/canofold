@@ -7,12 +7,12 @@ Commands:
   init [dir] [--locale <locale>] [--locales <locale,...>] [--docs-dir <path>]
                  Create or adopt documentation
   dev [--port <number>]
-                 Start local docs server on a custom local port
+                 Start local docs server; try the next port if occupied
   build [--no-cache]
                  Build static site, optionally ignoring the persistent cache
   clean          Remove generated output and the persistent build cache
   preview [--port <number>]
-                 Preview .canofold/dist on a custom local port
+                 Preview .canofold/dist; try the next port if occupied
   check [--json] Run documentation checks; emit JSON for CI with --json
   snapshot <id>   Copy the current docs into a version-local historical snapshot
   deploy         Generate deployment guidance

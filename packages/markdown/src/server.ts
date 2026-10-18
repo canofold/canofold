@@ -1,7 +1,7 @@
 /** Build/SSR-only entry point with compiler details hidden behind renderers. */
-export { createMarkdownRenderer } from './server/createMarkdownRenderer'
-export { defineMarkdownPlugin } from './compiler/plugins'
-export type { MarkdownContentAnalysis, MarkdownReferences } from './compiler/analyze'
+export { createMarkdownRenderer } from './server/createMarkdownRenderer.js'
+export { defineMarkdownPlugin } from './compiler/plugins.js'
+export type { MarkdownContentAnalysis, MarkdownReferences } from './compiler/analyze.js'
 export type {
   MarkdownAssets,
   MarkdownLabels,
@@ -14,10 +14,10 @@ export type {
   MarkdownPluginStyleAsset,
   MarkdownUnknownLanguagePolicy,
   RenderMarkdownOptions
-} from './compiler/prepareMarkdown'
+} from './compiler/prepareMarkdown.js'
 export type {
   MarkdownRenderer,
   MarkdownRenderOptions,
   MdxRenderOptions,
   RenderedMarkdown
-} from './server/createMarkdownRenderer'
+} from './server/createMarkdownRenderer.js'

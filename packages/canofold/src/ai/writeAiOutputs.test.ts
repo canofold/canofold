@@ -109,7 +109,7 @@ describe('writeAiOutputs', () => {
     expect(analyzeMarkdown(index).links).toEqual(['/%E5%BF%AB%E9%80%9F%20%E5%BC%80%E5%A7%8B/a%29b/index.md'])
     expect(analyzeMarkdown(llms).links).toEqual(['/%E5%BF%AB%E9%80%9F%20%E5%BC%80%E5%A7%8B/a%29b/'])
     expect(manifest).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
       includedVersions: 'current',
       totals: { pages: 1 },
       llmsFull: { mode: 'full' },

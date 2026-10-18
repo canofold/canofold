@@ -1,5 +1,5 @@
-import type { MarkdownClassNames, MarkdownIntrinsicComponents } from '../react/componentMap'
-import type { MarkdownSlots } from '../react/slots'
+import type { MarkdownClassNames, MarkdownIntrinsicComponents } from '../react/componentMap.js'
+import type { MarkdownSlots } from '../react/slots.js'
 
 export interface MarkdownIslandRenderOptions {
   classNames?: MarkdownClassNames

@@ -35,4 +35,28 @@ describe('mapConcurrent', () => {
     ).rejects.toThrow('failed')
     expect(events).toEqual(['settled'])
   })
+
+  it.each([undefined, null, false, 0, ''])(
+    'preserves a falsy rejection (%s) and stops scheduling work',
+    async (failure) => {
+      const started: number[] = []
+      await expect(
+        mapConcurrent([0, 1, 2], 1, async (value) => {
+          started.push(value)
+          throw failure
+        })
+      ).rejects.toBe(failure)
+      expect(started).toEqual([0])
+    }
+  )
+
+  it('preserves the first rejection when another active worker also fails', async () => {
+    await expect(
+      mapConcurrent([0, 1], 2, async (value) => {
+        if (value === 0) throw undefined
+        await new Promise((resolve) => setTimeout(resolve, 10))
+        throw new Error('later failure')
+      })
+    ).rejects.toBeUndefined()
+  })
 })

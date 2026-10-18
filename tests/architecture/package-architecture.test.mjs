@@ -60,12 +60,18 @@ test('Markdown consumes the public theme package boundary without reading siblin
   }
 })
 
-test('TypeScript source imports use bundler-native extensionless specifiers', async () => {
-  const entries = (await sourceText(join(root, 'packages'))).filter(([file]) => /\.tsx?$/.test(file))
-  const relativeJavaScriptImport = /(?:from\s+|import\s*\(\s*)['"]\.\.?\/[^'"]+\.js['"]/
-
+test('published Markdown declarations use resolvable native ESM module specifiers', async () => {
+  const entries = (await sourceText(join(root, 'packages/markdown/dist'))).filter(([file]) =>
+    file.endsWith('.d.ts')
+  )
+  assert.ok(entries.length > 0, 'build declarations before checking their module boundary')
   for (const [file, source] of entries) {
-    assert.doesNotMatch(source, relativeJavaScriptImport, `${file} uses a .js suffix in TypeScript source`)
+    for (const [, specifier] of source.matchAll(
+      /(?:from\s+|import\s*\(\s*|import\s+)['"](\.\.?\/[^'"]+)['"]/g
+    )) {
+      assert.equal(extname(specifier), '.js', `${file} has a non-ESM declaration import: ${specifier}`)
+      await access(resolve(dirname(file), specifier.replace(/\.js$/, '.d.ts')))
+    }
   }
 })
 
@@ -418,6 +424,7 @@ test('workspace exposes core, renderer, Vite engine, plugins, and themes', async
   assert.match(JSON.stringify(pluginsPackage.dependencies), /"katex"/)
   assert.doesNotMatch(JSON.stringify(pluginsPackage.dependencies), /"canofold"|"mermaid"|"pagefind"/)
   assert.deepEqual(pluginsPackage.peerDependenciesMeta, {
+    canofold: { optional: true },
     mermaid: { optional: true },
     pagefind: { optional: true }
   })
@@ -480,6 +487,7 @@ test('workspace exposes core, renderer, Vite engine, plugins, and themes', async
     './plantuml',
     './math',
     './pagefind',
+    './openapi',
     './client/kroki',
     './client/mermaid',
     './client/plantuml',
@@ -548,10 +556,12 @@ test('CI uses the supported Node.js runtime', async () => {
   const canofoldPackage = JSON.parse(await readFile(join(root, 'packages/canofold/package.json'), 'utf8'))
   const workflow = await readFile(join(root, '.github/workflows/ci.yml'), 'utf8')
 
-  assert.equal(canofoldPackage.engines.node, '>=22')
+  assert.equal(canofoldPackage.engines.node, '>=22.12.0')
   const setupNodeSteps = workflow.match(/uses:\s*actions\/setup-node@/g)?.length ?? 0
   const node22Steps = workflow.match(/node-version:\s*22/g)?.length ?? 0
   assert.ok(setupNodeSteps >= 3, 'release, platform, and React jobs must all configure Node.js')
-  assert.equal(node22Steps, setupNodeSteps)
+  assert.equal(node22Steps + 1, setupNodeSteps)
+  assert.match(workflow, /node:\s*\['22\.12\.0', '22'\]/)
+  assert.match(workflow, /node-version:\s*\$\{\{ matrix\.node \}\}/)
   assert.doesNotMatch(workflow, /node-version:\s*20/)
 })

@@ -9,6 +9,7 @@ import { pathExists, portablePathKey } from '../utils/paths'
 import { defaultConfig } from './defaults'
 import { configInputSchema } from './schema'
 import type { CanofoldConfig, CanofoldConfigInput } from './types'
+import { assertContentSources } from '../content/sources'
 
 const CONFIG_FILE_NAMES = [
   'canofold.config.ts',
@@ -76,6 +77,7 @@ function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
       provider: input.search?.provider ?? base.search.provider
     },
     checks: { rules: { ...base.checks.rules, ...input.checks?.rules } },
+    sources: [...(input.sources ?? base.sources)],
     extensions: (input.extensions ?? base.extensions).map((extension) => ({
       ...extension,
       ...(extension.options ? { options: structuredClone(extension.options) } : {})
@@ -247,5 +249,6 @@ export async function loadConfig(cwd: string): Promise<CanofoldConfig> {
   const config = mergeConfig(parsed)
   assertI18nConfig(config)
   assertVersionConfig(config)
+  assertContentSources(config)
   return config
 }

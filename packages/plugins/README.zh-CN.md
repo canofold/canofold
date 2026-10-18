@@ -49,6 +49,29 @@ export default defineConfig({
 
 包根入口和 `@canofold/plugins/math` 等工厂子路径属于公共 API。生成站点会自动加载浏览器与 CSS 入口。直接使用 React 或编辑器的宿主可以调用下文带类型的图表客户端入口；它们是生命周期增强器，不是插件工厂。
 
+## 本地 OpenAPI 内容来源
+
+使用独立服务端入口，不放入 `markdown.plugins`：
+
+```ts
+import { openapi } from '@canofold/plugins/openapi'
+
+export default {
+  sources: [openapi({
+    id: 'pet-api', root: 'docs/api', entry: 'docs/api/openapi.yaml',
+    version: 'current', locale: 'zh', base: '/api/'
+  })]
+}
+```
+
+本地 OpenAPI 3.0.x/3.1.x JSON/YAML 生成概览及每个入选 path operation 的独立页面，与普通 Markdown/MDX 首页共同构建。`root`、`entry` 均相对于项目，所有引用须在 `root` 内，版本/语言须已配置。`base` 是语言内路由前缀，`info.version` 是 API 版本，不是文档版本。可选 `include.paths` 精确匹配，`include.tags` 匹配任意标签；同时指定时取交集。空数组、重复项或没有匹配结果的选择器报错。
+
+网址使用小写方法和原始 path 的 UTF-8 十六进制编码，每段最多 64 个字符。例如 `/api/` 下 `GET /pets` 为 `/api/get/2f70657473/`；API path 最多 1,024 个 UTF-8 字节。标签只影响展示分组，不复制身份。参数、请求/响应媒体类型、示例、认证、服务器、弃用与原始 schema 组合进入同一条站点/搜索/机器输出链；描述与示例仅作为惰性数据，不执行 Markdown 或请求。
+
+不获取远程引用，schema URI 标识不授予联网权限。符号链接、越界、缺失引用和歧义 Path Item 同名字段明确失败。上限：单文件 16 MiB、单来源 64 MiB/512 文件、JSON 128 层/100 万节点、YAML 别名展开 50、10,000 个接口加概览、生成正文/事实合计 64 MiB、每页引用 schema 16 MiB。失败保留上一份完整构建，不截断事实。首版不含 Swagger 2.0/3.2、远程同步、Try-it-out、SDK 生成和独立 Callback/Webhook 页面。
+
+历史入口与引用须在该版本 `docsDir` 内，快照复制版本内文件但不重写来源配置。浏览器/Markdown 入口不加载解析器；严格 JSON 使用微软 MIT 许可的 `jsonc-parser` 访问器，禁用注释和尾逗号并拒绝重复键；YAML 复用 `yaml`，语法结构校验使用 MIT 许可的 Redocly 2.x。Canofold 0.8 要求 Node 22.12 或更高版本。完整接入及边界见 [OpenAPI 文档](https://canofold.dev/guide/writing/openapi/)。
+
 ## 由宿主提供本地图表渲染
 
 PlantUML 和 Kroki 可以把渲染交给浏览器宿主，而不把源码发送给外部服务。编译 Markdown 时选择客户端 renderer，并在 Markdown DOM 挂载后把一个 renderer 函数传给对应的客户端增强器：
@@ -86,6 +109,8 @@ kroki({ renderer: 'client' })
 ```
 
 `plantUml({ renderer: 'client' })` 通过 `@canofold/plugins/client/plantuml` 使用同一套客户端契约。两个工厂都不允许同时设置远程 `server` 和 `renderer: 'client'`。server 必须是没有查询参数或片段的 HTTP(S) 基础 URL。
+
+配置 `server` 后会生成远程图片 URL，浏览器加载图片时会把图表源码发送给该服务。私有内容请使用可信的自托管服务，或选择本地客户端渲染；这项显式配置不在每次构建时重复打印警告。
 
 ### 公式隔离与依赖边界
 

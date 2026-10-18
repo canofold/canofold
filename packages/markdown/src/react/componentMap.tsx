@@ -15,25 +15,28 @@ import {
   MarkdownTerminal,
   MarkdownSteps,
   MarkdownTabs
-} from '../components/composite/MarkdownComposite'
-import { MarkdownHeading } from '../components/blocks/MarkdownHeading'
-import type { MarkdownCodeBlockProps } from '../components/blocks/MarkdownCodeBlock'
-import type { MarkdownCopySnippetProps } from '../components/blocks/MarkdownCopySnippet'
-import type { MarkdownImageProps } from '../components/blocks/MarkdownImage'
-import type { MarkdownTableProps } from '../components/blocks/MarkdownTable'
-import type { MarkdownTerminalProps } from '../components/blocks/MarkdownTerminal'
-import type { MarkdownCompositeProps, MarkdownDetailsProps } from '../components/composite/MarkdownComposite'
-import type { MarkdownFileTreeProps } from '../components/composite/MarkdownFileTree'
-import type { MarkdownTabsProps } from '../components/composite/MarkdownTabs'
-import type { ImageGalleryProps } from '../components/gallery/ImageGallery'
+} from '../components/composite/MarkdownComposite.js'
+import { MarkdownHeading } from '../components/blocks/MarkdownHeading.js'
+import type { MarkdownCodeBlockProps } from '../components/blocks/MarkdownCodeBlock.js'
+import type { MarkdownCopySnippetProps } from '../components/blocks/MarkdownCopySnippet.js'
+import type { MarkdownImageProps } from '../components/blocks/MarkdownImage.js'
+import type { MarkdownTableProps } from '../components/blocks/MarkdownTable.js'
+import type { MarkdownTerminalProps } from '../components/blocks/MarkdownTerminal.js'
+import type {
+  MarkdownCompositeProps,
+  MarkdownDetailsProps
+} from '../components/composite/MarkdownComposite.js'
+import type { MarkdownFileTreeProps } from '../components/composite/MarkdownFileTree.js'
+import type { MarkdownTabsProps } from '../components/composite/MarkdownTabs.js'
+import type { ImageGalleryProps } from '../components/gallery/ImageGallery.js'
 import {
   getMarkdownCaptionSlot,
   getMarkdownIconSlot,
   type MarkdownIconName,
   type MarkdownSlots
-} from './slots'
-import { semanticOverrideProps } from './semanticOverrideProps'
-import { transformMarkdownUrlProps, type MarkdownUrlTransform } from './urlTransform'
+} from './slots.js'
+import { semanticOverrideProps } from './semanticOverrideProps.js'
+import { transformMarkdownUrlProps, type MarkdownUrlTransform } from './urlTransform.js'
 
 export type MarkdownComponentMap = Record<string, ElementType>
 

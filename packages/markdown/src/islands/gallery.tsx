@@ -1,7 +1,7 @@
 import { hydrateRoot } from 'react-dom/client'
-import { ImageGallery, type MarkdownGalleryItem } from '../components/gallery/ImageGallery'
-import { withIslandOptions } from './provider'
-import type { MarkdownIslandRenderOptions } from './options'
+import { ImageGallery, type MarkdownGalleryItem } from '../components/gallery/ImageGallery.js'
+import { withIslandOptions } from './provider.js'
+import type { MarkdownIslandRenderOptions } from './options.js'
 
 function readItems(root: HTMLElement): MarkdownGalleryItem[] {
   try {

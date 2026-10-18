@@ -2,9 +2,9 @@ import { SKIP, visit } from 'unist-util-visit'
 import type { Element, ElementContent, Root as HastRoot, RootContent as HastContent } from 'hast'
 import type { Root as MdastRoot } from 'mdast'
 import type { Node } from 'unist'
-import type { MarkdownAssetCollector } from '../assets'
-import type { NormalizedMarkdownOptions } from '../normalizeOptions'
-import { parseFenceMetadata } from '../fenceMetadata'
+import type { MarkdownAssetCollector } from '../assets.js'
+import type { NormalizedMarkdownOptions } from '../normalizeOptions.js'
+import { parseFenceMetadata } from '../fenceMetadata.js'
 
 function mdxComponentName(name: unknown) {
   return String(name ?? '')

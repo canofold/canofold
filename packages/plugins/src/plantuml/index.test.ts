@@ -18,9 +18,7 @@ describe('plantUml plugin', () => {
     expect(html).toContain('<pre class="cf-diagram-source"')
     expect(html).toContain('class="cf-diagram-zoom-controls"')
     expect(html).toContain('Alice -&gt; Bob: hello')
-    expect(warning).toHaveBeenCalledWith(
-      '[canofold/plugins] PlantUML sends diagram source to its configured external service. Use a trusted self-hosted service for private content.'
-    )
+    expect(warning).not.toHaveBeenCalled()
     warning.mockRestore()
   })
 

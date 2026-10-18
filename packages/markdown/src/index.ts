@@ -1,19 +1,19 @@
-export { Markdown } from './react/Markdown'
-export type { MarkdownProps, MarkdownRootProps } from './react/Markdown'
+export { Markdown } from './react/Markdown.js'
+export type { MarkdownProps, MarkdownRootProps } from './react/Markdown.js'
 export type {
   MarkdownClassNames,
   MarkdownComponents,
   MarkdownIntrinsicComponents,
   MarkdownNamedComponentProps
-} from './react/componentMap'
+} from './react/componentMap.js'
 export type {
   MarkdownCaptionSlotProps,
   MarkdownIconName,
   MarkdownIconSlotProps,
   MarkdownSlots
-} from './react/slots'
-export type { MarkdownUrlProperty, MarkdownUrlTransform } from './react/urlTransform'
-export { defineMarkdownPlugin } from './compiler/plugins'
+} from './react/slots.js'
+export type { MarkdownUrlProperty, MarkdownUrlTransform } from './react/urlTransform.js'
+export { defineMarkdownPlugin } from './compiler/plugins.js'
 export type {
   MarkdownCodeOverflow,
   MarkdownCodeOptions,
@@ -30,4 +30,4 @@ export type {
   MarkdownPluginStyleAsset,
   MarkdownUnknownLanguagePolicy,
   RenderMarkdownOptions
-} from './compiler/prepareMarkdown'
+} from './compiler/prepareMarkdown.js'

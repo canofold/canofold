@@ -9,11 +9,11 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
-import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels'
-import { MarkdownIcon } from '../shared/MarkdownIcon'
-import { markdownDomProps, reactText, stringProp } from '../shared/reactText'
-import { MarkdownDialogPortal, useMarkdownDialog } from '../shared/MarkdownDialog'
-import { transformMarkdownSrcSet, useMarkdownUrlTransform } from '../../react/urlTransform'
+import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
+import { MarkdownIcon } from '../shared/MarkdownIcon.js'
+import { markdownDomProps, reactText, stringProp } from '../shared/reactText.js'
+import { MarkdownDialogPortal, useMarkdownDialog } from '../shared/MarkdownDialog.js'
+import { transformMarkdownSrcSet, useMarkdownUrlTransform } from '../../react/urlTransform.js'
 
 export interface MarkdownGalleryItem {
   src: string

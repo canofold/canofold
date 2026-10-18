@@ -20,9 +20,9 @@ import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
 import { bundledThemes, type BundledTheme } from 'shiki/themes'
 import type { Pluggable, Transformer } from 'unified'
 import { visit } from 'unist-util-visit'
-import type { NormalizedMarkdownOptions } from './normalizeOptions'
-import { parseFenceMetadata } from './fenceMetadata'
-import { stableJson } from './stableJson'
+import type { NormalizedMarkdownOptions } from './normalizeOptions.js'
+import { parseFenceMetadata } from './fenceMetadata.js'
+import { stableJson } from './stableJson.js'
 
 type LanguageModule = { default: LanguageInput }
 type LanguageLoader = () => Promise<LanguageModule>

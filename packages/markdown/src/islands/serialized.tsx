@@ -3,9 +3,9 @@ import { toJsxRuntime } from 'hast-util-to-jsx-runtime'
 import type { Components as HastComponents } from 'hast-util-to-jsx-runtime'
 import type { Nodes } from 'hast'
 import { cloneElement, isValidElement, type ReactNode } from 'react'
-import { createMarkdownComponentMap } from '../react/componentMap'
-import type { MarkdownIslandRenderOptions } from './options'
-import { deserializeMarkdownNode } from '../protocol/serializedNode'
+import { createMarkdownComponentMap } from '../react/componentMap.js'
+import type { MarkdownIslandRenderOptions } from './options.js'
+import { deserializeMarkdownNode } from '../protocol/serializedNode.js'
 
 function isHastNode(node: unknown): node is Nodes {
   return Boolean(node && typeof node === 'object' && typeof (node as { type?: unknown }).type === 'string')

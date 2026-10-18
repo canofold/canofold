@@ -1,18 +1,18 @@
-import { createMarkdownProcessor } from './createPipeline'
-import { normalizeCallouts } from './plugins/directives'
-import { createMarkdownAssetCollector } from './assets'
-import { normalizeOptions } from './normalizeOptions'
-import { createSyntaxHighlighterPlugin } from './highlighter'
-import { detectMarkdownSyntax } from './syntaxFeatures'
+import { createMarkdownProcessor } from './createPipeline.js'
+import { normalizeCallouts } from './plugins/directives.js'
+import { createMarkdownAssetCollector } from './assets.js'
+import { normalizeOptions } from './normalizeOptions.js'
+import { createSyntaxHighlighterPlugin } from './highlighter.js'
+import { detectMarkdownSyntax } from './syntaxFeatures.js'
 import {
   activeMarkdownPlugins,
   markdownPluginFenceLanguages,
   markdownPluginHighlightLanguages
-} from './plugins'
-import type { PreparedMarkdown, RenderMarkdownOptions } from './types'
-import { analyzeDocument, type MarkdownCodeExample } from './analyze'
+} from './plugins.js'
+import type { PreparedMarkdown, RenderMarkdownOptions } from './types.js'
+import { analyzeDocument, type MarkdownCodeExample } from './analyze.js'
 
-export type { MarkdownAssets } from './assets'
+export type { MarkdownAssets } from './assets.js'
 export type {
   MarkdownCodeOverflow,
   MarkdownCodeOptions,
@@ -29,7 +29,7 @@ export type {
   MarkdownPluginStyleAsset,
   MarkdownUnknownLanguagePolicy,
   RenderMarkdownOptions
-} from './types'
+} from './types.js'
 
 export interface MarkdownCompilerContext {
   warnedLanguages: Set<string>

@@ -1,8 +1,8 @@
 import { hydrateRoot } from 'react-dom/client'
-import { MarkdownImage } from '../components/blocks/MarkdownImage'
-import { readSerializedChildren } from './serialized'
-import { withIslandOptions } from './provider'
-import type { MarkdownIslandRenderOptions } from './options'
+import { MarkdownImage } from '../components/blocks/MarkdownImage.js'
+import { readSerializedChildren } from './serialized.js'
+import { withIslandOptions } from './provider.js'
+import type { MarkdownIslandRenderOptions } from './options.js'
 
 export function hydrate(root: HTMLElement, options?: MarkdownIslandRenderOptions) {
   const image = root.querySelector('img')

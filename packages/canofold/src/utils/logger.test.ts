@@ -1,11 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { formatTerminalUrl, logError, logInfo } from './logger'
+import { formatLogMessage, formatTerminalUrl, logError, logInfo } from './logger'
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
 
 describe('logger', () => {
+  it('distinguishes levels on a terminal while keeping redirected output plain', () => {
+    expect(formatLogMessage('Ready', 'success', false)).toBe('[canofold] Ready')
+    expect(formatLogMessage('Ready', 'success', true)).toContain('\u001b[32m')
+    expect(formatLogMessage('Failed', 'error', true)).toContain('\u001b[31m')
+    expect(formatLogMessage('Starting', 'info', true)).toContain('\u001b[36m')
+    vi.stubEnv('NO_COLOR', '')
+    expect(formatLogMessage('Ready', 'success')).not.toContain('\u001b')
+    vi.unstubAllEnvs()
+  })
   it('applies the project prefix without discarding structured error details', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const error = new Error('build failed')

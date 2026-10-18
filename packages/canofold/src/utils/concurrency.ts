@@ -8,20 +8,24 @@ export async function mapConcurrent<T, R>(
   }
   const results = new Array<R>(items.length)
   let cursor = 0
+  let failed = false
   let failure: unknown
   const workerCount = Math.min(Math.floor(concurrency), items.length)
   await Promise.all(
     Array.from({ length: workerCount }, async () => {
-      while (cursor < items.length && failure === undefined) {
+      while (cursor < items.length && !failed) {
         const index = cursor++
         try {
           results[index] = await transform(items[index]!, index)
         } catch (error) {
-          failure ??= error
+          if (!failed) {
+            failed = true
+            failure = error
+          }
         }
       }
     })
   )
-  if (failure) throw failure
+  if (failed) throw failure
   return results
 }

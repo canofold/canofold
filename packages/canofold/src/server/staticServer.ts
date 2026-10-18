@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type Server as HttpServer, type Ser
 import { readFile, realpath } from 'node:fs/promises'
 import { extname, isAbsolute, join, normalize, relative, resolve, sep } from 'node:path'
 import { isInside } from '../utils/paths'
-import { logError } from '../utils/logger'
+import { logError, logInfo } from '../utils/logger'
 
 const contentTypes: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -343,17 +343,37 @@ export async function startStaticServer({
   server.on('request', requestHandler)
 
   await new Promise<void>((resolveListen, rejectListen) => {
-    const onError = (error: Error) => rejectListen(error)
-    server.once('error', onError)
-    server.listen(port, '127.0.0.1', () => {
+    let candidate = port
+    const cleanup = () => {
       server.off('error', onError)
+      server.off('listening', onListening)
+    }
+    const onError = (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE' && candidate > 0 && candidate < 65535) {
+        server.listen(++candidate, '127.0.0.1')
+        return
+      }
+      cleanup()
+      rejectListen(error)
+    }
+    const onListening = () => {
+      cleanup()
       resolveListen()
-    })
+    }
+    server.on('error', onError)
+    server.once('listening', onListening)
+    try {
+      server.listen(candidate, '127.0.0.1')
+    } catch (error) {
+      cleanup()
+      rejectListen(error)
+    }
   })
   const address = server.address()
   if (!address || typeof address === 'string') {
     throw new Error('Failed to start server')
   }
+  if (port !== 0 && address.port !== port) logInfo(`Port ${port} is in use; using ${address.port}.`)
   const heartbeatTimer = liveReload
     ? setInterval(() => heartbeatReloadClients(reloadClients), RELOAD_HEARTBEAT_MS)
     : undefined

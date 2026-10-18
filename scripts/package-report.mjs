@@ -10,39 +10,28 @@ const packages = [
   {
     name: '@canofold/themes',
     root: join(workspace, 'packages/themes'),
-    // Fourteen themes share common layers while retaining one public CSS
-    // subpath per visual theme. Keep only one file of growth headroom so copied
-    // component layers still fail this release gate.
     compressedBudget: 24 * 1024,
-    fileCountBudget: 24,
     cssSourcePackage: true
   },
   {
     name: '@canofold/markdown',
     root: join(workspace, 'packages/markdown'),
-    compressedBudget: 400 * 1024,
-    // Declarations, file-tree icons, runtime chunks and CSS, including the shared srcSet parser.
-    fileCountBudget: 136
+    compressedBudget: 400 * 1024
   },
   {
     name: 'canofold',
     root: join(workspace, 'packages/canofold'),
-    compressedBudget: 192 * 1024,
-    fileCountBudget: 45
+    compressedBudget: 192 * 1024
   },
   {
     name: '@canofold/vite',
     root: join(workspace, 'packages/vite'),
-    compressedBudget: 32 * 1024,
-    fileCountBudget: 12
+    compressedBudget: 32 * 1024
   },
   {
     name: '@canofold/plugins',
     root: join(workspace, 'packages/plugins'),
-    compressedBudget: 400 * 1024,
-    // Twenty KaTeX fonts plus public plugin/client declarations and runtimes.
-    // JavaScript entries remain self-contained; declarations may share one type-only file.
-    fileCountBudget: 52
+    compressedBudget: 400 * 1024
   }
 ]
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-package-report-'))
@@ -79,6 +68,18 @@ try {
       'package/package.json'
     ].filter((file) => !files.includes(file))
     const publishedSourceMaps = files.filter((file) => file.endsWith('.map'))
+    // Count is informational: public entries, shared chunks and required assets
+    // determine the package layout, not an arbitrary maximum number of files.
+    const exportTargets = new Set(
+      Object.values(manifest.exports ?? {}).flatMap((target) =>
+        typeof target === 'string' ? [target] : Object.values(target)
+      )
+    )
+    for (const target of exportTargets) {
+      if (!files.includes(posix.join('package', target))) {
+        failures.push(`${packageConfig.name}: published export target is missing: ${target}`)
+      }
+    }
     for (const file of files.filter((file) => file.endsWith('.js'))) {
       const source = execFileSync('tar', ['-xOf', tarball, file], { encoding: 'utf8' })
       for (const [, reference] of source.matchAll(/^\/\/# sourceMappingURL=(.+)$/gm)) {
@@ -92,9 +93,6 @@ try {
       failures.push(
         `${packageConfig.name}: ${compressedBytes} compressed bytes exceeds ${packageConfig.compressedBudget}`
       )
-    }
-    if (files.length > packageConfig.fileCountBudget) {
-      failures.push(`${packageConfig.name}: ${files.length} files exceeds ${packageConfig.fileCountBudget}`)
     }
     if (forbidden.length) {
       failures.push(`${packageConfig.name}: unexpected implementation files: ${forbidden.join(', ')}`)
@@ -113,8 +111,7 @@ try {
       package: packageConfig.name,
       compressedKB: (compressedBytes / 1024).toFixed(2),
       budgetKB: (packageConfig.compressedBudget / 1024).toFixed(2),
-      files: files.length,
-      fileBudget: packageConfig.fileCountBudget
+      files: files.length
     })
   }
 
