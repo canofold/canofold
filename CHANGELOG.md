@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.1 - 2026-10-18
+
+- Keep the documentation-version menu available in narrow headers using an accessible compact trigger. Preserve the single-version label behavior and existing version/locale routing.
+- Keep narrow-screen header controls within the viewport, constrain version menus with long labels to the visible header area, and allow overflowing version lists to scroll.
+
 ## 0.8.0 - 2026-10-18
 
 - Reject duplicate development sessions for the same canonical project before loading configuration or building. Release session ownership on shutdown or startup failure and reclaim crashed owners without affecting another project or its occupied port.

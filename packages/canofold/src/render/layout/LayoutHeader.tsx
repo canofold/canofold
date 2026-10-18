@@ -1,4 +1,4 @@
-import { ChevronDown, Languages, Menu, Palette, PanelLeft, Search } from 'lucide-react'
+import { ChevronDown, Languages, Layers, Menu, Palette, PanelLeft, Search } from 'lucide-react'
 import { localeNameFor } from '../layoutContent'
 import { themeSelections } from '../theme'
 import { publicPathFor } from '../../seo/urls'
@@ -181,7 +181,8 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
 
           {versionOptions.length > 1 ? (
             <details className="cf-menu cf-version-menu" data-canofold-menu="">
-              <summary className="cf-version-badge" aria-label={labels.version}>
+              <summary className="cf-version-badge" aria-label={labels.version} title={versionLabel}>
+                <Layers className="cf-version-icon" size={18} strokeWidth={2} aria-hidden="true" />
                 <span>{versionLabel}</span>
                 <ChevronDown size={13} strokeWidth={2} aria-hidden="true" />
               </summary>
