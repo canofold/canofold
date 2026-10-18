@@ -263,6 +263,10 @@ a {
   font: 0.8125rem/1 var(--cf-font-mono);
 }
 
+.cf-version-icon {
+  display: none;
+}
+
 .cf-menu {
   position: relative;
 }
@@ -1633,6 +1637,20 @@ html[data-cf-demo-standalone] body {
     display: none;
   }
 
+  .cf-version-menu > summary {
+    width: 36px;
+    padding: 8px;
+  }
+
+  .cf-version-menu > summary > span,
+  .cf-version-menu > summary > .lucide-chevron-down {
+    display: none;
+  }
+
+  .cf-version-icon {
+    display: block;
+  }
+
   .cf-shell {
     display: block;
   }
@@ -1814,8 +1832,12 @@ html[data-cf-demo-standalone] body {
     padding-inline: 12px;
   }
 
+  .cf-brand {
+    flex-shrink: 1;
+  }
+
   .cf-brand-logo {
-    max-width: min(7.5rem, 30vw);
+    max-width: min(7.5rem, 30vw, 100%);
     height: auto;
     max-height: 2.25rem;
   }
@@ -1830,16 +1852,36 @@ html[data-cf-demo-standalone] body {
     display: none;
   }
 
-  .cf-header-right {
-    margin-inline-start: auto;
+  .cf-brand-mark {
+    width: 2rem;
+    height: 2rem;
   }
 
-  .cf-version-badge {
+  .cf-header-right > .cf-version-badge {
     display: none;
   }
 
   .cf-header-right {
+    flex-shrink: 0;
+    margin-inline-start: auto;
     gap: 4px;
+  }
+
+  .cf-sidebar-toggle,
+  .cf-search-trigger {
+    flex-shrink: 0;
+  }
+
+  .cf-version-menu {
+    position: static;
+  }
+
+  .cf-version-menu > .cf-menu-list {
+    inset-inline-end: 12px;
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - var(--cf-header-height) - 1.5rem);
+    overflow-y: auto;
+    overflow-wrap: anywhere;
   }
 
   .cf-hero {

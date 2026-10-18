@@ -54,6 +54,9 @@ describe('site-owned layout metadata', () => {
     expect(model.versionArchived).toBe(true)
     const html = renderToStaticMarkup(<LayoutHeader model={model} />)
     expect(html).toContain('cf-version-menu')
+    expect(html).toContain('cf-version-icon"')
+    expect(html).toContain('aria-label="文档版本"')
+    expect(html).toContain('title="Acme 1.0"')
     expect(html).toContain('href="/v1/"')
   })
 
