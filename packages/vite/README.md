@@ -25,4 +25,6 @@ Production uses one Vite graph for the Markdown browser enhancer, Demo runtime, 
 
 Use `demos.setup` only for shared providers, themes, internationalization, or routing context. Ordinary components do not need it.
 
+CSS imported by `demos.setup` is included automatically on Demo pages in development and production, including client-side navigation. Component CSS stays with its lazily loaded Demo chunk; do not register the same stylesheet again in site `styles`.
+
 Demos render inline by default. `sandbox="iframe"` places trusted local demo code in a restricted iframe for DOM and global-style isolation; it is not a security boundary for untrusted code.

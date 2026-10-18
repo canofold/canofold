@@ -374,23 +374,17 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
       )
       .optional(),
     versions: z
-      .object({
-        current: versionIdSchema,
-        items: z
-          .array(
-            z
-              .object({
-                id: versionIdSchema,
-                label: z.string().min(1),
-                docsDir: z.string().min(1),
-                base: absoluteRouteSchema,
-                status: z.enum(['supported', 'archived']).optional()
-              })
-              .strict()
-          )
-          .min(1)
-      })
-      .strict()
+      .array(
+        z
+          .object({
+            id: versionIdSchema,
+            label: z.string().min(1),
+            docsDir: z.string().min(1),
+            base: absoluteRouteSchema,
+            status: z.enum(['supported', 'archived']).optional()
+          })
+          .strict()
+      )
       .optional(),
     redirects: z.record(absoluteRouteSchema, absoluteRouteSchema).optional(),
     advertising: z

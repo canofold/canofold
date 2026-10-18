@@ -2,7 +2,6 @@ import type { MarkdownAssets } from '@canofold/markdown/server'
 import type { CanofoldConfig, CanofoldLayoutLabels } from '../../config/types'
 import { localeRelativePathFor, localeRootPath } from '../../content/routes'
 import type { ContentGraph, DocPage, NavItem, SidebarGroup, SidebarItem } from '../../content/types'
-import { canofoldVersion } from '../../version'
 import { publicPathFor } from '../../seo/urls'
 import { searchProviderClient } from '../../search'
 import {
@@ -94,7 +93,7 @@ export function createLayoutModel({
       hasPage: Boolean(match)
     }
   })
-  const versionOptions = graph.versions.map((version) => {
+  const versionOptions = config.versions.map((version) => {
     const match = graph.pages.find(
       (candidate) =>
         candidate.version === version.id &&
@@ -133,7 +132,9 @@ export function createLayoutModel({
       (page.title && page.title !== config.title ? `${page.title} | ${config.title}` : config.title),
     description: page.description || config.description,
     ...(config.editUrl && page.version === graph.currentVersion
-      ? { editHref: `${config.editUrl.replace(/\/$/, '')}/${page.relativePath}` }
+      ? {
+          editHref: `${config.editUrl.replace(/\/$/, '')}/${page.relativePath.split('/').map(encodeURIComponent).join('/')}`
+        }
       : {}),
     alternatePages,
     languageOptions,
@@ -143,10 +144,7 @@ export function createLayoutModel({
     labels: content.labels,
     brandTagline:
       config.i18n.messages?.[page.locale]?.brandTagline || config.description || content.brandTagline,
-    versionLabel:
-      graph.versions.length === 1 && page.version === 'current'
-        ? `v${canofoldVersion}`
-        : (graph.versions.find((version) => version.id === page.version)?.label ?? page.version),
+    versionLabel: graph.versions.find((version) => version.id === page.version)?.label ?? page.version,
     versionArchived: graph.versions.find((version) => version.id === page.version)?.status === 'archived',
     localeRoot: publicPathFor(config, localeRoot),
     markdownShowcaseHref: publicPathFor(config, rawMarkdownShowcaseHref),

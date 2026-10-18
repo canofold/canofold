@@ -26,10 +26,10 @@ describe('runSnapshot', () => {
       join(cwd, 'canofold.config.ts'),
       `export default {
         i18n: { locales: ['zh', 'en'] },
-        versions: { current: 'v2', items: [
+        versions: [
           { id: 'v2', label: 'v2', docsDir: 'docs', base: '/' },
           { id: 'v1', label: 'v1', docsDir: 'versions/v1', base: '/v1/' }
-        ] }
+        ]
       }`
     )
     const graph = await buildContentGraph(cwd, await loadConfig(cwd))
@@ -50,6 +50,32 @@ describe('runSnapshot', () => {
 
     await expect(runSnapshot({ cwd, id: 'v1' })).rejects.toThrow('Publish or remove drafts')
     await expect(readFile(join(cwd, 'versions/v1/index.md'))).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  it('snapshots the first configured version and rejects existing ids and destinations', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-snapshot-first-'))
+    await mkdir(join(cwd, 'handbook'), { recursive: true })
+    await mkdir(join(cwd, 'old'), { recursive: true })
+    await writeFile(join(cwd, 'handbook/index.md'), '# Current series')
+    await writeFile(join(cwd, 'old/index.md'), '# Old series')
+    const config = `export default { versions: [
+      { id: 'stable', label: '0.7', docsDir: 'handbook', base: '/' },
+      { id: 'legacy', label: '0.6', docsDir: 'old', base: '/old/' }
+    ] }`
+    await writeFile(join(cwd, 'canofold.config.ts'), config)
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+
+    try {
+      await expect(runSnapshot({ cwd, id: 'stable' })).rejects.toThrow('already exists')
+      await expect(runSnapshot({ cwd, id: 'legacy' })).rejects.toThrow('already exists')
+      await runSnapshot({ cwd, id: 'v0.7' })
+      expect(await readFile(join(cwd, 'versions/v0.7/index.md'), 'utf8')).toBe('# Current series')
+      expect(await readFile(join(cwd, 'canofold.config.ts'), 'utf8')).toBe(config)
+      expect(log.mock.calls.at(-1)?.[0]).toContain('after the current entry in the versions array')
+      await expect(runSnapshot({ cwd, id: 'v0.7' })).rejects.toThrow('already exists')
+    } finally {
+      log.mockRestore()
+    }
   })
 
   it('keeps a version-local Demo source independent of later current edits', async () => {
@@ -75,10 +101,10 @@ describe('runSnapshot', () => {
     await writeFile(join(cwd, 'docs/demo/basic.tsx'), 'export default function Demo() { return "new" }')
     await writeFile(
       join(cwd, 'canofold.config.ts'),
-      `${engine}, versions: { current: 'v2', items: [
+      `${engine}, versions: [
         { id: 'v2', label: 'v2', docsDir: 'docs', base: '/' },
         { id: 'v1', label: 'v1', docsDir: 'versions/v1', base: '/v1/' }
-      ] } }`
+      ] }`
     )
     const config = await loadConfig(cwd)
     const graph = await buildContentGraph(cwd, config)

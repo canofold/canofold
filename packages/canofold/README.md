@@ -48,6 +48,12 @@ Official and third-party themes implement the same `ThemeDefinition` contract. C
 
 Top navigation normally follows directory routes. For related documents kept at flat routes, add their exact paths to the navigation item's `activePaths`; those paths must point to generated pages. For example, `{ text: 'Components', link: '/button/', activePaths: ['/notice/', '/progress/'] }` keeps “Components” selected on the listed pages without changing their URLs.
 
+## Document versions and dates
+
+`versions` is an array whose first entry is current. Omit it or use `[]` to hide the control while building from `docsDir` (`docs` by default). One entry displays its `label`; multiple entries offer switching. Neither the project nor Canofold package version is read automatically. For example: `versions: [{ id: 'v2', label: 'Acme 2.4', docsDir: 'docs', base: '/' }]`. With a non-empty array, set directories on its entries instead of the top-level `docsDir`. Historical documentation must first be saved in a separate directory; `canofold snapshot <id>` copies today's current docs rather than looking up Git history.
+
+Page update dates use `updatedAt` or reliable Git history and are displayed in UTC, independently of the build machine's timezone. If neither source is available, no date is shown.
+
 ## Output control and build report
 
 The defaults retain all outputs from earlier releases. Turn off only the artifacts you do not want to publish:

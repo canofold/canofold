@@ -36,6 +36,8 @@ export interface NavItem {
   title: string
   routePath: string
   activePaths?: string[]
+  /** Explicit section ownership for automatic or section-root navigation. */
+  section?: string
 }
 
 export interface DocPage extends Pick<MarkdownContentAnalysis, 'headings' | 'codeExamples' | 'excerpt'> {

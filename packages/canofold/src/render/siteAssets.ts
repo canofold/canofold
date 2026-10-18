@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { basename, dirname, extname, join, posix, relative, resolve } from 'node:path'
 import { build } from 'esbuild'
 import type { CanofoldConfig } from '../config/types'
+import { documentationVersions } from '../config/versions'
 import type { DocPage } from '../content/types'
 import { RESERVED_OUTPUT_DIRECTORIES } from '../output/plan'
 import { isInside, portablePathKey, resolveOutputPath, resolveProjectPath } from '../utils/paths'
@@ -190,7 +191,7 @@ export async function collectPublicAssets(cwd: string, config: CanofoldConfig): 
       else if (entry.isFile()) assets.push({ source, outputPath })
     }
   }
-  const docsDirs = new Set(config.versions.items.map((version) => version.docsDir))
+  const docsDirs = new Set(documentationVersions(config).map((version) => version.docsDir))
   for (const docsDir of docsDirs) {
     const publicDir = join(resolveProjectPath(cwd, docsDir, `public directory for ${docsDir}`), 'public')
     try {

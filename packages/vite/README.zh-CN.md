@@ -23,4 +23,6 @@ export default defineConfig({
 
 `demos.setup` 只用于所有 Demo 共享的 Provider、主题、国际化或路由环境；普通组件不需要设置。
 
+`demos.setup` 引入的 CSS 会在开发和生产环境中自动加载到 Demo 页面，客户端导航切换同样有效。组件 CSS 仍跟随对应 Demo 按需加载，不要在站点的 `styles` 中重复登记同一份样式。
+
 Demo 默认渲染在文档页面中。`sandbox="iframe"` 会把可信的本地 Demo 放进受限 iframe，隔离 DOM 与全局样式；它不是运行不可信代码的安全边界。

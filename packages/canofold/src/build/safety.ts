@@ -1,4 +1,5 @@
 import type { CanofoldConfig } from '../config/types'
+import { documentationVersions } from '../config/versions'
 import { basename, dirname, join } from 'node:path'
 import { resolveBuildTemporaryRoot } from './cache'
 import { assertDisjointPaths, assertProjectPath, resolveOutputRoot, resolveProjectPath } from '../utils/paths'
@@ -20,8 +21,8 @@ export async function resolveSafeOutputRoot(cwd: string, config: CanofoldConfig,
     await assertDisjointPaths(outputRoot, path, field)
   }
   const inputs = [
-    ...config.versions.items.map(
-      (version) => [version.docsDir, `versions.items[${version.id}].docsDir`] as const
+    ...documentationVersions(config).map(
+      (version) => [version.docsDir, `versions[${version.id}].docsDir`] as const
     ),
     ...config.styles.map((style, index) => [style, `styles[${index}]`] as const)
   ]

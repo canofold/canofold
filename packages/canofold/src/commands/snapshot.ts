@@ -2,6 +2,7 @@ import { copyFile, mkdir, mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { loadConfig } from '../config/load'
+import { documentationVersions } from '../config/versions'
 import { buildContentGraph } from '../content/graph'
 import { isMdxPath } from '../content/fileKinds'
 import { assertVersionLocalDependencies } from '../content/versionBoundary'
@@ -31,11 +32,11 @@ export async function runSnapshot({ cwd, id }: { cwd: string; id: string }) {
     throw new Error('Snapshot ID must be a path-safe version identifier')
   }
   const config = await loadConfig(cwd)
-  if (config.versions.items.some((item) => item.id === id)) {
+  const versions = documentationVersions(config)
+  if (versions.some((item) => item.id === id)) {
     throw new Error(`Version ${id} already exists in canofold.config.ts`)
   }
-  const current = config.versions.items.find((item) => item.id === config.versions.current)
-  if (!current) throw new Error(`Current version ${config.versions.current} is not configured`)
+  const current = versions[0]!
   const source = resolveProjectPath(cwd, current.docsDir, 'current docsDir')
   const docsDir = `versions/${id}`
   const target = resolveProjectPath(cwd, docsDir, 'snapshot docsDir')
@@ -90,6 +91,6 @@ export async function runSnapshot({ cwd, id }: { cwd: string; id: string }) {
   }
   console.log(`Created ${docsDir} from ${relative(cwd, source)}.`)
   console.log(
-    `Add { id: ${JSON.stringify(id)}, label: ${JSON.stringify(id)}, docsDir: ${JSON.stringify(docsDir)}, base: ${JSON.stringify(`/` + id + `/`)} } to versions.items in canofold.config.ts. The configuration was not modified.`
+    `Append { id: ${JSON.stringify(id)}, label: ${JSON.stringify(id)}, docsDir: ${JSON.stringify(docsDir)}, base: ${JSON.stringify(`/` + id + `/`)} } after the current entry in the versions array in canofold.config.ts. The configuration was not modified.`
   )
 }

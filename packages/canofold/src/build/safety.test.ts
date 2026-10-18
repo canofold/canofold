@@ -11,10 +11,7 @@ describe('build path safety', () => {
     async (docsDir) => {
       const cwd = await mkdtemp(join(tmpdir(), 'canofold-work-paths-'))
       const config = createMockConfig({
-        versions: {
-          current: 'current',
-          items: [{ id: 'current', label: 'Current', docsDir, base: '/' }]
-        }
+        versions: [{ id: 'current', label: 'Current', docsDir, base: '/' }]
       })
       await expect(resolveSafeOutputRoot(cwd, config, join(cwd, '.canofold/cache'))).rejects.toThrow(
         'must not overlap'

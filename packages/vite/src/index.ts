@@ -20,6 +20,7 @@ import {
   normalizePath,
   type BuildOptions,
   type InlineConfig,
+  type Manifest,
   type ModuleNode,
   type Plugin,
   type ViteDevServer,
@@ -377,6 +378,7 @@ function demoBuildOptions(context: CanofoldDemoPrepareContext): BuildOptions {
     emptyOutDir: true,
     copyPublicDir: false,
     cssCodeSplit: true,
+    manifest: true,
     ...(Number.parseInt(viteVersion, 10) >= 8
       ? { rolldownOptions: bundlerOptions }
       : { rollupOptions: bundlerOptions })
@@ -663,15 +665,37 @@ async function outputPathsUnder(root: string, prefix: string): Promise<string[]>
   return paths.flat().sort()
 }
 
+/** Vite's public manifest distinguishes entry/static CSS from lazy Demo CSS. */
+async function builtEntryStyles(context: CanofoldDemoPrepareContext): Promise<string[]> {
+  const manifest = JSON.parse(
+    await readFile(join(context.outputRoot, 'assets/canofold-demos/.vite/manifest.json'), 'utf8')
+  ) as Manifest
+  const entry = Object.keys(manifest).find((key) => manifest[key]!.file === 'index.js')
+  if (!entry) throw new Error('Vite Demo manifest is missing the index.js entry')
+  const visited = new Set<string>()
+  const styles = new Set<string>()
+  const visit = (key: string) => {
+    if (visited.has(key)) return
+    const chunk = manifest[key]
+    if (!chunk) throw new Error(`Vite Demo manifest is missing imported chunk ${key}`)
+    visited.add(key)
+    chunk.imports?.forEach(visit)
+    chunk.css?.forEach((file) => styles.add(file))
+  }
+  visit(entry)
+  return [...styles].map((file) => baseUrl(context.basePath, `/assets/canofold-demos/${file}`))
+}
+
 export function vite(options: CanofoldViteOptions = {}): CanofoldDemoEngine {
   return {
     id: '@canofold/vite',
-    version: '3',
+    version: '4',
     cacheKey: {
       root: options.root ?? null,
       configFile: options.configFile ?? null
     },
     async prepare(context) {
+      let styleUrls: string[] | undefined
       const prepared =
         context.mode === 'dev'
           ? await prepareDevDemos(context, options)
@@ -679,6 +703,7 @@ export function vite(options: CanofoldViteOptions = {}): CanofoldDemoEngine {
       if (context.mode === 'build') {
         const build = demoBuildOptions(context)
         await viteBuild(await isolatedBuildConfig(context, options, prepared.plugin, build))
+        styleUrls = await builtEntryStyles(context)
       }
       const clientUrl =
         context.mode === 'build'
@@ -691,6 +716,7 @@ export function vite(options: CanofoldViteOptions = {}): CanofoldDemoEngine {
       return {
         clientUrl,
         markdownClientUrl,
+        styleUrls: styleUrls?.length ? styleUrls : undefined,
         demos: Object.fromEntries(prepared.demos.map((demo) => [demo.id, demo])),
         dependencyPaths: prepared.dependencyPaths,
         ...(context.mode === 'build'

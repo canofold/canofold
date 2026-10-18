@@ -131,13 +131,11 @@ export async function runCheck({ cwd, format = 'text' }: { cwd: string; format?:
   const publishedGraph = { ...graph, pages: publishedPages }
   const existingByVersion = new Map(
     await Promise.all(
-      config.versions.items.map(
+      graph.versions.map(
         async (version) =>
           [
             version.id,
-            await collectFiles(
-              resolveProjectPath(cwd, version.docsDir, `versions.items[${version.id}].docsDir`)
-            )
+            await collectFiles(resolveProjectPath(cwd, version.docsDir, `versions[${version.id}].docsDir`))
           ] as const
       )
     )

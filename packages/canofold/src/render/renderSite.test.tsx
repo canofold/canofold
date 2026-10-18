@@ -406,7 +406,7 @@ describe('renderSite', () => {
       config: {
         ...defaultConfig,
         docsDir: 'docs/current',
-        versions: { current: 'current', items: versions }
+        versions
       },
       graph
     })
@@ -432,7 +432,7 @@ describe('renderSite', () => {
         config: {
           ...defaultConfig,
           docsDir: 'docs/current',
-          versions: { current: 'current', items: versions }
+          versions
         },
         graph: createMockGraph({ versions })
       })

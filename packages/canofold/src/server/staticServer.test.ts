@@ -332,6 +332,38 @@ describe('resolveRequestPath', () => {
     }
   })
 
+  it('keeps the original mounted URL when framework middleware strips its base', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-middleware-base-'))
+    await mkdir(join(cwd, 'guide'))
+    await writeFile(join(cwd, 'guide/index.html'), '<html><body>Guide</body></html>')
+    const server = await startStaticServer({
+      root: cwd,
+      port: 0,
+      basePath: '/manual/',
+      liveReload: true,
+      configureServer: async () => ({
+        middleware(request, _response, next) {
+          request.url = request.url?.replace(/^\/manual(?=\/)/, '')
+          next()
+        }
+      })
+    })
+    let stream: Awaited<ReturnType<typeof connectReloadStream>> | undefined
+    try {
+      const page = await requestStaticServer(server.port, '/manual/guide/?source=menu')
+      expect(page.status).toBe(200)
+      expect(page.body).toContain('Guide')
+      expect(page.body).toContain('/manual/__canofold/events')
+      expect((await requestStaticServer(server.port, '/guide/')).status).toBe(404)
+      stream = await connectReloadStream(server.port, '/manual/__canofold/events')
+      await vi.waitFor(() => expect(stream!.chunks.join('')).toContain(':connected'))
+    } finally {
+      stream?.close()
+      await server.close()
+      await rm(cwd, { recursive: true, force: true })
+    }
+  })
+
   it('reports a synchronously thrown framework middleware error', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-static-middleware-error-'))
     const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined)

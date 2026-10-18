@@ -39,10 +39,7 @@ export const defaultConfig: CanofoldConfig = {
   checks: { rules: {} },
   extensions: [],
   navigation: {},
-  versions: {
-    current: 'current',
-    items: [{ id: 'current', label: 'Current', docsDir: 'docs', base: '/' }]
-  },
+  versions: [],
   redirects: {},
   i18n: {
     defaultLocale: 'zh',

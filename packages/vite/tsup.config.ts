@@ -9,7 +9,7 @@ export default defineConfig((overrideOptions) => ({
   dts: true,
   clean: !overrideOptions.watch,
   splitting: false,
-  sourcemap: true,
+  sourcemap: Boolean(overrideOptions.watch),
   external: ['canofold', 'vite'],
   onSuccess: () => signalWatchBuild('vite')
 }))

@@ -21,7 +21,7 @@ export default defineConfig((overrideOptions): Options[] => [
     dts: overrideOptions.watch ? false : true,
     clean: !overrideOptions.watch,
     splitting: true,
-    sourcemap: true,
+    sourcemap: Boolean(overrideOptions.watch),
     define: {
       __CANOFOLD_VERSION__: JSON.stringify(pkg.version)
     },

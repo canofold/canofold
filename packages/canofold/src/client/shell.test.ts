@@ -26,6 +26,7 @@ afterEach(() => {
   delete window.__canofoldLoadPageModule
   delete window.__canofoldApplyPageDocument
   document.body.innerHTML = ''
+  document.head.innerHTML = ''
   document.documentElement.className = ''
   document.documentElement.removeAttribute('data-cf-theme')
   document.documentElement.removeAttribute('data-cf-theme-appearance')
@@ -38,6 +39,44 @@ afterEach(() => {
 })
 
 describe('typed browser shell', () => {
+  it.each([false, true])('preserves the reader color scheme %s across both server defaults', async (dark) => {
+    document.documentElement.classList.toggle('dark', dark)
+    document.documentElement.dataset.cfTheme = 'canofold'
+    document.documentElement.dataset.cfThemeAppearance = dark ? 'dark' : 'light'
+    document.body.innerHTML = '<div data-canofold-page-root>Initial</div>'
+    bootstrapShell()
+    for (const serverDark of [true, false]) {
+      await window.__canofoldApplyPageDocument!(
+        parse(
+          `<html lang="en" class="cf-playground-page${serverDark ? ' dark' : ''}"><body><div data-canofold-page-root>Next</div></body></html>`
+        ),
+        { mode: 'navigation' }
+      )
+      expect(document.documentElement.classList.contains('dark')).toBe(dark)
+      expect(document.documentElement.classList.contains('cf-playground-page')).toBe(true)
+      expect(document.documentElement.dataset.cfThemeAppearance).toBe(dark ? 'dark' : 'light')
+    }
+  })
+
+  it('reconciles page-specific styles and robots without removing global styles', async () => {
+    document.head.innerHTML = '<link rel="stylesheet" href="/global.css">'
+    document.body.innerHTML = '<div data-canofold-page-root>Initial</div>'
+    bootstrapShell()
+    const draft = parse(
+      '<head><meta name="robots" content="noindex, nofollow" data-canofold-page-head><link rel="stylesheet" href="/provider.css" data-canofold-page-head></head><body><div data-canofold-page-root>Draft</div></body>'
+    )
+    await window.__canofoldApplyPageDocument!(draft, { mode: 'navigation' })
+    const style = document.querySelector('link[href="/provider.css"]')
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, nofollow')
+    await window.__canofoldApplyPageDocument!(draft, { mode: 'update' })
+    expect(document.querySelector('link[href="/provider.css"]')).toBe(style)
+    await window.__canofoldApplyPageDocument!(parse('<div data-canofold-page-root>Published</div>'), {
+      mode: 'navigation'
+    })
+    expect(document.querySelector('meta[name="robots"]')).toBeNull()
+    expect(document.querySelector('link[href="/provider.css"]')).toBeNull()
+    expect(document.querySelector('link[href="/global.css"]')).not.toBeNull()
+  })
   it('reuses a single sidebar intent request without bypassing the HTTP cache', async () => {
     document.body.innerHTML =
       '<div data-canofold-page-root><a data-canofold-sidebar-link href="/next/">Next</a><main id="canofold-main">Old</main></div>'

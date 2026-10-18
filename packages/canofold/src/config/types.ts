@@ -194,10 +194,8 @@ export interface CanofoldConfigInput {
   }
   extensions?: CanofoldExtensionDescriptor[]
   navigation?: Record<string, CanofoldNavigationItem[]>
-  versions?: {
-    current: string
-    items: CanofoldVersionItem[]
-  }
+  /** Ordered documentation versions. The first is current; omitted or empty hides the control. */
+  versions?: CanofoldVersionItem[]
   redirects?: Record<string, string>
   advertising?: CanofoldAdvertisement
   i18n?: {
@@ -253,10 +251,7 @@ export interface CanofoldConfig {
   }
   extensions: CanofoldExtensionDescriptor[]
   navigation: Record<string, CanofoldNavigationItem[]>
-  versions: {
-    current: string
-    items: CanofoldVersionItem[]
-  }
+  versions: CanofoldVersionItem[]
   redirects: Record<string, string>
   advertising?: CanofoldAdvertisement
   i18n: {

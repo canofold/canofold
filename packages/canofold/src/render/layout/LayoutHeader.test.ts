@@ -20,10 +20,28 @@ describe('navItemIsActive', () => {
     )
   })
 
+  it('keeps graph-owned sections selected after their first page has been opened', () => {
+    const guide = { title: 'Guide', routePath: '/guide/start/', section: 'guide' }
+    expect(navItemIsActive(model('/guide/next/', 'guide'), guide)).toBe(true)
+    expect(navItemIsActive(model('/reference/next/', 'reference'), guide)).toBe(false)
+  })
+
   it('does not keep the root navigation item active on every page', () => {
     const home = { title: 'Home', routePath: '/' }
     expect(navItemIsActive(model('/'), home)).toBe(true)
     expect(navItemIsActive(model('/guide/'), home)).toBe(false)
+  })
+
+  it('does not select sibling configured entries merely because they share a directory', () => {
+    const page = model('/guide/writing/', 'guide')
+    expect(navItemIsActive(page, { title: 'Writing', routePath: '/guide/writing/' })).toBe(true)
+    expect(navItemIsActive(page, { title: 'Deployment', routePath: '/guide/deploy/' })).toBe(false)
+    expect(
+      navItemIsActive(model('/guide/writing-next/', 'guide'), {
+        title: 'Writing',
+        routePath: '/guide/writing/'
+      })
+    ).toBe(false)
   })
 })
 

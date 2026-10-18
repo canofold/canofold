@@ -12,6 +12,7 @@ describe('loadConfig', () => {
 
     expect(config.title).toBe('Canofold')
     expect(config.docsDir).toBe('docs')
+    expect(config.versions).toEqual([])
     expect(config.outputDir).toBe('.canofold/dist')
     expect(config.markdownMirror).toBe(true)
     expect(config.ai).toMatchObject({ pageIndex: true, fullContent: true })
@@ -523,7 +524,7 @@ describe('loadConfig', () => {
       join(versioned, 'canofold.config.ts'),
       `export default {
         docsDir: 'docs',
-        versions: { current: 'current', items: [{ id: 'current', label: 'Current', docsDir: 'v2', base: '/' }] }
+        versions: [{ id: 'current', label: 'Current', docsDir: 'v2', base: '/' }]
       }`
     )
     await expect(loadConfig(versioned)).rejects.toThrow('docsDir cannot be combined with versions')
@@ -608,19 +609,55 @@ describe('loadConfig', () => {
     }
   })
 
+  it.each([[undefined], [[]]])('keeps version controls unconfigured for %j', async (versions) => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-versions-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default ${JSON.stringify({ docsDir: 'handbook', versions })}`
+    )
+    const config = await loadConfig(cwd)
+    expect(config.versions).toEqual([])
+    expect(config.docsDir).toBe('handbook')
+  })
+
+  it('selects the first array entry as the main documentation version', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-versions-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { versions: [
+        { id: 'stable', label: '2.x', docsDir: 'handbook', base: '/' },
+        { id: 'legacy', label: '1.x', docsDir: 'old', base: '/v1/' }
+      ] }`
+    )
+    const config = await loadConfig(cwd)
+    expect(config.docsDir).toBe('handbook')
+    expect(config.versions).toEqual([
+      { id: 'stable', label: '2.x', docsDir: 'handbook', base: '/' },
+      { id: 'legacy', label: '1.x', docsDir: 'old', base: '/v1/' }
+    ])
+  })
+
+  it('rejects the superseded object configuration instead of silently adapting it', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-versions-'))
+    await writeFile(
+      join(cwd, 'canofold.config.ts'),
+      `export default { versions: { current: 'v1', items: [
+        { id: 'v1', label: '1.x', docsDir: 'docs', base: '/' }
+      ] } }`
+    )
+    await expect(loadConfig(cwd)).rejects.toThrow(/array/)
+  })
+
   it('loads enterprise navigation, versions, redirects, and advertising', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
     await writeFile(
       join(cwd, 'canofold.config.ts'),
       `export default {
         navigation: { zh: [{ text: '指南', link: '/guide/' }] },
-        versions: {
-          current: 'v2',
-          items: [
-            { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
-            { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/', status: 'archived' }
-          ]
-        },
+        versions: [
+          { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
+          { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/', status: 'archived' }
+        ],
         redirects: { '/old/': '/guide/' },
         advertising: { image: '/sponsor.png', href: 'https://example.com', alt: 'Sponsor' }
       }`
@@ -628,8 +665,8 @@ describe('loadConfig', () => {
 
     const config = await loadConfig(cwd)
     expect(config.navigation.zh?.[0]).toEqual({ text: '指南', link: '/guide/' })
-    expect(config.versions.current).toBe('v2')
-    expect(config.versions.items[1]?.status).toBe('archived')
+    expect(config.versions[0]?.id).toBe('v2')
+    expect(config.versions[1]?.status).toBe('archived')
     expect(config.redirects['/old/']).toBe('/guide/')
     expect(config.advertising?.alt).toBe('Sponsor')
     expect(config.search).toEqual({ enabled: true, provider: 'compact' })
@@ -639,16 +676,15 @@ describe('loadConfig', () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
     await writeFile(join(cwd, 'canofold.config.ts'), `export default { docsDir: 'handbook' }`)
     const config = await loadConfig(cwd)
-    expect(config.versions.items).toEqual([
-      { id: 'current', label: 'Current', docsDir: 'handbook', base: '/' }
-    ])
+    expect(config.docsDir).toBe('handbook')
+    expect(config.versions).toEqual([])
   })
 
   it('refuses to mark the current version as archived', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-archived-current-'))
     await writeFile(
       join(cwd, 'canofold.config.ts'),
-      `export default { versions: { current: 'v2', items: [{ id: 'v2', label: 'v2', docsDir: 'docs', base: '/', status: 'archived' }] } }`
+      `export default { versions: [{ id: 'v2', label: 'v2', docsDir: 'docs', base: '/', status: 'archived' }] }`
     )
     await expect(loadConfig(cwd)).rejects.toThrow('current documentation version cannot be archived')
   })
@@ -658,10 +694,25 @@ describe('loadConfig', () => {
       const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-'))
       await writeFile(
         join(cwd, 'canofold.config.ts'),
-        `export default { versions: { current: 'current', items: [{ id: 'current', label: 'Current', docsDir: 'docs', base: '/' }, { id: 'old', label: 'Old', docsDir: 'old', base: ${JSON.stringify(base)} }] } }`
+        `export default { versions: [{ id: 'current', label: 'Current', docsDir: 'docs', base: '/' }, { id: 'old', label: 'Old', docsDir: 'old', base: ${JSON.stringify(base)} }] }`
       )
       await expect(loadConfig(cwd)).rejects.toThrow('safe absolute path')
     }
+  })
+
+  it.each([
+    [[{ id: 'main', label: 'Main', docsDir: 'docs', base: '/latest/' }], 'must use base "/"'],
+    [
+      [
+        { id: 'main', label: 'Main', docsDir: 'docs', base: '/' },
+        { id: 'old', label: 'Old', docsDir: 'old', base: '/' }
+      ],
+      'duplicate bases'
+    ]
+  ])('rejects ambiguous main-version routes: %j', async (versions, message) => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-versions-'))
+    await writeFile(join(cwd, 'canofold.config.ts'), `export default ${JSON.stringify({ versions })}`)
+    await expect(loadConfig(cwd)).rejects.toThrow(message as string)
   })
 
   it('loads a safe deployment base path and rejects traversal', async () => {
@@ -718,10 +769,10 @@ describe('loadConfig', () => {
       const cwd = await mkdtemp(join(tmpdir(), 'canofold-config-version-id-'))
       await writeFile(
         join(cwd, 'canofold.config.ts'),
-        `export default { versions: { current: 'current', items: [
+        `export default { versions: [
           { id: ${JSON.stringify(ids[0])}, label: 'Current', docsDir: 'docs', base: '/' },
           { id: ${JSON.stringify(ids[1])}, label: 'Old', docsDir: 'old', base: '/old/' }
-        ] } }`
+        ] }`
       )
       await expect(loadConfig(cwd)).rejects.toThrow(/version ids|safe portable slug/)
     }

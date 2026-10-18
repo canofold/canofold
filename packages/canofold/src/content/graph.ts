@@ -1,6 +1,7 @@
 import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
 import { createMarkdownRenderer, type MarkdownRenderer } from '@canofold/markdown/server'
 import { markdownLabelsFor } from '../config/locale'
+import { documentationVersions } from '../config/versions'
 import { prepareMdxSource } from '../markdown/importBoundary'
 import { join, posix } from 'node:path'
 import type { CanofoldConfig, CanofoldNavigationItem, CanofoldVersionItem } from '../config/types'
@@ -9,7 +10,13 @@ import { demoDirectivePlugin, demoReferencesForPage } from '../demos/references'
 import { assertProjectPath, portablePathKey, resolveProjectPath } from '../utils/paths'
 import { isMarkdownIndexName, isMdxPath } from './fileKinds'
 import { frontmatterSchema, parseFrontmatter } from './frontmatter'
-import { htmlOutputPathFor, localeRelativePathFor, markdownOutputPathFor, routePathFor } from './routes'
+import {
+  htmlOutputPathFor,
+  localeRelativePathFor,
+  localeRootPath,
+  markdownOutputPathFor,
+  routePathFor
+} from './routes'
 import { scanMarkdownFiles } from './scan'
 import { gitContentDates } from './gitDates'
 import type {
@@ -35,7 +42,7 @@ function isLocaleHome(page: DocPage) {
 }
 
 export function assertLocaleHomePages(pages: readonly DocPage[], config: CanofoldConfig) {
-  for (const version of config.versions.items) {
+  for (const version of documentationVersions(config)) {
     for (const locale of config.i18n.locales) {
       if (
         !pages.some((page) => page.version === version.id && page.locale === locale && isLocaleHome(page))
@@ -163,7 +170,9 @@ function firstSidebarLink(item: SidebarItem): SidebarLink | undefined {
 function buildAutomaticNav(sidebar: SidebarGroup[]): NavItem[] {
   return sidebar.flatMap((group) => {
     const first = group.items[0] ? firstSidebarLink(group.items[0]) : undefined
-    return group.title && first ? [{ title: group.title, routePath: first.routePath }] : []
+    return group.title && first
+      ? [{ title: group.title, routePath: first.routePath, section: group.segment }]
+      : []
   })
 }
 
@@ -184,15 +193,20 @@ function buildConfiguredNav(items: CanofoldNavigationItem[], version: CanofoldVe
 
 /** Keep configured section links useful when the section landing page is hidden
  * from the sidebar: a top-level section click opens its first visible menu item. */
-function anchorConfiguredNavToSidebar(items: NavItem[], sidebar: SidebarGroup[]): NavItem[] {
+function anchorConfiguredNavToSidebar(
+  items: NavItem[],
+  sidebar: SidebarGroup[],
+  localeRoot: string
+): NavItem[] {
   return items.map((item) => {
     if (!item.routePath.startsWith('/')) return item
-    const segments = item.routePath.split('/').filter(Boolean)
     const group = sidebar.find(
-      (candidate) => candidate.segment && segments.at(-1) === candidate.segment && segments.length > 0
+      (candidate) =>
+        candidate.segment &&
+        item.routePath.replace(/\/$/, '') === `${localeRoot}${encodeURIComponent(candidate.segment)}`
     )
     const first = group?.items[0] ? firstSidebarLink(group.items[0]) : undefined
-    return first ? { ...item, routePath: first.routePath } : item
+    return group && first ? { ...item, routePath: first.routePath, section: group.segment } : item
   })
 }
 
@@ -225,8 +239,8 @@ async function scanVersionPages(
   includeDrafts = false,
   contentDates: Map<string, string> = new Map()
 ): Promise<DocPage[]> {
-  const docsRoot = resolveProjectPath(cwd, version.docsDir, `versions.items[${version.id}].docsDir`)
-  await assertProjectPath(cwd, docsRoot, `versions.items[${version.id}].docsDir`)
+  const docsRoot = resolveProjectPath(cwd, version.docsDir, `versions[${version.id}].docsDir`)
+  await assertProjectPath(cwd, docsRoot, `versions[${version.id}].docsDir`)
   const scanned = await scanMarkdownFiles(docsRoot)
   const pages: DocPage[] = []
 
@@ -328,11 +342,12 @@ export async function buildContentGraph(
 ): Promise<ContentGraph> {
   const pages: DocPage[] = []
   const renderer = options.renderer ?? createMarkdownRenderer()
+  const versions = documentationVersions(config)
   const contentDates = await gitContentDates(
     cwd,
-    config.versions.items.map((version) => version.docsDir)
+    versions.map((version) => version.docsDir)
   )
-  for (const version of config.versions.items) {
+  for (const version of versions) {
     for (const page of await scanVersionPages(
       cwd,
       config,
@@ -345,7 +360,7 @@ export async function buildContentGraph(
       pages.push(page)
   }
 
-  const versionOrder = new Map(config.versions.items.map((item, index) => [item.id, index]))
+  const versionOrder = new Map(versions.map((item, index) => [item.id, index]))
   const localeOrder = new Map(config.i18n.locales.map((locale, index) => [locale, index]))
   pages.sort((a, b) => {
     const versionDelta = (versionOrder.get(a.version) ?? 0) - (versionOrder.get(b.version) ?? 0)
@@ -362,7 +377,7 @@ export async function buildContentGraph(
 
   assertLocaleHomePages(pages, config)
 
-  for (const version of config.versions.items) {
+  for (const version of versions) {
     for (const locale of config.i18n.locales) {
       const contentPages = pages.filter(
         (page) => page.version === version.id && page.locale === locale && !isLocaleHome(page)
@@ -379,7 +394,7 @@ export async function buildContentGraph(
 
   const sidebar: ContentGraph['sidebar'] = {}
   const nav: ContentGraph['nav'] = {}
-  for (const version of config.versions.items) {
+  for (const version of versions) {
     const versionSidebar: Record<string, SidebarGroup[]> = {}
     const versionNav: Record<string, NavItem[]> = {}
     sidebar[version.id] = versionSidebar
@@ -390,7 +405,11 @@ export async function buildContentGraph(
       )
       versionSidebar[locale] = localeSidebar
       versionNav[locale] = config.navigation[locale]
-        ? anchorConfiguredNavToSidebar(buildConfiguredNav(config.navigation[locale], version), localeSidebar)
+        ? anchorConfiguredNavToSidebar(
+            buildConfiguredNav(config.navigation[locale], version),
+            localeSidebar,
+            localeRootPath(locale, config.i18n.defaultLocale, version.base)
+          )
         : buildAutomaticNav(localeSidebar)
     }
   }
@@ -413,7 +432,7 @@ export async function buildContentGraph(
     nav,
     locales: config.i18n.locales,
     defaultLocale: config.i18n.defaultLocale,
-    versions: config.versions.items.map((item) => ({ ...item })),
-    currentVersion: config.versions.current
+    versions: versions.map((item) => ({ ...item })),
+    currentVersion: versions[0]!.id
   }
 }

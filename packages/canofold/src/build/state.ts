@@ -3,6 +3,7 @@ import { resolve as resolveModule } from 'import-meta-resolve'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { CanofoldConfig } from '../config/types'
+import { documentationVersions } from '../config/versions'
 import { isMdxPath } from '../content/fileKinds'
 import { assertVersionLocalDependencies } from '../content/versionBoundary'
 import type { ContentGraph, DocPage } from '../content/types'
@@ -73,8 +74,8 @@ async function runtimeFingerprint() {
 }
 
 async function supportFingerprint(cwd: string, config: CanofoldConfig, pageDependencies: Set<string>) {
-  const docsRoots = [...new Set(config.versions.items.map((version) => version.docsDir))].map((docsDir) =>
-    resolveProjectPath(cwd, docsDir, 'docsDir')
+  const docsRoots = [...new Set(documentationVersions(config).map((version) => version.docsDir))].map(
+    (docsDir) => resolveProjectPath(cwd, docsDir, 'docsDir')
   )
   const supportFiles = (await Promise.all(docsRoots.map((root) => supportFilesUnder(root)))).flat()
   for (const style of config.styles) {
