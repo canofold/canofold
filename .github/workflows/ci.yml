@@ -38,17 +38,43 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install site regression browsers
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
-
       - name: Release checks
-        run: pnpm test:release
+        run: pnpm test:release:checks
+
+  navigation:
+    name: Site navigation (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.9.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install site regression browser
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Test packed site navigation
+        run: pnpm test:site-browser --project=${{ matrix.browser }}
 
       - name: Upload site regression failures
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
         with:
-          name: site-navigation-${{ matrix.node }}
+          name: site-navigation-${{ matrix.browser }}
           path: |
             playwright-report/
             test-results/
@@ -56,15 +82,16 @@ jobs:
 
   release-gate:
     name: Release gate
-    needs: test
+    needs: [test, navigation]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
-      - name: Require every Node release gate
+      - name: Require every release gate
         env:
           RESULT: ${{ needs.test.result }}
-        run: test "$RESULT" = success
+          NAVIGATION_RESULT: ${{ needs.navigation.result }}
+        run: test "$RESULT" = success && test "$NAVIGATION_RESULT" = success
 
   platform-smoke:
     name: Packed CLI (${{ matrix.os }})

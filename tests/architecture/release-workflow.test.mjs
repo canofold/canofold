@@ -7,7 +7,9 @@ import { test } from 'node:test'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
 test('release workflow accepts tags only from main history', async () => {
-  const workflow = await readFile(join(root, '.github/workflows/release.yml'), 'utf8')
+  const source = await readFile(join(root, '.github/workflows/release.yml'), 'utf8')
+  const workflow = source.slice(source.indexOf('\n  publish:\n'), source.indexOf('\n  github-release:\n'))
+  assert.match(workflow, /needs: \[checks, navigation\]/)
   const checkout = workflow.indexOf('uses: actions/checkout@v7')
   const sourceCheck = workflow.indexOf('name: Verify release tag source')
   const dependencies = workflow.indexOf('name: Install dependencies')

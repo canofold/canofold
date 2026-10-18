@@ -1047,16 +1047,19 @@ paths:
   if (process.argv.includes('--browser')) {
     await writeNavigationFixture(consumerRoot)
     runPnpm(['exec', 'canofold', 'build', '--no-cache'])
-    execPnpmSync(['exec', 'playwright', 'test'], {
-      cwd: workspace,
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        CANOFOLD_NAVIGATION_MODE: 'packed',
-        CANOFOLD_NAVIGATION_SITE: consumerRoot,
-        CANOFOLD_NAVIGATION_CLI: join(consumerRoot, 'node_modules/canofold/dist/cli.js')
+    execPnpmSync(
+      ['exec', 'playwright', 'test', ...process.argv.slice(2).filter((arg) => arg !== '--browser')],
+      {
+        cwd: workspace,
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          CANOFOLD_NAVIGATION_MODE: 'packed',
+          CANOFOLD_NAVIGATION_SITE: consumerRoot,
+          CANOFOLD_NAVIGATION_CLI: join(consumerRoot, 'node_modules/canofold/dist/cli.js')
+        }
       }
-    })
+    )
   }
 
   console.log(
