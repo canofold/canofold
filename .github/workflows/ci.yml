@@ -41,6 +41,18 @@ jobs:
       - name: Release checks
         run: pnpm test:release
 
+  release-gate:
+    name: Release gate
+    needs: test
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require every Node release gate
+        env:
+          RESULT: ${{ needs.test.result }}
+        run: test "$RESULT" = success
+
   platform-smoke:
     name: Packed CLI (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
