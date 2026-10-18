@@ -16,7 +16,8 @@ export default defineConfig((overrideOptions): Options[] => [
       mermaid: 'src/mermaid/index.ts',
       plantuml: 'src/plantuml/index.ts',
       math: 'src/math/index.ts',
-      pagefind: 'src/pagefind/index.ts'
+      pagefind: 'src/pagefind/index.ts',
+      openapi: 'src/openapi/index.ts'
     },
     format: ['esm'],
     platform: 'node',

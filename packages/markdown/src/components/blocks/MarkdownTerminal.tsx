@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ReactNode } from 'react'
-import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels'
-import { MarkdownCopyButton } from '../shared/MarkdownActions'
-import { markdownDomProps, mergeMarkdownClasses, stringProp } from '../shared/reactText'
+import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
+import { MarkdownCopyButton } from '../shared/MarkdownActions.js'
+import { markdownDomProps, mergeMarkdownClasses, stringProp } from '../shared/reactText.js'
 
 export interface MarkdownTerminalProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title'> {
   children?: ReactNode

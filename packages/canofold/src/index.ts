@@ -25,3 +25,4 @@ export {
   type CanofoldExtensionPagePatch,
   type CanofoldExtensionSourceContext
 } from './extensions/types'
+export type { ContentSource, ContentSourceContext, SourceDocument } from './content/source'

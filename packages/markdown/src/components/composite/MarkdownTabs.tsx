@@ -14,8 +14,8 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
-import { MarkdownIcon } from '../shared/MarkdownIcon'
-import { markdownDomProps, mergeMarkdownClasses } from '../shared/reactText'
+import { MarkdownIcon } from '../shared/MarkdownIcon.js'
+import { markdownDomProps, mergeMarkdownClasses } from '../shared/reactText.js'
 
 export interface MarkdownTabsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
   children?: ReactNode

@@ -19,6 +19,8 @@ Canofold and Vite share one HTTP server, and a development session creates only 
 
 No documentation-specific Vite configuration is required. `@canofold/vite` reuses the project's existing `vite.config`, plugins, aliases, React resolution, TypeScript/JSX settings, and CSS pipeline. Demos should import components through the package name or aliases the project already uses. Component CSS belongs in the component or Demo dependency graph, not in Canofold's site-level `styles` list.
 
+The embedded development server defaults to `logLevel: 'warn'` and `clearScreen: false`, preserving warnings and errors without dependency-optimization chatter or terminal clearing. Explicit values in `vite.config` take precedence.
+
 For a standard component library with a package name and one `build.lib.entry`, Canofold resolves the package name to that source entry when no same-name alias exists, so the entry does not need to be repeated as an alias. Multi-entry libraries and workspaces are not inferred and keep using their existing exports or aliases.
 
 Production uses one Vite graph for the Markdown browser enhancer, Demo runtime, and project components. The component project owns React and React DOM resolution, while Vite deduplicates them and splits Demo JavaScript and CSS on demand instead of placing every example in the entry chunk. That graph emits a lightweight Markdown entry and a Demo entry: pages without Demos do not statically load React for native Markdown behavior, while Demo pages reuse the enhancer from the Demo entry.

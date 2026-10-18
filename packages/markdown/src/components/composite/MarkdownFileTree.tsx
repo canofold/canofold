@@ -8,9 +8,9 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
-import { markdownDomProps, mergeMarkdownClasses, reactText } from '../shared/reactText'
-import type { MarkdownReactElement } from '../shared/reactText'
-import { MarkdownIcon } from '../shared/MarkdownIcon'
+import { markdownDomProps, mergeMarkdownClasses, reactText } from '../shared/reactText.js'
+import type { MarkdownReactElement } from '../shared/reactText.js'
+import { MarkdownIcon } from '../shared/MarkdownIcon.js'
 
 export interface MarkdownFileTreeProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
   children?: ReactNode

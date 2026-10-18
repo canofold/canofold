@@ -141,21 +141,19 @@ function SearchModal({ model }: { model: LayoutModel }) {
 
 function SourceSheet({ model }: { model: LayoutModel }) {
   const { home, labels, page } = model
+  const title = page.origin ? labels.generatedSource : labels.source
   if (home) return null
   return (
     <div className="cf-source-sheet" data-canofold-source-sheet="" hidden>
       <div className="cf-source-backdrop" data-canofold-source-close="" aria-hidden="true" />
-      <aside
-        className="cf-source-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label={labels.source}
-        tabIndex={-1}
-      >
+      <aside className="cf-source-panel" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}>
         <div className="cf-source-head">
           <div>
-            <p>{labels.source}</p>
-            <span>{page.sourceRelativePath}</span>
+            <p>{title}</p>
+            <span>
+              {page.sourceRelativePath}
+              {page.origin ? `#${page.origin.pointer}` : ''}
+            </span>
           </div>
           <div className="cf-source-actions">
             <button
@@ -179,7 +177,7 @@ function SourceSheet({ model }: { model: LayoutModel }) {
         </div>
         <textarea
           data-canofold-source-text=""
-          aria-label={labels.source}
+          aria-label={title}
           spellCheck={false}
           readOnly
           defaultValue={model.rawSource}

@@ -1,4 +1,4 @@
-export const BUILD_MANIFEST_SCHEMA_VERSION = 4
+export const BUILD_MANIFEST_SCHEMA_VERSION = 5
 
 export interface PageBuildState {
   fingerprint: string

@@ -1,6 +1,6 @@
-import { activeMarkdownPlugins } from './plugins'
-import type { MarkdownPlugin, MarkdownPluginClientAsset, MarkdownPluginStyleAsset } from './types'
-import { stableJson } from './stableJson'
+import { activeMarkdownPlugins } from './plugins.js'
+import type { MarkdownPlugin, MarkdownPluginClientAsset, MarkdownPluginStyleAsset } from './types.js'
+import { stableJson } from './stableJson.js'
 
 export interface MarkdownAssets {
   /** Browser behaviors required by the rendered document. */

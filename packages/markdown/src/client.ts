@@ -1,6 +1,6 @@
-import { MARKDOWN_BEHAVIOR_NAMES, type MarkdownAssets, type MarkdownBehaviorName } from './compiler/assets'
-import { enhanceNativeMarkdown } from './client/nativeBehaviors'
-import { enhanceRichMarkdown, disposeRichMarkdown } from './islands'
+import { MARKDOWN_BEHAVIOR_NAMES, type MarkdownAssets, type MarkdownBehaviorName } from './compiler/assets.js'
+import { enhanceNativeMarkdown } from './client/nativeBehaviors.js'
+import { enhanceRichMarkdown, disposeRichMarkdown } from './islands.js'
 
 interface RootEnhancementState {
   behaviorOwners: Map<MarkdownBehaviorName, number>
@@ -56,4 +56,4 @@ export function enhanceMarkdown(
   }
 }
 
-export type { MarkdownAssets, MarkdownBehaviorName } from './compiler/assets'
+export type { MarkdownAssets, MarkdownBehaviorName } from './compiler/assets.js'

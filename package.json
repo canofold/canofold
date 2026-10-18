@@ -16,6 +16,8 @@
     "build": "pnpm --filter @canofold/themes build && pnpm --filter @canofold/markdown build && pnpm --filter canofold build && pnpm --filter @canofold/vite build && pnpm --filter @canofold/plugins build",
     "predev": "pnpm --filter @canofold/themes build",
     "dev": "pnpm --parallel --stream --filter @canofold/themes --filter @canofold/markdown --filter canofold --filter @canofold/vite --filter @canofold/plugins run dev",
+    "dev:playground": "node scripts/dev-playground.mjs ../vite-component-playground",
+    "test:dev:playground": "node --test scripts/dev-playground.test.mjs",
     "test": "pnpm build && vitest run",
     "test:coverage": "pnpm build && vitest run --coverage",
     "test:architecture": "pnpm build && node --test tests/architecture/*.test.mjs",

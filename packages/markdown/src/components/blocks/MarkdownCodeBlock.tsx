@@ -1,8 +1,8 @@
 import { type HTMLAttributes, type ReactNode } from 'react'
-import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels'
-import type { MarkdownCodeOverflow } from '../../compiler/types'
-import { MarkdownCopyButton } from '../shared/MarkdownActions'
-import { MarkdownFileIcon } from '../shared/MarkdownFileIcon'
+import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
+import type { MarkdownCodeOverflow } from '../../compiler/types.js'
+import { MarkdownCopyButton } from '../shared/MarkdownActions.js'
+import { MarkdownFileIcon } from '../shared/MarkdownFileIcon.js'
 import {
   elementChildren,
   elementTag,
@@ -10,7 +10,7 @@ import {
   mergeMarkdownClasses,
   reactText,
   stringProp
-} from '../shared/reactText'
+} from '../shared/reactText.js'
 
 export interface MarkdownCodeBlockProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
   children?: ReactNode

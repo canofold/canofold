@@ -24,7 +24,8 @@ export async function resolveSafeOutputRoot(cwd: string, config: CanofoldConfig,
     ...documentationVersions(config).map(
       (version) => [version.docsDir, `versions[${version.id}].docsDir`] as const
     ),
-    ...config.styles.map((style, index) => [style, `styles[${index}]`] as const)
+    ...config.styles.map((style, index) => [style, `styles[${index}]`] as const),
+    ...config.sources.map((source) => [source.root, `sources[${source.id}].root`] as const)
   ]
   for (const [path, field] of inputs) {
     const source = resolveProjectPath(cwd, path, field)

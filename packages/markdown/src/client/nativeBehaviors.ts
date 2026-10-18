@@ -1,5 +1,5 @@
-import type { MarkdownBehaviorName } from '../compiler/assets'
-import { copyMarkdownText } from '../shared/copyText'
+import type { MarkdownBehaviorName } from '../compiler/assets.js'
+import { copyMarkdownText } from '../shared/copyText.js'
 
 const COPY_ACTION_BEHAVIORS: Partial<Record<string, MarkdownBehaviorName>> = {
   'copy-code': 'code-toolbar',

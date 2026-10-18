@@ -106,6 +106,7 @@ describe('pagefind', () => {
         {
           sourcePath: 'docs/index.md',
           sourceRevision: '0'.repeat(64),
+          navigation: { directories: [], index: true },
           transformedSource: '',
           sourceRelativePath: 'docs/index.md',
           relativePath: 'index.md',

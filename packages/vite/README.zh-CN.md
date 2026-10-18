@@ -17,6 +17,8 @@ export default defineConfig({
 
 无需为文档单独维护 Vite 配置。`@canofold/vite` 会复用项目现有的 `vite.config`、插件、alias、React、TypeScript/JSX 与 CSS 配置。Demo 应像应用代码一样从组件包名或项目已有 alias 导入组件，组件 CSS 由组件或 Demo 自己 import；不要把每个组件样式登记到 Canofold 的 `styles`。
 
+内嵌开发服务默认使用 `logLevel: 'warn'` 和 `clearScreen: false`，保留警告与错误，不重复打印依赖优化信息或清空终端；`vite.config` 中显式配置的值优先。
+
 对于 `package.json` 有包名且 `build.lib.entry` 只有一个入口的标准组件库，Canofold 会在没有同名自定义 alias 时自动把包名解析到该源码入口，因此不需要把同一入口再写一遍 alias。多入口库和 workspace 不做推断，继续使用项目已有的 exports 或 alias。
 
 生产构建中，Markdown 浏览器增强、Demo 运行时和项目组件进入同一 Vite 构建图。React 与 React DOM 由组件项目解析并去重，Demo 与 CSS 按需分块，不会把全部示例和样式无条件放进入口。同一构建图会输出轻量 Markdown 入口和 Demo 入口：没有 Demo 的页面不会因为原生 Markdown 交互而静态加载 React，有 Demo 的页面则复用 Demo 入口中的 Markdown 增强能力。

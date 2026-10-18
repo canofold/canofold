@@ -1,7 +1,10 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import * as fs from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import { resolve as resolveModule } from 'import-meta-resolve'
+import { describe, expect, it, vi } from 'vitest'
 import {
   createMockConfig,
   createMockGraph,
@@ -10,7 +13,50 @@ import {
 } from '../../test/fixtures'
 import { buildPageKey, createBuildManifest, fingerprintExistingFiles } from './state'
 
+vi.mock('node:fs/promises', async (original) => {
+  const actual = await original<typeof import('node:fs/promises')>()
+  return { ...actual, readFile: vi.fn(actual.readFile) }
+})
+
 describe('build state support-file fingerprints', () => {
+  it('recomputes navigation per version/locale without invalidating another locale', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-state-layout-'))
+    await mkdir(join(cwd, 'docs'))
+    const config = createMockConfig()
+    const zh = createMockPage()
+    const en = createMockPage({ locale: 'en', sourceRelativePath: 'docs/en/guide.md' })
+    const graph = createMockGraph({
+      pages: [zh, en],
+      sidebar: { current: { zh: [{ segment: 'guide', title: 'Before', items: [] }], en: [] } }
+    })
+    const first = await createBuildManifest(cwd, config, graph)
+    graph.sidebar.current!.zh![0]!.title = 'After'
+    const second = await createBuildManifest(cwd, config, graph)
+    expect(second.pages[buildPageKey(zh)]?.fingerprint).not.toBe(first.pages[buildPageKey(zh)]?.fingerprint)
+    expect(second.pages[buildPageKey(en)]?.fingerprint).toBe(first.pages[buildPageKey(en)]?.fingerprint)
+  })
+  it('invalidates output when the installed Markdown renderer changes without a Core version change', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-state-runtime-'))
+    await mkdir(join(cwd, 'docs'))
+    const config = createMockConfig()
+    const graph = createMockGraph()
+    const first = await createBuildManifest(cwd, config, graph)
+    const path = fileURLToPath(resolveModule('@canofold/markdown/server', import.meta.url))
+    const { readFile: read } = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises')
+    const spy = vi
+      .spyOn(fs, 'readFile')
+      .mockImplementation((...args: Parameters<typeof read>) =>
+        String(args[0]) === path
+          ? Promise.resolve(Buffer.from('changed renderer implementation'))
+          : read(...args)
+      )
+    try {
+      const second = await createBuildManifest(cwd, config, graph)
+      expect(second.sharedFingerprint).not.toBe(first.sharedFingerprint)
+    } finally {
+      spy.mockRestore()
+    }
+  })
   it('ignores missing files but surfaces other read errors', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-state-files-'))
     const directory = join(cwd, 'directory')

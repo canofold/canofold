@@ -37,6 +37,62 @@ async function linkBrowserRuntime(directory: string) {
 }
 
 describe('@canofold/vite', () => {
+  it.each([undefined, 'info'] as const)(
+    'defaults dev logging to warnings while honoring explicit level %s',
+    async (level) => {
+      const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-logging-'))
+      await mkdir(join(cwd, 'src'))
+      await linkNodeModules(cwd)
+      await writeFile(
+        join(cwd, 'src/demo.tsx'),
+        'export default function Demo(){ return <button>Demo</button> }'
+      )
+      await writeFile(
+        join(cwd, 'vite.config.ts'),
+        `export default { ${level ? `logLevel: '${level}',` : ''} plugins: [{ name: 'log-probe', configureServer(server) { server.config.logger.info('fixture-info'); server.config.logger.warn('fixture-warning') } }] }`
+      )
+      const info = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      onTestFinished(() => {
+        info.mockRestore()
+        warning.mockRestore()
+      })
+      const server = createServer()
+      onTestFinished(() => {
+        server.close()
+      })
+      const engine = vite()
+      const manifest = await engine.prepare({
+        cwd,
+        server,
+        outputRoot: join(cwd, '.canofold/dist'),
+        basePath: '/',
+        mode: 'dev',
+        demos: [
+          {
+            id: 'demo',
+            specifier: '/src/demo.tsx',
+            sandbox: 'inline',
+            pageSourcePath: join(cwd, 'docs/index.md'),
+            pageSourceRelativePath: 'docs/index.md',
+            routePath: '/',
+            locale: 'en'
+          }
+        ]
+      })
+      const runtime = await engine.startDev!({
+        cwd,
+        server,
+        basePath: '/',
+        getDemos: () => Object.values(manifest.demos),
+        shouldIgnorePath: () => false
+      })
+      onTestFinished(() => runtime.close())
+      expect(info.mock.calls.flat().join('\n').includes('fixture-info')).toBe(level === 'info')
+      expect(warning.mock.calls.flat().join('\n')).toContain('fixture-warning')
+    }
+  )
+
   it('rejects failed config restarts repeatedly and recovers after the config is fixed', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-restart-error-'))
     await mkdir(join(cwd, 'src'))

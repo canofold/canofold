@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -44,7 +44,9 @@ it.each(['demo-analysis', 'page-render', 'listen'] as const)(
         (failure === 'page-render' ? '{(() => { throw new Error("fixture render failure") })()}\n' : '')
     )
     const occupied = createServer()
-    await new Promise<void>((resolve) => occupied.listen(0, '127.0.0.1', resolve))
+    await new Promise<void>((resolve) =>
+      occupied.listen(failure === 'listen' ? 65535 : 0, '127.0.0.1', resolve)
+    )
     const port = (occupied.address() as { port: number }).port
     if (failure === 'listen') {
       onTestFinished(() => new Promise<void>((resolve) => occupied.close(() => resolve())))
@@ -66,6 +68,7 @@ it.each(['demo-analysis', 'page-render', 'listen'] as const)(
           ? 'fixture render failure'
           : 'EADDRINUSE'
     )
+    await expect(readFile(join(cwd, '.canofold/dev.lock'))).rejects.toMatchObject({ code: 'ENOENT' })
   }
 )
 

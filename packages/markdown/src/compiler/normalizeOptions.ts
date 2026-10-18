@@ -1,8 +1,8 @@
 import type { LanguageInput, ThemeRegistration } from '@shikijs/types'
 import canofoldDarkTheme from '../themes/canofold-dark.json'
 import canofoldLightTheme from '../themes/canofold-light.json'
-import { DEFAULT_MARKDOWN_LABELS } from './defaultLabels'
-import { normalizeMarkdownPlugins } from './plugins'
+import { DEFAULT_MARKDOWN_LABELS } from './defaultLabels.js'
+import { normalizeMarkdownPlugins } from './plugins.js'
 import type {
   MarkdownFeatureOptions,
   MarkdownHtmlPolicy,
@@ -11,7 +11,7 @@ import type {
   MarkdownPlugin,
   MarkdownUnknownLanguagePolicy,
   RenderMarkdownOptions
-} from './types'
+} from './types.js'
 
 const DEFAULT_CODE_THEMES = {
   light: canofoldLightTheme as ThemeRegistration,

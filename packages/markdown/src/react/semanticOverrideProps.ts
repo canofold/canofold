@@ -1,13 +1,13 @@
 import { Children, isValidElement, type ReactNode } from 'react'
-import { resolveMarkdownGalleryItems } from '../components/gallery/ImageGallery'
+import { resolveMarkdownGalleryItems } from '../components/gallery/ImageGallery.js'
 import {
   elementTag,
   reactText,
   readProp,
   stringProp,
   type MarkdownReactElement
-} from '../components/shared/reactText'
-import type { MarkdownComponentName, MarkdownElementProps } from './componentMap'
+} from '../components/shared/reactText.js'
+import type { MarkdownComponentName, MarkdownElementProps } from './componentMap.js'
 
 function childElement(children: ReactNode, tagName: string) {
   return Children.toArray(children).find((child): child is MarkdownReactElement => {

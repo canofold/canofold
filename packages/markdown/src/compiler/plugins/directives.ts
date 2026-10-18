@@ -4,9 +4,9 @@ import type { BlockContent, Code, Paragraph, PhrasingContent, Root, RootContent 
 import type { ContainerDirective, Directives } from 'mdast-util-directive'
 import type { State } from 'mdast-util-to-hast'
 import type { Node, Parent } from 'unist'
-import type { NormalizedMarkdownOptions } from '../normalizeOptions'
-import type { CalloutPart, StepGroup, StepItem, TabGroup, TabItem } from '../ast'
-import { markdownFileIconName, markdownFileKind } from '../../shared/fileKinds'
+import type { NormalizedMarkdownOptions } from '../normalizeOptions.js'
+import type { CalloutPart, StepGroup, StepItem, TabGroup, TabItem } from '../ast.js'
+import { markdownFileIconName, markdownFileKind } from '../../shared/fileKinds.js'
 
 const CALLOUTS = new Set(['info', 'tip', 'warning', 'danger'])
 const BADGE_TONES = new Set(['accent', 'success', 'warning', 'danger'])

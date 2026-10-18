@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
-import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels'
-import { copyMarkdownText } from '../../shared/copyText'
-import { MarkdownIcon, type MarkdownIconName } from './MarkdownIcon'
-import { ACTION_FEEDBACK_DURATION_MS } from './interactionConstants'
+import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
+import { copyMarkdownText } from '../../shared/copyText.js'
+import { MarkdownIcon, type MarkdownIconName } from './MarkdownIcon.js'
+import { ACTION_FEEDBACK_DURATION_MS } from './interactionConstants.js'
 
-export { copyMarkdownText } from '../../shared/copyText'
+export { copyMarkdownText } from '../../shared/copyText.js'
 
 export function MarkdownCopyButton({
   value,

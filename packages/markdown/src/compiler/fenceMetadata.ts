@@ -1,4 +1,4 @@
-import type { MarkdownCodeOverflow } from './types'
+import type { MarkdownCodeOverflow } from './types.js'
 
 const titlePattern = /(?:title|filename|label)\s*=\s*["']([^"']+)["']|\[([^\]]+)\]/i
 const overflowPattern = /(?:^|\s)(wrap|scroll)(?=\s|$)/i

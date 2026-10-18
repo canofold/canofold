@@ -5,14 +5,14 @@ import {
   createMarkdownMdxComponentMap,
   type MarkdownClassNames,
   type MarkdownComponents
-} from '../react/componentMap'
-import type { MarkdownAssets } from '../compiler/assets'
-import type { MarkdownContentAnalysis } from '../compiler/analyze'
-import { createMarkdownServerContext, type MarkdownServerContextOptions } from './cache'
-import type { RenderMarkdownOptions } from '../compiler/types'
-import { MarkdownDocument, MarkdownRoot } from '../react/Markdown'
-import { type MarkdownSlots } from '../react/slots'
-import { transformMarkdownUrlProps, type MarkdownUrlTransform } from '../react/urlTransform'
+} from '../react/componentMap.js'
+import type { MarkdownAssets } from '../compiler/assets.js'
+import type { MarkdownContentAnalysis } from '../compiler/analyze.js'
+import { createMarkdownServerContext, type MarkdownServerContextOptions } from './cache.js'
+import type { RenderMarkdownOptions } from '../compiler/types.js'
+import { MarkdownDocument, MarkdownRoot } from '../react/Markdown.js'
+import { type MarkdownSlots } from '../react/slots.js'
+import { transformMarkdownUrlProps, type MarkdownUrlTransform } from '../react/urlTransform.js'
 
 export interface MarkdownRenderOptions {
   markdown?: RenderMarkdownOptions
@@ -67,8 +67,7 @@ function withUrlTransform(factory: typeof runtime.jsx, transform?: MarkdownUrlTr
  * not have to assemble the rendering pipeline themselves.
  */
 export function createMarkdownRenderer(contextOptions: MarkdownServerContextOptions = {}): MarkdownRenderer {
-  const warningState = new Set<string>()
-  const context = createMarkdownServerContext({ ...contextOptions, warningState })
+  const context = createMarkdownServerContext(contextOptions)
 
   return {
     async analyze(source, { markdown, mode = 'markdown' } = {}) {

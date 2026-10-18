@@ -7,20 +7,20 @@ import {
   type HTMLAttributes,
   type ReactNode
 } from 'react'
-import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels'
-import { MarkdownIcon } from '../shared/MarkdownIcon'
+import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
+import { MarkdownIcon } from '../shared/MarkdownIcon.js'
 import {
   elementTag,
   markdownDomProps,
   mergeMarkdownClasses,
   reactText,
   stringProp
-} from '../shared/reactText'
-import { serializeMarkdownNode } from '../../protocol/serializedNode'
-import type { MarkdownReactElement } from '../shared/reactText'
-import { getMarkdownCaptionSlot, useMarkdownSlots } from '../../react/slots'
-import { MarkdownDialogPortal, useMarkdownDialog } from '../shared/MarkdownDialog'
-import { transformMarkdownSrcSet, useMarkdownUrlTransform } from '../../react/urlTransform'
+} from '../shared/reactText.js'
+import { serializeMarkdownNode } from '../../protocol/serializedNode.js'
+import type { MarkdownReactElement } from '../shared/reactText.js'
+import { getMarkdownCaptionSlot, useMarkdownSlots } from '../../react/slots.js'
+import { MarkdownDialogPortal, useMarkdownDialog } from '../shared/MarkdownDialog.js'
+import { transformMarkdownSrcSet, useMarkdownUrlTransform } from '../../react/urlTransform.js'
 
 export interface MarkdownImageProps extends Omit<HTMLAttributes<HTMLElement>, 'children' | 'title'> {
   children?: ReactNode

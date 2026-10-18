@@ -2,7 +2,7 @@ import { defineMarkdownPlugin, type MarkdownPlugin } from '@canofold/markdown'
 import { deflateSync, strToU8 } from 'fflate'
 
 import { diagramFence } from '../shared/diagram'
-import { externalDiagramServiceGate, resolveExternalDiagramServer } from '../shared/externalDiagramService'
+import { resolveExternalDiagramServer } from '../shared/externalDiagramService'
 import { hasMarkdownFenceLanguage } from '../shared/markdownSource'
 
 const PLUGIN_VERSION = '4'
@@ -47,9 +47,6 @@ export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
   const clientRenderer = options.renderer === 'client'
   const hasPlantUmlFence = ({ source }: { source: string }) =>
     hasMarkdownFenceLanguage(source, new Set(['plantuml', 'puml']))
-  const appliesTo = server
-    ? externalDiagramServiceGate({ plugin: 'PlantUML', appliesTo: hasPlantUmlFence })
-    : hasPlantUmlFence
 
   return defineMarkdownPlugin({
     name: 'plantuml',
@@ -61,7 +58,7 @@ export function plantUml(options: PlantUmlOptions = {}): MarkdownPlugin {
       options: { ...(server ? { server } : {}), ...(clientRenderer ? { renderer: 'client' as const } : {}) }
     },
     fenceLanguages: ['plantuml', 'puml'],
-    appliesTo,
+    appliesTo: hasPlantUmlFence,
     assets: {
       clients: [{ id: 'plantuml', module: '@canofold/plugins/client/plantuml' }],
       styles: [{ id: 'diagrams', module: '@canofold/plugins/diagram.css' }]

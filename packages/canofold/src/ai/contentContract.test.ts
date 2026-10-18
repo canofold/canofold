@@ -27,6 +27,9 @@ describe('document consumption contract', () => {
     const transformed = collect([{ ...page, transformedSource: '# Transformed', body: '# Transformed' }])
       .pages[0]!
     expect(transformed.source.revision).toBe(original.source.revision)
+    if (!('transformedRevision' in transformed.source) || !('transformedRevision' in original.source)) {
+      throw new Error('Authored Markdown must retain its transformed source revision')
+    }
     expect(transformed.source.transformedRevision).not.toBe(original.source.transformedRevision)
     expect(transformed.representation.fingerprint).not.toBe(original.representation.fingerprint)
     expect(transformed.revision).not.toBe(original.revision)
@@ -67,7 +70,7 @@ describe('document consumption contract', () => {
       { ...page, relativePath: 'excluded.md', ai: false }
     ])
     expect(collection.pages).toHaveLength(1)
-    expect(collection.schemaVersion).toBe(2)
+    expect(collection.schemaVersion).toBe(3)
     expect(collection.scope).toMatchObject({ space: null, versions: ['current'], locales: ['zh'] })
     expect(collection.outputs.aiFullContent).toBe(true)
   })

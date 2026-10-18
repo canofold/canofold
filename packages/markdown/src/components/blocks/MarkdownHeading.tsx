@@ -1,8 +1,8 @@
 import { useEffect, useState, type ElementType, type HTMLAttributes, type ReactNode } from 'react'
-import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels'
-import { copyMarkdownText } from '../shared/MarkdownActions'
-import { MarkdownIcon } from '../shared/MarkdownIcon'
-import { ACTION_FEEDBACK_DURATION_MS } from '../shared/interactionConstants'
+import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
+import { copyMarkdownText } from '../shared/MarkdownActions.js'
+import { MarkdownIcon } from '../shared/MarkdownIcon.js'
+import { ACTION_FEEDBACK_DURATION_MS } from '../shared/interactionConstants.js'
 
 function MarkdownHeadingAnchor({
   anchor,

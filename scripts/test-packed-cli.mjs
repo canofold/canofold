@@ -7,8 +7,10 @@ import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 import { execPnpmSync, packageManagerInvocationFor } from './lib/packageManager.mjs'
+import { filesUnder } from './lib/files.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
+const workspaceManifest = JSON.parse(await readFile(join(workspace, 'package.json'), 'utf8'))
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'canofold-packed-cli-'))
 const packsRoot = join(temporaryRoot, 'packs')
 const consumerRoot = join(temporaryRoot, 'consumer')
@@ -85,18 +87,6 @@ async function write(relativePath, contents) {
 
 async function assertExists(relativePath) {
   await access(join(consumerRoot, relativePath))
-}
-
-async function filesUnder(directory) {
-  const entries = await readdir(directory, { withFileTypes: true })
-  return (
-    await Promise.all(
-      entries.map((entry) => {
-        const path = join(directory, entry.name)
-        return entry.isDirectory() ? filesUnder(path) : [path]
-      })
-    )
-  ).flat()
 }
 
 try {
@@ -180,6 +170,7 @@ export default theme
           [pluginsPackage.manifest.name]:
             `file:${portableRelativePath(consumerRoot, pluginsPackage.tarball)}`,
           '@types/react': markdownPackage.manifest.devDependencies['@types/react'],
+          '@types/node': workspaceManifest.devDependencies['@types/node'],
           '@types/react-dom': markdownPackage.manifest.devDependencies['@types/react-dom'],
           pagefind: pluginsPackage.manifest.peerDependencies.pagefind,
           mermaid: pluginsPackage.manifest.devDependencies.mermaid,
@@ -323,6 +314,45 @@ enhancePlantUml(root, { renderer }).dispose()
     join(workspace, 'node_modules/typescript/bin/tsc'),
     '--project',
     'tsconfig.diagram.json'
+  ])
+  await write(
+    'content-source.ts',
+    `import { openapi } from '@canofold/plugins/openapi'
+import type { ContentSource, CanofoldConfigInput } from 'canofold'
+
+const source: ContentSource = openapi({ id: 'pets', root: 'docs/api', entry: 'docs/api/spec.yaml',
+  locale: 'en', version: 'current', base: '/api/' })
+const custom: ContentSource = { id: 'custom', kind: 'fixture', revision: '1', root: 'docs/api',
+  entry: 'docs/api/spec.yaml', locale: 'en', version: 'current', base: '/custom/', cacheKey: {},
+  async load(context) { await context.read(context.entry); return [{ key: 'overview', path: '',
+    pointer: '', title: 'Custom', description: 'Custom source', body: '# Custom' }] } }
+const contentConfig: CanofoldConfigInput = { sources: [source, custom] }
+void contentConfig
+`
+  )
+  await write(
+    'tsconfig.source.json',
+    `${JSON.stringify(
+      {
+        compilerOptions: {
+          lib: ['ES2022', 'DOM'],
+          types: ['node'],
+          module: 'NodeNext',
+          moduleResolution: 'NodeNext',
+          noEmit: true,
+          strict: true,
+          target: 'ES2022'
+        },
+        files: ['content-source.ts']
+      },
+      null,
+      2
+    )}\n`
+  )
+  run(process.execPath, [
+    join(workspace, 'node_modules/typescript/bin/tsc'),
+    '--project',
+    'tsconfig.source.json'
   ])
   for (const themeCss of [
     'shared.css',
@@ -538,7 +568,7 @@ export default function PackedSetup({ children }) {
 
   runPnpm(['exec', 'canofold', 'check'])
   const cleanBuild = runPnpmCaptured(['exec', 'canofold', 'build', '--no-cache'])
-  assert.match(cleanBuild.stdout, /Built .+\(clean: forced;/)
+  assert.match(cleanBuild.stdout, /Built .+\(clean\)/)
   assert.doesNotMatch(cleanBuild.stderr, /optimizeDeps\.esbuildOptions/)
   assert.doesNotMatch(cleanBuild.stderr, /MODULE_LEVEL_DIRECTIVE/)
 
@@ -596,7 +626,7 @@ export default function PackedSetup({ children }) {
   await assert.rejects(access(join(consumerRoot, '.canofold/dist/pagefind/pagefind-ui.js')))
   const aiRoot = join(consumerRoot, '.canofold/dist')
   const collection = JSON.parse(await readFile(join(aiRoot, 'ai/manifest.json'), 'utf8'))
-  assert.equal(collection.schemaVersion, 2)
+  assert.equal(collection.schemaVersion, 3)
   assert.equal(collection.pages.length, 6)
   assert.match(collection.snapshotRevision, /^[a-f0-9]{64}$/)
   const pageIndexBytes = await readFile(join(aiRoot, 'ai/pages.json'))
@@ -746,7 +776,7 @@ export default function PackedSetup({ children }) {
   assert.equal(extensionOutput.pages, 6)
 
   const cachedBuild = runPnpm(['exec', 'canofold', 'build'])
-  assert.match(cachedBuild, /\(cached: unchanged-inputs;/)
+  assert.match(cachedBuild, /Reused .+\(cached\)/)
   assert.equal(JSON.parse(await readFile(reportPath, 'utf8')).mode, 'cached')
 
   const configPath = join(consumerRoot, 'canofold.config.mts')
@@ -941,8 +971,80 @@ export default function PackedSetup({ children }) {
     /\/migrations\/docusaurus\//
   )
 
+  // Add a real source only after the authored-content migration assertions above.
+  // It must resolve from the installed tarball, not a sibling source or alias.
+  await write(
+    'docs/api/spec.yaml',
+    `openapi: 3.1.0
+info: { title: Packed API, version: '2' }
+paths:
+  /pets:
+    get:
+      summary: Packed operation
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: ./pet.yaml
+`
+  )
+  await write('docs/api/pet.yaml', 'type: object\nproperties:\n  name:\n    type: string\n')
+  const authoredConfig = await readFile(configPath, 'utf8')
+  const structuredConfig =
+    `import { openapi } from '@canofold/plugins/openapi'\n` +
+    authoredConfig.replace(
+      "  title: 'Packed RC',",
+      `  title: 'Packed RC',
+  sources: [{ id: 'external', kind: 'fixture', revision: '1', root: 'docs/api',
+    entry: 'docs/api/spec.yaml', locale: 'en', version: 'current', base: '/generated/', cacheKey: null,
+    async load(context) { await context.read(context.entry); return [{ key: 'overview', path: '',
+      pointer: '', title: 'Third-party source', description: 'Public adapter contract', body: '# Third-party source' }] }
+  }, openapi({ id: 'pets', root: 'docs/api', entry: 'docs/api/spec.yaml',
+    locale: 'en', version: 'current', base: '/api/' })],`
+    )
+  await writeFile(configPath, structuredConfig)
+  runPnpm(['exec', 'canofold', 'check'])
+  runPnpm(['exec', 'canofold', 'build'])
+  const readCollection = async () => JSON.parse(await readFile(join(aiRoot, 'ai/pages.json'), 'utf8'))
+  const apiBefore = await readCollection()
+  const customPage = apiBefore.pages.find((page) => page.source.id === 'external')
+  assert.equal(customPage?.source.kind, 'fixture')
+  assert.equal(customPage?.source.path, 'docs/api/spec.yaml')
+  assert.equal(customPage?.representation.analysis, 'fixture-static')
+  assert.match(await readFile(join(aiRoot, customPage.routePath, 'index.html'), 'utf8'), /Third-party source/)
+  const operation = apiBefore.pages.find((page) => page.source.key === 'GET /pets')
+  assert.ok(operation, 'The packed OpenAPI entry must contribute its operation')
+  assert.equal(operation.source.path, 'docs/api/spec.yaml')
+  assert.equal(operation.representation.body, 'source-derived-markdown')
+  assert.equal(operation.derived.method, 'GET')
+  const apiHtml = join(aiRoot, operation.routePath, 'index.html')
+  assert.match(await readFile(apiHtml, 'utf8'), /Packed operation/)
+  assert.match(await readFile(apiHtml, 'utf8'), /data-pagefind-body/)
+  assert.match(runPnpm(['exec', 'canofold', 'build']), /Reused .+\(cached\)/)
+  await write('docs/api/pet.yaml', 'type: object\nproperties:\n  name:\n    type: integer\n')
+  runPnpm(['exec', 'canofold', 'build'])
+  const operationAfter = (await readCollection()).pages.find((page) => page.id === operation.id)
+  assert.equal(operationAfter.source.revision, operation.source.revision)
+  assert.notEqual(operationAfter.source.dependenciesRevision, operation.source.dependenciesRevision)
+  assert.match(await readFile(apiHtml, 'utf8'), /integer/)
+  const trusted = await readFile(join(aiRoot, 'ai/pages.json'))
+  await rm(join(consumerRoot, 'docs/api/pet.yaml'))
+  assert.throws(() => runPnpm(['exec', 'canofold', 'build']))
+  assert.deepEqual(await readFile(join(aiRoot, 'ai/pages.json')), trusted)
+  await write('docs/api/pet.yaml', 'type: string\n')
+  runPnpm(['exec', 'canofold', 'build'])
+  await writeFile(configPath, authoredConfig)
+  runPnpm(['exec', 'canofold', 'build'])
+  assert.equal(
+    (await readCollection()).pages.some((page) => page.source.kind === 'openapi'),
+    false
+  )
+  await assert.rejects(access(apiHtml))
+
   console.log(
-    `Packed CLI smoke passed: canofold@${canofoldPackage.manifest.version}, ${extensionOutput.pages} initial pages, Markdown ${(markdownEntryBytes / 1024).toFixed(2)} KiB gzip, Demo ${(demoEntryBytes / 1024).toFixed(2)} KiB gzip, Pagefind, AI shards, extension host, cache hit, bilingual snapshot with independent Vite demos, existing bilingual Markdown README migration, representative VitePress/Docusaurus migrations`
+    `Packed CLI smoke passed: canofold@${canofoldPackage.manifest.version}, ${extensionOutput.pages} initial pages, Markdown ${(markdownEntryBytes / 1024).toFixed(2)} KiB gzip, Demo ${(demoEntryBytes / 1024).toFixed(2)} KiB gzip, Pagefind, AI shards, extension host, cache hit, bilingual snapshot with independent Vite demos, existing bilingual Markdown README migration, representative VitePress/Docusaurus migrations, OpenAPI and third-party content sources`
   )
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true })

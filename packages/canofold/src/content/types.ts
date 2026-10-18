@@ -1,6 +1,7 @@
 import type { MarkdownContentAnalysis, MarkdownReferences } from '@canofold/markdown/server'
 import type { CanofoldFrontmatter } from './frontmatter'
 import type { CanofoldDemoReference } from '../demos/types'
+import type { DerivedContentOrigin } from './source'
 
 interface PageLink {
   title: string
@@ -41,6 +42,8 @@ export interface NavItem {
 }
 
 export interface DocPage extends Pick<MarkdownContentAnalysis, 'headings' | 'codeExamples' | 'excerpt'> {
+  /** Present only for source-derived pages; sourcePath remains the real input file. */
+  origin?: DerivedContentOrigin
   sourcePath: string
   /** SHA-256 of the authored file before trusted source transformations. */
   sourceRevision: string
@@ -62,6 +65,8 @@ export interface DocPage extends Pick<MarkdownContentAnalysis, 'headings' | 'cod
   order: number
   /** First locale subdirectory, or ''. */
   group: string
+  /** Navigation hierarchy is independent of a physical file or an encoded route. */
+  navigation: { directories: Array<{ segment: string; title?: string }>; index: boolean }
   status: 'draft' | 'published'
   search: boolean
   ai: boolean

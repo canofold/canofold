@@ -8,21 +8,46 @@ import { planBuiltInOutputs } from '../output/plan'
 import { publicPathFor } from '../seo/urls'
 
 /** Versioned public data format, independent of the build-cache schema. */
-export const AI_SCHEMA_VERSION = 2
+export const AI_SCHEMA_VERSION = 3
 
 function documentRecord(config: CanofoldConfig, page: DocPage, declaredInputsRevision: string) {
   const path = localeRelativePathFor(page.relativePath, page.locale).normalize('NFC')
-  const id = fingerprint([config.ai.contentSpace ?? null, page.version, page.locale, path])
+  const id = fingerprint(
+    page.origin
+      ? [
+          config.ai.contentSpace ?? null,
+          page.version,
+          page.locale,
+          page.origin.kind,
+          page.origin.id,
+          page.origin.key
+        ]
+      : [config.ai.contentSpace ?? null, page.version, page.locale, path]
+  )
   const source = {
-    path,
-    kind: isMdxPath(path) ? 'mdx' : 'markdown',
+    path: page.origin ? page.sourceRelativePath : path,
+    kind: page.origin?.kind ?? (isMdxPath(path) ? 'mdx' : 'markdown'),
     revision: page.sourceRevision,
-    transformedRevision: fingerprintBytes(page.transformedSource)
+    ...(page.origin
+      ? {
+          id: page.origin.id,
+          key: page.origin.key,
+          pointer: page.origin.pointer,
+          adapterRevision: page.origin.adapterRevision,
+          optionsRevision: page.origin.optionsRevision,
+          dependenciesRevision: page.origin.dependenciesRevision,
+          dependencies: page.origin.dependencies
+        }
+      : { transformedRevision: fingerprintBytes(page.transformedSource) })
   }
   const representation = {
-    body: 'extension-transformed-source-body',
-    facts: 'compiled-static-with-author-and-extension-overrides',
-    analysis: isMdxPath(path) ? 'mdx-static-only' : 'markdown-static',
+    body: page.origin ? 'source-derived-markdown' : 'extension-transformed-source-body',
+    facts: page.origin ? 'source-derived-static' : 'compiled-static-with-author-and-extension-overrides',
+    analysis: page.origin
+      ? `${page.origin.kind}-static`
+      : isMdxPath(path)
+        ? 'mdx-static-only'
+        : 'markdown-static',
     fingerprint: fingerprintBytes(page.body),
     // Declared inputs are not a claim to hash arbitrary trusted plugin code or environment state.
     declaredInputsRevision
@@ -39,7 +64,8 @@ function documentRecord(config: CanofoldConfig, page: DocPage, declaredInputsRev
     ...(typeof page.frontmatter.owner === 'string' ? { owner: page.frontmatter.owner } : {}),
     headings: page.headings,
     ...(page.lastUpdated ? { lastUpdated: page.lastUpdated } : {}),
-    frontmatter: publicFrontmatterFor(page.frontmatter)
+    frontmatter: publicFrontmatterFor(page.frontmatter),
+    ...(page.origin ? { derived: page.origin.facts } : {})
   }
   return {
     id,

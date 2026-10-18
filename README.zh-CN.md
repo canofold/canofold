@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-Canofold 是一个静态优先、低侵入、可扩展的知识文档平台。它使用统一的内容模型，将 Markdown 和 MDX 构建成多语言、多版本的网站、搜索索引和 AI-ready 知识输出。
+Canofold 是一个静态优先、低侵入、可扩展的知识文档平台。它使用统一的内容模型，将 Markdown、MDX 和显式接入的本地 OpenAPI 规范构建成多语言、多版本的网站、搜索索引和 AI-ready 知识输出。
 
 ## 包与用途
 
@@ -12,11 +12,11 @@ Canofold 是一个静态优先、低侵入、可扩展的知识文档平台。�
 | `@canofold/markdown` | 在 React 应用中渲染 Canofold Markdown |
 | `@canofold/themes` | 使用官方视觉主题，或开发遵循共同契约的第三方主题 |
 | `@canofold/vite` | 在已有 Vite 项目中运行实时组件示例 |
-| `@canofold/plugins` | 使用官方 Markdown 插件或 Pagefind 搜索 Provider |
+| `@canofold/plugins` | 使用官方 Markdown 插件、Pagefind 搜索或本地 OpenAPI 内容来源 |
 
 ## 快速开始
 
-要求 Node.js 22 或更高版本。团队项目推荐把 CLI 安装为项目本地开发依赖：
+要求 Node.js 22.12 或更高版本。团队项目推荐把 CLI 安装为项目本地开发依赖：
 
 ```bash
 pnpm add -D canofold
@@ -54,7 +54,7 @@ pnpm docs:dev
 
 Canofold 构建的是完整静态 HTML，默认使用内置 compact 本地搜索，也可通过 `@canofold/plugins` 启用 Pagefind；同时可生成 `llms.txt`、Markdown 原文、页面索引和分片语料。输出目录默认是 `.canofold/dist/`，可发布到任意静态托管平台。
 
-0.7 机器格式提供与部署 URL 分离的文档身份，区分作者源文、转换后正文和编译静态事实，并支持校验完整的消费快照。[机器消费契约](./packages/canofold/README.zh-CN.md#机器消费契约07) 说明 schema 2、身份、修订和迁移规则。已发布的 0.6.x 产物使用 schema 1，消费者必须检查格式版本。
+0.8 机器格式统一使用 schema 3，覆盖 Markdown/MDX 与 OpenAPI 派生页面，分开记录文档身份、原始输入修订、声明依赖和生成表示。本地 OpenAPI 3.0/3.1 来源进入同一条站点、搜索和机器输出链，不往作者目录写生成文件。详见[机器消费契约](./packages/canofold/README.zh-CN.md#机器消费契约08)与 [OpenAPI 来源](./packages/plugins/README.zh-CN.md#本地-openapi-内容来源)。从 schema 1/2 升级时同步升级 Reader、重建可信基线，不把格式切换当成内容删除。
 
 ## 开发与贡献
 

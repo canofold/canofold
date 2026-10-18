@@ -13,12 +13,12 @@ import {
   type ReactNode
 } from 'react'
 import { CheckCircle2, ChevronDown, CircleAlert, Info, TriangleAlert } from 'lucide-react'
-import { MarkdownCodeBlock } from '../blocks/MarkdownCodeBlock'
-import { MarkdownCopySnippet } from '../blocks/MarkdownCopySnippet'
-import { MarkdownImage } from '../blocks/MarkdownImage'
-import { MarkdownTable } from '../blocks/MarkdownTable'
-import { MarkdownTerminal } from '../blocks/MarkdownTerminal'
-import { elementTag, markdownDomProps, mergeMarkdownClasses } from '../shared/reactText'
+import { MarkdownCodeBlock } from '../blocks/MarkdownCodeBlock.js'
+import { MarkdownCopySnippet } from '../blocks/MarkdownCopySnippet.js'
+import { MarkdownImage } from '../blocks/MarkdownImage.js'
+import { MarkdownTable } from '../blocks/MarkdownTable.js'
+import { MarkdownTerminal } from '../blocks/MarkdownTerminal.js'
+import { elementTag, markdownDomProps, mergeMarkdownClasses } from '../shared/reactText.js'
 
 type MarkdownCompositeKind =
   | 'callout'
@@ -192,9 +192,9 @@ function slotChildren(children: ReactNode, slot: string) {
 }
 
 /** Structural React wrappers for trusted/document extension blocks. */
-export { ImageGallery as MarkdownGallery } from '../gallery/ImageGallery'
-export { MarkdownTabs } from './MarkdownTabs'
-export { MarkdownFileTree } from './MarkdownFileTree'
+export { ImageGallery as MarkdownGallery } from '../gallery/ImageGallery.js'
+export { MarkdownTabs } from './MarkdownTabs.js'
+export { MarkdownFileTree } from './MarkdownFileTree.js'
 
 export function MarkdownCardGrid({ children, ...props }: MarkdownCompositeProps) {
   return <div {...withComponent(props, 'card-grid', 'cf-card-grid')}>{slotChildren(children, 'card')}</div>

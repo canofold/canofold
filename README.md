@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-Canofold is a static-first, minimally invasive, and extensible knowledge and documentation platform. It uses a unified content model to turn Markdown and MDX into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
+Canofold is a static-first, minimally invasive, and extensible knowledge and documentation platform. It uses a unified content model to turn Markdown, MDX, and explicitly configured local OpenAPI specifications into multilingual, versioned websites, search indexes, and AI-ready knowledge outputs.
 
 ## Packages
 
@@ -12,11 +12,11 @@ Canofold is a static-first, minimally invasive, and extensible knowledge and doc
 | `@canofold/markdown` | You want to render Canofold Markdown inside a React application |
 | `@canofold/themes` | You want official visual themes or the shared third-party theme contract |
 | `@canofold/vite` | You want live component demos powered by an existing Vite project |
-| `@canofold/plugins` | You need official Markdown plugins or the Pagefind search provider |
+| `@canofold/plugins` | You need official Markdown plugins, Pagefind search, or a local OpenAPI content source |
 
 ## Quick start
 
-Node.js 22 or newer is required. Install the CLI as a project-local development dependency for teams and CI:
+Node.js 22.12 or newer is required. Install the CLI as a project-local development dependency for teams and CI:
 
 ```bash
 pnpm add -D canofold
@@ -54,7 +54,7 @@ The package manager resolves bare `canofold` inside scripts from `node_modules/.
 
 Canofold emits complete static HTML, uses its built-in compact local search by default, and offers Pagefind through `@canofold/plugins`. It can also generate `llms.txt`, Markdown sources, page indexes, and bounded corpus shards. The default output directory is `.canofold/dist/`, ready for any static host.
 
-The 0.7 machine format identifies documents independently of deployment URLs, distinguishes authored source from transformed bodies and compiled static facts, and supports verified collection snapshots. See the [machine-consumption contract](./packages/canofold/README.md#machine-consumption-contract-07) for schema 2, identity, revision and migration rules. Published 0.6.x artifacts use schema 1; consumers must check the format version.
+The 0.8 machine format uses schema 3 for Markdown/MDX and OpenAPI-derived pages. It separates document identity, authored input revisions, declared dependencies and generated representations. Local OpenAPI 3.0/3.1 sources feed the same site, search and machine-output pipeline without generating files in your authoring tree. See the [machine-consumption contract](./packages/canofold/README.md#machine-consumption-contract-08) and [OpenAPI source](./packages/plugins/README.md#local-openapi-content-source). Upgrade readers and rebuild their trusted baseline when moving from schema 1/2; never treat a format change as content deletion.
 
 ## Development and contribution
 

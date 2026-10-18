@@ -1,4 +1,4 @@
-import type { MarkdownLabels } from './types'
+import type { MarkdownLabels } from './types.js'
 
 export const DEFAULT_MARKDOWN_LABELS = {
   copyCode: 'Copy code',

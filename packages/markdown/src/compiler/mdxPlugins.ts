@@ -1,22 +1,22 @@
-import { createMarkdownAssetCollector, type MarkdownAssets } from './assets'
-import { normalizeOptions } from './normalizeOptions'
-import { createMarkdownPluginPlan } from './pluginPlan'
-import type { RenderMarkdownOptions } from './types'
+import { createMarkdownAssetCollector, type MarkdownAssets } from './assets.js'
+import { normalizeOptions } from './normalizeOptions.js'
+import { createMarkdownPluginPlan } from './pluginPlan.js'
+import type { RenderMarkdownOptions } from './types.js'
 import type { PluggableList } from 'unified'
-import type { MarkdownHandlers } from './pluginPlan'
-import { createSyntaxHighlighterPlugin } from './highlighter'
-import { detectMarkdownSyntax } from './syntaxFeatures'
-import type { MarkdownCompilerContext } from './prepareMarkdown'
+import type { MarkdownHandlers } from './pluginPlan.js'
+import { createSyntaxHighlighterPlugin } from './highlighter.js'
+import { detectMarkdownSyntax } from './syntaxFeatures.js'
+import type { MarkdownCompilerContext } from './prepareMarkdown.js'
 import {
   activeMarkdownPlugins,
   markdownPluginFenceLanguages,
   markdownPluginHighlightLanguages
-} from './plugins'
+} from './plugins.js'
 import { compile } from '@mdx-js/mdx'
 import type { Root as HastRoot } from 'hast'
 import type { Plugin } from 'unified'
-import { analyzeDocument, type MarkdownContentAnalysis, type MarkdownCodeExample } from './analyze'
-import { normalizeCallouts } from './plugins/directives'
+import { analyzeDocument, type MarkdownContentAnalysis, type MarkdownCodeExample } from './analyze.js'
+import { normalizeCallouts } from './plugins/directives.js'
 
 export async function prepareMdx(
   source: string,

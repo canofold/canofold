@@ -55,6 +55,7 @@ export interface LayoutModel {
 }
 
 function subPath(page: DocPage) {
+  if (page.origin) return JSON.stringify([page.origin.kind, page.origin.id, page.origin.key])
   return localeRelativePathFor(page.relativePath, page.locale)
 }
 
@@ -131,7 +132,7 @@ export function createLayoutModel({
       seoTitle ||
       (page.title && page.title !== config.title ? `${page.title} | ${config.title}` : config.title),
     description: page.description || config.description,
-    ...(config.editUrl && page.version === graph.currentVersion
+    ...(config.editUrl && !page.origin && page.version === graph.currentVersion
       ? {
           editHref: `${config.editUrl.replace(/\/$/, '')}/${page.relativePath.split('/').map(encodeURIComponent).join('/')}`
         }

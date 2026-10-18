@@ -17,9 +17,9 @@ import {
   X,
   type LucideIcon
 } from 'lucide-react'
-import { getMarkdownIconSlot, useMarkdownSlots, type MarkdownIconName } from '../../react/slots'
+import { getMarkdownIconSlot, useMarkdownSlots, type MarkdownIconName } from '../../react/slots.js'
 
-export type { MarkdownIconName } from '../../react/slots'
+export type { MarkdownIconName } from '../../react/slots.js'
 
 const icons: Record<MarkdownIconName, LucideIcon> = {
   copy: Copy,

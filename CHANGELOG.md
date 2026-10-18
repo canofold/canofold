@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.8.0 - 2026-10-18
+
+- Reject duplicate development sessions for the same canonical project before loading configuration or building. Release session ownership on shutdown or startup failure and reclaim crashed owners without affecting another project or its occupied port.
+- Reuse navigation fingerprints within each version/locale during a build and compute shared derived-source revisions once per source. Include installed Markdown runtime changes in cache invalidation, without treating declaration files or source maps as rendering inputs.
+- Preserve the first concurrent-task failure even when its rejection value is falsy, stop scheduling further work, and settle active workers before rejecting. Gracefully close standalone development and preview servers on termination.
+- Preserve dollar signs in OpenAPI prose as literal data when the Markdown math plugin is enabled.
+- Try higher local ports when the development or preview port is occupied, and display the actual mounted URL. Keep build output concise, distinguish terminal status levels without coloring redirected logs, and leave detailed cache/output statistics in the build report. Remove repeated remote-renderer configuration advice while retaining its documented privacy boundary. Default embedded Vite development logging to warnings without clearing the terminal, honoring explicit Vite configuration. Do not reload the browser for unchanged development builds.
+- Require Node.js 22.12 or newer. OpenAPI grammar validation uses the maintained Redocly 2.x implementation without lint-only restrictions on valid nullable compositions or Link constants.
+- Validate JSON syntax, duplicate keys and nesting without retaining a redundant YAML syntax tree; preserve authored JSON/YAML diagnostic positions. Reserve `markdown` and `mdx` source kinds for authored documents.
+- Fix Markdown declarations for native ESM/TypeScript `NodeNext` consumers by using explicit relative module extensions, and keep renderer warning state private to its cache context.
+
+- Add explicit build-time `sources` and the server-only `@canofold/plugins/openapi` adapter for local OpenAPI 3.0/3.1 JSON/YAML. Generate an overview and stable operation pages in the existing site, navigation, search, mirror and AI pipeline without writing authored Markdown files.
+- Preserve parameters, authentication, servers, examples, schema composition, finite recursive references and original provenance. Bound tracked local inputs and generated output; reject unsafe/missing references and ambiguous declarations without remote fetching or executable descriptions.
+- Publish one schema 3 machine contract for authored and derived documents, retaining Markdown/MDX identities while separating stable derived keys, original entry revisions, dependency revisions and generated representations. Upgrade the Reader and establish a new baseline; do not mix schema 1/2 with schema 3.
+- Track multiple pages from the same source independently in build state and development updates. Preserve complete output through failures and clean departed operation/source artifacts. Require version-local inputs and references for historical snapshots.
+- Separate source navigation groups from generated route encoding and label the generated source viewer and diagnostics accurately. Report package file counts without arbitrary maxima; retain actual size, export completeness, type consumption and browser isolation checks.
+
 ## 0.7.1 - 2026-10-18
 
 - Documentation versions use an ordered `versions: [...]` array: the first entry is current, one entry displays its label, and multiple entries offer switching. Omitted or empty versions hide the control without changing the default content scope. Labels never come from the generator or project package version. Migrate the former `{ current, items }` configuration by moving `items` directly under `versions` and placing its current entry first; the old object format is no longer accepted. The snapshot command follows the same array order.

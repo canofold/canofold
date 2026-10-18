@@ -37,6 +37,14 @@ export function createMockPage(overrides: Partial<DocPage> = {}): DocPage {
     description: '',
     order: 0,
     group: 'guide',
+    navigation: {
+      directories: relativePath
+        .replace(new RegExp(`^${overrides.locale ?? 'zh'}/`), '')
+        .split('/')
+        .slice(0, -1)
+        .map((segment) => ({ segment })),
+      index: /^index\.mdx?$/i.test(relativePath.split('/').at(-1) ?? '')
+    },
     status: 'published',
     search: true,
     ai: true,

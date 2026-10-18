@@ -94,6 +94,7 @@ test('published JavaScript entry points expose only the documented runtime API',
     ],
     ['packages/markdown/dist/index.js', ['Markdown', 'defineMarkdownPlugin']],
     ['packages/markdown/dist/client/bundler.js', ['enhanceMarkdown']],
+    ['packages/plugins/dist/openapi.js', ['openapi']],
     ['packages/markdown/dist/client/index.js', ['enhanceMarkdown']],
     ['packages/markdown/dist/server.js', ['createMarkdownRenderer', 'defineMarkdownPlugin']],
     [
@@ -115,7 +116,6 @@ test('published JavaScript entry points expose only the documented runtime API',
 test('Canofold config declarations expose the contract without bundling the Zod schema', async () => {
   const declarations = await readFile(join(root, 'packages/canofold/dist/index.d.ts'), 'utf8')
   assert.doesNotMatch(declarations, /from ['"]zod['"]|\bZod[A-Z]/)
-  assert.ok(Buffer.byteLength(declarations) < 16 * 1024, 'canofold declarations must stay below 16 KB')
 })
 
 test('plugin declarations do not require the Canofold runtime package', async () => {

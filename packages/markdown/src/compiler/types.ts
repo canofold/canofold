@@ -1,4 +1,4 @@
-import type { MarkdownAssets } from './assets'
+import type { MarkdownAssets } from './assets.js'
 import type { Root } from 'hast'
 import type { LanguageInput } from '@shikijs/types'
 import type { PluggableList } from 'unified'
@@ -199,5 +199,5 @@ export interface RenderMarkdownOptions {
 export interface PreparedMarkdown {
   document: Root
   assets: MarkdownAssets
-  analysis: import('./analyze').MarkdownContentAnalysis
+  analysis: import('./analyze.js').MarkdownContentAnalysis
 }

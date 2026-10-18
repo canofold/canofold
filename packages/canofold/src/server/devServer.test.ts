@@ -7,12 +7,14 @@ const mocks = vi.hoisted(() => ({
   runBuild: vi.fn(),
   startStaticServer: vi.fn(),
   watch: vi.fn(),
+  acquireProjectLock: vi.fn(),
   createMarkdownRenderer: vi.fn(() => ({ clear: vi.fn() }))
 }))
 
 vi.mock('../commands/build', () => ({ runBuild: mocks.runBuild }))
 vi.mock('./staticServer', () => ({ startStaticServer: mocks.startStaticServer }))
 vi.mock('chokidar', () => ({ default: { watch: mocks.watch } }))
+vi.mock('../utils/projectLock', () => ({ acquireProjectLock: mocks.acquireProjectLock }))
 vi.mock('node:fs/promises', async (importOriginal) => ({
   ...(await importOriginal<typeof import('node:fs/promises')>()),
   realpath: async (path: string) => path
@@ -65,6 +67,10 @@ function buildResult(overrides: Partial<BuildResult> = {}): BuildResult {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.acquireProjectLock.mockResolvedValue({
+    assertOwned: vi.fn(async () => undefined),
+    release: vi.fn(async () => undefined)
+  })
 })
 
 describe('createBuildScheduler', () => {
@@ -137,6 +143,49 @@ describe('createBuildScheduler', () => {
 })
 
 describe('startDevServer', () => {
+  it('reloads every route derived from one changed input instead of selecting only the first', async () => {
+    let onFileEvent: ((eventName: string, path: string) => void) | undefined
+    const watcher = {
+      add: vi.fn(),
+      close: vi.fn(async () => undefined),
+      on: vi.fn((event: string, listener: (...arguments_: unknown[]) => void) => {
+        if (event === 'all') onFileEvent = listener as typeof onFileEvent
+        return watcher
+      })
+    }
+    const staticServer = {
+      port: 3333,
+      reload: vi.fn(),
+      sendBuildError: vi.fn(),
+      sendBuildOk: vi.fn(),
+      close: vi.fn(async () => undefined)
+    }
+    const pages = ['/api/', '/api/get/pets/'].map((routePath) =>
+      createMockPage({ routePath, sourceRelativePath: 'docs/api/openapi.json' })
+    )
+    mocks.watch.mockReturnValue(watcher)
+    mocks.startStaticServer.mockResolvedValue(staticServer)
+    mocks.runBuild.mockResolvedValue(
+      buildResult({
+        graph: createMockGraph({ pages }),
+        changedPages: ['docs/api/openapi.json'],
+        partialReload: true
+      })
+    )
+    const server = await startDevServer({ cwd: '/project', port: 3333 })
+    try {
+      onFileEvent?.('change', 'docs/api/openapi.json')
+      await vi.waitFor(() => expect(staticServer.reload).toHaveBeenCalled())
+      expect(staticServer.reload).toHaveBeenCalledWith({
+        protocol: 1,
+        type: 'update',
+        mode: 'full',
+        routes: ['/api/', '/api/get/pets/']
+      })
+    } finally {
+      await server.close()
+    }
+  })
   it('rebuilds linked assets in the existing server when refreshed', async () => {
     const watcher = {
       add: vi.fn(),
@@ -162,6 +211,36 @@ describe('startDevServer', () => {
     expect(mocks.runBuild.mock.calls[1]?.[0]).toHaveProperty('forceClean', true)
     expect(staticServer.reload).toHaveBeenCalledOnce()
     await server.close()
+  })
+
+  it('keeps browser state when a file event does not change any build inputs', async () => {
+    let onFileEvent: ((eventName: string, path: string) => void) | undefined
+    const watcher = {
+      add: vi.fn(),
+      on: vi.fn((event: string, listener: (...arguments_: unknown[]) => void) => {
+        if (event === 'all') onFileEvent = listener as typeof onFileEvent
+        return watcher
+      }),
+      close: vi.fn(async () => undefined)
+    }
+    const staticServer = {
+      port: 3333,
+      reload: vi.fn(),
+      sendBuildError: vi.fn(),
+      sendBuildOk: vi.fn(),
+      close: vi.fn(async () => undefined)
+    }
+    mocks.watch.mockReturnValue(watcher)
+    mocks.startStaticServer.mockResolvedValue(staticServer)
+    mocks.runBuild.mockResolvedValueOnce(buildResult()).mockResolvedValue(buildResult({ cached: true }))
+    const server = await startDevServer({ cwd: '/project', port: 3333 })
+    try {
+      onFileEvent?.('change', 'notes.txt')
+      await vi.waitFor(() => expect(staticServer.sendBuildOk).toHaveBeenCalledOnce())
+      expect(staticServer.reload).not.toHaveBeenCalled()
+    } finally {
+      await server.close()
+    }
   })
 
   it('restarts the mounted demo engine only when its development identity changes', async () => {

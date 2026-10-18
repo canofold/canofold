@@ -1,8 +1,8 @@
 import { hydrateRoot } from 'react-dom/client'
-import { MarkdownTable } from '../components/blocks/MarkdownTable'
-import { readSerializedNode } from './serialized'
-import { withIslandOptions } from './provider'
-import type { MarkdownIslandRenderOptions } from './options'
+import { MarkdownTable } from '../components/blocks/MarkdownTable.js'
+import { readSerializedNode } from './serialized.js'
+import { withIslandOptions } from './provider.js'
+import type { MarkdownIslandRenderOptions } from './options.js'
 
 export function hydrate(root: HTMLElement, options?: MarkdownIslandRenderOptions) {
   return hydrateRoot(

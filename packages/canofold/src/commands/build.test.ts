@@ -276,7 +276,13 @@ describe('runBuild', () => {
     try {
       const forced = await runBuild({ cwd, noCache: true })
       expect(forced.report.removalBaseline).toBe(false)
-      expect(log).toHaveBeenCalledWith(expect.stringContaining('removals not compared'))
+      expect(log).toHaveBeenCalledOnce()
+      expect(log).toHaveBeenCalledWith(expect.stringMatching(/Built .*1 pages.*\(clean\)/))
+      expect(log.mock.calls.flat().join('')).not.toMatch(/Outputs:|forced|removed|versions current/)
+      log.mockClear()
+      const cached = await runBuild({ cwd, demoMode: 'dev' })
+      expect(cached.cached).toBe(true)
+      expect(log).not.toHaveBeenCalled()
     } finally {
       log.mockRestore()
     }
@@ -745,7 +751,7 @@ describe('runBuild', () => {
     await expect(readFile(output, 'utf8')).resolves.toBe(previous)
   })
 
-  it('preserves schema 2 outputs and cached state when the AI writer fails, then recovers', async () => {
+  it('preserves schema 3 outputs and cached state when the AI writer fails, then recovers', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-ai-atomic-'))
     await mkdir(join(cwd, 'docs'))
     const sourcePath = join(cwd, 'docs/index.md')

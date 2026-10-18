@@ -1,4 +1,4 @@
-import { markdownFileIconName, markdownFileKind } from '../../shared/fileKinds'
+import { markdownFileIconName, markdownFileKind } from '../../shared/fileKinds.js'
 
 export function MarkdownFileIcon({ filename, language }: { filename: string; language?: string }) {
   const kind = markdownFileKind(filename, language)

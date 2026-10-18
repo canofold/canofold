@@ -1,7 +1,7 @@
 import { SKIP, visit } from 'unist-util-visit'
 import type { Element, ElementContent, Root } from 'hast'
-import type { MarkdownAssetCollector } from '../assets'
-import type { NormalizedMarkdownOptions } from '../normalizeOptions'
+import type { MarkdownAssetCollector } from '../assets.js'
+import type { NormalizedMarkdownOptions } from '../normalizeOptions.js'
 
 function componentName(node: Element | undefined) {
   if (!node) return ''

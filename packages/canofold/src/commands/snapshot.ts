@@ -58,6 +58,13 @@ export async function runSnapshot({ cwd, id }: { cwd: string; id: string }) {
       throw new Error('Move demos.setup into version-local demos before snapshotting')
     }
     for (const page of pages) {
+      if (page.origin) {
+        await assertVersionLocalDependencies(
+          cwd,
+          page,
+          page.origin.dependencies.map((dependency) => join(cwd, dependency.path))
+        )
+      }
       if (isMdxPath(page.relativePath)) {
         const mdxPaths = await localComponentDependencyPaths(
           prepareMdxSource(page.body).imports,

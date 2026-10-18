@@ -577,6 +577,9 @@ async function prepareDevDemos(context: CanofoldDemoPrepareContext, options: Can
     const configPaths = new Set<string>()
     const configLifecycle: Plugin = {
       name: 'canofold-dev-config',
+      config(config) {
+        return { logLevel: config.logLevel ?? 'warn', clearScreen: config.clearScreen ?? false }
+      },
       configResolved(config) {
         configPaths.clear()
         config.configFileDependencies.forEach((path) => configPaths.add(canonicalPath(path)))

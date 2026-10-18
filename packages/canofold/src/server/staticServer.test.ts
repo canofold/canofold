@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises'
 import { createServer, request } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, onTestFinished } from 'vitest'
 import {
   closeReloadClients,
   contentTypeFor,
@@ -60,6 +60,54 @@ function connectReloadStream(port: number, path: string) {
     outgoing.end()
   })
 }
+
+it('uses the next port when occupied, without taking over the existing server', async () => {
+  const occupied = createServer((_request, response) => response.end('existing server'))
+  await new Promise<void>((resolve) => occupied.listen(0, '127.0.0.1', resolve))
+  onTestFinished(() => new Promise<void>((resolve) => occupied.close(() => resolve())))
+  const port = (occupied.address() as { port: number }).port
+  const root = await mkdtemp(join(tmpdir(), 'canofold-port-'))
+  onTestFinished(() => rm(root, { recursive: true, force: true }))
+  await writeFile(join(root, 'index.html'), '<body>new server</body>')
+  const server = await startStaticServer({ root, port, liveReload: true })
+  onTestFinished(() => server.close())
+  expect(server.port).toBeGreaterThan(port)
+  expect((await requestStaticServer(port, '/')).body).toBe('existing server')
+  expect((await requestStaticServer(server.port, '/')).body).toContain('new server')
+  const stream = await connectReloadStream(server.port, '/__canofold/events')
+  onTestFinished(stream.close)
+  server.sendBuildOk()
+  await vi.waitFor(() => expect(stream.chunks.join('')).toContain('event: build-ok'))
+})
+
+it('does not retry unrelated listen errors or leave startup listeners attached', async () => {
+  const server = createServer()
+  const originalListeners = server.listeners('listening')
+  const denied = Object.assign(new Error('permission denied'), { code: 'EACCES' })
+  const listen = vi.spyOn(server, 'listen').mockImplementation(() => {
+    queueMicrotask(() => server.emit('error', denied))
+    return server
+  })
+  await expect(startStaticServer({ root: '/unused', port: 3333, server })).rejects.toBe(denied)
+  expect(listen).toHaveBeenCalledOnce()
+  expect(server.listeners('listening')).toEqual(originalListeners)
+  expect(server.listenerCount('error')).toBe(0)
+})
+
+it('stops at the TCP port limit without wrapping around or accumulating listeners', async () => {
+  const server = createServer()
+  const originalListeners = server.listeners('listening')
+  const occupied = Object.assign(new Error('port occupied'), { code: 'EADDRINUSE' })
+  const listen = vi.spyOn(server, 'listen').mockImplementation(() => {
+    queueMicrotask(() => server.emit('error', occupied))
+    return server
+  })
+  await expect(startStaticServer({ root: '/unused', port: 65534, server })).rejects.toBe(occupied)
+  expect(listen).toHaveBeenCalledTimes(2)
+  expect(listen).toHaveBeenNthCalledWith(2, 65535, '127.0.0.1')
+  expect(server.listeners('listening')).toEqual(originalListeners)
+  expect(server.listenerCount('error')).toBe(0)
+})
 
 describe('resolveRequestPath', () => {
   it('resolves directory requests to index.html', () => {

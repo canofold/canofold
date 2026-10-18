@@ -6,6 +6,7 @@ import type { SearchProvider } from '../search/types'
 import type { CanofoldDemoEngine } from '../demos/types'
 import { publicResourceSchema } from './publicResource'
 import { CHECK_RULE_IDS } from '../check/rules'
+import type { ContentSource } from '../content/source'
 import {
   type CanofoldLayoutLabels,
   type CanofoldConfigInput,
@@ -104,6 +105,7 @@ const layoutLabelsSchema = z
     source: z.string().optional(),
     preview: z.string().optional(),
     copySource: z.string().optional(),
+    generatedSource: z.string().optional(),
     sourceCopied: z.string().optional(),
     quickActions: z.string().optional(),
     github: z.string().optional(),
@@ -359,6 +361,23 @@ export const configInputSchema: z.ZodType<CanofoldConfigInput> = z
       .strict()
       .optional(),
     extensions: z.array(extensionSchema).optional(),
+    sources: z
+      .array(
+        z.custom<ContentSource>((value) => {
+          if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+          const source = value as Partial<ContentSource>
+          return (
+            ['id', 'kind', 'revision', 'root', 'entry', 'version', 'locale', 'base'].every(
+              (key) =>
+                typeof source[key as keyof ContentSource] === 'string' &&
+                (source[key as keyof ContentSource] as string).trim().length > 0
+            ) &&
+            typeof source.load === 'function' &&
+            source.cacheKey !== undefined
+          )
+        }, 'sources entries must be ContentSource adapter objects')
+      )
+      .optional(),
     navigation: z
       .record(
         z.string(),

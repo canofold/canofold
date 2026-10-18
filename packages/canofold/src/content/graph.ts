@@ -19,6 +19,7 @@ import {
 } from './routes'
 import { scanMarkdownFiles } from './scan'
 import { gitContentDates } from './gitDates'
+import { loadSourcePages } from './sources'
 import type {
   ContentGraph,
   DocPage,
@@ -57,16 +58,12 @@ function sidebarLink(page: DocPage): SidebarLink {
   return { type: 'link', title: page.title || page.routePath, routePath: page.routePath }
 }
 
-function pageSegments(page: DocPage) {
-  return localeRelativePathFor(page.relativePath, page.locale).split('/')
-}
-
 function pageDirectorySegments(page: DocPage) {
-  return pageSegments(page).slice(0, -1)
+  return page.navigation.directories.map((directory) => directory.segment)
 }
 
 function isDirectoryIndex(page: DocPage) {
-  return isMarkdownIndexName(pageSegments(page).at(-1) ?? '')
+  return page.navigation.index
 }
 
 /** Build a recursive sidebar while keeping the first directory as the active section. */
@@ -96,7 +93,10 @@ function buildSidebar(localePages: DocPage[]): SidebarGroup[] {
     const groupTitle = groupSegment
       ? typeof groupIndex?.frontmatter.group === 'string'
         ? groupIndex.frontmatter.group
-        : groupIndex?.title || explicitGroupTitles.get(groupSegment) || humanize(groupSegment)
+        : groupIndex?.title ||
+          explicitGroupTitles.get(groupSegment) ||
+          page.navigation.directories[0]?.title ||
+          humanize(groupSegment)
       : ''
     if (typeof page.frontmatter.group === 'string' && page.frontmatter.group !== groupTitle) {
       throw new Error(
@@ -133,6 +133,7 @@ function buildSidebar(localePages: DocPage[]): SidebarGroup[] {
           : undefined) ??
         directoryIndex?.title ??
         compatibilityTitle ??
+        page.navigation.directories[index]?.title ??
         humanize(segment)
       if (compatibilityTitle && compatibilityTitle !== title) {
         throw new Error(`Inconsistent subgroup name for locale "${page.locale}" directory "${directoryPath}"`)
@@ -309,6 +310,10 @@ async function scanVersionPages(
       description: typeof data.description === 'string' ? data.description : '',
       order,
       group: rest.length > 1 ? (rest[0] ?? '') : '',
+      navigation: {
+        directories: rest.slice(0, -1).map((segment) => ({ segment })),
+        index: isMarkdownIndexName(rest.at(-1) ?? '')
+      },
       status,
       search: data.search !== false,
       ai: data.ai !== false,
@@ -360,6 +365,9 @@ export async function buildContentGraph(
       pages.push(page)
   }
 
+  for (const page of await loadSourcePages(cwd, config, renderer)) {
+    pages.push(extensions ? await extensions.extendPage(page) : page)
+  }
   const versionOrder = new Map(versions.map((item, index) => [item.id, index]))
   const localeOrder = new Map(config.i18n.locales.map((locale, index) => [locale, index]))
   pages.sort((a, b) => {

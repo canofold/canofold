@@ -33,6 +33,8 @@ export interface CheckDiagnostic extends CheckIssue {
   ruleId: CheckRuleId
   /** Project-relative source path, including the version-specific docs directory. */
   page?: string
+  /** Entry-document pointer for a source-derived page; generated lines are not source lines. */
+  sourcePointer?: string
   suggestion?: string
 }
 
@@ -164,7 +166,7 @@ export async function runCheck({ cwd, format = 'text' }: { cwd: string; format?:
     ...graph.pages.flatMap((page) => {
       const scope = page.status === 'draft' ? authoringScope : publishedScope
       const lineOffset = bodyLineOffset(page)
-      return [
+      const diagnostics = [
         ...annotate(
           'code-block-language',
           checkCodeBlockLanguages(page.body, lineOffset),
@@ -203,6 +205,12 @@ export async function runCheck({ cwd, format = 'text' }: { cwd: string; format?:
         ).flatMap((issue) => annotate(referenceRule(issue), [issue], page.sourceRelativePath)),
         ...annotate('duplicate-heading', checkDuplicateHeadings(page), page.sourceRelativePath)
       ]
+      if (!page.origin) return diagnostics
+      return diagnostics.map(({ line, column, ...issue }) => ({
+        ...issue,
+        sourcePointer: page.origin!.pointer,
+        message: `Generated Markdown${line === undefined ? '' : ` at ${line}${column === undefined ? '' : `:${column}`}`}: ${issue.message}`
+      }))
     }),
     ...annotate('missing-translation', checkMissingTranslations(publishedGraph)),
     ...annotate('stale-translation', checkStaleTranslations(publishedGraph))
@@ -229,7 +237,7 @@ export async function runCheck({ cwd, format = 'text' }: { cwd: string; format?:
   } else {
     for (const issue of issues) {
       const location = issue.page
-        ? ` ${issue.page}${issue.line === undefined ? '' : `:${issue.line}${issue.column === undefined ? '' : `:${issue.column}`}`}`
+        ? ` ${issue.page}${issue.sourcePointer === undefined ? '' : `#${issue.sourcePointer}`}${issue.line === undefined ? '' : `:${issue.line}${issue.column === undefined ? '' : `:${issue.column}`}`}`
         : ''
       console.log(`${issue.severity.toUpperCase()} [${issue.ruleId}]:${location} ${issue.message}`)
     }

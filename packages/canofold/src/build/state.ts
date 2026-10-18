@@ -26,8 +26,12 @@ function portablePath(cwd: string, path: string) {
 }
 
 /** Stable manifest identity for pages whose source file can appear in multiple versions. */
-export function buildPageKey(page: Pick<DocPage, 'version' | 'sourceRelativePath'>) {
-  return JSON.stringify([page.version, page.sourceRelativePath])
+export function buildPageKey(page: Pick<DocPage, 'version' | 'sourceRelativePath' | 'locale' | 'origin'>) {
+  return JSON.stringify(
+    page.origin
+      ? [page.version, page.locale, page.origin.kind, page.origin.id, page.origin.key]
+      : [page.version, page.sourceRelativePath]
+  )
 }
 
 async function supportFilesUnder(root: string): Promise<string[]> {
@@ -68,9 +72,13 @@ export async function fingerprintExistingFiles(paths: string[]) {
 }
 
 async function runtimeFingerprint() {
-  const runtimeDir = dirname(fileURLToPath(resolveModule('canofold', import.meta.url)))
-  const markdownBase = fileURLToPath(resolveModule('@canofold/markdown/base.css', import.meta.url))
-  return fingerprintExistingFiles([...(await supportFilesUnder(runtimeDir)), markdownBase])
+  const runtimeDirs = ['canofold', '@canofold/markdown/server'].map((specifier) =>
+    dirname(fileURLToPath(resolveModule(specifier, import.meta.url)))
+  )
+  const files = (await Promise.all(runtimeDirs.map(supportFilesUnder))).flat()
+  // Types and source maps cannot change rendered output. All JS, styles and
+  // runtime assets can, including linked Markdown packages at the same version.
+  return fingerprintExistingFiles(files.filter((path) => !/\.(?:map|d\.(?:ts|mts|cts))$/.test(path)))
 }
 
 async function supportFingerprint(cwd: string, config: CanofoldConfig, pageDependencies: Set<string>) {
@@ -98,6 +106,7 @@ function serializablePage(page: DocPage) {
   return {
     sourceRelativePath: page.sourceRelativePath,
     sourceRevision: page.sourceRevision,
+    origin: page.origin ?? null,
     relativePath: page.relativePath,
     version: page.version,
     versionBase: page.versionBase,
@@ -110,6 +119,7 @@ function serializablePage(page: DocPage) {
     description: page.description,
     order: page.order,
     group: page.group,
+    navigation: page.navigation,
     status: page.status,
     search: page.search,
     ai: page.ai,
@@ -143,6 +153,17 @@ function serializableConfig(config: CanofoldConfig) {
   const provider = config.search.provider
   return {
     ...config,
+    sources: config.sources.map((source) => ({
+      id: source.id,
+      kind: source.kind,
+      revision: source.revision,
+      root: source.root,
+      entry: source.entry,
+      version: source.version,
+      locale: source.locale,
+      base: source.base,
+      cacheKey: source.cacheKey
+    })),
     demos: {
       setup: config.demos.setup ?? null,
       engine: config.demos.engine
@@ -199,6 +220,9 @@ export async function createBuildManifest(
       path: portablePath(cwd, path),
       fingerprint: fingerprintBytes(await readFile(path))
     }))
+    dependencies.push(
+      ...(page.origin?.dependencies ?? []).map(({ path, revision }) => ({ path, fingerprint: revision }))
+    )
     for (const reference of page.demos) {
       const demo = demoManifest?.demos[reference.id]
       if (!demo) continue
@@ -249,20 +273,29 @@ export async function createBuildManifest(
       : null,
     demoEngineDependencies: await fingerprintExistingFiles(demoManifest?.dependencyPaths ?? [])
   })
+  const layoutFingerprints = new Map<string, string>()
   const pages = Object.fromEntries(
-    graph.pages.map((page) => [
-      buildPageKey(page),
-      {
-        fingerprint: fingerprint({
-          page: serializablePage(page),
-          localComponents: dependenciesByPage.get(buildPageKey(page)) ?? [],
-          layout: pageLayoutContext(graph, page)
-        }),
-        outputPath: page.outputPath,
-        markdownOutputPath: page.markdownOutputPath,
-        assetOutputPaths: assetPathsByPage.get(buildPageKey(page))!
+    graph.pages.map((page) => {
+      const scope = JSON.stringify([page.version, page.locale])
+      let layout = layoutFingerprints.get(scope)
+      if (!layout) {
+        layout = fingerprint(pageLayoutContext(graph, page))
+        layoutFingerprints.set(scope, layout)
       }
-    ])
+      return [
+        buildPageKey(page),
+        {
+          fingerprint: fingerprint({
+            page: serializablePage(page),
+            localComponents: dependenciesByPage.get(buildPageKey(page)) ?? [],
+            layout
+          }),
+          outputPath: page.outputPath,
+          markdownOutputPath: page.markdownOutputPath,
+          assetOutputPaths: assetPathsByPage.get(buildPageKey(page))!
+        }
+      ]
+    })
   )
   const buildFingerprint = fingerprint({ sharedFingerprint, pages })
   return {

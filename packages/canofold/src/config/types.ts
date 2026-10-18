@@ -8,6 +8,7 @@ import type {
 import type { ThemeDefinition } from '@canofold/themes'
 import type { SearchProvider } from '../search/types'
 import type { CanofoldDemoEngine } from '../demos/types'
+import type { ContentSource } from '../content/source'
 import type { CheckRuleId, CheckRuleLevel } from '../check/rules'
 import { CANOFOLD_MARKDOWN_ELEMENT_GROUP_IDS } from './constants'
 
@@ -73,6 +74,7 @@ export interface CanofoldLayoutLabels {
   source: string
   preview: string
   copySource: string
+  generatedSource: string
   sourceCopied: string
   quickActions: string
   github: string
@@ -192,6 +194,7 @@ export interface CanofoldConfigInput {
   checks?: {
     rules?: Partial<Record<CheckRuleId, CheckRuleLevel>>
   }
+  sources?: ContentSource[]
   extensions?: CanofoldExtensionDescriptor[]
   navigation?: Record<string, CanofoldNavigationItem[]>
   /** Ordered documentation versions. The first is current; omitted or empty hides the control. */
@@ -249,6 +252,7 @@ export interface CanofoldConfig {
   checks: {
     rules: Partial<Record<CheckRuleId, CheckRuleLevel>>
   }
+  sources: ContentSource[]
   extensions: CanofoldExtensionDescriptor[]
   navigation: Record<string, CanofoldNavigationItem[]>
   versions: CanofoldVersionItem[]
