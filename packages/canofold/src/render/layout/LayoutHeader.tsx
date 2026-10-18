@@ -68,13 +68,13 @@ function SearchIcon({ size = 16 }: { size?: number }) {
 
 export function navItemIsActive(model: LayoutModel, item: NavItem): boolean {
   const { routePath } = item
-  const navSegments = routePath.split('/').filter(Boolean)
   return (
     routePath.startsWith('/') &&
     (model.page.routePath === routePath ||
       item.activePaths?.includes(model.page.routePath) ||
-      (routePath !== '/' && model.page.routePath.startsWith(routePath)) ||
-      (model.page.group !== '' && navSegments.includes(model.page.group)))
+      (routePath !== '/' &&
+        model.page.routePath.startsWith(routePath.endsWith('/') ? routePath : `${routePath}/`)) ||
+      (item.section !== undefined && item.section === model.page.group))
   )
 }
 
@@ -198,9 +198,9 @@ export function LayoutHeader({ model }: { model: LayoutModel }) {
                 ))}
               </div>
             </details>
-          ) : (
+          ) : versionOptions.length === 1 ? (
             <span className="cf-version-badge">{versionLabel}</span>
-          )}
+          ) : null}
 
           {languageOptions.length > 1 ? (
             <details className="cf-menu cf-lang" data-canofold-menu="">

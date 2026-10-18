@@ -317,7 +317,10 @@ export async function startStaticServer({
   let mounted: StaticServerMiddleware | undefined
   const server = providedServer ?? createServer()
   const requestHandler = (request: IncomingMessage, response: ServerResponse) => {
+    const originalUrl = request.url
     const next = (error?: unknown) => {
+      // Framework middleware may strip its base; fallback routes belong to this host.
+      request.url = originalUrl
       if (error) {
         logError('Mounted development server error:', error)
         response.statusCode = 500

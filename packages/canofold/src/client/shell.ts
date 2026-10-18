@@ -183,7 +183,7 @@ export function bootstrapShell() {
   function syncDocumentElement(nextDocument: Document) {
     const dark = root.classList.contains('dark')
     root.className = nextDocument.documentElement.className
-    if (dark) root.classList.add('dark')
+    root.classList.toggle('dark', dark)
     root.lang = nextDocument.documentElement.lang
     const direction = nextDocument.documentElement.getAttribute('dir')
     if (direction) root.setAttribute('dir', direction)

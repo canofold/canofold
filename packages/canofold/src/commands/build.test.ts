@@ -587,13 +587,10 @@ describe('runBuild', () => {
       join(cwd, 'canofold.config.ts'),
       `export default {
         i18n: { defaultLocale: 'zh', locales: ['zh', 'en'] },
-        versions: {
-          current: 'v2',
-          items: [
-            { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
-            { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
-          ]
-        },
+        versions: [
+          { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
+          { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
+        ],
         ai: { versions: 'all' }
       }`
     )
@@ -1150,13 +1147,10 @@ describe('runBuild', () => {
     await writeFile(
       join(cwd, 'canofold.config.ts'),
       `export default {
-        versions: {
-          current: 'v2',
-          items: [
-            { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
-            { id: 'v1', label: '1.x', docsDir: 'docs', base: '/v1/' }
-          ]
-        }
+        versions: [
+          { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
+          { id: 'v1', label: '1.x', docsDir: 'docs', base: '/v1/' }
+        ]
       }`
     )
 
@@ -1167,6 +1161,47 @@ describe('runBuild', () => {
     expect(rebuilt.mode).toBe('incremental')
     expect(await readFile(join(cwd, '.canofold/dist/index.html'), 'utf8')).toContain('Beta')
     expect(await readFile(join(cwd, '.canofold/dist/v1/index.html'), 'utf8')).toContain('Beta')
+  })
+
+  it('invalidates cached version controls and removes outputs when a historical entry is removed', async () => {
+    const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-version-config-cache-'))
+    await mkdir(join(cwd, 'handbook'), { recursive: true })
+    await mkdir(join(cwd, 'old'), { recursive: true })
+    await writeFile(join(cwd, 'handbook/index.md'), '# Current content')
+    await writeFile(join(cwd, 'old/index.md'), '# Historical content')
+    const configPath = join(cwd, 'canofold.config.ts')
+    const output = join(cwd, '.canofold/dist')
+    const html = () => readFile(join(output, 'index.html'), 'utf8')
+    const current = { id: 'main', label: '0.7', docsDir: 'handbook', base: '/' }
+    const historical = { id: 'old', label: '0.6', docsDir: 'old', base: '/old/' }
+    const configure = (input: object) => writeFile(configPath, `export default ${JSON.stringify(input)}`)
+
+    await configure({ docsDir: 'handbook' })
+    await runBuild({ cwd })
+    expect(await html()).not.toContain('cf-version-badge')
+    expect(await runBuild({ cwd })).toMatchObject({ mode: 'cached' })
+
+    await configure({ versions: [current, historical] })
+    expect(await runBuild({ cwd })).toMatchObject({ mode: 'clean' })
+    expect(await html()).toContain('cf-version-menu')
+    expect(await readFile(join(output, 'old/index.html'), 'utf8')).toContain('Historical content')
+    expect(await readFile(join(output, 'ai/pages.json'), 'utf8')).not.toContain('Historical content')
+    const index = JSON.parse(await readFile(join(output, 'ai/pages.json'), 'utf8'))
+    expect(index.scope.versions).toEqual(['main'])
+    expect(await runBuild({ cwd })).toMatchObject({ mode: 'cached' })
+
+    await configure({ versions: [{ ...current, label: '0.7 · latest' }] })
+    expect(await runBuild({ cwd })).toMatchObject({ mode: 'clean' })
+    expect(await html()).toContain('0.7 · latest')
+    expect(await html()).not.toContain('cf-version-menu')
+    await expect(access(join(output, 'old/index.html'))).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(access(join(output, 'search/old/zh.json'))).rejects.toMatchObject({ code: 'ENOENT' })
+
+    await configure({ docsDir: 'handbook', versions: [] })
+    expect(await runBuild({ cwd })).toMatchObject({ mode: 'clean' })
+    expect(await html()).not.toContain('cf-version-badge')
+    expect(await html()).toContain('Current content')
+    expect(await runBuild({ cwd })).toMatchObject({ mode: 'cached' })
   })
 
   it('builds versioned snapshots, isolated search indexes, and redirects', async () => {
@@ -1181,13 +1216,10 @@ describe('runBuild', () => {
       join(cwd, 'canofold.config.ts'),
       `export default {
         navigation: { zh: [{ text: '指南', link: '/guide/start/' }] },
-        versions: {
-          current: 'v2',
-          items: [
-            { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
-            { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
-          ]
-        },
+        versions: [
+          { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
+          { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
+        ],
         redirects: { '/getting-started/': '/guide/start/' }
       }`
     )

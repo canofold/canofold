@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join, posix, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execPnpmSync } from './lib/packageManager.mjs'
 
@@ -79,6 +79,14 @@ try {
       'package/package.json'
     ].filter((file) => !files.includes(file))
     const publishedSourceMaps = files.filter((file) => file.endsWith('.map'))
+    for (const file of files.filter((file) => file.endsWith('.js'))) {
+      const source = execFileSync('tar', ['-xOf', tarball, file], { encoding: 'utf8' })
+      for (const [, reference] of source.matchAll(/^\/\/# sourceMappingURL=(.+)$/gm)) {
+        if (!reference.startsWith('data:') && !files.includes(posix.join(posix.dirname(file), reference))) {
+          failures.push(`${packageConfig.name}: ${file} references missing source map ${reference}`)
+        }
+      }
+    }
 
     if (compressedBytes > packageConfig.compressedBudget) {
       failures.push(

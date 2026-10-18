@@ -410,6 +410,50 @@ describe('@canofold/vite', () => {
     expect(await readFile(join(outputRoot, cssPath!), 'utf8')).toContain('.fixture-demo')
   })
 
+  it('delivers setup entry CSS without eagerly including dynamic Demo CSS', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-setup-css-'))
+    const outputRoot = join(cwd, '.canofold/dist')
+    await mkdir(join(cwd, 'src'))
+    await linkNodeModules(cwd)
+    await writeFile(join(cwd, 'src/shared.css'), '.shared-provider { padding: 13px; }')
+    await writeFile(
+      join(cwd, 'src/setup.tsx'),
+      `import './shared.css'; export default function Setup({children}) { return <div className="shared-provider">{children}</div> }`
+    )
+    await writeFile(join(cwd, 'src/demo.css'), '.dynamic-demo { color: red; }')
+    await writeFile(
+      join(cwd, 'src/demo.tsx'),
+      `import './demo.css'; export default function Demo() { return <button className="dynamic-demo">Demo</button> }`
+    )
+    const manifest = await vite({ configFile: false }).prepare({
+      cwd,
+      outputRoot,
+      basePath: '/manual/',
+      mode: 'build',
+      setup: './src/setup.tsx',
+      demos: [
+        {
+          id: 'styled',
+          specifier: '/src/demo.tsx',
+          sandbox: 'inline',
+          pageSourcePath: join(cwd, 'docs/demo.md'),
+          pageSourceRelativePath: 'docs/demo.md',
+          routePath: '/demo/',
+          locale: 'en'
+        }
+      ]
+    })
+    expect(manifest.styleUrls).toHaveLength(1)
+    const css = await readFile(join(outputRoot, manifest.styleUrls![0]!.replace('/manual/', '')), 'utf8')
+    expect(css).toContain('.shared-provider')
+    expect(css).not.toContain('.dynamic-demo')
+    const dynamicCss = manifest.outputPaths!.filter(
+      (path) => path.endsWith('.css') && !manifest.styleUrls!.some((url) => url.endsWith(path))
+    )
+    expect(dynamicCss).toHaveLength(1)
+    expect(await readFile(join(outputRoot, dynamicCss[0]!), 'utf8')).toContain('.dynamic-demo')
+  })
+
   it('builds historical and current demos from their own version-local source trees', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-versioned-demo-'))
     const outputRoot = join(cwd, '.canofold/dist')

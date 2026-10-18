@@ -61,7 +61,9 @@ export function Layout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {page.status === 'draft' ? <meta name="robots" content="noindex, nofollow" /> : null}
+        {page.status === 'draft' ? (
+          <meta name="robots" content="noindex, nofollow" data-canofold-page-head="" />
+        ) : null}
         <title>{model.title}</title>
         <meta name="description" content={model.description} data-canofold-page-head="" />
         <meta property="og:title" content={model.title} data-canofold-page-head="" />
@@ -109,7 +111,7 @@ export function Layout({
           />
         ))}
         {demoStyleUrls.map((url) => (
-          <link key={url} rel="stylesheet" href={url} />
+          <link key={url} rel="stylesheet" href={url} data-canofold-page-head="" />
         ))}
         <script dangerouslySetInnerHTML={{ __html: themeBootScript(config.themes) }} />
       </head>

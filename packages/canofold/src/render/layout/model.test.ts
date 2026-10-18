@@ -48,7 +48,10 @@ describe('createLayoutModel', () => {
       ]
     })
     const model = createLayoutModel({
-      config: createMockConfig({ i18n: { defaultLocale: 'zh', locales: ['zh', 'en'] } }),
+      config: createMockConfig({
+        i18n: { defaultLocale: 'zh', locales: ['zh', 'en'] },
+        versions: graph.versions
+      }),
       graph,
       page,
       home: false,

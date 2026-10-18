@@ -26,16 +26,8 @@ function cloneDefaultConfig(): CanofoldConfig {
 function mergeConfig(input: CanofoldConfigInput): CanofoldConfig {
   const base = cloneDefaultConfig()
   const docsDir = input.docsDir ?? base.docsDir
-  const versions = input.versions
-    ? {
-        current: input.versions.current,
-        items: input.versions.items.map((item) => ({ ...item }))
-      }
-    : {
-        current: 'current',
-        items: [{ id: 'current', label: 'Current', docsDir, base: '/' }]
-      }
-  const currentDocsDir = versions.items.find((item) => item.id === versions.current)?.docsDir ?? docsDir
+  const versions = (input.versions ?? base.versions).map((item) => ({ ...item }))
+  const currentDocsDir = versions[0]?.docsDir ?? docsDir
   const config: CanofoldConfig = {
     ...base,
     ...input,
@@ -150,18 +142,15 @@ function assertI18nConfig(config: CanofoldConfig) {
 }
 
 function assertVersionConfig(config: CanofoldConfig) {
-  const ids = config.versions.items.map((item) => item.id)
-  const bases = config.versions.items.map((item) => item.base)
-  if (!ids.includes(config.versions.current)) {
-    throw new Error(`versions.current "${config.versions.current}" must match a versions.items id`)
-  }
+  const ids = config.versions.map((item) => item.id)
+  const bases = config.versions.map((item) => item.base)
   if (new Set(ids.map(portablePathKey)).size !== ids.length) {
-    throw new Error('versions.items must not contain portable-duplicate version ids')
+    throw new Error('versions must not contain portable-duplicate version ids')
   }
   if (new Set(bases.map(portablePathKey)).size !== bases.length) {
-    throw new Error('versions.items must not contain duplicate bases')
+    throw new Error('versions must not contain duplicate bases')
   }
-  for (const item of config.versions.items) {
+  for (const item of config.versions) {
     try {
       assertRoutePath(item.base)
     } catch {
@@ -171,12 +160,12 @@ function assertVersionConfig(config: CanofoldConfig) {
       throw new Error(`Version base "${item.base}" must be an absolute path ending in /`)
     }
   }
-  const current = config.versions.items.find((item) => item.id === config.versions.current)
-  if (current?.base !== '/') {
-    throw new Error('The current documentation version must use base "/"')
+  const current = config.versions[0]
+  if (current && current.base !== '/') {
+    throw new Error('The first (current) documentation version must use base "/"')
   }
   if (current?.status === 'archived') {
-    throw new Error('The current documentation version cannot be archived')
+    throw new Error('The first/current documentation version cannot be archived')
   }
 }
 
@@ -186,8 +175,8 @@ function assertEffectiveInput(input: CanofoldConfigInput) {
   if (new Set(themeIds).size !== themeIds.length) {
     throw new Error('themes must not contain duplicate theme ids')
   }
-  if (input.docsDir !== undefined && input.versions !== undefined) {
-    throw new Error('docsDir cannot be combined with versions; set docsDir on each versions.items entry')
+  if (input.docsDir !== undefined && input.versions?.length) {
+    throw new Error('docsDir cannot be combined with versions; set docsDir on each versions entry')
   }
   if (input.branding?.logoDark && !input.branding.logo) {
     throw new Error('branding.logoDark requires branding.logo')

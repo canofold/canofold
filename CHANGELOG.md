@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.1 - 2026-10-18
+
+- Documentation versions use an ordered `versions: [...]` array: the first entry is current, one entry displays its label, and multiple entries offer switching. Omitted or empty versions hide the control without changing the default content scope. Labels never come from the generator or project package version. Migrate the former `{ current, items }` configuration by moving `items` directly under `versions` and placing its current entry first; the old object format is no longer accepted. The snapshot command follows the same array order.
+- Encode each original source-path segment in “Edit this page” links, preserving literal percent escapes, Unicode, spaces, and directory separators.
+- Display reliable content-update dates in UTC so the same document does not show different calendar dates on local and CI machines.
+- Deliver shared Demo setup CSS and its static imports through the existing Demo manifest and page-head lifecycle, while leaving per-component CSS lazy-loaded.
+- Preserve both light and dark reader choices during client navigation, even when the server's default theme uses the opposite color scheme.
+- Give automatic and section-root navigation explicit section ownership; do not select or redirect unrelated configured sibling/nested entries merely because URL segments match a directory name.
+- Synchronize draft robots metadata during development navigation and page updates without changing production draft exclusion.
+- Keep production CLI and Vite bundles free of references to unpublished source maps; retain maps for local watch builds and check actual tarballs for dangling references.
+- Preserve the original request URL when framework middleware hands a request back to the host, keeping development pages, assets, and live updates reachable below a deployment base path.
+
 ## 0.7.0 - 2026-10-17
 
 - Version the page index and full-content manifest as schema 2. Publish document identity, authored/transformed source fingerprints, content revisions, explicit body/static-analysis representations, output capabilities and a shared collection snapshot. Preserve independent output controls and include page inventories in full manifests when the page index is disabled.

@@ -48,6 +48,12 @@ export default defineConfig({
 
 顶部导航通常按目录路由识别当前栏目。如果相关文档使用平级路由，可在导航项的 `activePaths` 中列出页面的精确路径；这些路径必须指向已生成的页面。例如 `{ text: '组件', link: '/button/', activePaths: ['/notice/', '/progress/'] }`，无需改动页面 URL，也能让所列页面保持“组件”选中。
 
+## 文档版本与日期
+
+`versions` 使用数组，第一项为当前主版本。省略或设为 `[]` 时不展示版本入口，仍从 `docsDir`（默认 `docs`）构建文档；一项显示 `label`，多项提供版本切换，不自动读取项目或 Canofold 包的版本。例如：`versions: [{ id: 'v2', label: 'Acme 2.4', docsDir: 'docs', base: '/' }]`。配置非空数组时，目录分别写在各项中，不再设置顶层 `docsDir`。历史文档需要先保存到独立目录；`canofold snapshot <id>` 复制执行时的当前文档，不会回溯 Git。
+
+页面更新日期来自 `updatedAt` 或可靠的 Git 历史，统一按 UTC 展示，不随构建机器时区变化。两者都不可用时，不显示日期。
+
 ## 产物控制与构建报告
 
 默认值保留旧版本的全部产物；只需关闭不想发布的类别：

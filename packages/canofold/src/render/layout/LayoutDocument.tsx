@@ -104,7 +104,9 @@ function Sidebar({ model }: { model: LayoutModel }) {
 function PageFooter({ model }: { model: LayoutModel }) {
   const { editHref, labels, page } = model
   const updated = page.lastUpdated
-    ? new Intl.DateTimeFormat(page.locale, { dateStyle: 'medium' }).format(new Date(page.lastUpdated))
+    ? new Intl.DateTimeFormat(page.locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(
+        new Date(page.lastUpdated)
+      )
     : undefined
   return (
     <footer className="cf-page-footer">

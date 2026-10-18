@@ -285,8 +285,8 @@ describe('buildContentGraph', () => {
       }
     ])
     expect(graph.nav.current?.zh).toEqual([
-      { title: '指南', routePath: '/guide/start/' },
-      { title: '参考', routePath: '/reference/cli/' }
+      { title: '指南', routePath: '/guide/start/', section: 'guide' },
+      { title: '参考', routePath: '/reference/cli/', section: 'reference' }
     ])
     expect(graph.pages.map((page) => page.routePath)).toContain('/reference/markdown/')
   })
@@ -310,7 +310,9 @@ describe('buildContentGraph', () => {
     )
 
     expect(graph.pages.map((page) => page.routePath)).toEqual(['/', '/ja/', '/ja/guide/start/'])
-    expect(graph.nav.current?.ja).toEqual([{ title: 'ガイド', routePath: '/ja/guide/start/' }])
+    expect(graph.nav.current?.ja).toEqual([
+      { title: 'ガイド', routePath: '/ja/guide/start/', section: 'guide' }
+    ])
   })
 
   it('rejects inconsistent translated group names inside one locale directory', async () => {
@@ -455,23 +457,47 @@ describe('buildContentGraph', () => {
       cwd,
       createMockConfig({
         navigation: { zh: [{ text: '产品指南', link: '/guide/' }] },
-        versions: {
-          current: 'v2',
-          items: [
-            { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
-            { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
-          ]
-        }
+        versions: [
+          { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
+          { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
+        ]
       })
     )
 
-    expect(graph.nav.v2?.zh).toEqual([{ title: '产品指南', routePath: '/guide/start/' }])
-    expect(graph.nav.v1?.zh).toEqual([{ title: '产品指南', routePath: '/v1/guide/start/' }])
+    expect(graph.nav.v2?.zh).toEqual([{ title: '产品指南', routePath: '/guide/start/', section: 'guide' }])
+    expect(graph.nav.v1?.zh).toEqual([{ title: '产品指南', routePath: '/v1/guide/start/', section: 'guide' }])
     expect(graph.pages.map((page) => page.routePath)).toEqual([
       '/',
       '/guide/start/',
       '/v1/',
       '/v1/guide/start/'
+    ])
+  })
+
+  it('does not infer section ownership or redirect explicit nested page entries', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-explicit-nav-sections-'))
+    await mkdir(join(cwd, 'docs/guide'), { recursive: true })
+    await mkdir(join(cwd, 'docs/reference'), { recursive: true })
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await writeFile(join(cwd, 'docs/guide/writing.md'), '# Writing')
+    await writeFile(join(cwd, 'docs/guide/deploy.md'), '# Deployment')
+    await writeFile(join(cwd, 'docs/reference/guide.md'), '# Other guide')
+    const graph = await buildContentGraph(
+      cwd,
+      createMockConfig({
+        navigation: {
+          zh: [
+            { text: 'Writing', link: '/guide/writing/' },
+            { text: 'Deployment', link: '/guide/deploy/' },
+            { text: 'Other guide', link: '/reference/guide/' }
+          ]
+        }
+      })
+    )
+    expect(graph.nav.current?.zh).toEqual([
+      { title: 'Writing', routePath: '/guide/writing/' },
+      { title: 'Deployment', routePath: '/guide/deploy/' },
+      { title: 'Other guide', routePath: '/reference/guide/' }
     ])
   })
 
@@ -503,13 +529,10 @@ describe('buildContentGraph', () => {
       cwd,
       createMockConfig({
         navigation: { zh: [{ text: 'External', link: 'HTTPS://example.com/docs' }] },
-        versions: {
-          current: 'v2',
-          items: [
-            { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
-            { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
-          ]
-        }
+        versions: [
+          { id: 'v2', label: '2.x', docsDir: 'docs', base: '/' },
+          { id: 'v1', label: '1.x', docsDir: 'versions/v1', base: '/v1/' }
+        ]
       })
     )
 

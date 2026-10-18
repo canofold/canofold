@@ -37,10 +37,10 @@ describe('runCheck', () => {
     )
     await writeFile(
       join(cwd, 'canofold.config.ts'),
-      `export default { versions: { current: 'current', items: [
+      `export default { versions: [
         { id: 'current', label: 'Current', docsDir: 'docs', base: '/' },
         { id: 'v1', label: 'v1', docsDir: 'versions/v1', base: '/v1/' }
-      ] } }`
+      ] }`
     )
     vi.spyOn(console, 'log').mockImplementation(() => undefined)
 
@@ -209,13 +209,10 @@ describe('runCheck', () => {
       join(cwd, 'canofold.config.ts'),
       `export default {
   i18n: { defaultLocale: 'zh', locales: ['zh'] },
-  versions: {
-    current: 'current',
-    items: [
-      { id: 'current', label: 'Current', docsDir: 'docs/current', base: '/' },
-      { id: 'v1', label: 'v1', docsDir: 'docs/v1', base: '/v1/' }
-    ]
-  }
+  versions: [
+    { id: 'current', label: 'Current', docsDir: 'docs/current', base: '/' },
+    { id: 'v1', label: 'v1', docsDir: 'docs/v1', base: '/v1/' }
+  ]
 }`
     )
     await writeFile(

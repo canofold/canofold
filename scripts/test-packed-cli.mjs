@@ -378,7 +378,7 @@ export default {
   requiredVersion: '${canofoldPackage.manifest.version}',
   themes: [aurora, neumorphism, canofold, neoBrutalist],
   layout: { sidebarWidth: '18rem', outlineWidth: '19rem' },
-  demos: { engine: vite() },
+  demos: { engine: vite(), setup: './src/demo.setup.tsx' },
   seo: { robots: 'disallow' },
   markdown: { plugins: [mermaid()], code: { overflow: 'scroll' } },
   search: { provider: pagefind() },
@@ -387,13 +387,10 @@ export default {
     defaultLocale: 'en',
     locales: ['en', 'zh']
   },
-  versions: {
-    current: 'current',
-    items: [
-      { id: 'current', label: 'Current', docsDir: 'docs', base: '/' },
-      { id: 'v0', label: 'v0', docsDir: 'versions/v0', base: '/v0/' }
-    ]
-  },
+  versions: [
+    { id: 'current', label: 'Current', docsDir: 'docs', base: '/' },
+    { id: 'v0', label: 'v0', docsDir: 'versions/v0', base: '/v0/' }
+  ],
   ai: {
     llmsTxt: true,
     llmsFullTxt: true,
@@ -517,6 +514,14 @@ export default function PackedButtonDemo() {
 `
   )
   await write('src/button.css', '.packed-button { color: rgb(1 2 3); }\n')
+  await write('src/provider.css', '.packed-provider { padding: 13px; }\n')
+  await write(
+    'src/demo.setup.tsx',
+    `import './provider.css'
+export default function PackedSetup({ children }) {
+  return <div className="packed-provider">{children}</div>
+}`
+  )
   await write(
     'docs/guide/platform/internals/cache/index.md',
     `---\ntitle: Deep cache page\ngroup: Guide\n---\n\n# Deep cache page\n\nThe recursive sidebar supports this depth.\n\n| Mode | Owner |\n| --- | --- |\n| Markdown | Vite |\n`
@@ -643,6 +648,16 @@ export default function PackedButtonDemo() {
   )
   assert.match(markdownOnlyHtml, /data-markdown-client-url="\/assets\/canofold-demos\/markdown\.js"/)
   assert.doesNotMatch(markdownOnlyHtml, /data-canofold-demo-client-url=/)
+  assert.doesNotMatch(markdownOnlyHtml, /<link[^>]+href="\/assets\/canofold-demos\/[^\"]+\.css"/)
+  const sharedStyles = [
+    ...homeHtml.matchAll(
+      /<link rel="stylesheet" href="(\/assets\/canofold-demos\/[^\"]+\.css)" data-canofold-page-head=""/g
+    )
+  ]
+  assert.equal(sharedStyles.length, 1, 'Demo setup CSS must be linked through the managed page head')
+  const providerCss = await readFile(join(consumerRoot, '.canofold/dist', sharedStyles[0][1]), 'utf8')
+  assert.match(providerCss, /packed-provider/)
+  assert.doesNotMatch(providerCss, /packed-button/, 'Lazy Demo CSS must not become global entry CSS')
   const demoRoot = join(consumerRoot, '.canofold/dist/assets/canofold-demos')
   const demoFiles = await filesUnder(demoRoot)
   const demoJavaScript = await Promise.all(
@@ -767,6 +782,12 @@ export default function PackedButtonDemo() {
   // Exercise the snapshot workflow through the packed CLI and the real Vite Demo engine.
   // The existing fixture's project-root Demo path is intentionally replaced with a
   // version-local source before snapshotting, so historical code can be frozen.
+  assert.throws(
+    () => runPnpm(['exec', 'canofold', 'snapshot', 'v1']),
+    /Move demos.setup into version-local demos before snapshotting/
+  )
+  const snapshotConfig = originalConfig.replace(", setup: './src/demo.setup.tsx'", '')
+  await writeFile(configPath, snapshotConfig)
   await writeFile(
     join(consumerRoot, 'docs/index.md'),
     (await readFile(join(consumerRoot, 'docs/index.md'), 'utf8')).replaceAll(
@@ -790,7 +811,7 @@ export default function PackedButtonDemo() {
   await assertExists('versions/v1/zh/demo/snapshot.tsx')
   await writeFile(
     configPath,
-    originalConfig.replace(
+    snapshotConfig.replace(
       "{ id: 'v0', label: 'v0', docsDir: 'versions/v0', base: '/v0/' }",
       "{ id: 'v0', label: 'v0', docsDir: 'versions/v0', base: '/v0/' },\n" +
         "      { id: 'v1', label: 'v1', docsDir: 'versions/v1', base: '/v1/', status: 'archived' }"
