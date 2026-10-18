@@ -552,6 +552,24 @@ test('Markdown benchmark uses a self-contained representative corpus', async () 
   assert.doesNotMatch(benchmark, /site\/docs/)
 })
 
+test('site browser regression gates packed candidates before publication', async () => {
+  const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
+  assert.match(manifest.scripts['test:release'], /test-packed-cli\.mjs --browser/)
+  assert.match(manifest.scripts['test:release'], /test:release:checks/)
+  assert.doesNotMatch(manifest.scripts['test:release:checks'], /test-packed-cli/)
+  for (const path of ['ci.yml', 'release.yml']) {
+    const workflow = await readFile(join(root, '.github/workflows', path), 'utf8')
+    assert.match(workflow, /browser: \[chromium, firefox, webkit\]/)
+    const install = workflow.indexOf('playwright install --with-deps ${{ matrix.browser }}')
+    assert.ok(install >= 0)
+    assert.ok(install < workflow.indexOf('run: pnpm test:site-browser --project=${{ matrix.browser }}'))
+    assert.match(workflow, /run: pnpm test:release:checks/)
+    assert.match(workflow, /needs: \[(?:test|checks), navigation\]/)
+  }
+  const packed = await readFile(join(root, 'scripts/test-packed-cli.mjs'), 'utf8')
+  assert.match(packed, /process\.argv\.slice\(2\)\.filter\(\(arg\) => arg !== '--browser'\)/)
+})
+
 test('CI uses the supported Node.js runtime', async () => {
   const canofoldPackage = JSON.parse(await readFile(join(root, 'packages/canofold/package.json'), 'utf8'))
   const workflow = await readFile(join(root, '.github/workflows/ci.yml'), 'utf8')
