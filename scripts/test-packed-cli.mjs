@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 import { execPnpmSync, packageManagerInvocationFor } from './lib/packageManager.mjs'
 import { filesUnder } from './lib/files.mjs'
+import { writeNavigationFixture } from './lib/navigationFixture.mjs'
 
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const workspaceManifest = JSON.parse(await readFile(join(workspace, 'package.json'), 'utf8'))
@@ -1042,6 +1043,21 @@ paths:
     false
   )
   await assert.rejects(access(apiHtml))
+
+  if (process.argv.includes('--browser')) {
+    await writeNavigationFixture(consumerRoot)
+    runPnpm(['exec', 'canofold', 'build', '--no-cache'])
+    execPnpmSync(['exec', 'playwright', 'test'], {
+      cwd: workspace,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        CANOFOLD_NAVIGATION_MODE: 'packed',
+        CANOFOLD_NAVIGATION_SITE: consumerRoot,
+        CANOFOLD_NAVIGATION_CLI: join(consumerRoot, 'node_modules/canofold/dist/cli.js')
+      }
+    })
+  }
 
   console.log(
     `Packed CLI smoke passed: canofold@${canofoldPackage.manifest.version}, ${extensionOutput.pages} initial pages, Markdown ${(markdownEntryBytes / 1024).toFixed(2)} KiB gzip, Demo ${(demoEntryBytes / 1024).toFixed(2)} KiB gzip, Pagefind, AI shards, extension host, cache hit, bilingual snapshot with independent Vite demos, existing bilingual Markdown README migration, representative VitePress/Docusaurus migrations, OpenAPI and third-party content sources`

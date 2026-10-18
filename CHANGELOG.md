@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.2 - 2026-10-19
+
+- Share narrow-screen popup positioning across all header menus instead of only the version selector. Keep intermediate-width header controls from overlapping, preserve search icons and single-line text alongside long version labels, and bound version labels without duplicating navigation.
+- Gate candidate tarballs with the same complete, bilingual, all-theme header browser suite used for linked Playground packages, before npm publication.
+
 ## 0.8.1 - 2026-10-18
 
 - Keep the documentation-version menu available in narrow headers using an accessible compact trigger. Preserve the single-version label behavior and existing version/locale routing.

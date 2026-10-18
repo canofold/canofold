@@ -38,8 +38,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install site regression browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
       - name: Release checks
         run: pnpm test:release
+
+      - name: Upload site regression failures
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: site-navigation-${{ matrix.node }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
 
   release-gate:
     name: Release gate

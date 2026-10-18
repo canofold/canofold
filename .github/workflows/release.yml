@@ -48,8 +48,21 @@ jobs:
       - name: Verify release metadata
         run: node scripts/check-release-version.mjs "${GITHUB_REF_NAME}"
 
+      - name: Install site regression browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
       - name: Run release checks
         run: pnpm test:release
+
+      - name: Upload site regression failures
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: site-navigation-release
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
 
       - name: Pack publishable packages
         run: |
