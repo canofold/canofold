@@ -1,6 +1,7 @@
 export interface MarkdownSyntaxFeatures {
   highlightedCode: boolean
   codeLanguages: readonly string[]
+  definitionLists: boolean
 }
 
 const PLAIN_TEXT_LANGUAGES = new Set(['text', 'plaintext', 'txt', 'plain'])
@@ -75,13 +76,13 @@ export function detectMarkdownSyntax(
   source?: string,
   pluginFenceLanguages: ReadonlySet<string> = new Set()
 ): MarkdownSyntaxFeatures {
-  if (source === undefined) return { highlightedCode: true, codeLanguages: [] }
+  if (source === undefined) return { highlightedCode: true, codeLanguages: [], definitionLists: true }
 
   const languages = new Set<string>()
   let openFence: OpenFence | undefined
   const container = { listIndent: 0 }
 
-  for (const line of source.split(/\r?\n/)) {
+  for (const line of source.split(/\r\n?|\n/)) {
     const content = containerContent(line, container)
     if (openFence) {
       if (closesFence(content, openFence)) openFence = undefined
@@ -102,5 +103,8 @@ export function detectMarkdownSyntax(
   }
 
   const codeLanguages = [...languages]
-  return { highlightedCode: codeLanguages.length > 0, codeLanguages }
+  // Be conservative: even markers inside code enable the extension. A missing
+  // marker, however, cannot form a definition list in any Markdown container.
+  const definitionLists = /^[ \t>]*(?:(?:[-+*]|\d{1,9}[.)])[ \t>]+)*:(?:[ \t]|\r?$)/m.test(source)
+  return { highlightedCode: codeLanguages.length > 0, codeLanguages, definitionLists }
 }

@@ -39,6 +39,14 @@ afterEach(() => {
 })
 
 describe('typed browser shell', () => {
+  it('transfers a received document subtree without cloning every content node', async () => {
+    document.body.innerHTML = '<div data-canofold-page-root><main>Old</main></div>'
+    bootstrapShell()
+    const next = parse('<div data-canofold-page-root><main>Next page</main></div>')
+    const main = next.querySelector('main')
+    await window.__canofoldApplyPageDocument!(next, { mode: 'navigation' })
+    expect(document.querySelector('main')).toBe(main)
+  })
   it.each([false, true])('preserves the reader color scheme %s across both server defaults', async (dark) => {
     document.documentElement.classList.toggle('dark', dark)
     document.documentElement.dataset.cfTheme = 'canofold'
@@ -65,7 +73,7 @@ describe('typed browser shell', () => {
     const draft = parse(
       '<head><meta name="robots" content="noindex, nofollow" data-canofold-page-head><link rel="stylesheet" href="/provider.css" data-canofold-page-head></head><body><div data-canofold-page-root>Draft</div></body>'
     )
-    await window.__canofoldApplyPageDocument!(draft, { mode: 'navigation' })
+    await window.__canofoldApplyPageDocument!(draft.cloneNode(true) as Document, { mode: 'navigation' })
     const style = document.querySelector('link[href="/provider.css"]')
     expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, nofollow')
     await window.__canofoldApplyPageDocument!(draft, { mode: 'update' })

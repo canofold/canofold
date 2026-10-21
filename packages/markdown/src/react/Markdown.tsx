@@ -20,6 +20,8 @@ import { stableJson } from '../compiler/stableJson.js'
 import type { PreparedMarkdown, RenderMarkdownOptions } from '../compiler/types.js'
 import { MarkdownSlotsProvider, type MarkdownSlots } from './slots.js'
 import { MarkdownUrlTransformProvider, type MarkdownUrlTransform } from './urlTransform.js'
+import { createPreparationCache, markdownDocumentWeight } from '../compiler/preparationCache.js'
+import { staticTokens } from './staticTokens.js'
 
 export interface MarkdownRootProps extends Omit<
   HTMLAttributes<HTMLElement>,
@@ -60,6 +62,8 @@ interface MarkdownDocumentProps extends MarkdownRootProps {
   document: PreparedMarkdown['document']
   /** Optional intrinsic tag replacements for host-level customization. */
   components?: MarkdownComponents
+  /** @internal JSX factories for already serialized static tokens. */
+  runtime?: { jsx: typeof jsx; jsxs: typeof jsxs }
 }
 
 function cx(...values: Array<string | undefined>) {
@@ -101,28 +105,26 @@ export function MarkdownRoot({
 }
 
 /** Render a prepared HAST tree as React elements. */
-export function MarkdownDocument({
-  document,
-  classNames,
-  components,
-  slots,
-  urlTransform,
-  ...props
-}: MarkdownDocumentProps) {
+export function MarkdownDocument(input: MarkdownDocumentProps) {
+  const { document, classNames, components, slots, urlTransform, runtime, ...props } = input
+  const compacted = useMemo(
+    () => (runtime || components ? { document, runtime } : staticTokens(document)),
+    [document, components, runtime]
+  )
   const componentMap = useMemo(
     () => createMarkdownComponentMap(classNames, slots, components, urlTransform) as HastComponents,
     [classNames, components, slots, urlTransform]
   )
   const children = useMemo(
     () =>
-      toJsxRuntime(document, {
+      toJsxRuntime(compacted.document, {
         Fragment,
-        jsx,
-        jsxs,
+        jsx: compacted.runtime?.jsx ?? jsx,
+        jsxs: compacted.runtime?.jsxs ?? jsxs,
         components: componentMap,
         passNode: true
       }),
-    [componentMap, document]
+    [componentMap, compacted]
   )
 
   return (
@@ -136,40 +138,82 @@ function serializeOptions(options: RenderMarkdownOptions | undefined): string | 
   return stableJson(options ?? {})
 }
 
-const clientPreparationCache = new Map<string, Promise<PreparedMarkdown>>()
-const CLIENT_CACHE_LIMIT = 32
-
-function clientCacheKey(source: string, optionsKey: string | undefined) {
-  return optionsKey === undefined ? undefined : `${optionsKey.length}:${optionsKey}\0${source}`
+interface PreparedClientMarkdown {
+  document: PreparedMarkdown['document']
+  runtime?: ReturnType<typeof staticTokens>['runtime']
 }
 
-async function prepareForClient(
+const clientPreparationCache = createPreparationCache<PreparedClientMarkdown>(
+  32,
+  16 * 1024 * 1024,
+  (value) => markdownDocumentWeight(value.document) + (value.runtime?.retainedBytes ?? 0)
+)
+interface PendingPreparation {
+  controller: AbortController
+  promise: Promise<PreparedClientMarkdown>
+  owners: number
+  settled: boolean
+}
+const pendingClientPreparations = new Map<string, PendingPreparation>()
+
+function clientCacheKey(source: string, optionsKey: string | undefined, customComponents: boolean) {
+  return optionsKey === undefined
+    ? undefined
+    : `${customComponents ? 'raw' : 'tokens'}:${optionsKey.length}:${optionsKey}\0${source}`
+}
+
+function prepareForClient(
   source: string,
   options: RenderMarkdownOptions | undefined,
-  optionsKey: string | undefined
+  optionsKey: string | undefined,
+  customComponents: boolean
 ) {
-  const create = () =>
-    import('../compiler/prepareMarkdown.js').then(({ prepareMarkdown }) => prepareMarkdown(source, options))
-  const key = clientCacheKey(source, optionsKey)
-  if (key === undefined) return create()
-  const existing = clientPreparationCache.get(key)
-  if (existing) {
-    clientPreparationCache.delete(key)
-    clientPreparationCache.set(key, existing)
-    return existing
+  const key = clientCacheKey(source, optionsKey, customComponents)
+  let pending = key === undefined ? undefined : pendingClientPreparations.get(key)
+  if (!pending) {
+    const controller = new AbortController()
+    const create = () =>
+      import('../compiler/prepareMarkdown.js').then(async ({ prepareMarkdown }) => {
+        controller.signal.throwIfAborted()
+        const { document } = await prepareMarkdown(source, options, {
+          warnedLanguages: new Set(),
+          signal: controller.signal
+        })
+        controller.signal.throwIfAborted()
+        // Rendering already compacts inert tokens. Retain that result rather
+        // than also keeping the much larger original token tree and analysis.
+        return customComponents ? { document } : staticTokens(document)
+      })
+    pending = {
+      controller,
+      promise: clientPreparationCache.get(key, create),
+      owners: 0,
+      settled: false
+    }
+    if (key !== undefined) pendingClientPreparations.set(key, pending)
+    const entry = pending
+    const settle = () => {
+      entry.settled = true
+      if (key !== undefined && pendingClientPreparations.get(key) === entry) {
+        pendingClientPreparations.delete(key)
+      }
+    }
+    void entry.promise.then(settle, settle)
   }
-
-  const request = create().catch((error) => {
-    if (clientPreparationCache.get(key) === request) clientPreparationCache.delete(key)
-    throw error
-  })
-  clientPreparationCache.set(key, request)
-  while (clientPreparationCache.size > CLIENT_CACHE_LIMIT) {
-    const oldest = clientPreparationCache.keys().next().value
-    if (oldest === undefined) break
-    clientPreparationCache.delete(oldest)
+  const entry = pending
+  entry.owners++
+  return {
+    promise: entry.promise,
+    release() {
+      entry.owners--
+      if (entry.owners || entry.settled) return
+      entry.controller.abort()
+      if (key !== undefined && pendingClientPreparations.get(key) === entry) {
+        pendingClientPreparations.delete(key)
+        clientPreparationCache.delete(key)
+      }
+    }
   }
-  return request
 }
 
 /**
@@ -187,6 +231,7 @@ export function Markdown({
 }: MarkdownProps) {
   const optionsKey = useMemo(() => serializeOptions(options), [options])
   const optionsIdentity: unknown = optionsKey ?? options ?? null
+  const customComponents = Boolean(props.components)
   const onErrorRef = useRef(onError)
   onErrorRef.current = onError
   const onReadyRef = useRef(onReady)
@@ -194,16 +239,18 @@ export function Markdown({
   const [state, setState] = useState<{
     source?: string
     optionsIdentity?: unknown
-    prepared?: PreparedMarkdown
+    customComponents?: boolean
+    prepared?: PreparedClientMarkdown
   }>({})
 
   useEffect(() => {
     let active = true
     if (!retainPrevious) setState({ source, optionsIdentity })
 
-    void prepareForClient(source, options, optionsKey)
+    const preparation = prepareForClient(source, options, optionsKey, customComponents)
+    void preparation.promise
       .then((prepared) => {
-        if (active) setState({ source, optionsIdentity, prepared })
+        if (active) setState({ source, optionsIdentity, customComponents, prepared })
       })
       .catch((error: unknown) => {
         if (!active) return
@@ -213,22 +260,26 @@ export function Markdown({
 
     return () => {
       active = false
+      preparation.release()
     }
-  }, [source, optionsIdentity, retainPrevious])
+  }, [source, optionsIdentity, retainPrevious, customComponents])
 
   const preparedIsCurrent =
-    state.source === source && Object.is(state.optionsIdentity, optionsIdentity) && Boolean(state.prepared)
+    state.source === source &&
+    Object.is(state.optionsIdentity, optionsIdentity) &&
+    state.customComponents === customComponents &&
+    Boolean(state.prepared)
 
   useEffect(() => {
     if (preparedIsCurrent) onReadyRef.current?.()
   }, [preparedIsCurrent, state.prepared])
 
   if (!preparedIsCurrent) {
-    if (retainPrevious && state.prepared) {
-      return <MarkdownDocument document={state.prepared.document} data-cf-runtime="react" {...props} />
+    if (retainPrevious && state.prepared && state.customComponents === customComponents) {
+      return <MarkdownDocument {...state.prepared} data-cf-runtime="react" {...props} />
     }
     return fallback
   }
   if (!state.prepared) return fallback
-  return <MarkdownDocument document={state.prepared.document} data-cf-runtime="react" {...props} />
+  return <MarkdownDocument {...state.prepared} data-cf-runtime="react" {...props} />
 }

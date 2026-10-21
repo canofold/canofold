@@ -133,51 +133,161 @@ async function projectMetadataPaths(projectRoot: string) {
   return existing.filter((path): path is string => Boolean(path))
 }
 
-function isProjectSource(cwd: string, path: string) {
-  const projectRelative = relative(canonicalPath(cwd), canonicalPath(path))
-  return (
-    projectRelative !== '..' &&
-    !projectRelative.startsWith(`..${sep}`) &&
-    !isAbsolute(projectRelative) &&
-    !projectRelative.split(sep).some((segment) => segment === 'node_modules' || segment === '.canofold')
+const MODULE_CONCURRENCY = 32
+
+/** Settle active transforms before propagating the first failure or closing Vite. */
+async function settleModuleBatch<T>(tasks: Promise<T>[]): Promise<T[]> {
+  let failure: { error: unknown } | undefined
+  const results = await Promise.allSettled(
+    tasks.map((task) =>
+      task.catch((error: unknown) => {
+        failure ??= { error }
+        throw error
+      })
+    )
   )
+  if (failure) throw failure.error
+  return results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
 }
 
-function moduleRequestUrl(server: ViteDevServer, modulePath: string) {
-  const rootRelative = relative(canonicalPath(server.config.root), canonicalPath(modulePath))
-  if (rootRelative !== '..' && !rootRelative.startsWith(`..${sep}`) && !isAbsolute(rootRelative)) {
-    return `/${normalizePath(rootRelative)}`
+function mergeDependencyPaths(left: readonly string[], right: readonly string[]): string[] {
+  const merged: string[] = []
+  let a = 0,
+    b = 0
+  while (a < left.length || b < right.length) {
+    if (b === right.length || (a < left.length && left[a]! < right[b]!)) merged.push(left[a++]!)
+    else if (a === left.length || right[b]! < left[a]!) merged.push(right[b++]!)
+    else {
+      merged.push(left[a++]!)
+      b += 1
+    }
   }
-  return `/@fs/${normalizePath(modulePath)}`
+  return merged
 }
 
-async function collectLocalDependencies(server: ViteDevServer, modulePath: string, cwd: string) {
-  await server.transformRequest(moduleRequestUrl(server, modulePath))
-  const first =
-    server.moduleGraph.getModuleById(normalizePath(modulePath)) ??
-    server.moduleGraph.getModulesByFile(modulePath)?.values().next().value
-  const visited = new Set<string>()
-  const dependencies = new Set<string>()
-
-  async function visit(module: ModuleNode | undefined): Promise<void> {
-    if (!module) return
-    const key = module.id ?? module.url
-    if (visited.has(key)) return
-    visited.add(key)
-    if (!module.file || !isProjectSource(cwd, module.file)) return
-    dependencies.add(canonicalPath(module.file))
-    await server.transformRequest(module.url)
-    await Promise.all([...module.importedModules].map((dependency) => visit(dependency)))
+function createDependencyCollector(server: ViteDevServer, cwd: string) {
+  const projectRoot = canonicalPath(cwd)
+  const viteRoot = canonicalPath(server.config.root)
+  const paths = new Map<string, string>()
+  const canonical = (path: string) => {
+    let value = paths.get(path)
+    if (!value) paths.set(path, (value = canonicalPath(path)))
+    return value
+  }
+  const contains = (path: string) => {
+    const projectRelative = relative(projectRoot, canonical(path))
+    return (
+      projectRelative !== '..' &&
+      !projectRelative.startsWith(`..${sep}`) &&
+      !isAbsolute(projectRelative) &&
+      !projectRelative.split(sep).some((part) => part === 'node_modules' || part === '.canofold')
+    )
+  }
+  const transforms = new Map<string, ReturnType<ViteDevServer['transformRequest']>>()
+  const transform = (url: string) => {
+    let pending = transforms.get(url)
+    if (!pending) transforms.set(url, (pending = server.transformRequest(url)))
+    return pending
+  }
+  const modules = new Map<ModuleNode, { path: string; imports: ModuleNode[] }>()
+  const queued = new Set<ModuleNode>()
+  const pending: ModuleNode[] = []
+  let loading: Promise<void> | undefined
+  const enqueue = (module: ModuleNode) => {
+    if (queued.has(module)) return
+    queued.add(module)
+    pending.push(module)
+  }
+  const loadGraph = async (first: ModuleNode) => {
+    enqueue(first)
+    while (pending.length > 0 || loading) {
+      loading ??= (async () => {
+        while (pending.length > 0) {
+          const batch = pending.splice(0, MODULE_CONCURRENCY)
+          await settleModuleBatch(
+            batch.map(async (module) => {
+              if (!module.file) return
+              const path = canonical(module.file)
+              if (!contains(path)) return
+              await transform(module.url)
+              const imports = [...module.importedModules]
+              modules.set(module, { path, imports })
+              imports.forEach(enqueue)
+            })
+          )
+        }
+      })().finally(() => {
+        loading = undefined
+      })
+      await loading
+      // A new root can arrive while the previous drain's promise is settling.
+      // Recheck the queue so that root cannot observe a partially loaded graph.
+    }
   }
 
-  await visit(first)
-  return [...dependencies].sort()
+  // Library barrels are imported by many Demo roots. Their reachable files are
+  // stable in this prepared snapshot, so traverse each shared import once.
+  // Cache complete iterative walks, not recursive partial results (cycles).
+  const closures = new Map<ModuleNode, readonly string[]>()
+  const importedFiles = (first: ModuleNode) => {
+    const known = closures.get(first)
+    if (known) return known
+    const visited = new Set<ModuleNode>()
+    const dependencies = new Set<string>()
+    const remaining = [first]
+    while (remaining.length) {
+      const module = remaining.pop()!
+      if (visited.has(module)) continue
+      visited.add(module)
+      const cached = closures.get(module)
+      if (cached) {
+        cached.forEach((path) => dependencies.add(path))
+        continue
+      }
+      const entry = modules.get(module)
+      if (!entry) continue
+      dependencies.add(entry.path)
+      remaining.push(...entry.imports)
+    }
+    const files = [...dependencies].sort()
+    closures.set(first, files)
+    return files
+  }
+
+  // Hydrate each module once, then walk its snapshot synchronously per root.
+  // Allocating an async traversal per Demo and dependency multiplies promises
+  // and peak memory for library barrels. The queue also handles import cycles.
+  // All state remains preparation-scoped so edits and removed imports are fresh.
+  return {
+    contains,
+    async collect(modulePath: string) {
+      const rootRelative = relative(viteRoot, canonical(modulePath))
+      const url =
+        rootRelative !== '..' && !rootRelative.startsWith(`..${sep}`) && !isAbsolute(rootRelative)
+          ? `/${normalizePath(rootRelative)}`
+          : `/@fs/${normalizePath(modulePath)}`
+      await transform(url)
+      const first =
+        server.moduleGraph.getModuleById(normalizePath(modulePath)) ??
+        server.moduleGraph.getModulesByFile(modulePath)?.values().next().value
+      if (!first) return []
+      await loadGraph(first)
+      const entry = modules.get(first)
+      let dependencies: string[] = []
+      if (entry) {
+        dependencies = [entry.path]
+        for (const imported of entry.imports)
+          dependencies = mergeDependencyPaths(dependencies, importedFiles(imported))
+      }
+      return dependencies
+    }
+  }
 }
 
 async function resolveDemo(
   server: ViteDevServer,
   reference: CanofoldDemoReference,
-  cwd: string
+  collectDependencies: ReturnType<typeof createDependencyCollector>
 ): Promise<CanofoldPreparedDemo> {
   const resolved = await server.pluginContainer.resolveId(reference.specifier, importerFor(reference))
   if (!resolved || resolved.external || resolved.id.startsWith('\0')) {
@@ -191,7 +301,7 @@ async function resolveDemo(
       `Demo ${JSON.stringify(reference.specifier)} must resolve to a local source file, got ${JSON.stringify(resolved.id)}`
     )
   }
-  if (!isProjectSource(cwd, modulePath)) {
+  if (!collectDependencies.contains(modulePath)) {
     throw new Error(
       `Demo ${JSON.stringify(reference.specifier)} must resolve inside the Canofold project root`
     )
@@ -207,13 +317,18 @@ async function resolveDemo(
     ...reference,
     modulePath,
     moduleUrl: normalizePath(resolved.id),
-    dependencyPaths: await collectLocalDependencies(server, modulePath, cwd),
+    dependencyPaths: await collectDependencies.collect(modulePath),
     source,
     language: languageFor(modulePath)
   }
 }
 
-async function resolvedSetup(server: ViteDevServer, setup: string | undefined, cwd: string) {
+async function resolvedSetup(
+  server: ViteDevServer,
+  setup: string | undefined,
+  cwd: string,
+  collectDependencies: ReturnType<typeof createDependencyCollector>
+) {
   if (!setup) return undefined
   const importer = normalizePath(join(cwd, 'canofold.config.ts'))
   const resolved = await server.pluginContainer.resolveId(setup, importer)
@@ -224,13 +339,29 @@ async function resolvedSetup(server: ViteDevServer, setup: string | undefined, c
   if (!isAbsolute(modulePath)) {
     throw new Error(`demos.setup must resolve to a local source file, got ${JSON.stringify(resolved.id)}`)
   }
-  if (!isProjectSource(cwd, modulePath)) {
+  if (!collectDependencies.contains(modulePath)) {
     throw new Error(`demos.setup ${JSON.stringify(setup)} must resolve inside the Canofold project root`)
   }
   return {
     id: normalizePath(resolved.id),
-    dependencyPaths: await collectLocalDependencies(server, modulePath, cwd)
+    dependencyPaths: await collectDependencies.collect(modulePath)
   }
+}
+
+async function resolveDemos(
+  server: ViteDevServer,
+  demos: readonly CanofoldDemoReference[],
+  dependencies: ReturnType<typeof createDependencyCollector>
+) {
+  const prepared: CanofoldPreparedDemo[] = []
+  for (let index = 0; index < demos.length; index += MODULE_CONCURRENCY) {
+    prepared.push(
+      ...(await settleModuleBatch(
+        demos.slice(index, index + MODULE_CONCURRENCY).map((demo) => resolveDemo(server, demo, dependencies))
+      ))
+    )
+  }
+  return prepared
 }
 
 function hasPackageAlias(config: InlineConfig, packageName: string) {
@@ -452,8 +583,9 @@ async function prepareDemos(context: CanofoldDemoPrepareContext, options: Canofo
     server: { middlewareMode: true, hmr: false, ws: false }
   })
   try {
-    demos = await Promise.all(context.demos.map((reference) => resolveDemo(server, reference, context.cwd)))
-    const resolved = await resolvedSetup(server, context.setup, context.cwd)
+    const collectDependencies = createDependencyCollector(server, context.cwd)
+    demos = await resolveDemos(server, context.demos, collectDependencies)
+    const resolved = await resolvedSetup(server, context.setup, context.cwd, collectDependencies)
     setup = resolved?.id
     return {
       demos,
@@ -589,7 +721,9 @@ async function prepareDevDemos(context: CanofoldDemoPrepareContext, options: Can
       ...inlineConfig(context.cwd, context.basePath, options, [plugin, configLifecycle]),
       server: {
         middlewareMode: true,
-        hmr: { server: context.server },
+        ...(Number(viteVersion.split('.')[0]) >= 8
+          ? { ws: { server: context.server } }
+          : { hmr: { server: context.server } }),
         // The host watches the manifest's config dependencies and serializes
         // rebuilds. Only it may restart Vite; native config restarts would race
         // prepare() while the dependency optimizer is still processing modules.
@@ -619,10 +753,9 @@ async function prepareDevDemos(context: CanofoldDemoPrepareContext, options: Can
       session.state.demos.map((demo) => [demo.id, demo.modulePath]),
       session.state.setup
     ])
-    const demos = await Promise.all(
-      context.demos.map((reference) => resolveDemo(session.server, reference, context.cwd))
-    )
-    const setup = await resolvedSetup(session.server, context.setup, context.cwd)
+    const collectDependencies = createDependencyCollector(session.server, context.cwd)
+    const demos = await resolveDemos(session.server, context.demos, collectDependencies)
+    const setup = await resolvedSetup(session.server, context.setup, context.cwd, collectDependencies)
     // Walking Demo and setup modules can start dependency optimization in the
     // background. Finish those requests before a config change can restart Vite.
     await session.server.waitForRequestsIdle()
@@ -718,6 +851,7 @@ export function vite(options: CanofoldViteOptions = {}): CanofoldDemoEngine {
           : baseUrl(context.basePath, `/@id/__x00__${PUBLIC_MARKDOWN_CLIENT_ID}`)
       return {
         clientUrl,
+        ...(context.mode === 'dev' ? { hotReload: true as const } : {}),
         markdownClientUrl,
         styleUrls: styleUrls?.length ? styleUrls : undefined,
         demos: Object.fromEntries(prepared.demos.map((demo) => [demo.id, demo])),

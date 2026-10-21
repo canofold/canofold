@@ -1,4 +1,4 @@
-export const BUILD_MANIFEST_SCHEMA_VERSION = 5
+export const BUILD_MANIFEST_SCHEMA_VERSION = 6
 
 export interface PageBuildState {
   fingerprint: string
@@ -17,6 +17,8 @@ export interface BuildManifest {
   canofoldVersion: string
   buildFingerprint: string
   sharedFingerprint: string
+  /** Project-relative inputs owned by document rendering, not browser-only HMR. */
+  contentDependencyPaths: string[]
   pages: Record<string, PageBuildState>
   outputs: Record<string, OutputFileState>
 }

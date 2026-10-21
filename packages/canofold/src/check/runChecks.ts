@@ -6,9 +6,8 @@ import {
   sourceLinkCandidates
 } from '../content/routes'
 import { createHash } from 'node:crypto'
-import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
 import { canonicalRoutePath } from '../content/routes'
-import type { MarkdownPlugin } from '@canofold/markdown'
+import type { MarkdownAnalysis } from '@canofold/markdown/server/analyze'
 
 export interface CheckIssue {
   severity: 'warning' | 'error'
@@ -25,8 +24,11 @@ function atSource(location: { line: number; column: number } | null | undefined,
   return location ? { line: location.line + lineOffset, column: location.column } : {}
 }
 
-export function checkCodeBlockLanguages(markdown: string, lineOffset = 0): CheckIssue[] {
-  return analyzeMarkdown(markdown).missingCodeBlockLanguageLocations.map((location) => ({
+export function checkCodeBlockLanguages(
+  analysis: Pick<MarkdownAnalysis, 'missingCodeBlockLanguageLocations'>,
+  lineOffset = 0
+): CheckIssue[] {
+  return analysis.missingCodeBlockLanguageLocations.map((location) => ({
     severity: 'warning' as const,
     message: 'Code block is missing a language',
     ...atSource(location, lineOffset)
@@ -34,12 +36,10 @@ export function checkCodeBlockLanguages(markdown: string, lineOffset = 0): Check
 }
 
 export function checkRichDirectiveSyntax(
-  markdown: string,
-  lineOffset = 0,
-  plugins: readonly MarkdownPlugin[] = [],
-  mode: 'markdown' | 'mdx' = 'markdown'
+  analysis: Pick<MarkdownAnalysis, 'directiveIssues'>,
+  lineOffset = 0
 ): CheckIssue[] {
-  return analyzeMarkdown(markdown, { plugins, mode }).directiveIssues.map((issue) => ({
+  return analysis.directiveIssues.map((issue) => ({
     severity: 'error' as const,
     message: issue.message,
     ...(issue.line === undefined ? {} : { line: issue.line + lineOffset }),
@@ -111,14 +111,17 @@ export function checkLinksAndImages(
   routeHeadingSlugs: Map<string, Set<string>> = new Map(),
   fileHeadingSlugs: Map<string, Set<string>> = new Map(),
   generatedPublicPaths: Set<string> = new Set(),
-  lineOffset = 0
+  lineOffset = 0,
+  preparedMarkdownFiles?: ReadonlyMap<string, string>
 ): CheckIssue[] {
   const issues: CheckIssue[] = []
-  const markdownFilesByExtensionKey = new Map(
-    [...existingRelativeFiles]
-      .filter((path) => /\.(?:md|mdx)$/i.test(path))
-      .map((path) => [markdownExtensionKey(path), path])
-  )
+  const markdownFilesByExtensionKey =
+    preparedMarkdownFiles ??
+    new Map(
+      [...existingRelativeFiles]
+        .filter((path) => /\.(?:md|mdx)$/i.test(path))
+        .map((path) => [markdownExtensionKey(path), path])
+    )
   const missing = (kind: 'Image' | 'Link' | 'Heading', target: string, position: object) => {
     issues.push({ severity: 'error', message: `${kind} target does not exist: ${target}`, ...position })
   }

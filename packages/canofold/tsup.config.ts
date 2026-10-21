@@ -31,7 +31,9 @@ export default defineConfig((overrideOptions): Options[] => [
       if (overrideOptions.watch) await signalWatchBuild('canofold')
     },
     esbuildOptions(options) {
-      options.keepNames = true
+      // Watch builds retain names for debugging. Published code does not rely on
+      // Function.name; avoid restoring every minified internal name at runtime.
+      options.keepNames = Boolean(overrideOptions.watch)
       options.minifyIdentifiers = true
       options.minifySyntax = true
       options.minifyWhitespace = true

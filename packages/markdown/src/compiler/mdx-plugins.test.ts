@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { rehypeRichDirectives, remarkRichDirectives } from './plugins/directives'
 import { createMarkdownMdxPlugins } from './mdxPlugins'
+import { remarkDefinitionList } from 'remark-definition-list'
 
 describe('Markdown MDX plugins', () => {
+  it('keeps definition syntax when no source is available and skips only impossible matches', async () => {
+    expect((await createMarkdownMdxPlugins()).remarkPlugins).toContain(remarkDefinitionList)
+    expect((await createMarkdownMdxPlugins({}, 'Term\n: Meaning')).remarkPlugins).toContain(
+      remarkDefinitionList
+    )
+    expect((await createMarkdownMdxPlugins({}, '# Plain\n\nText')).remarkPlugins).not.toContain(
+      remarkDefinitionList
+    )
+  })
   it('returns the shared stateless syntax and rehype plugins', async () => {
     const plugins = await createMarkdownMdxPlugins()
 

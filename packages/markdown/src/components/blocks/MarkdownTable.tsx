@@ -2,6 +2,7 @@ import { cloneElement, useMemo, useRef, useState, type HTMLAttributes, type Reac
 import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
 import { MarkdownCopyButton, MarkdownDownloadButton } from '../shared/MarkdownActions.js'
 import { MarkdownIcon } from '../shared/MarkdownIcon.js'
+import { useInteractionReady } from '../shared/useInteractionReady.js'
 import {
   elementChildren,
   elementTag,
@@ -95,6 +96,7 @@ function sortableTable(
               className="cf-sort-button"
               type="button"
               data-cf-action="sort-table"
+              disabled={!onSort}
               data-column={String(column)}
               data-sort={direction}
               aria-pressed={active ? 'true' : 'false'}
@@ -111,17 +113,15 @@ function sortableTable(
         })
       })
     : []
-  const sortedRows = body
-    ? rowsOf(body)
-        .slice()
-        .sort((left, right) => {
-          if (!sort) return 0
+  const sortedRows =
+    body && sort
+      ? rowsOf(body).sort((left, right) => {
           const a = reactText(cellsOf(left)[sort.column]?.props.children)
           const b = reactText(cellsOf(right)[sort.column]?.props.children)
           const result = a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
           return sort.direction === 'asc' ? result : -result
         })
-    : []
+      : []
   const sections = elementChildren(table.props.children).map((child) => {
     if (elementTag(child) === 'thead' && headerRows[0])
       return cloneElement(child, {
@@ -151,6 +151,7 @@ export function MarkdownTable({
   inner = false,
   ...inputProps
 }: InternalMarkdownTableProps) {
+  const ready = useInteractionReady()
   const props = inputProps as Record<string, unknown>
   const table = tableFromChildren(children)
   const csv = useMemo(() => tableCsv(table), [table])
@@ -198,7 +199,7 @@ export function MarkdownTable({
           : null
         : { column, direction: 'asc' }
     )
-  const tableWithHandlers = sortableTable(table, sort, sortLabel, cycleSort)
+  const tableWithHandlers = sortableTable(table, sort, sortLabel, ready ? cycleSort : undefined)
 
   const closePreview = () => setPreview(false)
   const onDialogKeyDown = useMarkdownDialog({
@@ -265,6 +266,7 @@ export function MarkdownTable({
             label={copyLabel}
             failureLabel={copyFailureLabel}
             action="copy-table"
+            disabled={!ready}
           />
           <MarkdownDownloadButton
             value={csv}
@@ -278,6 +280,7 @@ export function MarkdownTable({
             className="cf-block-button"
             type="button"
             data-cf-action="zoom-table"
+            disabled={!ready}
             aria-label={zoomLabel}
             title={zoomLabel}
             aria-haspopup="dialog"

@@ -11,6 +11,7 @@ import {
 } from 'react'
 import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
 import { MarkdownIcon } from '../shared/MarkdownIcon.js'
+import { useInteractionReady } from '../shared/useInteractionReady.js'
 import { markdownDomProps, reactText, stringProp } from '../shared/reactText.js'
 import { MarkdownDialogPortal, useMarkdownDialog } from '../shared/MarkdownDialog.js'
 import { transformMarkdownSrcSet, useMarkdownUrlTransform } from '../../react/urlTransform.js'
@@ -188,6 +189,7 @@ export function ImageGallery({
   ...props
 }: InternalImageGalleryProps) {
   const inputProps = props as Record<string, unknown>
+  const ready = useInteractionReady()
   const urlTransform = useMarkdownUrlTransform()
   const nodeItems = itemsFromNode(node)
   const resolvedItems = resolveMarkdownGalleryItems(items, node, children).map((item) => ({
@@ -245,6 +247,7 @@ export function ImageGallery({
                 className="cf-gallery-trigger"
                 type="button"
                 data-cf-action="open-gallery"
+                disabled={!ready}
                 aria-label={`${item.alt || labels.image} ${index + 1}`}
                 aria-haspopup="dialog"
                 onClick={(event) => open(index, event.currentTarget)}

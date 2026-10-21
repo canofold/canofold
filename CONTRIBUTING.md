@@ -48,7 +48,12 @@ pnpm audit:dependencies
 pnpm report:bundles
 pnpm report:package
 pnpm benchmark:enterprise
+pnpm benchmark:demos
 ```
+
+`pnpm benchmark:demos` exercises a disposable component library with 76 pages and 456 Demos by default, using the built-in Compact search provider. It includes tables, forms, trees, Portal dialogs, Context, CSS Modules, lazy modules, icons, a shared export barrel and API documentation. `CANOFOLD_BENCHMARK_PAGES` and `CANOFOLD_BENCHMARK_DEMOS` select larger workloads (at least four pages and four Demos per page); use 150/8 and 300/8 for the larger regression tiers. Each run starts without Canofold/Vite caches and measures both server readiness and the first browser page, then restarts twice with caches retained. Chromium checks cover interactions, iframe isolation, highlighted source, immediate CSS HMR, consecutive document/Demo edits, burst saves and failure recovery. Server RSS and browser heap samples accompany the edit measurements. Cold here means application caches, not a cleared operating-system disk cache. A startup exceeding 60 seconds fails explicitly; it does not produce a cached-start result. Install Chromium before running it (`pnpm exec playwright install chromium`). Use this component workload alongside the enterprise text/search benchmark when changing development or Demo dependency processing; neither replaces the other.
+
+For diagnosis only, `node scripts/benchmark-demos.mjs --observe-slow` continues an over-limit startup for at most 180 seconds to measure subsequent cached starts. It still exits with failure if any startup exceeded the unchanged 60-second limit; observational completion is not a passing performance result.
 
 5. Use `type(scope): summary` commit messages and keep unrelated formatting or design changes out of the pull request.
 

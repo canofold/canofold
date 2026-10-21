@@ -73,19 +73,21 @@ describe('quality checks', () => {
     expect(checkStaleTranslations(untracked)).toEqual([])
   })
   it('reports unlabeled code fences', () => {
-    expect(checkCodeBlockLanguages('```\nconst x = 1\n```')).toEqual([
+    expect(checkCodeBlockLanguages(analyzeMarkdown('```\nconst x = 1\n```'))).toEqual([
       { severity: 'warning', message: 'Code block is missing a language', line: 1, column: 1 }
     ])
   })
 
   it('accepts labeled code fences', () => {
-    expect(checkCodeBlockLanguages('```ts\nconst x = 1\n```')).toEqual([])
+    expect(checkCodeBlockLanguages(analyzeMarkdown('```ts\nconst x = 1\n```'))).toEqual([])
   })
 
   it('reports malformed rich directives with source positions', () => {
     expect(
       checkRichDirectiveSyntax(
-        [':::gallery[Preview]', 'Visible prose', '', '![Screenshot](/preview.png)', ':::'].join('\n')
+        analyzeMarkdown(
+          [':::gallery[Preview]', 'Visible prose', '', '![Screenshot](/preview.png)', ':::'].join('\n')
+        )
       )
     ).toEqual([
       {
@@ -100,7 +102,7 @@ describe('quality checks', () => {
   it('reports unknown directives unless an active plugin declares them', () => {
     const source = '::custom[Plugin content]'
 
-    expect(checkRichDirectiveSyntax(source)).toEqual([
+    expect(checkRichDirectiveSyntax(analyzeMarkdown(source))).toEqual([
       {
         severity: 'error',
         message: 'Unknown Markdown directive `custom`',
@@ -109,7 +111,9 @@ describe('quality checks', () => {
       }
     ])
     expect(
-      checkRichDirectiveSyntax(source, 0, [{ name: 'custom-directive', directiveNames: ['custom'] }])
+      checkRichDirectiveSyntax(
+        analyzeMarkdown(source, { plugins: [{ name: 'custom-directive', directiveNames: ['custom'] }] })
+      )
     ).toEqual([])
   })
 

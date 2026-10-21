@@ -80,18 +80,96 @@ it('uses the next port when occupied, without taking over the existing server', 
   await vi.waitFor(() => expect(stream.chunks.join('')).toContain('event: build-ok'))
 })
 
+it('validates method, mount and path before invoking the development document renderer', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'canofold-request-document-'))
+  onTestFinished(() => rm(root, { recursive: true, force: true }))
+  const resolveDocument = vi.fn(async () => '<body>Rendered page</body>')
+  const server = await startStaticServer({
+    root,
+    port: 0,
+    basePath: '/docs/',
+    liveReload: true,
+    resolveDocument
+  })
+  onTestFinished(() => server.close())
+  expect((await requestStaticServer(server.port, '/docs/guide/', 'POST')).status).toBe(405)
+  expect((await requestStaticServer(server.port, '/docs/bad%2fpath/')).status).toBe(403)
+  expect((await requestStaticServer(server.port, '/outside/')).status).toBe(404)
+  expect(resolveDocument).not.toHaveBeenCalled()
+  const page = await requestStaticServer(server.port, '/docs/guide/')
+  expect(page.body).toContain('Rendered page')
+  expect(page.body).toContain('/docs/__canofold/events')
+  expect(page.headers['cache-control']).toBe('no-store')
+  const head = await requestStaticServer(server.port, '/docs/guide/', 'HEAD')
+  expect(head.status).toBe(200)
+  expect(head.body).toBe('')
+  expect(resolveDocument).toHaveBeenCalledWith('/guide/')
+})
+
+it('finishes HEAD probes to the live-update endpoint without opening an event stream', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'canofold-events-head-'))
+  onTestFinished(() => rm(root, { recursive: true, force: true }))
+  const http = createServer()
+  const finished = vi.fn()
+  http.on('request', (_request, response) => response.once('finish', finished))
+  const server = await startStaticServer({ root, port: 0, server: http, liveReload: true })
+  onTestFinished(() => server.close())
+  const head = await requestStaticServer(server.port, '/__canofold/events', 'HEAD')
+  expect(head.status).toBe(200)
+  expect(head.headers['content-type']).toBe('text/event-stream')
+  expect(head.body).toBe('')
+  expect(finished).toHaveBeenCalledOnce()
+})
+
+it('releases the HTTP listener even if mounted tooling fails to close', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'canofold-close-failure-'))
+  onTestFinished(() => rm(root, { recursive: true, force: true }))
+  const http = createServer()
+  const server = await startStaticServer({
+    root,
+    port: 0,
+    server: http,
+    configureServer: () => ({
+      middleware(_request, _response, next) {
+        next()
+      },
+      async close() {
+        throw new Error('tool close failed')
+      }
+    })
+  })
+  await expect(server.close()).rejects.toThrow('tool close failed')
+  expect(http.listening).toBe(false)
+  expect(http.listenerCount('request')).toBe(0)
+})
+
 it('does not retry unrelated listen errors or leave startup listeners attached', async () => {
   const server = createServer()
+  const close = vi.fn(async () => undefined)
   const originalListeners = server.listeners('listening')
   const denied = Object.assign(new Error('permission denied'), { code: 'EACCES' })
   const listen = vi.spyOn(server, 'listen').mockImplementation(() => {
     queueMicrotask(() => server.emit('error', denied))
     return server
   })
-  await expect(startStaticServer({ root: '/unused', port: 3333, server })).rejects.toBe(denied)
+  await expect(
+    startStaticServer({
+      root: '/unused',
+      port: 3333,
+      server,
+      configureServer: () => ({
+        middleware(_request, _response, next) {
+          next()
+        },
+        close
+      })
+    })
+  ).rejects.toBe(denied)
   expect(listen).toHaveBeenCalledOnce()
   expect(server.listeners('listening')).toEqual(originalListeners)
   expect(server.listenerCount('error')).toBe(0)
+  expect(server.listenerCount('request')).toBe(0)
+  expect(close).toHaveBeenCalledOnce()
 })
 
 it('stops at the TCP port limit without wrapping around or accumulating listeners', async () => {

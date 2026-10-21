@@ -33,6 +33,7 @@ export type {
 
 export interface MarkdownCompilerContext {
   warnedLanguages: Set<string>
+  signal?: AbortSignal
 }
 
 /**
@@ -44,6 +45,7 @@ export async function prepareMarkdown(
   options?: RenderMarkdownOptions,
   context: MarkdownCompilerContext = { warnedLanguages: new Set<string>() }
 ): Promise<PreparedMarkdown> {
+  context.signal?.throwIfAborted()
   const assets = createMarkdownAssetCollector()
   const resolvedOptions = normalizeOptions(options)
   const activePlugins = activeMarkdownPlugins(resolvedOptions.plugins, { source, mode: 'markdown' })
@@ -54,6 +56,7 @@ export async function prepareMarkdown(
     ...new Set([...detectedSyntax.codeLanguages, ...markdownPluginHighlightLanguages(activePlugins)])
   ]
   const syntax = {
+    definitionLists: detectedSyntax.definitionLists,
     highlightedCode: codeLanguages.length > 0,
     codeLanguages
   }
@@ -68,11 +71,13 @@ export async function prepareMarkdown(
           syntax.codeLanguages,
           activeOptions,
           context.warnedLanguages,
-          pluginFenceLanguages
+          pluginFenceLanguages,
+          context.signal
         )
       : undefined
   ])
   const rehypeRaw = rawModule?.default
+  context.signal?.throwIfAborted()
   const rehypeSanitize = sanitizeModule?.default
   const processor = createMarkdownProcessor({
     assets,
@@ -90,6 +95,7 @@ export async function prepareMarkdown(
     canofoldCodeExamples: [] as MarkdownCodeExample[]
   }
   const document = (await processor.run(tree, { value, data })) as PreparedMarkdown['document']
+  context.signal?.throwIfAborted()
   return {
     document,
     analysis: analyzeDocument(document, data.canofoldCodeExamples),

@@ -13,6 +13,7 @@ export const mountDemo = runtime.mountDemo;
 window.__canofoldBootstrapDemos = runtime.bootstrapDemos;
 void runtime.bootstrapDemos();
 if (import.meta.hot) {
+  import.meta.hot.on('vite:beforeUpdate', runtime.reloadPendingFrame);
   import.meta.hot.accept();
   import.meta.hot.dispose(runtime.dispose);
 }

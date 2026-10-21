@@ -1,5 +1,5 @@
 import rehypeShikiFromHighlighter from '@shikijs/rehype/core'
-import type { Element, Root as HastRoot } from 'hast'
+import type { Element, Parents, Root as HastRoot } from 'hast'
 import type {
   LanguageInput,
   LanguageRegistration,
@@ -20,9 +20,30 @@ import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
 import { bundledThemes, type BundledTheme } from 'shiki/themes'
 import type { Pluggable, Transformer } from 'unified'
 import { visit } from 'unist-util-visit'
+import { toString } from 'hast-util-to-string'
 import type { NormalizedMarkdownOptions } from './normalizeOptions.js'
 import { parseFenceMetadata } from './fenceMetadata.js'
 import { stableJson } from './stableJson.js'
+import { createPreparationCache } from './preparationCache.js'
+
+// Highlight fragments contain only Shiki-owned data, before user rehype plugins.
+// Compressed retention avoids keeping a second token tree alive for long edits.
+const highlightedBlocks = createPreparationCache<ArrayBuffer>(
+  1024,
+  8 * 1024 * 1024,
+  (value) => value.byteLength
+)
+let nextHighlighterId = 0
+
+async function compressBlock(block: Element) {
+  const stream = new Response(JSON.stringify(block)).body!.pipeThrough(new CompressionStream('gzip'))
+  return new Response(stream).arrayBuffer()
+}
+
+async function restoreBlock(value: ArrayBuffer): Promise<Element> {
+  const stream = new Response(value).body!.pipeThrough(new DecompressionStream('gzip'))
+  return (await new Response(stream).json()) as Element
+}
 
 type LanguageModule = { default: LanguageInput }
 type LanguageLoader = () => Promise<LanguageModule>
@@ -35,16 +56,6 @@ function transformerFenceMetadata(): ShikiTransformer {
       const { filename, overflow } = parseFenceMetadata(meta)
       if (filename) node.properties.dataCfFilename = filename
       if (overflow) node.properties.dataCfCodeOverflow = overflow
-      return node
-    }
-  }
-}
-
-function transformerCollapseCodeNewlines(): ShikiTransformer {
-  return {
-    name: 'canofold:collapse-code-newlines',
-    code(node) {
-      node.children = node.children.filter((child) => !(child.type === 'text' && /^\n+$/.test(child.value)))
       return node
     }
   }
@@ -136,6 +147,7 @@ const languageAliases: Readonly<Record<string, BuiltinLanguage>> = {
 const specialLanguages = new Set(['ansi', 'text', 'plaintext', 'txt', 'plain'])
 
 interface ManagedHighlighter {
+  id: number
   highlighter: Awaited<ReturnType<typeof createHighlighterCore>>
   loadedInputs: Set<string>
   loadChain: Promise<void>
@@ -147,7 +159,9 @@ const languageConfigIds = new WeakMap<object, number>()
 let nextLanguageConfigId = 1
 
 function themeInput(theme: string | ThemeRegistration): ThemeInput {
-  if (typeof theme !== 'string') return theme
+  // Shiki normalizes registrations in place. Do not mutate our shared default
+  // theme or change its cache identity after the first highlighter is created.
+  if (typeof theme !== 'string') return structuredClone(theme)
   const loader = bundledThemes[theme as BundledTheme]
   if (!loader) throw new Error(`Unknown Shiki theme: ${theme}`)
   return loader
@@ -195,7 +209,12 @@ function managedHighlighter(options: NormalizedMarkdownOptions) {
     langs: [],
     engine: createJavaScriptRegexEngine()
   })
-    .then((highlighter) => ({ highlighter, loadedInputs: new Set<string>(), loadChain: Promise.resolve() }))
+    .then((highlighter) => ({
+      id: nextHighlighterId++,
+      highlighter,
+      loadedInputs: new Set<string>(),
+      loadChain: Promise.resolve()
+    }))
     .catch((error) => {
       if (highlighters.get(key) === created) highlighters.delete(key)
       throw error
@@ -295,7 +314,8 @@ export async function createSyntaxHighlighterPlugin(
   codeLanguages: readonly string[],
   options: NormalizedMarkdownOptions,
   warnedLanguages = new Set<string>(),
-  excludedLanguages: ReadonlySet<string> = new Set()
+  excludedLanguages: ReadonlySet<string> = new Set(),
+  signal?: AbortSignal
 ): Promise<Pluggable> {
   const managed = await managedHighlighter(options)
   await loadLanguages(managed, codeLanguages, options, warnedLanguages)
@@ -305,12 +325,16 @@ export async function createSyntaxHighlighterPlugin(
 
   return () => {
     const highlight = rehypeShikiFromHighlighter(managed.highlighter, {
-      themes: options.codeThemes,
+      themes: structuredClone(options.codeThemes),
       addLanguageClass: true,
+      mergeSameStyleTokens: true,
       fallbackLanguage,
       transformers: [
+        {
+          name: 'canofold:code-line-endings',
+          preprocess: (code) => code.replace(/\r\n?/g, '\n')
+        },
         transformerFenceMetadata(),
-        transformerCollapseCodeNewlines(),
         transformerMetaHighlight(),
         transformerNotationHighlight(),
         transformerNotationDiff(),
@@ -321,38 +345,40 @@ export async function createSyntaxHighlighterPlugin(
     })
 
     const transform: Transformer<HastRoot, HastRoot> = async (tree, file) => {
-      const hiddenLanguageClasses: Array<{
-        code: Element
-        className: string[]
-      }> = []
-
-      visit(tree, 'element', (node) => {
-        if (node.tagName !== 'pre') return
-        const code = node.children.find(
-          (child): child is Element => child.type === 'element' && child.tagName === 'code'
-        )
-        const className = code?.properties.className
-        if (!code || !Array.isArray(className)) return
-
-        const languageClass = className.find(
-          (entry) => typeof entry === 'string' && entry.startsWith('language-')
-        )
+      const blocks: Array<{ node: Element; parent: Parents; index: number; key: string }> = []
+      visit(tree, 'element', (node, index, parent) => {
+        if (node.tagName !== 'pre' || index === undefined || !parent) return
+        const code = node.children[0]
+        if (code?.type !== 'element' || code.tagName !== 'code') return
+        const className = code.properties.className
+        const languageClass = Array.isArray(className)
+          ? className.find((value) => typeof value === 'string' && value.startsWith('language-'))
+          : undefined
         if (typeof languageClass !== 'string') return
-
-        const language = languageClass.slice('language-'.length).toLowerCase()
-        if (!excludedLanguages.has(language)) return
-
-        hiddenLanguageClasses.push({ code, className: [...className] })
-        code.properties.className = className.filter((entry) => entry !== languageClass)
+        if (excludedLanguages.has(languageClass.slice('language-'.length).toLowerCase())) return
+        const meta = code.data?.meta ?? code.properties.metastring?.toString() ?? ''
+        const key = JSON.stringify([managed.id, fallbackLanguage, languageClass, meta, toString(code)])
+        blocks.push({ node, parent, index, key })
       })
-
-      try {
-        const result = await highlight(tree, file, () => undefined)
-        if (result instanceof Error) throw result
-      } finally {
-        for (const entry of hiddenLanguageClasses) {
-          entry.code.properties.className = entry.className
-        }
+      for (const { node, parent, index, key } of blocks) {
+        signal?.throwIfAborted()
+        let fresh: Element | undefined
+        const value = await highlightedBlocks.get(key, async () => {
+          const block: HastRoot = { type: 'root', children: [node] }
+          const result = await highlight(block, file, () => undefined)
+          if (result instanceof Error) throw result
+          // Rehype Shiki replaces a pre with its generated root fragment.
+          const fragment = block.children[0] as Element | HastRoot
+          const output = fragment.type === 'root' ? fragment.children[0] : fragment
+          if (output?.type !== 'element') throw new Error('Shiki returned an invalid code block')
+          fresh = output
+          return compressBlock(output)
+        })
+        // Cached fragments are decoded into a fresh tree so downstream plugins
+        // and concurrent renderers cannot mutate another document's tokens.
+        const output = fresh ?? (await restoreBlock(value))
+        signal?.throwIfAborted()
+        parent.children[index] = output
       }
     }
 

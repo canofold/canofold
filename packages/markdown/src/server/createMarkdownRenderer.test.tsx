@@ -7,6 +7,19 @@ import type { Root as MdastRoot } from 'mdast'
 import type { Root as HastRoot } from 'hast'
 
 describe('Markdown server renderer', () => {
+  it.each(['markdown', 'mdx'] as const)(
+    'returns isolated %s resource facts from the compiler even after prepared-tree eviction',
+    async (mode) => {
+      const renderer = createMarkdownRenderer({ maxEntries: 1 })
+      const source = '# Guide\n\nSection\n---\n\n![Figure][image]\n\n[image]: https://example.com/image.png'
+      const first = await renderer.analyze(source, { mode })
+      expect(first.assets.behaviors).toEqual(expect.arrayContaining(['heading', 'image']))
+      first.assets.behaviors.length = 0
+      await renderer.analyze('# Another page', { mode })
+      const next = await renderer.analyze(source, { mode })
+      expect(next.assets.behaviors).toEqual(expect.arrayContaining(['heading', 'image']))
+    }
+  )
   it.each(['strip', 'trusted', 'sanitize'] as const)(
     'excludes generated footnote UI from %s content metadata',
     async (html) => {

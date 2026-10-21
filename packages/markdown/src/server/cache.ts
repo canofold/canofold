@@ -4,6 +4,14 @@ import { stableJson } from '../compiler/stableJson.js'
 import { createHash } from 'node:crypto'
 import type { PreparedMarkdown, RenderMarkdownOptions } from '../compiler/types.js'
 import { prepareMdx } from '../compiler/mdxPlugins.js'
+import type { MarkdownContentAnalysis } from '../compiler/analyze.js'
+import type { MarkdownAssets } from '../compiler/assets.js'
+import { createPreparationCache, preparedMarkdownWeight } from '../compiler/preparationCache.js'
+
+/** Compiled content and resource facts, without retaining the presentation tree. */
+export interface MarkdownAnalysisResult extends MarkdownContentAnalysis {
+  assets: MarkdownAssets
+}
 
 export interface MarkdownServerContextOptions {
   /** Maximum number of prepared entries retained per format (Markdown and MDX). */
@@ -11,6 +19,11 @@ export interface MarkdownServerContextOptions {
 }
 
 interface MarkdownServerContext {
+  analyze(
+    source: string,
+    options?: RenderMarkdownOptions,
+    mode?: 'markdown' | 'mdx'
+  ): Promise<MarkdownAnalysisResult>
   prepare(source: string, options?: RenderMarkdownOptions): Promise<PreparedMarkdown>
   prepareMdx(source: string, options?: RenderMarkdownOptions): ReturnType<typeof prepareMdx>
   clear(): void
@@ -26,38 +39,6 @@ function cacheKey(source: string, options?: RenderMarkdownOptions): string | und
   return createHash('sha256').update(source).update('\0').update(optionsKey).digest('hex')
 }
 
-function remember<T>(cache: Map<string, Promise<T>>, key: string, value: Promise<T>, maxEntries: number) {
-  cache.delete(key)
-  cache.set(key, value)
-  while (cache.size > maxEntries) {
-    const oldest = cache.keys().next().value
-    if (oldest === undefined) break
-    cache.delete(oldest)
-  }
-  return value
-}
-
-function cached<T>(
-  cache: Map<string, Promise<T>>,
-  key: string | undefined,
-  create: () => Promise<T>,
-  maxEntries: number
-) {
-  if (!key) return create()
-  const existing = cache.get(key)
-  if (existing) {
-    cache.delete(key)
-    cache.set(key, existing)
-    return existing
-  }
-
-  const value = create().catch((error) => {
-    if (cache.get(key) === value) cache.delete(key)
-    throw error
-  })
-  return remember(cache, key, value, maxEntries)
-}
-
 /**
  * Renderer-scoped Markdown cache. It deduplicates concurrent preparation and
  * stays bounded; hosts clear it when a full build invalidates the content
@@ -68,29 +49,41 @@ export function createMarkdownServerContext({
 }: MarkdownServerContextOptions = {}): MarkdownServerContext {
   const warningState = new Set<string>()
   const limit = Number.isFinite(maxEntries) && maxEntries > 0 ? Math.floor(maxEntries) : 64
-  const prepared = new Map<string, Promise<PreparedMarkdown>>()
-  const mdx = new Map<string, ReturnType<typeof prepareMdx>>()
+  const compilerContext = { warnedLanguages: warningState }
+  const prepared = createPreparationCache<PreparedMarkdown>(limit, 16 * 1024 * 1024, preparedMarkdownWeight)
+  const mdx = createPreparationCache<Awaited<ReturnType<typeof prepareMdx>>>(
+    limit,
+    16 * 1024 * 1024,
+    (value) => (value.code.length + JSON.stringify(value.analysis).length) * 2
+  )
+  // Analysis retains content facts, not highlighted trees or executable MDX.
+  // Its independent byte budget accommodates large projects without retaining
+  // their presentation trees, and remains bounded across deleted/edited pages.
+  const analysis = createPreparationCache<MarkdownAnalysisResult>(
+    Infinity,
+    8 * 1024 * 1024,
+    (value) => JSON.stringify(value).length * 2
+  )
 
   return {
+    analyze(source, options, mode = 'markdown') {
+      const key = cacheKey(source, options)
+      return analysis.get(key === undefined ? undefined : `${mode}:${key}`, async () => {
+        const result =
+          mode === 'mdx' ? await this.prepareMdx(source, options) : await this.prepare(source, options)
+        return { ...result.analysis, assets: result.assets }
+      })
+    },
     prepare(source, options) {
-      return cached(
-        prepared,
-        cacheKey(source, options),
-        () => prepareMarkdown(source, options, { warnedLanguages: warningState }),
-        limit
-      )
+      return prepared.get(cacheKey(source, options), () => prepareMarkdown(source, options, compilerContext))
     },
     prepareMdx(source, options) {
-      return cached(
-        mdx,
-        cacheKey(source, options),
-        () => prepareMdx(source, options, { warnedLanguages: warningState }),
-        limit
-      )
+      return mdx.get(cacheKey(source, options), () => prepareMdx(source, options, compilerContext))
     },
     clear() {
       prepared.clear()
       mdx.clear()
+      analysis.clear()
       warningState.clear()
     }
   }

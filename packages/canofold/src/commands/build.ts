@@ -11,6 +11,7 @@ import { writeRedirects } from '../content/redirects'
 import type { ContentGraph, DocPage } from '../content/types'
 import { canofoldVersion } from '../version'
 import { renderSite, type PreviousPageOutput } from '../render/renderSite'
+import { preparePageResources, type PageResources } from '../render/resources'
 import { writeSearchIndexes } from '../search/index'
 import { writeRobots } from '../seo/robots'
 import { writeSitemap } from '../seo/sitemap'
@@ -42,6 +43,8 @@ import { outputBackupRoot, resolveSafeOutputRoot } from '../build/safety'
 import { loadExtensionHost, type ExtensionHost } from '../extensions/host'
 import { prepareDemoManifest } from '../demos/prepare'
 import type { CanofoldDemoManifest } from '../demos/types'
+import { checkContentGraph } from '../check/project'
+import { ContentDiagnosticsError, formatDiagnostic, type CheckDiagnostic } from '../check/diagnostics'
 
 export interface BuildOptions {
   cwd: string
@@ -55,6 +58,10 @@ export interface BuildOptions {
   demoMode?: 'build' | 'dev'
   /** @internal Shared listener used by browser tooling during development. */
   demoServer?: HttpServer
+  /** @internal The dev server renders requested HTML from the validated graph. */
+  renderHtml?: boolean
+  /** @internal Validated startup config; subsequent rebuilds load it afresh. */
+  config?: CanofoldConfig
 }
 
 export interface BuildResult {
@@ -69,6 +76,10 @@ export interface BuildResult {
   reason: string
   report: BuildReport
   demoManifest?: CanofoldDemoManifest
+  /** Inputs whose changes require document rendering even if an engine also imports them. */
+  contentDependencyPaths: string[]
+  /** Whether this revision materialized document HTML for whole-site consumers. */
+  renderHtml: boolean
 }
 
 export function versionSatisfies(version: string, range: string) {
@@ -99,7 +110,9 @@ async function writeBuildOutputs({
   renderer,
   writeSharedAssets,
   extensions,
-  demoManifest
+  demoManifest,
+  renderHtml,
+  resources
 }: {
   cwd: string
   config: CanofoldConfig
@@ -110,6 +123,8 @@ async function writeBuildOutputs({
   writeSharedAssets: boolean
   extensions: ExtensionHost
   demoManifest?: CanofoldDemoManifest
+  renderHtml?: boolean
+  resources: PageResources
 }) {
   await renderSite({
     cwd,
@@ -119,7 +134,9 @@ async function writeBuildOutputs({
     previousPages,
     renderer,
     writeSharedAssets,
-    demoManifest
+    demoManifest,
+    renderHtml,
+    resources
   })
   await writeSearchIndexes(cwd, config, graph)
   await writeSitemap(cwd, config, graph)
@@ -195,11 +212,30 @@ async function runBuildLocked(
     config.extensions
   )
   const renderer = options.renderer ?? createMarkdownRenderer()
+  // Pluggable whole-site indexers may read emitted HTML. Only the built-in
+  // graph index (or disabled search) permits request-time HTML delivery.
+  const renderHtml =
+    options.demoMode !== 'dev' ||
+    options.renderHtml !== false ||
+    (config.search.enabled && typeof config.search.provider !== 'string')
   if (options.forceClean || options.noCache) renderer.clear()
+  const contentDiagnostics: CheckDiagnostic[] = []
   const graph = await buildContentGraph(options.cwd, config, extensions, {
     includeDrafts: options.demoMode === 'dev',
-    renderer
+    renderer,
+    diagnostics: contentDiagnostics
   })
+  const diagnostics = await checkContentGraph(
+    options.cwd,
+    config,
+    graph,
+    extensions.publicOutputPaths,
+    contentDiagnostics,
+    options.demoMode !== 'dev'
+  )
+  const errors = diagnostics.filter((issue) => issue.severity === 'error')
+  if (errors.length) throw new ContentDiagnosticsError(errors)
+  const resources = await preparePageResources(options.cwd, config, graph, renderer)
   const analyzedDemoManifest = await prepareDemoManifest({
     cwd: options.cwd,
     config,
@@ -213,7 +249,8 @@ async function runBuildLocked(
     graph,
     extensions.fingerprint,
     analyzedDemoManifest,
-    options.demoMode === 'dev' ? 'dev' : 'build'
+    options.demoMode === 'dev' ? (renderHtml ? 'dev' : 'dev-request') : 'build',
+    resources
   )
   const previousManifest = options.noCache ? undefined : await readBuildManifest(cacheRoot)
   const outputExists = await pathExists(outputRoot)
@@ -228,6 +265,9 @@ async function runBuildLocked(
     outputValid,
     forceClean: options.forceClean || options.noCache
   })
+  if (options.demoMode !== 'dev' || plan.mode !== 'cached') {
+    for (const issue of diagnostics) console.warn(formatDiagnostic(issue))
+  }
 
   if (plan.mode === 'cached') {
     const report = createBuildReport({
@@ -238,6 +278,7 @@ async function runBuildLocked(
       mode: plan.mode,
       reason: plan.reason,
       changedPages: [],
+      renderHtml,
       durationMs: performance.now() - startedAt
     })
     await writeBuildCacheJson(cacheRoot, 'build-report', report)
@@ -252,6 +293,8 @@ async function runBuildLocked(
       partialReload: false,
       reason: plan.reason,
       report,
+      contentDependencyPaths: currentManifest.contentDependencyPaths,
+      renderHtml,
       ...(analyzedDemoManifest ? { demoManifest: analyzedDemoManifest } : {})
     }
   }
@@ -269,30 +312,34 @@ async function runBuildLocked(
   }
   await mkdir(dirname(temporaryRoot), { recursive: true })
   try {
-    let demoManifest: CanofoldDemoManifest | undefined
     if (plan.mode === 'incremental') {
       await copyBuildOutputs(outputRoot, temporaryRoot, previousManifest?.outputs ?? {})
-      demoManifest =
-        options.demoMode === 'dev'
-          ? analyzedDemoManifest
-          : await prepareDemoManifest({
-              cwd: options.cwd,
-              config: temporaryConfig,
-              graph,
-              mode: 'build',
-              server: options.demoServer
-            })
-      await writeBuildOutputs({
-        cwd: options.cwd,
-        config: temporaryConfig,
-        graph,
-        pages: changedPages,
-        previousPages: previousManifest ? Object.values(previousManifest.pages) : [],
-        renderer,
-        writeSharedAssets: false,
-        extensions,
-        demoManifest
-      })
+    }
+    const demoManifest =
+      options.demoMode === 'dev'
+        ? analyzedDemoManifest
+        : await prepareDemoManifest({
+            cwd: options.cwd,
+            config: temporaryConfig,
+            graph,
+            mode: 'build',
+            server: options.demoServer
+          })
+    await writeBuildOutputs({
+      cwd: options.cwd,
+      config: temporaryConfig,
+      graph,
+      pages: plan.mode === 'incremental' ? changedPages : graph.pages,
+      previousPages:
+        plan.mode === 'incremental' && previousManifest ? Object.values(previousManifest.pages) : [],
+      renderer,
+      resources,
+      writeSharedAssets: plan.mode !== 'incremental',
+      renderHtml,
+      extensions,
+      demoManifest
+    })
+    if (plan.mode === 'incremental') {
       const removedPages = plan.removedPageKeys.flatMap((key) => {
         const page = previousManifest?.pages[key]
         return page ? [page] : []
@@ -303,27 +350,6 @@ async function runBuildLocked(
         removedPages,
         Object.values(currentManifest.pages)
       )
-    } else {
-      demoManifest =
-        options.demoMode === 'dev'
-          ? analyzedDemoManifest
-          : await prepareDemoManifest({
-              cwd: options.cwd,
-              config: temporaryConfig,
-              graph,
-              mode: 'build',
-              server: options.demoServer
-            })
-      await writeBuildOutputs({
-        cwd: options.cwd,
-        config: temporaryConfig,
-        graph,
-        pages: graph.pages,
-        renderer,
-        writeSharedAssets: true,
-        extensions,
-        demoManifest
-      })
     }
     await assertBuildLockOwned()
     await replaceOutputDirectory(outputRoot, temporaryRoot)
@@ -347,6 +373,7 @@ async function runBuildLocked(
     mode: plan.mode,
     reason: plan.reason,
     changedPages: changedPagePaths,
+    renderHtml,
     durationMs: performance.now() - startedAt
   })
   await writeBuildCacheJson(cacheRoot, 'build-report', report)
@@ -368,6 +395,8 @@ async function runBuildLocked(
       ),
     reason: plan.reason,
     report,
+    contentDependencyPaths: currentManifest.contentDependencyPaths,
+    renderHtml,
     ...(analyzedDemoManifest ? { demoManifest: analyzedDemoManifest } : {})
   }
 }
@@ -376,7 +405,7 @@ export async function runBuild(options: BuildOptions): Promise<BuildResult> {
   const startedAt = performance.now()
   const cacheRoot = resolveBuildCacheRoot(options.cwd)
   await assertProjectPath(options.cwd, cacheRoot, 'build cache')
-  const config = await loadConfig(options.cwd)
+  const config = options.config ?? (await loadConfig(options.cwd))
   assertRequiredVersion(config)
   const outputRoot = await resolveSafeOutputRoot(options.cwd, config, cacheRoot)
   return withBuildLock(cacheRoot, (assertOwned) =>

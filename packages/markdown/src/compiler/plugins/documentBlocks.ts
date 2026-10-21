@@ -2,6 +2,7 @@ import { SKIP, visit } from 'unist-util-visit'
 import type { Element, ElementContent, Root } from 'hast'
 import type { MarkdownAssetCollector } from '../assets.js'
 import type { NormalizedMarkdownOptions } from '../normalizeOptions.js'
+import { inertHighlightedCode } from '../inertCode.js'
 
 function componentName(node: Element | undefined) {
   if (!node) return ''
@@ -103,6 +104,7 @@ export const rehypeDocumentBlocks = (
 ) => {
   return (tree: Root) => {
     visit(tree, 'element', (node, index, parent) => {
+      if (inertHighlightedCode(node)) return SKIP
       if (!parent || index === undefined) return
       trackTrustedComponent(node, assets, labels)
 

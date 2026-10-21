@@ -8,6 +8,9 @@ import { execPnpmSync } from './lib/packageManager.mjs'
 const workspace = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const markdownPackageRoot = join(workspace, 'packages/markdown')
 const themesPackageRoot = join(workspace, 'packages/themes')
+const viteVersion = JSON.parse(
+  await readFile(join(workspace, 'packages/vite/node_modules/vite/package.json'), 'utf8')
+).version
 const versions = process.env.REACT_VERSION
   ? [process.env.REACT_VERSION]
   : ['18.2.0', '18.3.1', '19.2.0', '19.3.0']
@@ -47,7 +50,7 @@ try {
             '@canofold/themes': `file:${themesTarball}`,
             react: version,
             'react-dom': version,
-            vite: '8.3.0'
+            vite: viteVersion
           }
         },
         null,
@@ -74,6 +77,14 @@ if (typeof Markdown !== 'function') throw new Error('Markdown public component i
 const renderer = createMarkdownRenderer()
 const result = await renderer.render('::::tabs[Versions]\\n:::tab[React]\\nReact ${version}\\n:::\\n::::')
 const unsafeResult = await renderer.render('[Unsafe](javascript:alert(1))')
+const richResult = await renderer.render('![Photo](photo.png)\\n\\n| Value |\\n| --- |\\n| One |')
+const richHtml = renderToStaticMarkup(richResult.content)
+const buttons = richHtml.match(/<button\\b[^>]*>/g) || []
+for (const action of ['zoom-image', 'zoom-table', 'copy-table', 'sort-table']) {
+  if (!buttons.some(button => button.includes('data-cf-action="' + action + '"') && button.includes('disabled=""'))) {
+    throw new Error('Static React-only control must wait for hydration: ' + action)
+  }
+}
 
 const warnings = []
 const originalError = console.error

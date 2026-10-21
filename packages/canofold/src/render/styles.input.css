@@ -8,14 +8,20 @@
 }
 
 html {
-  min-width: 20rem;
-  background: var(--cf-canvas);
   overscroll-behavior: none;
   scroll-behavior: smooth;
 }
 
-body {
+html:not(:where([data-cf-demo-frame])),
+:where(html:not([data-cf-demo-frame])) body {
   min-width: 20rem;
+}
+
+html:not(:where([data-cf-demo-frame])) {
+  background: var(--cf-canvas);
+}
+
+body {
   margin: 0;
   overscroll-behavior: none;
   color: var(--cf-ink-body);
@@ -922,7 +928,7 @@ a {
   display: grid;
   min-height: 8rem;
   place-items: center;
-  padding: clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(0.75rem, 2vw, 1.5rem);
   background: transparent;
 }
 

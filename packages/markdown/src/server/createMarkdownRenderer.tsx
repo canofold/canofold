@@ -7,12 +7,16 @@ import {
   type MarkdownComponents
 } from '../react/componentMap.js'
 import type { MarkdownAssets } from '../compiler/assets.js'
-import type { MarkdownContentAnalysis } from '../compiler/analyze.js'
-import { createMarkdownServerContext, type MarkdownServerContextOptions } from './cache.js'
+import {
+  createMarkdownServerContext,
+  type MarkdownServerContextOptions,
+  type MarkdownAnalysisResult
+} from './cache.js'
 import type { RenderMarkdownOptions } from '../compiler/types.js'
 import { MarkdownDocument, MarkdownRoot } from '../react/Markdown.js'
 import { type MarkdownSlots } from '../react/slots.js'
 import { transformMarkdownUrlProps, type MarkdownUrlTransform } from '../react/urlTransform.js'
+import { staticTokens } from '../react/staticTokens.js'
 
 export interface MarkdownRenderOptions {
   markdown?: RenderMarkdownOptions
@@ -41,7 +45,7 @@ export interface MarkdownRenderer {
   analyze(
     source: string,
     options?: { markdown?: RenderMarkdownOptions; mode?: 'markdown' | 'mdx' }
-  ): Promise<MarkdownContentAnalysis>
+  ): Promise<MarkdownAnalysisResult>
   render(source: string, options?: MarkdownRenderOptions): Promise<RenderedMarkdown>
   renderMdx(source: string, options?: MdxRenderOptions): Promise<RenderedMarkdown>
   clear(): void
@@ -71,16 +75,15 @@ export function createMarkdownRenderer(contextOptions: MarkdownServerContextOpti
 
   return {
     async analyze(source, { markdown, mode = 'markdown' } = {}) {
-      const prepared =
-        mode === 'mdx' ? await context.prepareMdx(source, markdown) : await context.prepare(source, markdown)
-      return structuredClone(prepared.analysis)
+      return structuredClone(await context.analyze(source, markdown, mode))
     },
     async render(source, options = {}) {
       const prepared = await context.prepare(source, options.markdown)
+      const document = options.components ? { document: prepared.document } : staticTokens(prepared.document)
       return {
         content: (
           <MarkdownDocument
-            document={prepared.document}
+            {...document}
             classNames={options.classNames}
             components={options.components}
             slots={options.slots}

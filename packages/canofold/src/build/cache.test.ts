@@ -50,6 +50,7 @@ function manifest(): BuildManifest {
     canofoldVersion,
     buildFingerprint: 'build',
     sharedFingerprint: 'shared',
+    contentDependencyPaths: [],
     pages: {
       'docs/index.md': {
         fingerprint: 'page',

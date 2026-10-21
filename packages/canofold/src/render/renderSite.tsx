@@ -3,7 +3,6 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolve as resolveModule } from 'import-meta-resolve'
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { ReactNode } from 'react'
 import type { CanofoldConfig } from '../config/types'
 import { isMdxPath } from '../content/fileKinds'
 import type { ContentGraph, DocPage } from '../content/types'
@@ -18,7 +17,6 @@ import {
   type MarkdownPluginStyleAsset,
   type MarkdownRenderer
 } from '@canofold/markdown/server'
-import { detectMarkdownAssets } from '@canofold/markdown/server/analyze'
 import { compileCss, compileThemes, markdownFileIconsDir, mathFontsDir } from './buildCss'
 import { HomeHero } from './HomeHero'
 import { Layout } from './Layout'
@@ -27,12 +25,14 @@ import { markdownLabelsFor } from '../config/locale'
 import { DEFAULT_BRAND_ASSET_PATHS } from '../brand'
 import { copyBuiltInBrandAssets } from './brandAssets'
 import { renderMdxResult } from './renderMdx'
+import { preparePageResources, type PageResources } from './resources'
 import { buildSearchBundle } from './searchBundle'
 import { themeBootScript } from './shellScripts'
 import { buildLayoutVariables } from './theme'
 import { generatedOutputPaths } from '../output/plan'
 import { mapConcurrent } from '../utils/concurrency'
 import { createPageUrlTransform } from './transformUrls'
+import type { MarkdownUrlTransform } from '@canofold/markdown'
 import { buildPlaygroundBundle } from './playgroundBundle'
 import type { CanofoldDemoManifest } from '../demos/types'
 import { createDemoMarkdownPlugin } from '../demos/markdown'
@@ -53,13 +53,6 @@ import {
 
 export { copyRequiredMathFonts } from './siteAssets'
 export type { PreviousPageOutput } from './siteAssets'
-
-const emptyMarkdownAssets: MarkdownAssets = {
-  behaviors: [],
-  math: false,
-  pluginClients: [],
-  pluginStyles: []
-}
 
 function playgroundMarkdownAssets(
   initial: MarkdownAssets,
@@ -137,6 +130,82 @@ function render404Page(config: CanofoldConfig, graph: ContentGraph): string {
   return `<!doctype html><html lang="${escapeHtml(defaultLocale)}"${darkClass}${initialTheme ? ` data-cf-theme="${escapeHtml(initialTheme.id)}"` : ''}${initialAppearance ? ` data-cf-theme-appearance="${escapeHtml(initialAppearance.id)}"` : ''}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>404 - ${notFoundTitle} | ${title}</title><meta name="robots" content="noindex"><link rel="icon" href="${favicon}"><link rel="stylesheet" href="${stylesheet}"><script>${themeBootScript(config.themes)}</script></head><body><div class="cf-not-found"><span class="cf-not-found-code">404</span><h1 id="canofold-404-title" class="cf-not-found-title">${notFoundTitle}</h1><p id="canofold-404-description" class="cf-not-found-desc">${notFoundDescription}</p><a id="canofold-404-home" href="${home}" class="cf-not-found-link">${homeLabel}</a></div><script>${localeScript}</script></body></html>`
 }
 
+/** One document renderer shared by static builds and development requests. */
+export async function renderPage({
+  cwd,
+  config,
+  graph,
+  page,
+  renderer,
+  demoManifest,
+  urlTransform
+}: {
+  cwd: string
+  config: CanofoldConfig
+  graph: ContentGraph
+  page: DocPage
+  renderer: MarkdownRenderer
+  demoManifest?: CanofoldDemoManifest
+  urlTransform: MarkdownUrlTransform
+}) {
+  const isHome = page.routePath === localeRootPath(page.locale, graph.defaultLocale, page.versionBase)
+  const demoPlugin =
+    page.demos.length && demoManifest
+      ? createDemoMarkdownPlugin({ page, manifest: demoManifest, labels: demoLabelsFor(page.locale) })
+      : undefined
+  if (page.demos.length && !demoManifest) {
+    throw new Error(`No prepared demo manifest is available for ${page.sourceRelativePath}`)
+  }
+  const markdownOptions = {
+    ...config.markdown,
+    plugins: demoPlugin ? [...config.markdown.plugins, demoPlugin] : config.markdown.plugins,
+    locale: page.locale,
+    labels: { ...markdownLabelsFor(page.locale, config.i18n.messages), ...config.markdown.labels }
+  }
+  const rendered = isMdxPath(page.relativePath)
+    ? await renderMdxResult(
+        page.body,
+        page.sourcePath,
+        cwd,
+        { ...markdownOptions, html: 'trusted' },
+        undefined,
+        urlTransform,
+        renderer
+      )
+    : await renderer.render(page.body, { markdown: markdownOptions, as: 'article', urlTransform })
+  const markdownAssets =
+    page.frontmatter.layout === 'playground'
+      ? playgroundMarkdownAssets(rendered.assets, config.markdown.plugins)
+      : rendered.assets
+  const hasLandingContent = Boolean(page.frontmatter.hero || page.frontmatter.features?.length)
+  const content = isHome ? (
+    <>
+      {hasLandingContent ? <HomeHero page={page} config={config} /> : null}
+      {page.body.trim() ? rendered.content : null}
+    </>
+  ) : (
+    (rendered.content ?? <article className="cf-content" />)
+  )
+  const html =
+    '<!doctype html>' +
+    renderToStaticMarkup(
+      <Layout
+        config={config}
+        graph={graph}
+        page={page}
+        home={isHome}
+        markdownAssets={markdownAssets}
+        rawSource={page.transformedSource}
+        markdownClientUrl={page.demos.length ? demoManifest?.clientUrl : demoManifest?.markdownClientUrl}
+        demoClientUrl={page.demos.length ? demoManifest?.clientUrl : undefined}
+        demoStyleUrls={page.demos.length ? demoManifest?.styleUrls : undefined}
+      >
+        {content}
+      </Layout>
+    )
+  return { html, assets: markdownAssets }
+}
+
 export async function renderSite({
   cwd,
   config,
@@ -145,7 +214,9 @@ export async function renderSite({
   previousPages = [],
   renderer = createMarkdownRenderer(),
   writeSharedAssets = true,
-  demoManifest
+  demoManifest,
+  renderHtml = true,
+  resources
 }: {
   cwd: string
   config: CanofoldConfig
@@ -160,7 +231,11 @@ export async function renderSite({
   writeSharedAssets?: boolean
   /** Prepared browser modules for pages that declare component demos. */
   demoManifest?: CanofoldDemoManifest
+  /** Dev requests render HTML through renderPage; mirrors/assets remain build outputs. */
+  renderHtml?: boolean
+  resources?: PageResources
 }) {
+  const pageResources = resources ?? (await preparePageResources(cwd, config, graph, renderer))
   const outputRoot = resolveOutputRoot(cwd, config.outputDir)
   const generatedPaths = generatedOutputPaths(config, graph)
   const hasPlayground = graph.pages.some((page) => page.frontmatter.layout === 'playground')
@@ -170,14 +245,7 @@ export async function renderSite({
   if (writeSharedAssets) {
     const needsMath =
       (hasPlayground && config.markdown.plugins.some((plugin) => plugin.assets?.math === true)) ||
-      graph.pages.some(
-        (page) =>
-          detectMarkdownAssets(
-            page.body,
-            config.markdown.plugins,
-            isMdxPath(page.relativePath) ? 'mdx' : 'markdown'
-          ).math
-      )
+      [...pageResources.values()].some(({ assets }) => assets.math)
     const [css, themes, customStyles] = await Promise.all([
       compileCss({ math: needsMath, cwd }),
       compileThemes(config.themes, cwd),
@@ -230,11 +298,10 @@ export async function renderSite({
   const pluginStyles = new Map<string, MarkdownPluginStyleAsset>()
   const markdownBehaviors = new Set<MarkdownAssets['behaviors'][number]>()
   behaviorPages.forEach((page) => {
-    const assets = detectMarkdownAssets(
-      page.body,
-      config.markdown.plugins,
-      isMdxPath(page.relativePath) ? 'mdx' : 'markdown'
-    )
+    const assets =
+      page.frontmatter.layout === 'playground'
+        ? playgroundMarkdownAssets(pageResources.get(page)!.assets, config.markdown.plugins)
+        : pageResources.get(page)!.assets
     registerPluginAssets(assets, pluginClients, pluginStyles)
     assets.behaviors.forEach((behavior) => markdownBehaviors.add(behavior))
   })
@@ -247,92 +314,22 @@ export async function renderSite({
   }
   const transformForPage = createPageUrlTransform(config.basePath, graph.pages)
   await mapConcurrent(pages, RENDER_CONCURRENCY, async (page) => {
-    const urlTransform = transformForPage(page, assetPathsByPage.get(page))
-    const isHome = page.routePath === localeRootPath(page.locale, graph.defaultLocale, page.versionBase)
-    let markdownContent: ReactNode | undefined
-    let markdownAssets = emptyMarkdownAssets
-    const demoLabels = demoLabelsFor(page.locale)
-    const demoPlugin =
-      page.demos.length > 0 && demoManifest
-        ? createDemoMarkdownPlugin({ page, manifest: demoManifest, labels: demoLabels })
-        : undefined
-    if (page.demos.length > 0 && !demoManifest) {
-      throw new Error(`No prepared demo manifest is available for ${page.sourceRelativePath}`)
-    }
-    const markdownOptions = {
-      ...config.markdown,
-      plugins: demoPlugin ? [...config.markdown.plugins, demoPlugin] : config.markdown.plugins,
-      locale: page.locale,
-      labels: {
-        ...markdownLabelsFor(page.locale, config.i18n.messages),
-        ...config.markdown.labels
-      }
-    }
-
-    if (isMdxPath(page.relativePath)) {
-      const mdxOptions = { ...markdownOptions, html: 'trusted' as const }
-      const rendered = await renderMdxResult(
-        page.body,
-        page.sourcePath,
+    if (renderHtml) {
+      const rendered = await renderPage({
         cwd,
-        mdxOptions,
-        undefined,
-        urlTransform,
-        renderer
-      )
-      markdownContent = rendered.content
-      markdownAssets = rendered.assets
-    } else {
-      const rendered = await renderer.render(page.body, {
-        markdown: markdownOptions,
-        as: 'article',
-        urlTransform
+        config,
+        graph,
+        page,
+        renderer,
+        demoManifest,
+        urlTransform: transformForPage(page, assetPathsByPage.get(page))
       })
-      markdownContent = rendered.content
-      markdownAssets = rendered.assets
+      registerPluginAssets(rendered.assets, pluginClients, pluginStyles)
+      rendered.assets.behaviors.forEach((behavior) => markdownBehaviors.add(behavior))
+      const htmlPath = resolveOutputPath(outputRoot, page.outputPath, `page ${page.sourceRelativePath}`)
+      await mkdir(dirname(htmlPath), { recursive: true })
+      await writeFile(htmlPath, rendered.html)
     }
-    if (page.frontmatter.layout === 'playground') {
-      markdownAssets = playgroundMarkdownAssets(markdownAssets, config.markdown.plugins)
-    }
-    registerPluginAssets(markdownAssets, pluginClients, pluginStyles)
-    markdownAssets.behaviors.forEach((behavior) => markdownBehaviors.add(behavior))
-
-    const hasLandingContent = Boolean(page.frontmatter.hero || page.frontmatter.features?.length)
-    const hasAuthoredBody = page.body.trim().length > 0
-    const content = isHome ? (
-      <>
-        {hasLandingContent ? <HomeHero page={page} config={config} /> : null}
-        {hasAuthoredBody ? markdownContent : null}
-      </>
-    ) : (
-      (markdownContent ?? <article className="cf-content" />)
-    )
-
-    const rawSource = page.transformedSource
-
-    const html =
-      '<!doctype html>' +
-      renderToStaticMarkup(
-        <Layout
-          config={config}
-          graph={graph}
-          page={page}
-          home={isHome}
-          markdownAssets={markdownAssets}
-          rawSource={rawSource}
-          markdownClientUrl={
-            page.demos.length > 0 ? demoManifest?.clientUrl : demoManifest?.markdownClientUrl
-          }
-          demoClientUrl={page.demos.length > 0 ? demoManifest?.clientUrl : undefined}
-          demoStyleUrls={page.demos.length > 0 ? demoManifest?.styleUrls : undefined}
-        >
-          {content}
-        </Layout>
-      )
-
-    const htmlPath = resolveOutputPath(outputRoot, page.outputPath, `page ${page.sourceRelativePath}`)
-    await mkdir(dirname(htmlPath), { recursive: true })
-    await writeFile(htmlPath, html)
 
     if (config.markdownMirror) {
       const markdownPath = resolveOutputPath(
@@ -341,7 +338,7 @@ export async function renderSite({
         `page ${page.sourceRelativePath}`
       )
       await mkdir(dirname(markdownPath), { recursive: true })
-      await writeFile(markdownPath, rawSource)
+      await writeFile(markdownPath, page.transformedSource)
     }
   })
 

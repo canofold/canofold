@@ -16,6 +16,7 @@ function manifest({
     canofoldVersion: '0.1.0',
     buildFingerprint: build,
     sharedFingerprint: shared,
+    contentDependencyPaths: [],
     pages: Object.fromEntries(
       Object.entries(pages).map(([path, fingerprint]) => [
         path,

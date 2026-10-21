@@ -38,6 +38,73 @@ async function fixture(spec: unknown = specification()) {
 }
 
 describe('OpenAPI content source', () => {
+  it('reports YAML alias limits as recoverable source diagnostics', async () => {
+    const { cwd, config, source } = await fixture()
+    source.entry = 'docs/api/openapi.yaml'
+    const aliases = Array(15).fill('*a').join(', ')
+    const copies = Array(15).fill('*b').join(', ')
+    await writeFile(
+      join(cwd, source.entry),
+      `openapi: 3.1.0\ninfo: {title: Test, version: "1"}\npaths: {}\na: &a [one, two]\nb: &b [${aliases}]\nc: [${copies}]\n`
+    )
+    const diagnostics: import('../../../canofold/src/commands/check').CheckDiagnostic[] = []
+    const graph = await buildContentGraph(cwd, config, undefined, { diagnostics })
+    expect(graph.pages).toHaveLength(1)
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({
+        ruleId: 'content-syntax',
+        page: source.entry,
+        message: expect.stringMatching(/alias/i)
+      })
+    )
+  })
+  it('locates a missing local reference at its authored owner and recovers when the file is added', async () => {
+    const spec = specification()
+    Object.assign(spec.paths['/pets'].get.responses['200'], { $ref: './response.yaml' })
+    const { cwd, config } = await fixture(spec)
+    const diagnostics: import('../../../canofold/src/commands/check').CheckDiagnostic[] = []
+    await buildContentGraph(cwd, config, undefined, { diagnostics })
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({
+        page: 'docs/api/openapi.json',
+        sourcePointer: '/paths/~1pets/get/responses/200',
+        message: expect.stringContaining('Referenced input not found')
+      })
+    )
+    await writeFile(join(cwd, 'docs/api/response.yaml'), 'description: Recovered response\n')
+    expect((await buildContentGraph(cwd, config)).pages).toHaveLength(3)
+  })
+  it('emits structured source locations alongside authored-file diagnostics without partial publication', async () => {
+    const { cwd } = await fixture()
+    await writeFile(
+      join(cwd, 'docs/api/openapi.json'),
+      '{"openapi":"3.1.0","info":{"title":42,"version":"1"},"paths":{}}'
+    )
+    // The direct adapter fixture uses the same host-owned diagnostic contract.
+    const config = createMockConfig({
+      sources: [
+        openapi({
+          id: 'pet-api',
+          root: 'docs/api',
+          entry: 'docs/api/openapi.json',
+          base: '/api/',
+          locale: 'zh',
+          version: 'current'
+        })
+      ]
+    })
+    const diagnostics: import('../../../canofold/src/commands/check').CheckDiagnostic[] = []
+    const graph = await buildContentGraph(cwd, config, undefined, { diagnostics })
+    expect(graph.pages).toHaveLength(1)
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({
+        page: 'docs/api/openapi.json',
+        sourcePointer: '/info/title',
+        line: 1,
+        severity: 'error'
+      })
+    )
+  })
   it('keeps dollar signs in specification text literal when the site enables math', async () => {
     const spec = specification()
     spec.paths['/pets'].get.summary = 'Price $x$ and $\\unknown{value}$ are API text'

@@ -19,6 +19,118 @@ vi.mock('node:fs/promises', async (original) => {
 })
 
 describe('build state support-file fingerprints', () => {
+  it('resolves derived content dependencies from the project, not the caller working directory', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-state-source-paths-'))
+    await mkdir(join(cwd, 'docs'))
+    const page = createMockPage({
+      sourcePath: join(cwd, 'api.json'),
+      sourceRelativePath: 'api.json',
+      origin: {
+        id: 'api',
+        kind: 'openapi',
+        key: 'operation',
+        pointer: '/paths',
+        adapterRevision: '1',
+        optionsRevision: 'options',
+        dependencies: [
+          { path: 'api.json', revision: 'entry' },
+          { path: 'schemas/model.json', revision: 'model' }
+        ],
+        dependenciesRevision: 'dependencies',
+        facts: {}
+      }
+    })
+    const manifest = await createBuildManifest(
+      cwd,
+      createMockConfig(),
+      createMockGraph({ pages: [page] }),
+      undefined,
+      undefined,
+      'dev-request'
+    )
+    expect(manifest.contentDependencyPaths.filter((path) => path.endsWith('.json'))).toEqual([
+      'api.json',
+      'schemas/model.json'
+    ])
+  })
+  it.each(['stylesheet', 'public'] as const)(
+    'keeps Core %s inputs invalidated when imported by a hot Demo',
+    async (kind) => {
+      const cwd = await mkdtemp(join(tmpdir(), 'canofold-state-overlap-'))
+      await mkdir(join(cwd, 'docs/public'), { recursive: true })
+      const entry = join(cwd, 'docs/demo.tsx')
+      const asset = join(cwd, kind === 'stylesheet' ? 'docs/shared.css' : 'docs/public/shared.css')
+      await writeFile(entry, 'export default () => null')
+      await writeFile(asset, 'button { color: red }')
+      const demo = {
+        id: 'demo',
+        specifier: './demo.tsx',
+        sandbox: 'inline' as const,
+        pageSourcePath: join(cwd, 'docs/index.md'),
+        pageSourceRelativePath: 'docs/index.md',
+        routePath: '/',
+        locale: 'zh',
+        modulePath: entry,
+        dependencyPaths: [entry, asset],
+        source: 'export default () => null',
+        language: 'tsx' as const
+      }
+      const page = createMockPage({ sourcePath: join(cwd, 'docs/index.md'), demos: [demo] })
+      const graph = createMockGraph({ pages: [page] })
+      const config = createMockConfig({ styles: kind === 'stylesheet' ? ['docs/shared.css'] : [] })
+      const manifest = { clientUrl: '/demo.js', hotReload: true as const, demos: { demo } }
+      const first = await createBuildManifest(cwd, config, graph, undefined, manifest, 'dev-request')
+      await writeFile(asset, 'button { color: blue }')
+      const second = await createBuildManifest(cwd, config, graph, undefined, manifest, 'dev-request')
+      expect(second.sharedFingerprint).not.toBe(first.sharedFingerprint)
+      if (kind === 'stylesheet') expect(second.contentDependencyPaths).toContain('docs/shared.css')
+    }
+  )
+  it('reads shared Demo dependencies once per manifest and refreshes them on the next build', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-state-shared-demo-'))
+    await mkdir(join(cwd, 'docs'))
+    const shared = join(cwd, 'shared.ts')
+    await writeFile(shared, 'export const value = 1')
+    const demos = Array.from({ length: 4 }, (_, index) => ({
+      id: `demo-${index}`,
+      specifier: '/shared.ts',
+      sandbox: 'inline' as const,
+      pageSourcePath: join(cwd, `docs/page-${index}.md`),
+      pageSourceRelativePath: `docs/page-${index}.md`,
+      routePath: `/page-${index}/`,
+      locale: 'zh',
+      modulePath: shared,
+      moduleUrl: '/shared.ts',
+      dependencyPaths: [shared, shared],
+      source: '',
+      language: 'ts' as const
+    }))
+    const pages = demos.map((demo) =>
+      createMockPage({
+        sourceRelativePath: demo.pageSourceRelativePath,
+        demos: [demo, demo]
+      })
+    )
+    const config = createMockConfig()
+    const graph = createMockGraph({ pages })
+    const manifest = {
+      clientUrl: '/demo.js',
+      demos: Object.fromEntries(demos.map((demo) => [demo.id, demo]))
+    }
+    const reads = vi.mocked(fs.readFile)
+    reads.mockClear()
+    const first = await createBuildManifest(cwd, config, graph, undefined, manifest)
+    expect(reads.mock.calls.filter(([path]) => path === shared)).toHaveLength(1)
+    await writeFile(shared, 'export const value = 2')
+    reads.mockClear()
+    const second = await createBuildManifest(cwd, config, graph, undefined, manifest)
+    expect(reads.mock.calls.filter(([path]) => path === shared)).toHaveLength(1)
+    for (const page of pages) {
+      expect(second.pages[buildPageKey(page)]!.fingerprint).not.toBe(
+        first.pages[buildPageKey(page)]!.fingerprint
+      )
+    }
+  })
   it('recomputes navigation per version/locale without invalidating another locale', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-state-layout-'))
     await mkdir(join(cwd, 'docs'))
@@ -115,6 +227,8 @@ describe('build state support-file fingerprints', () => {
       clientUrl: '/demo.js',
       demos: { demo }
     })
+    const hotManifest = { clientUrl: '/demo.js', hotReload: true as const, demos: { demo } }
+    const hotBefore = await createBuildManifest(cwd, config, graph, undefined, hotManifest, 'dev-request')
     await writeFile(dependencyPath, 'export const Button = 2')
     const second = await createBuildManifest(cwd, config, graph, undefined, {
       clientUrl: '/demo.js',
@@ -124,6 +238,13 @@ describe('build state support-file fingerprints', () => {
     expect(second.sharedFingerprint).toBe(first.sharedFingerprint)
     expect(second.pages[buildPageKey(page)]?.fingerprint).not.toBe(
       first.pages[buildPageKey(page)]?.fingerprint
+    )
+    const hotAfter = await createBuildManifest(cwd, config, graph, undefined, hotManifest, 'dev-request')
+    expect(hotAfter.buildFingerprint).toBe(hotBefore.buildFingerprint)
+    await writeFile(entryPath, 'export default () => "Updated source"')
+    const entryChanged = await createBuildManifest(cwd, config, graph, undefined, hotManifest, 'dev-request')
+    expect(entryChanged.pages[buildPageKey(page)]?.fingerprint).not.toBe(
+      hotAfter.pages[buildPageKey(page)]?.fingerprint
     )
   })
 

@@ -600,7 +600,7 @@ describe('renderSite', () => {
     await renderSite({
       cwd,
       config: { ...defaultConfig, outputDir: staticOutputDir },
-      graph,
+      graph: { ...graph, pages: [staticPage] },
       pages: [staticPage]
     })
     const staticHtml = await readFile(join(cwd, staticOutputDir, staticPage.outputPath), 'utf8')

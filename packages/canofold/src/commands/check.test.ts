@@ -13,6 +13,48 @@ afterEach(() => {
 })
 
 describe('runCheck', () => {
+  it('reports malformed MDX in JSON without hiding diagnostics in other files', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-check-invalid-mdx-'))
+    await mkdir(join(cwd, 'docs'))
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await writeFile(join(cwd, 'docs/bad.mdx'), '---\ntitle: Broken\n---\n# Broken\n\n<Component>')
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    const issues = await runCheck({ cwd, format: 'json' })
+    expect(issues).toContainEqual(
+      expect.objectContaining({ ruleId: 'content-syntax', page: 'docs/bad.mdx', severity: 'error' })
+    )
+    expect(JSON.parse(log.mock.calls.at(-1)?.[0] as string).diagnostics).toEqual(issues)
+  })
+
+  it('collects independent YAML and schema failures together with healthy-page diagnostics as JSON', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-check-invalid-content-'))
+    await mkdir(join(cwd, 'docs'))
+    await writeFile(join(cwd, 'docs/index.md'), '# Home\n\n[Missing](./missing.md)')
+    await writeFile(join(cwd, 'docs/yaml.md'), '---\ntitle: [broken\n---\n# Broken')
+    await writeFile(join(cwd, 'docs/schema.md'), '---\ntitle: 123\n---\n# Broken')
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+
+    const issues = await runCheck({ cwd, format: 'json' })
+
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'content-syntax',
+          page: 'docs/yaml.md',
+          severity: 'error',
+          line: 3
+        }),
+        expect.objectContaining({ ruleId: 'content-syntax', page: 'docs/schema.md', severity: 'error' }),
+        expect.objectContaining({ ruleId: 'broken-link', page: 'docs/index.md', severity: 'error' })
+      ])
+    )
+    expect(JSON.parse(log.mock.calls.at(-1)?.[0] as string)).toMatchObject({
+      schemaVersion: 1,
+      diagnostics: issues
+    })
+    expect(process.exitCode).toBe(1)
+  })
+
   it('rejects a draft-only home before the production build', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-check-draft-home-'))
     await mkdir(join(cwd, 'docs'))

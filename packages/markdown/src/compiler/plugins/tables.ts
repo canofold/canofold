@@ -3,6 +3,7 @@ import type { Element, Root } from 'hast'
 import type { MarkdownAssetCollector } from '../assets.js'
 import type { NormalizedMarkdownOptions } from '../normalizeOptions.js'
 import { serializeMarkdownNode } from '../../protocol/serializedNode.js'
+import { inertHighlightedCode } from '../inertCode.js'
 
 function isComponent(node: unknown, component: string) {
   if (!node || typeof node !== 'object' || !('properties' in node)) return false
@@ -14,6 +15,7 @@ function isComponent(node: unknown, component: string) {
 export const rehypeTables = (assets: MarkdownAssetCollector, labels: NormalizedMarkdownOptions['labels']) => {
   return (tree: Root) => {
     visit(tree, 'element', (node, index, parent) => {
+      if (inertHighlightedCode(node)) return SKIP
       if (node.tagName !== 'table' || !parent || index === undefined || isComponent(parent, 'table')) return
 
       assets.markBehavior('table')

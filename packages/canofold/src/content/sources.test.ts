@@ -42,6 +42,32 @@ async function fixture() {
 }
 
 describe('build-time content sources', () => {
+  it('only collects explicit input diagnostics and rejects forged paths or positions', async () => {
+    const { cwd, config, source } = await fixture()
+    const diagnostics: import('../check/diagnostics').CheckDiagnostic[] = []
+    source.load = async (context) =>
+      context.fail({ message: 'Repair input', pointer: '/version', line: 1, column: 2 })
+    const graph = await buildContentGraph(cwd, config, undefined, { diagnostics })
+    expect(graph.pages).toHaveLength(1)
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({ page: source.entry, sourcePointer: '/version', line: 1, column: 2 })
+    )
+    source.load = async (context) => context.fail({ message: 'Invalid', file: '../index.md' })
+    await expect(buildContentGraph(cwd, config, undefined, { diagnostics: [] })).rejects.toThrow(
+      'tracked input'
+    )
+    source.load = async (context) => context.fail({ message: 'Invalid', column: 1 })
+    await expect(buildContentGraph(cwd, config, undefined, { diagnostics: [] })).rejects.toThrow(
+      'invalid position'
+    )
+    source.load = async () => {
+      throw new Error('Adapter bug')
+    }
+    await expect(buildContentGraph(cwd, config, undefined, { diagnostics: [] })).rejects.toThrow(
+      'Adapter bug'
+    )
+  })
+
   it('projects multiple documents without inventing physical files or changing Markdown identity', async () => {
     const { cwd, config } = await fixture()
     const graph = await buildContentGraph(cwd, config)

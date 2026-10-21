@@ -54,7 +54,8 @@ html[data-cf-theme='hand-drawn-doodle'] {
   --cf-nav-item-active-shadow: none;
 }
 
-html[data-cf-theme='hand-drawn-doodle'] :where(body, .cf-main, .cf-content) {
+html[data-cf-theme='hand-drawn-doodle']:not(:where([data-cf-demo-frame]))
+  :where(body, .cf-main, .cf-content) {
   background-color: var(--cf-canvas);
   background-image: repeating-linear-gradient(
     to bottom,

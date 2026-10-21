@@ -15,6 +15,16 @@ afterEach(() => {
 })
 
 describe('native Markdown behaviors', () => {
+  it('copies highlighted lines with their original newlines and empty lines', async () => {
+    const writeText = vi.fn(async () => undefined)
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+    document.body.innerHTML =
+      '<figure class="cf-code"><div data-cf-behavior="code-toolbar"><button data-cf-action="copy-code">Copy</button></div><pre><code><span class="line">const first = 1</span>\n<span class="line"></span>\n<span class="line">const last = 2</span></code></pre></figure>'
+    enhancement = enhanceMarkdown(document.body, { behaviors: ['code-toolbar'] })
+    await enhancement.ready
+    document.querySelector<HTMLButtonElement>('[data-cf-action="copy-code"]')!.click()
+    await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('const first = 1\n\nconst last = 2'))
+  })
   it('scrolls overflowing code tabs and restores their controls on disposal', async () => {
     const root = document.createElement('div')
     root.innerHTML = `<div class="cf-code-group" data-cf-behavior="tabs">

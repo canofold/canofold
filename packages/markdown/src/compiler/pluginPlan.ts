@@ -56,7 +56,9 @@ export function createMarkdownPluginPlan(
   const pluginFenceLanguages = new Set(
     options.plugins.flatMap((plugin) => plugin.fenceLanguages ?? []).map((language) => language.toLowerCase())
   )
-  const remarkPlugins: PluggableList = [remarkDefinitionList, remarkGfm]
+  const remarkPlugins: PluggableList = syntax.definitionLists
+    ? [remarkDefinitionList, remarkGfm]
+    : [remarkGfm]
   remarkPlugins.push(remarkDirective)
   remarkPlugins.push([
     remarkValidateRichDirectives,

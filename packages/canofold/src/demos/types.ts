@@ -31,6 +31,11 @@ export interface CanofoldPreparedDemo extends CanofoldDemoReference {
 }
 
 export interface CanofoldDemoManifest {
+  /** In dev, the engine owns live updates of imported Demo dependencies.
+   * Core still invalidates the entry source displayed in each document.
+   * Production builds always fingerprint the full dependency graph.
+   */
+  hotReload?: true
   clientUrl: string
   /** Optional Markdown browser entry emitted by the same module graph as demos. */
   markdownClientUrl?: string

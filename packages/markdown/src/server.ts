@@ -1,5 +1,6 @@
 /** Build/SSR-only entry point with compiler details hidden behind renderers. */
 export { createMarkdownRenderer } from './server/createMarkdownRenderer.js'
+export type { MarkdownAnalysisResult } from './server/cache.js'
 export { defineMarkdownPlugin } from './compiler/plugins.js'
 export type { MarkdownContentAnalysis, MarkdownReferences } from './compiler/analyze.js'
 export type {

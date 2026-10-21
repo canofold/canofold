@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { DEFAULT_MARKDOWN_LABELS } from '../../compiler/defaultLabels.js'
 import { MarkdownIcon } from '../shared/MarkdownIcon.js'
+import { useInteractionReady } from '../shared/useInteractionReady.js'
 import {
   elementTag,
   markdownDomProps,
@@ -62,6 +63,7 @@ export function MarkdownImage({
   inner = false,
   ...inputProps
 }: InternalMarkdownImageProps) {
+  const ready = useInteractionReady()
   const props = inputProps as Record<string, unknown>
   const urlTransform = useMarkdownUrlTransform()
   const resolvedDirectSrc = directSrc && urlTransform ? urlTransform(directSrc, 'src') : directSrc
@@ -131,6 +133,7 @@ export function MarkdownImage({
         className="cf-media-zoom"
         type="button"
         data-cf-action="zoom-image"
+        disabled={!ready}
         data-cf-slot="action"
         data-cf-preview-open={open ? 'true' : undefined}
         aria-label={zoomLabel}

@@ -2,6 +2,7 @@ import { lstat, open, realpath } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import type { MarkdownRenderer } from '@canofold/markdown/server'
+import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
 import { fingerprint, fingerprintBytes } from '../build/fingerprint'
 import type { CanofoldConfig } from '../config/types'
 import { documentationVersions } from '../config/versions'
@@ -15,6 +16,7 @@ import {
 } from './routes'
 import type { ContentSource } from './source'
 import type { DocPage } from './types'
+import { ContentDiagnosticsError, type CheckDiagnostic } from '../check/diagnostics'
 
 const MAX_FILE_BYTES = 16 * 1024 * 1024
 const MAX_SOURCE_BYTES = 64 * 1024 * 1024
@@ -126,7 +128,12 @@ async function trackedInput(cwd: string, source: ContentSource) {
 }
 
 /** Adapt source facts once, before navigation, search and machine-output projection. */
-export async function loadSourcePages(cwd: string, config: CanofoldConfig, renderer: MarkdownRenderer) {
+export async function loadSourcePages(
+  cwd: string,
+  config: CanofoldConfig,
+  renderer: MarkdownRenderer,
+  diagnostics?: CheckDiagnostic[]
+) {
   assertContentSources(config)
   const versions = documentationVersions(config)
   const pages: DocPage[] = []
@@ -139,13 +146,41 @@ export async function loadSourcePages(cwd: string, config: CanofoldConfig, rende
     )
     const input = await trackedInput(cwd, source)
     const version = versions.find((candidate) => candidate.id === source.version)!
-    const documents = await source.load({
-      cwd,
-      root: input.root,
-      entry: input.entry,
-      read: input.read,
-      routeBase: `${localeRootPath(source.locale, config.i18n.defaultLocale, version.base)}${sourceBase.slice(1)}`
-    })
+    let documents: readonly import('./source').SourceDocument[]
+    try {
+      documents = await source.load({
+        cwd,
+        root: input.root,
+        entry: input.entry,
+        read: input.read,
+        fail: ({ message, file = input.entry, pointer = '', line, column }) => {
+          const path = relative(cwd, resolve(input.root, file)).replace(/\\/g, '/')
+          if (!input.dependencies.has(path))
+            throw new Error(`Source diagnostic must refer to a tracked input: ${source.id}`)
+          if (
+            (line !== undefined && (!Number.isSafeInteger(line) || line < 1)) ||
+            (column !== undefined && (line === undefined || !Number.isSafeInteger(column) || column < 1))
+          )
+            throw new Error(`Source diagnostic has an invalid position: ${source.id}`)
+          throw new ContentDiagnosticsError([
+            {
+              ruleId: 'content-syntax',
+              severity: 'error',
+              page: path,
+              sourcePointer: pointer,
+              message,
+              ...(line === undefined ? {} : { line }),
+              ...(column === undefined ? {} : { column })
+            }
+          ])
+        },
+        routeBase: `${localeRootPath(source.locale, config.i18n.defaultLocale, version.base)}${sourceBase.slice(1)}`
+      })
+    } catch (error) {
+      if (!diagnostics || !(error instanceof ContentDiagnosticsError)) throw error
+      diagnostics.push(...error.diagnostics)
+      continue
+    }
     if (documents.length > MAX_DOCUMENTS) throw new Error(`Too many derived documents: ${source.id}`)
     const dependencies = [...input.dependencies]
       .map(([path, value]) => ({ path, revision: value.revision }))
@@ -192,6 +227,9 @@ export async function loadSourcePages(cwd: string, config: CanofoldConfig, rende
         mode: 'markdown',
         markdown: { ...config.markdown, html: 'sanitize' }
       })
+      const { directiveIssues, missingCodeBlockLanguageLocations } = analyzeMarkdown(document.body, {
+        plugins: config.markdown.plugins
+      })
       pages.push({
         sourcePath: input.entry,
         sourceRelativePath,
@@ -219,6 +257,7 @@ export async function loadSourcePages(cwd: string, config: CanofoldConfig, rende
         search: true,
         ai: true,
         body: document.body,
+        syntax: { directiveIssues, missingCodeBlockLanguageLocations },
         searchText: analysis.text,
         headings: analysis.headings,
         codeExamples: analysis.codeExamples,
