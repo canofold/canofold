@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os'
 import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { ViteDevServer } from 'vite'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { vite } from './index'
 
@@ -43,13 +44,14 @@ describe('@canofold/vite', () => {
       const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-logging-'))
       await mkdir(join(cwd, 'src'))
       await linkNodeModules(cwd)
+      await writeFile(join(cwd, 'package.json'), '{"type":"module"}')
       await writeFile(
         join(cwd, 'src/demo.tsx'),
         'export default function Demo(){ return <button>Demo</button> }'
       )
       await writeFile(
         join(cwd, 'vite.config.ts'),
-        `export default { ${level ? `logLevel: '${level}',` : ''} plugins: [{ name: 'log-probe', configureServer(server) { server.config.logger.info('fixture-info'); server.config.logger.warn('fixture-warning') } }] }`
+        `export default { server: { hmr: { overlay: true } }, ${level ? `logLevel: '${level}',` : ''} plugins: [{ name: 'log-probe', configureServer(server) { server.config.logger.info('fixture-info'); server.config.logger.warn('fixture-warning') } }] }`
       )
       const info = vi.spyOn(console, 'log').mockImplementation(() => {})
       const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -87,11 +89,113 @@ describe('@canofold/vite', () => {
         getDemos: () => Object.values(manifest.demos),
         shouldIgnorePath: () => false
       })
+      expect(manifest.hotReload).toBe(true)
       onTestFinished(() => runtime.close())
       expect(info.mock.calls.flat().join('\n').includes('fixture-info')).toBe(level === 'info')
       expect(warning.mock.calls.flat().join('\n')).toContain('fixture-warning')
+      expect(warning.mock.calls.flat().join('\n')).not.toContain('is deprecated')
     }
   )
+
+  it('prepares shared cyclic dependencies once per pass and refreshes changed import edges', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-shared-'))
+    await mkdir(join(cwd, 'src'))
+    await linkNodeModules(cwd)
+    await writeFile(join(cwd, 'package.json'), '{"type":"module"}')
+    const probeKey = `__canofoldSharedProbe${Date.now()}`
+    await writeFile(
+      join(cwd, 'vite.config.ts'),
+      `export default { plugins: [{
+      name: 'request-probe', configureServer(server) {
+        const requests = []; globalThis.${probeKey} = { requests, server };
+        const transform = server.transformRequest.bind(server);
+        server.transformRequest = (url, ...args) => { requests.push(url); return transform(url, ...args) };
+      }
+    }] }`
+    )
+    onTestFinished(() => {
+      delete (globalThis as Record<string, unknown>)[probeKey]
+    })
+    await writeFile(
+      join(cwd, 'src/shared.ts'),
+      "import './cycle'; import './old.css'; export const shared = 1"
+    )
+    await writeFile(join(cwd, 'src/cycle.ts'), "export { shared } from './shared'")
+    await writeFile(join(cwd, 'src/old.css'), 'button { color: red }')
+    await writeFile(join(cwd, 'src/new.css'), 'button { color: blue }')
+    await writeFile(join(cwd, 'src/setup-only.css'), '.setup { padding: 4px }')
+    await writeFile(
+      join(cwd, 'src/setup.tsx'),
+      "import './setup-only.css'; import './shared'; export default ({children}) => <div>{children}</div>"
+    )
+    for (const name of ['a', 'b']) {
+      await writeFile(
+        join(cwd, `src/${name}.tsx`),
+        "import { shared } from './shared'; export default () => <button>{shared}</button>"
+      )
+    }
+    const server = createServer()
+    const engine = vite()
+    const context = {
+      cwd,
+      server,
+      outputRoot: join(cwd, '.canofold/dist'),
+      basePath: '/',
+      mode: 'dev' as const,
+      setup: '/src/setup.tsx',
+      demos: ['a', 'b'].map((name) => ({
+        id: name,
+        specifier: `/src/${name}.tsx`,
+        sandbox: 'inline' as const,
+        pageSourcePath: join(cwd, 'docs/index.md'),
+        pageSourceRelativePath: 'docs/index.md',
+        routePath: '/',
+        locale: 'en'
+      }))
+    }
+    const first = await engine.prepare(context)
+    const runtime = await engine.startDev!({
+      cwd,
+      server,
+      basePath: '/',
+      getDemos: () => [],
+      shouldIgnorePath: () => false
+    })
+    onTestFinished(() => runtime.close())
+    const probe = (globalThis as Record<string, unknown>)[probeKey] as {
+      requests: string[]
+      server: ViteDevServer
+    }
+    expect(probe.requests.filter((url) => url === '/src/shared.ts')).toHaveLength(1)
+    expect(first.dependencyPaths).toContain(join(await realpath(cwd), 'src/setup-only.css'))
+    expect(first.demos.a?.dependencyPaths).not.toContain(join(await realpath(cwd), 'src/b.tsx'))
+    expect(first.demos.b?.dependencyPaths).not.toContain(join(await realpath(cwd), 'src/a.tsx'))
+    for (const demo of Object.values(first.demos)) {
+      expect(demo.dependencyPaths).not.toContain(join(await realpath(cwd), 'src/setup-only.css'))
+    }
+    for (const demo of Object.values(first.demos)) {
+      expect(demo.dependencyPaths).toEqual(
+        expect.arrayContaining([
+          join(await realpath(cwd), 'src/shared.ts'),
+          join(await realpath(cwd), 'src/cycle.ts'),
+          join(await realpath(cwd), 'src/old.css')
+        ])
+      )
+    }
+    await writeFile(
+      join(cwd, 'src/shared.ts'),
+      "import './cycle'; import './new.css'; export const shared = 2"
+    )
+    // Model the watcher's invalidation without a timing-dependent wait.
+    probe.server.moduleGraph.onFileChange(join(await realpath(cwd), 'src/shared.ts'))
+    probe.requests.length = 0
+    const second = await engine.prepare(context)
+    expect(probe.requests.filter((url) => url === '/src/shared.ts')).toHaveLength(1)
+    for (const demo of Object.values(second.demos)) {
+      expect(demo.dependencyPaths).toContain(join(await realpath(cwd), 'src/new.css'))
+      expect(demo.dependencyPaths).not.toContain(join(await realpath(cwd), 'src/old.css'))
+    }
+  })
 
   it('rejects failed config restarts repeatedly and recovers after the config is fixed', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-vite-restart-error-'))

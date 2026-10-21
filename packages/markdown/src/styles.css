@@ -745,6 +745,12 @@ html.dark .cf-code > pre.shiki span,
   white-space: inherit;
 }
 
+/* Keep source newlines in Shiki's DOM for selection and copying. The line
+   elements own whitespace; separator text must not become anonymous flex rows. */
+.cf-code pre.shiki code {
+  white-space: normal;
+}
+
 .cf-code .line,
 .cf-code .diff {
   display: block;

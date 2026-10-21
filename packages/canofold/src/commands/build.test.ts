@@ -41,6 +41,60 @@ describe('versionSatisfies', () => {
 })
 
 describe('runBuild', () => {
+  it.each(['setext', 'reference image', 'local MDX'])(
+    'keeps compiled %s interactions in request-time and unchanged-page builds',
+    async (kind) => {
+      const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-build-compiled-assets-'))
+      await mkdir(join(cwd, 'docs'))
+      await writeFile(join(cwd, 'docs/index.md'), '# Home')
+      const content =
+        kind === 'setext'
+          ? '# Guide\n\nSection\n-------\n'
+          : kind === 'reference image'
+            ? '# Guide\n\n![Figure][image]\n\n[image]: https://example.com/figure.png\n'
+            : "import Figure from './Figure'\n\n# Guide\n\n<Figure />"
+      if (kind === 'local MDX')
+        await writeFile(
+          join(cwd, 'docs/Figure.tsx'),
+          'const Image = () => <figure data-cf-component="image"><img src="https://example.com/image.png" /></figure>; export default function Figure() { return <Image /> }'
+        )
+      await writeFile(join(cwd, `docs/guide.${kind === 'local MDX' ? 'mdx' : 'md'}`), content)
+      const client = join(cwd, '.canofold/dist/assets/canofold-markdown/index.js')
+      await runBuild({ cwd, demoMode: 'dev', renderHtml: false })
+      await access(client)
+      await writeFile(join(cwd, 'docs/index.md'), '# Home\n\nEdited')
+      expect((await runBuild({ cwd, demoMode: 'dev', renderHtml: false })).incremental).toBe(true)
+      await access(client)
+      await runBuild({ cwd })
+      await writeFile(join(cwd, 'docs/index.md'), '# Home\n\nEdited again')
+      expect((await runBuild({ cwd })).incremental).toBe(true)
+      await access(client)
+    }
+  )
+  it('checks publication scope before cached output and preserves the last good build on failure', async () => {
+    const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-build-checks-'))
+    await mkdir(join(cwd, 'docs'))
+    await writeFile(join(cwd, 'docs/index.md'), '# Home\n\n[Missing](./missing.md)')
+    const configPath = join(cwd, 'canofold.config.ts')
+    await writeFile(configPath, "export default { checks: { rules: { 'broken-link': 'warning' } } }")
+    await runBuild({ cwd })
+    const output = join(cwd, '.canofold/dist')
+    const before = await directorySnapshot(output)
+    await writeFile(configPath, 'export default {}')
+    await expect(runBuild({ cwd })).rejects.toThrow('Link target does not exist')
+    expect(await directorySnapshot(output)).toEqual(before)
+    await writeFile(join(cwd, 'docs/index.md'), '# Home')
+    await writeFile(
+      join(cwd, 'docs/draft.md'),
+      '---\nstatus: draft\ntitle: 123\n---\n[Missing](./missing.md)'
+    )
+    await runBuild({ cwd })
+    expect(await runBuild({ cwd })).toMatchObject({ cached: true })
+    await expect(runBuild({ cwd, demoMode: 'dev' })).rejects.toThrow('Frontmatter title')
+    await writeFile(join(cwd, 'docs/index.md'), '# Home\n\n[Draft](./draft.md)')
+    await expect(runBuild({ cwd })).rejects.toThrow('Link target does not exist: ./draft.md')
+  })
+
   it('renders Markdown and MDX source links as HTML routes when Markdown mirrors are disabled', async () => {
     const cwd = await trackedMkdtemp(join(tmpdir(), 'canofold-source-links-'))
     await mkdir(join(cwd, 'docs/guide'), { recursive: true })
@@ -1064,6 +1118,7 @@ describe('runBuild', () => {
   it('adds required Islands when an incremental page gains core interactive blocks', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'canofold-incremental-islands-'))
     await mkdir(join(cwd, 'docs/zh'), { recursive: true })
+    await writeFile(join(cwd, 'docs/zh/one.png'), 'fixture image')
     await writeFile(join(cwd, 'docs/zh/index.md'), '---\ntitle: 首页\n---\n# 首页')
     await writeFile(join(cwd, 'canofold.config.ts'), `export default { markdown: { html: 'trusted' } }`)
     const guidePath = join(cwd, 'docs/zh/guide.md')

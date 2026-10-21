@@ -20,6 +20,22 @@ async function renderMdxToHtml(
 }
 
 describe('renderMdxToHtml', () => {
+  it('binds default, named and namespace imports to the host React and JSX runtime', async () => {
+    const html = await renderMdxToHtml(`import React from 'react'
+import { Fragment as Group } from 'react'
+import * as ReactNamespace from 'react'
+import * as JSX from 'react/jsx-runtime'
+
+<React.Fragment><Group><ReactNamespace.Fragment><JSX.Fragment><strong>Host runtime</strong></JSX.Fragment></ReactNamespace.Fragment></Group></React.Fragment>`)
+    expect(html).toContain('<strong>Host runtime</strong>')
+  })
+
+  it('reports missing host exports instead of binding an undefined component', async () => {
+    await expect(renderMdxResult("import { Missing } from 'react'\n\n<Missing />")).rejects.toThrow(
+      'Module "react" does not export "Missing"'
+    )
+  })
+
   it('returns only the optional assets required by the MDX source', async () => {
     const result = await renderMdxResult('# Hello\n\nA short page.')
 

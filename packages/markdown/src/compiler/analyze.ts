@@ -29,6 +29,7 @@ import {
 } from './directiveValidation.js'
 import { activeMarkdownPlugins, markdownPluginDirectiveNames, normalizeMarkdownPlugins } from './plugins.js'
 import type { MarkdownPlugin } from './types.js'
+import { inertHighlightedCode } from './inertCode.js'
 
 export interface MarkdownHeading {
   level: number
@@ -196,6 +197,7 @@ export function analyzeDocument(
     if (component === 'demo') return 'skip'
     const id = staticProperty(node, 'id')
     if (typeof id === 'string') result.anchors.push(id)
+    if (node.type === 'element' && inertHighlightedCode(node)) return 'skip'
     if (/^h[1-6]$/.test(tagName) && typeof id === 'string' && !isFootnoteLabel(node)) {
       result.headings.push({
         level: Number(tagName[1]),

@@ -24,6 +24,7 @@ export function Article({ source }: { source: string }) {
 
 - `@canofold/markdown` provides the React renderer and plugin contract.
 - `@canofold/markdown/server` provides the Markdown and trusted-MDX build or SSR renderer.
+- The server renderer's `analyze()` returns compiled content facts and `assets` requirements without executing author MDX components. Hosts can prepare interaction scripts and styles before rendering pages.
 - `@canofold/markdown/server/analyze` analyzes document features without rendering.
 - `@canofold/markdown/client` enhances generated static HTML.
 - `@canofold/markdown/base.css` provides structural Markdown and interaction styles.

@@ -82,7 +82,7 @@ html[data-cf-theme='dopamine-design'] {
   --cf-theme-input-focus-shadow: 0 0 0 4px rgb(255 0 110 / 0.22);
 }
 
-html[data-cf-theme='dopamine-design'] :where(body, .cf-main, .cf-content) {
+html[data-cf-theme='dopamine-design']:not(:where([data-cf-demo-frame])) :where(body, .cf-main, .cf-content) {
   background-color: var(--cf-surface);
   background-image:
     radial-gradient(circle at 8% 8%, rgb(255 190 11 / 0.18), transparent 24%),

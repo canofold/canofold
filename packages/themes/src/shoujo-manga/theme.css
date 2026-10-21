@@ -83,7 +83,7 @@ html[data-cf-theme='shoujo-manga'] {
   --cf-theme-input-focus-shadow: 0 0 0 4px rgb(196 181 253 / 0.36);
 }
 
-html[data-cf-theme='shoujo-manga'] :where(body, .cf-main, .cf-content) {
+html[data-cf-theme='shoujo-manga']:not(:where([data-cf-demo-frame])) :where(body, .cf-main, .cf-content) {
   background-color: var(--cf-surface);
   background-image: radial-gradient(circle, rgb(201 76 119 / 0.07) 1px, transparent 1.5px);
   background-size: 10px 10px;

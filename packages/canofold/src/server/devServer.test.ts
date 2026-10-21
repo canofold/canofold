@@ -61,12 +61,15 @@ function buildResult(overrides: Partial<BuildResult> = {}): BuildResult {
       removedPaths: [],
       removalBaseline: false
     },
+    contentDependencyPaths: [],
+    renderHtml: false,
     ...overrides
   }
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.runBuild.mockReset()
   mocks.acquireProjectLock.mockResolvedValue({
     assertOwned: vi.fn(async () => undefined),
     release: vi.fn(async () => undefined)
@@ -142,10 +145,144 @@ describe('createBuildScheduler', () => {
   })
 })
 
+it('keeps document/style/SSR inputs Core-owned even when Vite also imports them', async () => {
+  let onFileEvent!: (event: string, path: string) => void
+  const watcher = {
+    once: (event: string, listener: () => void) => {
+      if (event === 'ready') queueMicrotask(listener)
+    },
+    removeListener: vi.fn(),
+    add: vi.fn(),
+    close: vi.fn(async () => undefined),
+    on(event: string, listener: typeof onFileEvent) {
+      if (event === 'all') onFileEvent = listener
+      return watcher
+    }
+  }
+  const runtime = { handlesFile: () => true, close: vi.fn(async () => undefined) }
+  const result = buildResult({
+    config: createMockConfig({
+      demos: {
+        engine: {
+          id: 'hot',
+          prepare: async () => ({ clientUrl: '/hot.js', demos: {} }),
+          startDev: async () => runtime
+        }
+      }
+    }),
+    demoManifest: { clientUrl: '/hot.js', demos: {} },
+    contentDependencyPaths: ['src/ssr.tsx', 'styles/site.css']
+  })
+  const staticServer = {
+    port: 3333,
+    reload: vi.fn(),
+    sendBuildError: vi.fn(),
+    sendBuildOk: vi.fn(),
+    close: vi.fn(async () => undefined)
+  }
+  mocks.watch.mockReturnValue(watcher)
+  mocks.runBuild.mockResolvedValue(result)
+  mocks.startStaticServer.mockImplementationOnce(async ({ configureServer }) => {
+    await configureServer()
+    return staticServer
+  })
+  const server = await startDevServer({ cwd: '/project', port: 3333 })
+  try {
+    onFileEvent('change', 'src/runtime-only.css')
+    await wait(120)
+    expect(mocks.runBuild).toHaveBeenCalledTimes(1)
+    let builds = 1
+    for (const path of ['src/ssr.tsx', 'styles/site.css', 'docs/new.md', 'docs/public/shared.css']) {
+      onFileEvent('change', path)
+      builds += 1
+      await vi.waitFor(() => expect(mocks.runBuild).toHaveBeenCalledTimes(builds))
+    }
+  } finally {
+    await server.close()
+  }
+})
+
 describe('startDevServer', () => {
+  it.each(['page', 'demo-source'] as const)(
+    'classifies %s updates from built content when startup events and saves overlap',
+    async (mode) => {
+      let emit: ((event: string, path: string) => void) | undefined
+      const watcher = {
+        once: vi.fn((event: string, listener: () => void) => {
+          if (event === 'ready') queueMicrotask(listener)
+        }),
+        removeListener: vi.fn(),
+        add: vi.fn(),
+        close: vi.fn(async () => {}),
+        on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
+          if (event === 'all') emit = listener as typeof emit
+          return watcher
+        })
+      }
+      const server = {
+        port: 3333,
+        reload: vi.fn(),
+        sendBuildError: vi.fn(),
+        sendBuildOk: vi.fn(),
+        close: vi.fn(async () => {})
+      }
+      mocks.watch.mockReturnValue(watcher)
+      mocks.startStaticServer.mockResolvedValue(server)
+      const page = createMockPage({
+        demos: [
+          {
+            id: 'live',
+            specifier: '/src/demo.tsx',
+            sandbox: 'inline',
+            pageSourcePath: '/project/docs/guide.md',
+            pageSourceRelativePath: 'docs/guide.md',
+            routePath: '/guide/',
+            locale: 'zh'
+          }
+        ]
+      })
+      const initial = buildResult({ graph: createMockGraph({ pages: [page] }) })
+      const next = buildResult({
+        graph: createMockGraph({
+          pages: [{ ...page, ...(mode === 'page' ? { sourceRevision: '1'.repeat(64) } : {}) }]
+        }),
+        mode: 'incremental',
+        incremental: true,
+        changedPages: ['docs/guide.md'],
+        partialReload: true
+      })
+      mocks.runBuild
+        .mockImplementationOnce(async () => {
+          emit?.('change', 'src/setup.tsx')
+          return initial
+        })
+        .mockImplementationOnce(async () => {
+          emit?.('change', mode === 'page' ? 'docs/guide.md' : 'src/demo.tsx')
+          return next
+        })
+        .mockResolvedValue({ ...next, cached: true })
+      const handle = await startDevServer({ cwd: '/project', port: 3333 })
+      try {
+        await vi.waitFor(() => expect(mocks.runBuild).toHaveBeenCalledTimes(3))
+        expect(server.reload).toHaveBeenCalledExactlyOnceWith({
+          protocol: 1,
+          type: 'update',
+          mode,
+          routes: ['/guide/']
+        })
+      } finally {
+        await handle.close()
+      }
+    }
+  )
+
   it('reloads every route derived from one changed input instead of selecting only the first', async () => {
     let onFileEvent: ((eventName: string, path: string) => void) | undefined
     const watcher = {
+      once: vi.fn((event: string, listener: () => void) => {
+        if (event === 'ready') queueMicrotask(listener)
+      }),
+      removeListener: vi.fn(),
       add: vi.fn(),
       close: vi.fn(async () => undefined),
       on: vi.fn((event: string, listener: (...arguments_: unknown[]) => void) => {
@@ -188,6 +325,10 @@ describe('startDevServer', () => {
   })
   it('rebuilds linked assets in the existing server when refreshed', async () => {
     const watcher = {
+      once: vi.fn((event: string, listener: () => void) => {
+        if (event === 'ready') queueMicrotask(listener)
+      }),
+      removeListener: vi.fn(),
       add: vi.fn(),
       on: vi.fn(() => watcher),
       close: vi.fn(async () => undefined)
@@ -216,6 +357,10 @@ describe('startDevServer', () => {
   it('keeps browser state when a file event does not change any build inputs', async () => {
     let onFileEvent: ((eventName: string, path: string) => void) | undefined
     const watcher = {
+      once: vi.fn((event: string, listener: () => void) => {
+        if (event === 'ready') queueMicrotask(listener)
+      }),
+      removeListener: vi.fn(),
       add: vi.fn(),
       on: vi.fn((event: string, listener: (...arguments_: unknown[]) => void) => {
         if (event === 'all') onFileEvent = listener as typeof onFileEvent
@@ -246,6 +391,10 @@ describe('startDevServer', () => {
   it('restarts the mounted demo engine only when its development identity changes', async () => {
     let onFileEvent: ((eventName: string, path: string) => void) | undefined
     const watcher = {
+      once: vi.fn((event: string, listener: () => void) => {
+        if (event === 'ready') queueMicrotask(listener)
+      }),
+      removeListener: vi.fn(),
       add: vi.fn(),
       on: vi.fn((eventName: string, listener: (...arguments_: unknown[]) => void) => {
         if (eventName === 'all') {
@@ -292,7 +441,8 @@ describe('startDevServer', () => {
       .mockResolvedValueOnce(resultWithEngine('second', secondStartDev))
 
     const server = await startDevServer({ cwd: '/project', port: 3333 })
-    expect(mocks.watch.mock.calls[0]?.[0]).toEqual(['.', '/shared/vite.config.ts'])
+    expect(mocks.watch.mock.calls[0]?.[0]).toBe('.')
+    expect(watcher.add).toHaveBeenCalledWith(['/shared/vite.config.ts'])
     const sharedServer = mocks.runBuild.mock.calls[0]?.[0].demoServer
     expect(sharedServer).toBeDefined()
     expect(mocks.startStaticServer.mock.calls[0]?.[0].server).toBe(sharedServer)
@@ -320,14 +470,38 @@ describe('startDevServer', () => {
     expect(secondStartDev).toHaveBeenCalledOnce()
     expect(secondRuntime.update).toHaveBeenCalledOnce()
 
+    const mountedServer = await mocks.startStaticServer.mock.results[0]!.value
+    const reloadCount = mountedServer.reload.mock.calls.length
+    secondRuntime.update.mockRejectedValueOnce(new Error('runtime update failed'))
+    mocks.runBuild.mockResolvedValue({
+      ...resultWithEngine('second', secondStartDev),
+      cached: true,
+      changedPages: []
+    })
+    onFileEvent?.('change', 'docs/guide.md')
+    await vi.waitFor(() => expect(mountedServer.sendBuildError).toHaveBeenCalledWith('runtime update failed'))
+    onFileEvent?.('change', 'docs/guide.md')
+    await vi.waitFor(() => expect(secondRuntime.update).toHaveBeenCalledTimes(3))
+    expect(mountedServer.reload).toHaveBeenCalledTimes(reloadCount + 1)
+    expect(mountedServer.reload).toHaveBeenLastCalledWith({
+      protocol: 1,
+      type: 'update',
+      mode: 'full',
+      routes: []
+    })
+
     await server.close()
     expect(secondRuntime.close).toHaveBeenCalledOnce()
   })
 
-  it('restores the complete changed-file batch after a failed build', async () => {
+  it('rechecks all inputs on the next change after a failed build', async () => {
     let onFileEvent: ((eventName: string, path: string) => void) | undefined
     let onWatcherError: ((error: unknown) => void) | undefined
     const watcher = {
+      once: vi.fn((event: string, listener: () => void) => {
+        if (event === 'ready') queueMicrotask(listener)
+      }),
+      removeListener: vi.fn(),
       add: vi.fn(),
       on: vi.fn((eventName: string, listener: (...arguments_: unknown[]) => void) => {
         if (eventName === 'all') {

@@ -37,7 +37,7 @@ function assertJson(
   ancestors = new Set<object>(),
   budget = { nodes: 0 }
 ): asserts value is Json {
-  if (++budget.nodes > 1_000_000 || depth > 128) throw new Error('OpenAPI exceeds nesting/node limits')
+  if (++budget.nodes > 1_000_000 || depth > 128) throw new SyntaxError('OpenAPI exceeds nesting/node limits')
   if (
     value === null ||
     typeof value === 'string' ||
@@ -46,7 +46,7 @@ function assertJson(
   )
     return
   if (!value || typeof value !== 'object' || ancestors.has(value)) {
-    throw new Error('OpenAPI must contain finite JSON-compatible data, not cyclic YAML aliases')
+    throw new SyntaxError('OpenAPI must contain finite JSON-compatible data, not cyclic YAML aliases')
   }
   ancestors.add(value)
   for (const item of Object.values(value)) assertJson(item, depth + 1, ancestors, budget)
@@ -54,10 +54,10 @@ function assertJson(
 }
 
 /** Validate JSON without retaining a second syntax tree for a large input. */
-function parseJson(raw: string, file: string): unknown {
+function parseJson(raw: string, fail: (message: string, line?: number, column?: number) => never): unknown {
   const scopes: Array<Set<string> | null> = []
   const begin = (object: boolean) => {
-    if (scopes.length > 128) throw new Error(`${file}: OpenAPI exceeds nesting limit`)
+    if (scopes.length > 128) fail('OpenAPI exceeds nesting limit')
     scopes.push(object ? new Set<string>() : null)
   }
   visitJson(
@@ -73,11 +73,11 @@ function parseJson(raw: string, file: string): unknown {
       },
       onObjectProperty(key, _offset, _length, line, column) {
         const keys = scopes.at(-1)!
-        if (keys.has(key)) throw new Error(`${file}:${line + 1}:${column + 1}: Map keys must be unique`)
+        if (keys.has(key)) fail('Map keys must be unique', line + 1, column + 1)
         keys.add(key)
       },
       onError(error, _offset, _length, line, column) {
-        throw new Error(`${file}:${line + 1}:${column + 1}: ${printParseErrorCode(error)}`)
+        fail(printParseErrorCode(error), line + 1, column + 1)
       }
     },
     { disallowComments: true, allowTrailingComma: false, allowEmptyContent: false }
@@ -86,7 +86,7 @@ function parseJson(raw: string, file: string): unknown {
 }
 
 function jsonPosition(raw: string, tokens: string[]) {
-  let position = ''
+  let position: { line?: number; column?: number } = {}
   const locate = (
     _offset: number,
     _length: number,
@@ -99,7 +99,7 @@ function jsonPosition(raw: string, tokens: string[]) {
       current.length === tokens.length &&
       current.every((token, index) => String(token) === tokens[index])
     ) {
-      position = `:${line + 1}:${column + 1}`
+      position = { line: line + 1, column: column + 1 }
     }
   }
   visitJson(
@@ -181,15 +181,16 @@ export class OpenApiDocument {
           .split('/')
           .map((token) => token.replace(/~1/g, '/').replace(/~0/g, '~'))
       : []
-    let position = ''
+    let position: { line?: number; column?: number } = {}
     if (file && location.file.endsWith('.json')) position = jsonPosition(file.raw, tokens)
     else if (file) {
       const lines = new LineCounter()
       const node = parseDocument(file.raw, { lineCounter: lines }).getIn(tokens, true)
       const offset = isNode(node) ? node.range?.[0] : undefined
-      if (offset !== undefined) position = `:${lines.linePos(offset).line}:${lines.linePos(offset).col}`
+      if (offset !== undefined)
+        position = { line: lines.linePos(offset).line, column: lines.linePos(offset).col }
     }
-    throw new Error(`${this.display(location)}${position}: ${message}`)
+    return this.context.fail({ file: location.file, pointer: location.pointer, ...position, message })
   }
 
   private async load(file: string) {
@@ -197,19 +198,32 @@ export class OpenApiDocument {
     if (existing) return existing.value
     const raw = await this.context.read(file)
     let value: unknown
-    if (file.endsWith('.json')) value = parseJson(raw, file)
+    if (file.endsWith('.json'))
+      value = parseJson(raw, (message, line, column) => this.context.fail({ file, message, line, column }))
     else {
-      const syntax = parseDocument(raw, { uniqueKeys: true })
-      if (syntax.errors.length)
-        throw new Error(`${relative(this.context.root, file)}: ${syntax.errors[0]!.message}`)
-      if (syntax.warnings.length)
-        throw new Error(`${relative(this.context.root, file)}: ${syntax.warnings[0]!.message}`)
+      const lineCounter = new LineCounter()
+      const syntax = parseDocument(raw, { uniqueKeys: true, lineCounter, prettyErrors: false })
+      const problem = syntax.errors[0] ?? syntax.warnings[0]
+      if (problem) {
+        const position = lineCounter.linePos(problem.pos[0])
+        this.context.fail({ file, message: problem.message, line: position.line, column: position.col })
+      }
       visit(syntax, (_key, _node, path) => {
-        if (path.length > 260) throw new Error(`${file}: OpenAPI exceeds nesting limit`)
+        if (path.length > 260) this.context.fail({ file, message: 'OpenAPI exceeds nesting limit' })
       })
-      value = syntax.toJS({ maxAliasCount: 50 })
+      try {
+        value = syntax.toJS({ maxAliasCount: 50 })
+      } catch (error) {
+        if (error instanceof ReferenceError) this.context.fail({ file, message: error.message })
+        throw error
+      }
     }
-    assertJson(value)
+    try {
+      assertJson(value)
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw error
+      this.context.fail({ file, message: error.message })
+    }
     this.files.set(file, { value, raw })
     return value
   }
@@ -247,7 +261,13 @@ export class OpenApiDocument {
     }
     if (indexed) return indexed
     const file = resource?.location.file ?? fileURLToPath(new URL(url.href.split('#')[0]!))
-    let value = resource?.value ?? (await this.load(file))
+    let value =
+      resource?.value ??
+      (await this.load(file).catch((error: unknown) => {
+        if ((error as NodeJS.ErrnoException)?.code === 'ENOENT')
+          this.fail(`Referenced input not found: ${ref}`, location)
+        throw error
+      }))
     if (!resource) {
       await this.walk(
         value,

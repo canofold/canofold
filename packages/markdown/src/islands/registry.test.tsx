@@ -43,6 +43,35 @@ async function Markdown({
 }
 
 describe('Markdown React Islands', () => {
+  it.each([
+    ['image', '![Photo](photo.png)', 'zoom-image'],
+    ['table', '| Value |\n| --- |\n| One |', 'zoom-table'],
+    [
+      'gallery',
+      '<div class="cf-image-gallery" data-cf-component="gallery"><figure><img src="photo.png" alt="Photo" /></figure></div>',
+      'open-gallery'
+    ]
+  ] as const)(
+    'enables %s controls only after hydration, then handles the first click',
+    async (behavior, source, action) => {
+      const element = await Markdown({ source, options: { html: 'trusted' } })
+      const container = document.createElement('div')
+      container.innerHTML = renderToStaticMarkup(element)
+      document.body.append(container)
+      const controls = [...container.querySelectorAll<HTMLButtonElement>('button')]
+      expect(controls.length).toBeGreaterThan(0)
+      expect(controls.every((button) => button.disabled)).toBe(true)
+      if (behavior === 'table')
+        expect(container.querySelector('[data-cf-action="download-table"]')?.hasAttribute('href')).toBe(false)
+      await act(async () => enhance(container, [behavior]))
+      expect(controls.every((button) => !button.disabled)).toBe(true)
+      await act(async () =>
+        container.querySelector<HTMLButtonElement>(`[data-cf-action="${action}"]`)!.click()
+      )
+      expect(document.body.querySelector('[role="dialog"]')).not.toBeNull()
+    }
+  )
+
   it('can dispose immediately after readiness without interrupting hydration', async () => {
     const element = await Markdown({ source: '| Value |\n| --- |\n| One |' })
     const container = document.createElement('div')

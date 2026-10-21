@@ -28,6 +28,15 @@ export interface ContentSourceContext {
   routeBase: string
   /** Bounded, tracked UTF-8 reads. Absolute paths must remain inside root. */
   read(path: string): Promise<string>
+  /** Stop this source with an authored diagnostic; ordinary adapter exceptions remain fatal. */
+  fail(diagnostic: {
+    message: string
+    /** Absolute path or path relative to root; must name an input read through this context. */
+    file?: string
+    pointer?: string
+    line?: number
+    column?: number
+  }): never
 }
 
 export interface SourceDocument {

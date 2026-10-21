@@ -417,8 +417,9 @@ export const rehypeRichDirectives = () => {
 export function normalizeCallouts(markdown: string): string {
   let fence: { marker: string; size: number } | undefined
   return markdown
-    .split('\n')
-    .map((line) => {
+    .split(/(\r\n?|\n)/)
+    .map((line, index) => {
+      if (index % 2) return line
       const candidate = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/)
       const marker = candidate?.[1]
       const markerType = marker?.[0]
@@ -444,7 +445,7 @@ export function normalizeCallouts(markdown: string): string {
         (_match, open, name, title) => `${open}${name}[${escapeDirectiveLabel(title)}]`
       )
     })
-    .join('\n')
+    .join('')
 }
 
 /** Convert stable Tabs and Code Group directives into the shared tab model. */

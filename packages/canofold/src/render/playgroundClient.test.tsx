@@ -71,6 +71,12 @@ describe('playground client', () => {
     expect(preview.querySelector('[data-old-preview]')?.textContent).toBe('First')
 
     finishInitialEnhancement?.()
+    // Wait for React's first commit before settling the compiler import started
+    // by its effect. The enhancement assertion must not time cold module loading.
+    await vi.waitFor(() =>
+      expect(preview.querySelector('.cf-playground-live-preview')?.childElementCount).toBeGreaterThan(0)
+    )
+    await vi.dynamicImportSettled()
     await vi.waitFor(() => expect(enhance).toHaveBeenCalledOnce())
     expect(preview.querySelector('[data-old-preview]')?.textContent).toBe('First')
     expect(preview.querySelector<HTMLElement>('.cf-playground-live-preview')?.hidden).toBe(true)

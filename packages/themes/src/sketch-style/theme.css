@@ -54,7 +54,7 @@ html[data-cf-theme='sketch-style'] {
   --cf-nav-item-active-shadow: none;
 }
 
-html[data-cf-theme='sketch-style'] :where(body, .cf-main, .cf-content) {
+html[data-cf-theme='sketch-style']:not(:where([data-cf-demo-frame])) :where(body, .cf-main, .cf-content) {
   background-color: var(--cf-canvas);
   background-image: url("data:image/svg+xml,%3Csvg width='8' height='8' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M-2 8L8-2M2 10L10 2' stroke='%232c2c2c' stroke-opacity='.035' stroke-width='.7'/%3E%3C/svg%3E");
 }

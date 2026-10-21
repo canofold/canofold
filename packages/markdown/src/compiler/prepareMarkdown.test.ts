@@ -4,6 +4,7 @@ import { createElement } from 'react'
 import { MarkdownDocument } from '../react/Markdown'
 import { prepareMarkdown } from './prepareMarkdown'
 import type { RenderMarkdownOptions } from './types'
+import { normalizeCallouts } from './plugins/directives'
 
 async function renderPreparedResult(source: string, options?: RenderMarkdownOptions) {
   const prepared = await prepareMarkdown(source, options)
@@ -18,6 +19,103 @@ async function renderPreparedHtml(source: string, options?: RenderMarkdownOption
 }
 
 describe('renderPreparedHtml', () => {
+  it.each(['\n', '\r\n', '\r'])(
+    'normalizes friendly callouts without rewriting code or line endings: %j',
+    (newline) => {
+      const lines = ['```md', ':::tip Literal code', '```', '', ':::tip Actual title', 'Content', ':::']
+      const expected = [...lines]
+      expected[4] = ':::tip[Actual title]'
+      expect(normalizeCallouts(lines.join(newline))).toBe(expected.join(newline))
+    }
+  )
+  it('retains an anchor on the highlighted code element itself', async () => {
+    const prepared = await prepareMarkdown('```ts\nconst codeAnchor = true\n```', {
+      plugins: [
+        {
+          name: 'code-anchor',
+          rehypePlugins: [
+            () => (tree) => {
+              const walk = (node: typeof tree | (typeof tree.children)[number]) => {
+                if (node.type === 'element' && node.tagName === 'code') node.properties.id = 'code-anchor'
+                if ('children' in node) node.children.forEach(walk)
+              }
+              walk(tree)
+            }
+          ]
+        }
+      ]
+    })
+    expect(prepared.analysis.anchors).toContain('code-anchor')
+  })
+
+  it('highlights code in documents using lone carriage-return line endings', async () => {
+    const source = '# CR document\r\r```ts {3}\rconst carriageReturn = true\r\rconst last = 2\r```'
+    const html = await renderPreparedHtml(source)
+    expect(html).toContain('class="shiki')
+    expect(html).toContain('carriageReturn')
+    expect(html).toBe(await renderPreparedHtml(source.replace(/\r/g, '\n')))
+  })
+  it('keeps source newlines in the semantic code tree, including empty lines', async () => {
+    const { toString } = await import('hast-util-to-string')
+    const source = 'const first = 1\n\nconst last = 2'
+    const prepared = await prepareMarkdown(['```ts', source, '```'].join('\n'))
+    const findCode = (
+      node: typeof prepared.document | (typeof prepared.document.children)[number]
+    ): string | undefined => {
+      if (node.type === 'element' && node.tagName === 'code') return toString(node)
+      if ('children' in node)
+        for (const child of node.children) {
+          const value = findCode(child)
+          if (value !== undefined) return value
+        }
+    }
+    expect(findCode(prepared.document)).toBe(source)
+  })
+  it.each(['Term\n: Definition', '> Term\n> : Definition', 'Term\r\n:\tDefinition'])(
+    'preserves definition lists with syntax-directed parsing: %s',
+    async (source) => {
+      const html = await renderPreparedHtml(source)
+      expect(html).toContain('<dl data-cf-element="definition-list">')
+      expect(html).toContain('<dt data-cf-element="definition-term">Term</dt>')
+      expect(html).toContain('Definition')
+    }
+  )
+  it('retains semantic nodes inserted into highlighted code by a plugin', async () => {
+    const prepared = await prepareMarkdown('```ts\nconst semantic = true\n```', {
+      plugins: [
+        {
+          name: 'semantic-code',
+          rehypePlugins: [
+            () => (tree) => {
+              const walk = (node: typeof tree | (typeof tree.children)[number]) => {
+                if (node.type === 'element' && node.tagName === 'code') {
+                  node.children.push({
+                    type: 'element',
+                    tagName: 'a',
+                    properties: { href: '/semantic/', id: 'semantic-link' },
+                    children: [{ type: 'text', value: 'Semantic link' }]
+                  })
+                  return
+                }
+                if ('children' in node) node.children.forEach(walk)
+              }
+              walk(tree)
+            }
+          ]
+        }
+      ]
+    })
+    expect(prepared.analysis.links).toContain('/semantic/')
+    expect(prepared.analysis.anchors).toContain('semantic-link')
+    const html = renderToStaticMarkup(createElement(MarkdownDocument, { document: prepared.document }))
+    expect(html).toContain('href="/semantic/"')
+  })
+  it('merges adjacent equally styled tokens without losing source or highlighted boundaries', async () => {
+    const html = await renderPreparedHtml('```ts\nexport const value = true\n```')
+    expect(html).toMatch(/>export const<\/span>/)
+    expect(html).toMatch(/> true<\/span>/)
+    expect(html).toContain('language-ts')
+  })
   it('preserves ordinary colon-separated words instead of treating them as directives', async () => {
     const source =
       '# Commands\n\n验收：format:check、lint、check 均通过。Run npm:copy.\n\n## After\n\nStill visible.'
@@ -165,11 +263,10 @@ describe('renderPreparedHtml', () => {
     expect(html).not.toContain('download="snippet.ts"')
   })
 
-  it('does not keep Shiki newline text nodes between code lines', async () => {
+  it('preserves Shiki newline text nodes between code lines', async () => {
     const html = await renderPreparedHtml(['```ts', 'const one = 1', 'const two = 2', '```'].join('\n'))
 
-    expect(html).toMatch(/class="line"[^>]*>[\s\S]*?<\/span><span class="line"/)
-    expect(html).not.toMatch(/class="line"[^>]*>[\s\S]*?<\/span>\n<span class="line"/)
+    expect(html).toMatch(/class="line"[^>]*>[\s\S]*?<\/span>\n<span class="line"/)
   })
 
   it('uses the Canofold light and dark syntax themes by default', async () => {
@@ -340,7 +437,7 @@ describe('renderPreparedHtml', () => {
 
     expect(html).toContain('language-vue')
     expect(html).toContain('--shiki-dark:')
-    expect(html).toContain('&lt;script')
+    expect(html).toMatch(/(?:&lt;|&#x3C;)script/)
     expect(html).toContain('data-cf-file-icon="vue"')
   })
 
@@ -488,8 +585,8 @@ describe('renderPreparedHtml', () => {
     expect(result.html).toContain('>npm<')
     expect(result.html).toContain('>pnpm</span>')
     expect(result.html).toContain('>npm</span>')
-    expect(result.html).toContain(' add</span>')
-    expect(result.html).toContain(' install</span>')
+    expect(result.html).toContain(' add @canofold/markdown</span>')
+    expect(result.html).toContain(' install @canofold/markdown</span>')
     expect(result.html).not.toMatch(
       /<button[^>]*data-cf-tab="quick-install-1"[^>]*>\s*<span class="cf-code-file-icon"/i
     )

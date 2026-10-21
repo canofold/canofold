@@ -81,7 +81,7 @@ html[data-cf-theme='memphis'] {
   --cf-theme-input-focus-shadow: 4px 4px 0 #48dbfb;
 }
 
-html[data-cf-theme='memphis'] :where(body, .cf-main, .cf-content) {
+html[data-cf-theme='memphis']:not(:where([data-cf-demo-frame])) :where(body, .cf-main, .cf-content) {
   background-color: var(--cf-surface);
   background-image: radial-gradient(circle, rgb(23 18 31 / 12%) 1.5px, transparent 1.5px);
   background-size: 18px 18px;

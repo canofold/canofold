@@ -13,6 +13,7 @@ export function MarkdownCopyButton({
   action,
   className = 'cf-block-button',
   icon = 'copy',
+  disabled = false,
   failureLabel = DEFAULT_MARKDOWN_LABELS.copyFailed
 }: {
   value: string
@@ -20,6 +21,7 @@ export function MarkdownCopyButton({
   action: string
   className?: string
   icon?: MarkdownIconName
+  disabled?: boolean
   failureLabel?: string
 }) {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -38,6 +40,7 @@ export function MarkdownCopyButton({
       }`}
       type="button"
       data-cf-action={action}
+      disabled={disabled}
       data-cf-copied={status === 'success' ? 'true' : undefined}
       data-cf-copy-error={status === 'error' ? 'true' : undefined}
       aria-label={feedbackLabel}
@@ -89,7 +92,7 @@ export function MarkdownDownloadButton({
   return (
     <a
       className={className}
-      href={downloadUrl ?? '#'}
+      href={downloadUrl}
       download={filename}
       data-cf-action={action}
       aria-disabled={downloadUrl ? undefined : 'true'}

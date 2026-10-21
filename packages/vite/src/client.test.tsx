@@ -7,6 +7,7 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 afterEach(async () => {
   await act(async () => window.__canofoldDemoDispose?.())
   delete window.__canofoldDemoDispose
+  delete window.__canofoldReloadDemoFrame
   document.body.innerHTML = ''
   document.documentElement.removeAttribute('data-cf-theme')
   document.documentElement.removeAttribute('data-cf-theme-appearance')
@@ -121,11 +122,43 @@ describe('Demo client', () => {
     expect(frame.contentDocument!.querySelector('[role="alert"]')?.textContent).toBe(
       'This example could not be loaded.'
     )
-    runtime.dispose()
+    const staleReload = frame.contentWindow!.__canofoldReloadDemoFrame!
+    const setSrcdoc = vi.spyOn(frame, 'srcdoc', 'set')
+    staleReload()
+    expect(setSrcdoc).toHaveBeenCalledOnce()
+    frame.contentDocument!.body.innerHTML = '<div id="root"></div>'
+    onLoad?.call(frame, new Event('load'))
     expect(disconnect).toHaveBeenCalledOnce()
     expect(disconnectAppearance).toHaveBeenCalledOnce()
+    expect(frame.contentDocument!.querySelector('script[type="module"]')).not.toBeNull()
+    runtime.dispose()
+    expect(disconnect).toHaveBeenCalledTimes(2)
+    expect(disconnectAppearance).toHaveBeenCalledTimes(2)
+    staleReload()
+    expect(setSrcdoc).toHaveBeenCalledOnce()
     expect(() => fitFrame(document.createElement('iframe'))()).not.toThrow()
     stylesheet.remove()
+  })
+
+  it('clears the preview error state after repairing a failed import', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    document.body.innerHTML = '<div data-cf-demo-preview data-cf-demo-id="demo"></div>'
+    const registry = new Map([
+      [
+        'demo',
+        async (): Promise<{ default: () => React.JSX.Element }> => {
+          throw new Error('broken import')
+        }
+      ]
+    ])
+    const runtime = createDemoRuntime(registry, undefined, '/demo.js')
+    await act(async () => runtime.bootstrapDemos())
+    const preview = document.querySelector<HTMLElement>('[data-cf-demo-preview]')!
+    expect(preview.hasAttribute('data-cf-demo-error')).toBe(true)
+    registry.set('demo', async () => ({ default: () => <button>Repaired</button> }))
+    await act(async () => runtime.bootstrapDemos())
+    expect(preview.querySelector('button')?.textContent).toBe('Repaired')
+    expect(preview.hasAttribute('data-cf-demo-error')).toBe(false)
   })
 
   it('ignores an iframe load that finishes after the demo runtime was disposed', async () => {
@@ -228,6 +261,29 @@ describe('Demo client', () => {
       await pending
     })
     expect(document.querySelector('button')).toBeNull()
+  })
+
+  it('invalidates only pending iframe imports, leaving mounted examples to Vite HMR', async () => {
+    document.body.innerHTML = '<div data-cf-demo-preview data-cf-demo-id="demo"></div>'
+    let resolve!: (module: { default: () => React.JSX.Element }) => void
+    const module = new Promise<{ default: () => React.JSX.Element }>((done) => {
+      resolve = done
+    })
+    const reload = vi.fn()
+    window.__canofoldReloadDemoFrame = reload
+    const runtime = createDemoRuntime(new Map([['demo', () => module]]), undefined, '/demo.js')
+    runtime.reloadPendingFrame()
+    expect(reload).not.toHaveBeenCalled()
+    await act(async () => {
+      const pending = runtime.bootstrapDemos()
+      runtime.reloadPendingFrame()
+      expect(reload).toHaveBeenCalledOnce()
+      resolve({ default: () => <button>Ready</button> })
+      await pending
+    })
+    runtime.reloadPendingFrame()
+    expect(reload).toHaveBeenCalledOnce()
+    expect(document.querySelector('button')?.textContent).toBe('Ready')
   })
 
   it('opens a standalone demo through the same registry', async () => {

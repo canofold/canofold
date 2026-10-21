@@ -82,7 +82,7 @@ html[data-cf-theme='cyber-chinese'] {
   --cf-theme-input-focus-shadow: 0 0 8px #00d4ff, inset 0 0 10px rgb(0 212 255 / 0.12);
 }
 
-html[data-cf-theme='cyber-chinese'] :where(body, .cf-main, .cf-content) {
+html[data-cf-theme='cyber-chinese']:not(:where([data-cf-demo-frame])) :where(body, .cf-main, .cf-content) {
   background-color: var(--cf-surface);
   background-image:
     linear-gradient(rgb(201 162 39 / 0.035) 1px, transparent 1px),

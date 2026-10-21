@@ -233,7 +233,9 @@ export function bootstrapShell() {
     const sidebarScrollTop =
       options.sidebarScrollTop ?? q('[data-canofold-sidebar]', currentRoot)?.scrollTop ?? 0
     disposePage()
-    const imported = d.importNode(nextRoot, true)
+    // Each incoming document belongs to this update. Move its parsed subtree
+    // instead of allocating a second copy of every token in a long document.
+    const imported = d.adoptNode(nextRoot)
     if (options.mode === 'navigation') {
       const currentSidebar = q('[data-canofold-sidebar]', currentRoot)
       const nextSidebar = q('[data-canofold-sidebar]', imported)

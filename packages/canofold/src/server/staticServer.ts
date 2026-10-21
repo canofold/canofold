@@ -3,6 +3,7 @@ import { readFile, realpath } from 'node:fs/promises'
 import { extname, isAbsolute, join, normalize, relative, resolve, sep } from 'node:path'
 import { isInside } from '../utils/paths'
 import { logError, logInfo } from '../utils/logger'
+import { escapeHtml } from '../utils/html'
 
 const contentTypes: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -84,6 +85,7 @@ export function injectLiveReloadScript(html: string, eventsPath = '/__canofold/e
 const source=new EventSource(${JSON.stringify(eventsPath)});
 let connected=false,disconnected=false;
 let overlay=null;
+let updateGeneration=0;
 function showError(msg){
   if(!overlay){overlay=document.createElement('dialog');overlay.style.cssText='all:initial;position:fixed;inset:0;width:100%;height:100%;border:none;background:rgba(15,15,20,.92);color:#f87171;font:14px/1.6 monospace;padding:2rem;box-sizing:border-box;z-index:2147483647;overflow:auto;white-space:pre-wrap;word-break:break-all;';document.documentElement.appendChild(overlay);}
   overlay.textContent='\u26a0\ufe0f Build error:\\n\\n'+msg;
@@ -91,12 +93,16 @@ function showError(msg){
 }
 function clearError(){if(overlay&&overlay.open){overlay.close();overlay.remove();overlay=null;}}
 function normalizeRoute(value){const path=value.split(/[?#]/,1)[0]||'/';return path.endsWith('/')?path:path+'/';}
-async function applyPageUpdate(update){
+async function applyPageUpdate(update,generation){
   const currentRoute=normalizeRoute(location.pathname);
   if(!update.routes.some((route)=>normalizeRoute(route)===currentRoute))return true;
   const response=await fetch(location.href,{cache:'no-store',headers:{accept:'text/html'}});
-  if(!response.ok||!(response.headers.get('content-type')||'').includes('text/html'))return false;
-  const nextDocument=new DOMParser().parseFromString(await response.text(),'text/html');
+  if(generation!==updateGeneration)return true;
+  if(response.status<500&&(!response.ok||!(response.headers.get('content-type')||'').includes('text/html')))return false;
+  const html=await response.text();
+  if(generation!==updateGeneration)return true;
+  const nextDocument=new DOMParser().parseFromString(html,'text/html');
+  if(response.status>=500){const details=nextDocument.querySelector('pre')?.textContent||nextDocument.body.textContent;showError('Page update failed (HTTP '+response.status+'): '+details);return true;}
   if(typeof window.__canofoldApplyPageDocument!=='function')return false;
   return window.__canofoldApplyPageDocument(nextDocument,{mode:update.mode==='demo-source'?'demo-source':'update'});
 }
@@ -104,12 +110,13 @@ source.onopen=()=>{if(connected&&disconnected){clearError();location.reload();}c
 source.onerror=()=>{if(connected)disconnected=true;};
 source.onmessage=()=>{clearError();location.reload();};
 source.addEventListener('update',async(event)=>{
+  const generation=++updateGeneration;
   clearError();
   try{
     const update=JSON.parse(event.data);
     if(update.protocol!==1||update.type!=='update'||!['page','demo-source'].includes(update.mode)){location.reload();return;}
-    if(!await applyPageUpdate(update))location.reload();
-  }catch{location.reload();}
+    if(!await applyPageUpdate(update,generation)&&generation===updateGeneration)location.reload();
+  }catch{if(generation===updateGeneration)location.reload();}
 });
 source.addEventListener('build-error',(e)=>showError(e.data));
 source.addEventListener('build-ok',()=>clearError());
@@ -185,7 +192,8 @@ export async function startStaticServer({
   server: providedServer,
   liveReload = false,
   basePath = '/',
-  configureServer
+  configureServer,
+  resolveDocument
 }: {
   root: string | (() => string)
   port: number
@@ -193,12 +201,15 @@ export async function startStaticServer({
   server?: HttpServer
   liveReload?: boolean
   basePath?: string | (() => string)
+  /** Development HTML, resolved only after method, mount and path validation. */
+  resolveDocument?: (pathname: string) => Promise<string | undefined>
   /** Mount another development tool on the same HTTP server before static files. */
   configureServer?: (
     server: HttpServer
   ) => StaticServerMiddleware | undefined | Promise<StaticServerMiddleware | undefined>
 }) {
   const reloadClients = new Set<ReloadClient>()
+  let buildError: string | undefined
   const staticHandler = async (request: IncomingMessage, response: ServerResponse) => {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       response.writeHead(405, { allow: 'GET, HEAD' })
@@ -222,7 +233,12 @@ export async function startStaticServer({
         'cache-control': 'no-cache',
         connection: 'keep-alive'
       })
+      if (request.method === 'HEAD') {
+        response.end()
+        return
+      }
       response.write(':connected\n\n')
+      if (buildError !== undefined) response.write(formatServerSentEvent('build-error', buildError))
       reloadClients.add(response)
       const removeClient = () => reloadClients.delete(response)
       request.once('close', removeClient)
@@ -249,6 +265,14 @@ export async function startStaticServer({
     const sendInternalError = (error: unknown) => {
       logError('Static server error:', error)
       response.statusCode = 500
+      if (liveReload && request.headers.accept?.includes('text/html')) {
+        response.setHeader('content-type', contentTypes['.html']!)
+        response.setHeader('cache-control', 'no-store')
+        const message = error instanceof Error ? error.message : String(error)
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Canofold render error</title></head><body><h1>Render error</h1><pre>${escapeHtml(message)}</pre></body></html>`
+        response.end(request.method === 'HEAD' ? undefined : injectLiveReloadScript(html, eventsPath))
+        return
+      }
       response.end(request.method === 'HEAD' ? undefined : 'Internal server error')
     }
 
@@ -273,6 +297,19 @@ export async function startStaticServer({
     }
 
     try {
+      const document = await resolveDocument?.(mountedPathname)
+      if (response.destroyed || response.writableEnded) return
+      if (document !== undefined) {
+        response.writeHead(200, { 'content-type': contentTypes['.html']!, 'cache-control': 'no-store' })
+        response.end(
+          request.method === 'HEAD'
+            ? undefined
+            : liveReload
+              ? injectLiveReloadScript(document, eventsPath)
+              : document
+        )
+        return
+      }
       let realFile: string | undefined
       let body: Buffer | undefined
       for (const filePath of filePaths) {
@@ -292,6 +329,12 @@ export async function startStaticServer({
         }
       }
       if (!realFile || !body) {
+        if (liveReload && buildError !== undefined && request.headers.accept?.includes('text/html')) {
+          response.writeHead(503, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
+          const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Canofold build error</title></head><body><h1>Build error</h1><pre>${escapeHtml(buildError)}</pre><p>Fix the source to resume the preview.</p></body></html>`
+          response.end(request.method === 'HEAD' ? undefined : injectLiveReloadScript(html, eventsPath))
+          return
+        }
         await sendNotFound()
         return
       }
@@ -368,6 +411,10 @@ export async function startStaticServer({
       cleanup()
       rejectListen(error)
     }
+  }).catch(async (error: unknown) => {
+    server.off('request', requestHandler)
+    await mounted?.close?.()
+    throw error
   })
   const address = server.address()
   if (!address || typeof address === 'string') {
@@ -385,19 +432,24 @@ export async function startStaticServer({
       writeReloadClients(reloadClients, formatServerSentEvent('update', JSON.stringify(update)))
     },
     sendBuildError: (message: string) => {
+      buildError = message
       writeReloadClients(reloadClients, formatServerSentEvent('build-error', message))
     },
     sendBuildOk: () => {
+      buildError = undefined
       writeReloadClients(reloadClients, formatServerSentEvent('build-ok'))
     },
     close: async () => {
       if (heartbeatTimer) clearInterval(heartbeatTimer)
       closeReloadClients(reloadClients)
-      await mounted?.close?.()
-      server.off('request', requestHandler)
-      await new Promise<void>((resolveClose, reject) =>
-        server.close((error) => (error ? reject(error) : resolveClose()))
-      )
+      try {
+        await mounted?.close?.()
+      } finally {
+        server.off('request', requestHandler)
+        await new Promise<void>((resolveClose, reject) =>
+          server.close((error) => (error ? reject(error) : resolveClose()))
+        )
+      }
     }
   }
 }

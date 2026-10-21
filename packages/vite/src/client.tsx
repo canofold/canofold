@@ -8,6 +8,7 @@ declare global {
   interface Window {
     __canofoldDemoDispose?: () => void
     __canofoldBootstrapDemos?: () => Promise<void>
+    __canofoldReloadDemoFrame?: () => void
   }
 }
 
@@ -56,6 +57,7 @@ export function createDemoRuntime(
   const frameCleanups = new Set<() => void>()
   let events = new AbortController()
   let generation = 0
+  let pendingImports = 0
 
   function dispose() {
     generation += 1
@@ -70,7 +72,13 @@ export function createDemoRuntime(
   async function mountDemo(element: HTMLElement, id: string, failedLabel: string) {
     const revision = generation
     const load = registry.get(id)
-    const module = load && (await load())
+    let module: DemoModule | undefined
+    pendingImports += 1
+    try {
+      module = load && (await load())
+    } finally {
+      pendingImports -= 1
+    }
     if (revision !== generation) return
     const Demo = module?.default ?? module?.Demo
     if (!Demo) throw new Error(`Demo module ${id} must export a default React component.`)
@@ -137,6 +145,7 @@ export function createDemoRuntime(
         const id = preview.dataset.cfDemoId
         if (!id) return
         const failed = preview.dataset.cfDemoFailedLabel || 'This example could not be loaded.'
+        delete preview.dataset.cfDemoError
         preview.textContent = preview.dataset.cfDemoLoadingLabel || 'Loading example…'
         try {
           const card = preview.closest<HTMLElement>('[data-cf-component="demo"]')
@@ -147,10 +156,13 @@ export function createDemoRuntime(
             frame.loading = 'lazy'
             frame.referrerPolicy = 'no-referrer'
             frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
+            let cleanupFrame = () => {}
+            frameCleanups.add(() => cleanupFrame())
             frame.addEventListener(
               'load',
               () => {
                 if (revision !== generation || signal.aborted) return
+                cleanupFrame()
                 const frameDocument = frame.contentDocument
                 const root = frameDocument?.getElementById('root')
                 if (!frameDocument || !root) return
@@ -174,7 +186,9 @@ export function createDemoRuntime(
                   attributes: true,
                   attributeFilter: ['data-cf-theme', 'data-cf-theme-appearance', 'class']
                 })
-                frameCleanups.add(() => appearanceObserver.disconnect())
+                frame.contentWindow!.__canofoldReloadDemoFrame = () => {
+                  if (revision === generation && !signal.aborted) frame.srcdoc = frame.srcdoc
+                }
                 root.dataset.cfDemoPreview = ''
                 root.dataset.cfDemoId = id
                 root.dataset.cfDemoFailedLabel = failed
@@ -190,12 +204,16 @@ export function createDemoRuntime(
                   root.dataset.cfDemoError = ''
                 })
                 frameDocument.body.append(script)
-                frameCleanups.add(fitFrame(frame))
+                const stopFitting = fitFrame(frame)
+                cleanupFrame = () => {
+                  appearanceObserver.disconnect()
+                  stopFitting()
+                }
               },
-              { once: true, signal }
+              { signal }
             )
             frame.srcdoc =
-              '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0}body{display:grid;place-items:center;padding:24px;box-sizing:border-box;font-family:system-ui,sans-serif}#root{min-width:0;max-width:100%}</style></head><body><div id="root"></div></body></html>'
+              '<!doctype html><html data-cf-demo-frame><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0}body{display:grid;place-items:center;padding:12px;box-sizing:border-box;font-family:system-ui,sans-serif}#root{min-width:0;max-width:100%}</style></head><body><div id="root"></div></body></html>'
             preview.replaceChildren(frame)
           } else {
             preview.textContent = ''
@@ -211,5 +229,15 @@ export function createDemoRuntime(
     )
   }
 
-  return { mountDemo, bootstrapDemos, dispose }
+  return {
+    mountDemo,
+    bootstrapDemos,
+    dispose,
+    reloadPendingFrame() {
+      // Vite cannot update an imported module before its hot context exists.
+      // Discard that iframe's in-flight module graph, not the host page or
+      // already mounted examples. The new realm loads the current sources.
+      if (pendingImports > 0) window.__canofoldReloadDemoFrame?.()
+    }
+  }
 }

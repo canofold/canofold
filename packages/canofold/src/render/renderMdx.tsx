@@ -6,24 +6,11 @@ import type { ElementType, ReactNode } from 'react'
 import * as React from 'react'
 import * as jsxRuntime from 'react/jsx-runtime'
 import { isDocsImportSpecifier, prepareMdxSource, type DocsImportSpecifier } from '../markdown/importBoundary'
-import { loadLocalComponentBundle } from './localComponents'
+import { loadLocalComponentBundle, mergeMarkdownAssets } from './localComponents'
 
 interface RenderedMdx {
   content: ReactNode
   assets: MarkdownAssets
-}
-
-function mergeAssets(...values: MarkdownAssets[]): MarkdownAssets {
-  return {
-    behaviors: [...new Set(values.flatMap((value) => value.behaviors))],
-    math: values.some((value) => value.math),
-    pluginClients: [
-      ...new Map(values.flatMap((value) => value.pluginClients).map((asset) => [asset.id, asset])).values()
-    ],
-    pluginStyles: [
-      ...new Map(values.flatMap((value) => value.pluginStyles).map((asset) => [asset.id, asset])).values()
-    ]
-  }
 }
 
 function bindImports(
@@ -85,6 +72,6 @@ export async function renderMdxResult(
   })
   return {
     content: rendered.content,
-    assets: mergeAssets(rendered.assets, localAssets)
+    assets: mergeMarkdownAssets(rendered.assets, localAssets)
   }
 }

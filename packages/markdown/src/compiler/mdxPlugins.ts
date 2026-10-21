@@ -73,6 +73,7 @@ export async function createMarkdownMdxPlugins(
     ...new Set([...detectedSyntax.codeLanguages, ...markdownPluginHighlightLanguages(activePlugins)])
   ]
   const syntax = {
+    definitionLists: source === undefined || detectedSyntax.definitionLists,
     highlightedCode: codeLanguages.length > 0,
     codeLanguages
   }

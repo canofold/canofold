@@ -2,6 +2,7 @@ import type { MarkdownContentAnalysis, MarkdownReferences } from '@canofold/mark
 import type { CanofoldFrontmatter } from './frontmatter'
 import type { CanofoldDemoReference } from '../demos/types'
 import type { DerivedContentOrigin } from './source'
+import type { MarkdownAnalysis } from '@canofold/markdown/server/analyze'
 
 interface PageLink {
   title: string
@@ -71,6 +72,8 @@ export interface DocPage extends Pick<MarkdownContentAnalysis, 'headings' | 'cod
   search: boolean
   ai: boolean
   body: string
+  /** Reuse source analysis for checks, never reparse it with different plugin semantics. */
+  syntax?: Pick<MarkdownAnalysis, 'directiveIssues' | 'missingCodeBlockLanguageLocations'>
   searchText: string
   references: MarkdownReferences
   demos: CanofoldDemoReference[]

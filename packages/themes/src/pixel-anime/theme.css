@@ -82,7 +82,7 @@ html[data-cf-theme='pixel-anime'] {
   --cf-theme-input-focus-shadow: 4px 4px 0 #ffd93d;
 }
 
-html[data-cf-theme='pixel-anime'] :where(body, .cf-main, .cf-content) {
+html[data-cf-theme='pixel-anime']:not(:where([data-cf-demo-frame])) :where(body, .cf-main, .cf-content) {
   background-color: var(--cf-surface);
   background-image:
     linear-gradient(90deg, rgb(74 144 217 / 0.06) 2px, transparent 2px),

@@ -56,6 +56,8 @@ function isBuildManifest(value: unknown): value is BuildManifest {
     manifest.canofoldVersion === canofoldVersion &&
     typeof manifest.buildFingerprint === 'string' &&
     typeof manifest.sharedFingerprint === 'string' &&
+    Array.isArray(manifest.contentDependencyPaths) &&
+    manifest.contentDependencyPaths.every((path) => typeof path === 'string' && path.length > 0) &&
     Boolean(manifest.pages) &&
     typeof manifest.pages === 'object' &&
     Object.values(manifest.pages as Record<string, unknown>).every(isPageState) &&

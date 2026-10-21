@@ -1,8 +1,7 @@
 import { analyzeMarkdown } from '@canofold/markdown/server/analyze'
 import { createMarkdownRenderer, type MarkdownRenderer } from '@canofold/markdown/server'
-import { markdownLabelsFor } from '../config/locale'
 import { documentationVersions } from '../config/versions'
-import { prepareMdxSource } from '../markdown/importBoundary'
+import { analyzeDocument } from '../markdown/analyze'
 import { join, posix } from 'node:path'
 import type { CanofoldConfig, CanofoldNavigationItem, CanofoldVersionItem } from '../config/types'
 import type { ExtensionHost } from '../extensions/host'
@@ -29,6 +28,7 @@ import type {
   SidebarLink,
   SidebarTreeGroup
 } from './types'
+import { ContentDiagnosticsError, markdownSyntaxDiagnostic, type CheckDiagnostic } from '../check/diagnostics'
 
 function humanize(segment: string) {
   return segment
@@ -238,7 +238,8 @@ async function scanVersionPages(
   renderer: MarkdownRenderer,
   extensions?: ExtensionHost,
   includeDrafts = false,
-  contentDates: Map<string, string> = new Map()
+  contentDates: Map<string, string> = new Map(),
+  diagnostics: CheckDiagnostic[] = []
 ): Promise<DocPage[]> {
   const docsRoot = resolveProjectPath(cwd, version.docsDir, `versions[${version.id}].docsDir`)
   await assertProjectPath(cwd, docsRoot, `versions[${version.id}].docsDir`)
@@ -264,10 +265,35 @@ async function scanVersionPages(
           locale
         })
       : file.raw
-    const parsed = parseFrontmatter(transformedSource)
-    const data = frontmatterSchema.parse(parsed.data)
+    let parsed: ReturnType<typeof parseFrontmatter>
+    try {
+      parsed = parseFrontmatter(transformedSource)
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw error
+      const position = error as SyntaxError & { line?: number; column?: number }
+      diagnostics.push({
+        ruleId: 'content-syntax',
+        severity: 'error',
+        page: sourceRelativePath,
+        message: error.message,
+        ...(position.line === undefined ? {} : { line: position.line, column: position.column })
+      })
+      continue
+    }
+    if (!includeDrafts && (parsed.data as { status?: unknown } | null)?.status === 'draft') continue
+    const validated = frontmatterSchema.safeParse(parsed.data)
+    if (!validated.success) {
+      for (const issue of validated.error.issues)
+        diagnostics.push({
+          ruleId: 'content-syntax',
+          severity: 'error',
+          page: sourceRelativePath,
+          message: `Frontmatter ${issue.path.join('.') || '(root)'}: ${issue.message}`
+        })
+      continue
+    }
+    const data = validated.data
     const status = data.status ?? 'published'
-    if (status === 'draft' && !includeDrafts) continue
     const mode = isMdxPath(file.path) ? 'mdx' : 'markdown'
     const syntax = analyzeMarkdown(parsed.content, {
       plugins: [...config.markdown.plugins, demoDirectivePlugin],
@@ -275,20 +301,32 @@ async function scanVersionPages(
     })
     // Invalid directives have no compiled document. Keep source facts for check's
     // positional diagnostics; the renderer still rejects them before publishing.
-    const analysis = syntax.directiveIssues.length
-      ? { ...syntax, excerpt: '', anchors: syntax.headings.map((heading) => heading.slug) }
-      : await renderer.analyze(mode === 'mdx' ? prepareMdxSource(parsed.content).source : parsed.content, {
-          mode,
-          markdown: {
-            ...config.markdown,
-            ...(mode === 'mdx' ? { html: 'trusted' as const } : {}),
-            plugins: syntax.directives.some((directive) => directive.name === 'demo')
-              ? [...config.markdown.plugins, demoDirectivePlugin]
-              : config.markdown.plugins,
-            locale,
-            labels: { ...markdownLabelsFor(locale, config.i18n.messages), ...config.markdown.labels }
-          }
-        })
+    const analysis = await (async () => {
+      try {
+        return syntax.directiveIssues.length
+          ? {
+              ...syntax,
+              excerpt: '',
+              anchors: syntax.headings.map((heading) => heading.slug)
+            }
+          : await analyzeDocument(
+              renderer,
+              config,
+              parsed.content,
+              mode,
+              locale,
+              syntax.directives.some((directive) => directive.name === 'demo')
+            )
+      } catch (error) {
+        const offset =
+          transformedSource.slice(0, transformedSource.length - parsed.content.length).split('\n').length - 1
+        const diagnostic = markdownSyntaxDiagnostic(error, sourceRelativePath, offset)
+        if (!diagnostic) throw error
+        diagnostics.push(diagnostic)
+        return undefined
+      }
+    })()
+    if (!analysis) continue
     const order =
       typeof data.order === 'number' && Number.isFinite(data.order) ? data.order : Number.MAX_SAFE_INTEGER
     const relativePath = file.path.replace(/\\/g, '/')
@@ -318,6 +356,10 @@ async function scanVersionPages(
       search: data.search !== false,
       ai: data.ai !== false,
       body: parsed.content,
+      syntax: {
+        directiveIssues: syntax.directiveIssues,
+        missingCodeBlockLanguageLocations: syntax.missingCodeBlockLanguageLocations
+      },
       headings: analysis.headings,
       searchText: analysis.text,
       excerpt: analysis.excerpt,
@@ -343,10 +385,11 @@ export async function buildContentGraph(
   cwd: string,
   config: CanofoldConfig,
   extensions?: ExtensionHost,
-  options: { includeDrafts?: boolean; renderer?: MarkdownRenderer } = {}
+  options: { includeDrafts?: boolean; renderer?: MarkdownRenderer; diagnostics?: CheckDiagnostic[] } = {}
 ): Promise<ContentGraph> {
   const pages: DocPage[] = []
   const renderer = options.renderer ?? createMarkdownRenderer()
+  const diagnostics = options.diagnostics ?? []
   const versions = documentationVersions(config)
   const contentDates = await gitContentDates(
     cwd,
@@ -360,14 +403,16 @@ export async function buildContentGraph(
       renderer,
       extensions,
       options.includeDrafts,
-      contentDates
+      contentDates,
+      diagnostics
     ))
       pages.push(page)
   }
 
-  for (const page of await loadSourcePages(cwd, config, renderer)) {
+  for (const page of await loadSourcePages(cwd, config, renderer, diagnostics)) {
     pages.push(extensions ? await extensions.extendPage(page) : page)
   }
+  if (diagnostics.length && !options.diagnostics) throw new ContentDiagnosticsError(diagnostics)
   const versionOrder = new Map(versions.map((item, index) => [item.id, index]))
   const localeOrder = new Map(config.i18n.locales.map((locale, index) => [locale, index]))
   pages.sort((a, b) => {
@@ -383,7 +428,7 @@ export async function buildContentGraph(
   })
   assertUniquePageTargets(pages)
 
-  assertLocaleHomePages(pages, config)
+  if (!diagnostics.length) assertLocaleHomePages(pages, config)
 
   for (const version of versions) {
     for (const locale of config.i18n.locales) {
@@ -426,7 +471,7 @@ export async function buildContentGraph(
     for (const items of Object.values(versionNav)) {
       for (const item of items) {
         for (const routePath of [item.routePath, ...(item.activePaths ?? [])]) {
-          if (routePath.startsWith('/') && !pageRoutes.has(routePath)) {
+          if (!diagnostics.length && routePath.startsWith('/') && !pageRoutes.has(routePath)) {
             throw new Error(`Navigation target is not a generated page: "${routePath}"`)
           }
         }

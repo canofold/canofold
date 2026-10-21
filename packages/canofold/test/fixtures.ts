@@ -49,6 +49,10 @@ export function createMockPage(overrides: Partial<DocPage> = {}): DocPage {
     search: true,
     ai: true,
     body: '# Guide',
+    syntax: {
+      directiveIssues: source.directiveIssues,
+      missingCodeBlockLanguageLocations: source.missingCodeBlockLanguageLocations
+    },
     headings: [{ level: 1, text: 'Guide', slug: 'guide' }],
     searchText: 'Guide',
     excerpt: '',

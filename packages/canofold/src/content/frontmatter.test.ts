@@ -28,11 +28,12 @@ describe('parseFrontmatter', () => {
 
   it('bounds alias expansion and never changes object prototypes', () => {
     const repeated = Array.from({ length: 15 }, () => '*a').join(', ')
-    expect(() =>
+    const parseAliases = () =>
       parseFrontmatter(
         `---\na: &a [one, two]\nb: &b [${repeated}]\nc: [${Array.from({ length: 15 }, () => '*b').join(', ')}]\n---\nBody`
       )
-    ).toThrow(/alias/i)
+    expect(parseAliases).toThrow(/alias/i)
+    expect(parseAliases).toThrow(SyntaxError)
     parseFrontmatter('---\n__proto__: {canofoldPolluted: true}\n---\nBody')
     expect(Object.hasOwn(Object.prototype, 'canofoldPolluted')).toBe(false)
   })

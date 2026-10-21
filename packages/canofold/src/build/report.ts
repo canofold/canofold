@@ -37,7 +37,8 @@ export function createBuildReport({
   mode,
   reason,
   changedPages,
-  durationMs
+  durationMs,
+  renderHtml = true
 }: {
   config: CanofoldConfig
   graph: ContentGraph
@@ -47,8 +48,15 @@ export function createBuildReport({
   reason: string
   changedPages: string[]
   durationMs: number
+  renderHtml?: boolean
 }): BuildReport {
   const entries = planBuiltInOutputs(config, graph)
+  if (!renderHtml) {
+    const pages = new Set(graph.pages.map((page) => page.outputPath))
+    for (const entry of entries) {
+      if (entry.id === 'site') entry.paths = entry.paths.filter((path) => !pages.has(path))
+    }
+  }
   const enabledEntries = entries.filter((entry) => entry.enabled)
   const allPaths = Object.keys(manifest.outputs)
   const exactOwners = new Map(

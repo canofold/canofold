@@ -24,6 +24,7 @@ export function Article({ source }: { source: string }) {
 
 - `@canofold/markdown` 提供 React 渲染器和插件契约。
 - `@canofold/markdown/server` 提供 Markdown 与可信 MDX 的构建或 SSR 渲染器。
+- 服务端渲染器的 `analyze()` 返回编译后的内容事实及 `assets` 资源需求，不执行作者的 MDX 组件。宿主可在渲染页面前准备交互脚本和样式。
 - `@canofold/markdown/server/analyze` 只分析文档能力，不执行渲染。
 - `@canofold/markdown/client` 增强已经生成的静态 HTML。
 - `@canofold/markdown/base.css` 提供 Markdown 结构与交互样式。

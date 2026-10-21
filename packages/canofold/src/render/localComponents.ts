@@ -188,7 +188,7 @@ async function bundleLocalImports(source: readonly LocalImport[], sourcePath?: s
   )
 }
 
-/** Resolve every project-local source file that contributes to one MDX page. */
+/** Resolve local inputs for checks and snapshots without evaluating author modules. */
 export async function localComponentDependencyPaths(
   source: readonly LocalImport[],
   sourcePath?: string,
@@ -196,6 +196,20 @@ export async function localComponentDependencyPaths(
 ) {
   const bundles = await bundleLocalImports(source, sourcePath, projectRoot)
   return [...new Set(bundles.flatMap(({ bundle }) => bundle.sourcePaths))].sort()
+}
+
+/** Resource and dependency facts without evaluating trusted component modules. */
+export async function analyzeLocalComponentImports(
+  source: readonly LocalImport[],
+  sourcePath: string,
+  projectRoot: string,
+  plugins: readonly MarkdownPlugin[]
+) {
+  const bundles = await bundleLocalImports(source, sourcePath, projectRoot)
+  return {
+    paths: [...new Set(bundles.flatMap(({ bundle }) => bundle.sourcePaths))].sort(),
+    assets: await assetsFromBundles(bundles, plugins)
+  }
 }
 
 async function componentsFromBundles(
@@ -229,23 +243,16 @@ async function componentsFromBundles(
   return loaded
 }
 
-function mergeAssets(target: MarkdownAssets, source: MarkdownAssets) {
-  target.behaviors = [...new Set([...target.behaviors, ...source.behaviors])]
-  target.math ||= source.math
-  target.pluginClients = [
-    ...new Map([...target.pluginClients, ...source.pluginClients].map((asset) => [asset.id, asset])).values()
-  ]
-  target.pluginStyles = [
-    ...new Map([...target.pluginStyles, ...source.pluginStyles].map((asset) => [asset.id, asset])).values()
-  ]
-}
-
-function emptyAssets(): MarkdownAssets {
+export function mergeMarkdownAssets(...values: MarkdownAssets[]): MarkdownAssets {
   return {
-    behaviors: [],
-    math: false,
-    pluginClients: [],
-    pluginStyles: []
+    behaviors: [...new Set(values.flatMap((value) => value.behaviors))],
+    math: values.some((value) => value.math),
+    pluginClients: [
+      ...new Map(values.flatMap((value) => value.pluginClients).map((asset) => [asset.id, asset])).values()
+    ],
+    pluginStyles: [
+      ...new Map(values.flatMap((value) => value.pluginStyles).map((asset) => [asset.id, asset])).values()
+    ]
   }
 }
 
@@ -253,16 +260,16 @@ async function assetsFromBundles(
   values: Awaited<ReturnType<typeof bundleLocalImports>>,
   plugins: readonly MarkdownPlugin[] = []
 ) {
-  const assets = emptyAssets()
+  const assets: MarkdownAssets[] = []
   const visited = new Set<string>()
   for (const { bundle } of values) {
     for (const sourcePath of bundle.sourcePaths) {
       if (visited.has(sourcePath)) continue
       visited.add(sourcePath)
-      mergeAssets(assets, detectMarkdownAssets(await readFile(sourcePath, 'utf8'), plugins, 'mdx'))
+      assets.push(detectMarkdownAssets(await readFile(sourcePath, 'utf8'), plugins, 'mdx'))
     }
   }
-  return assets
+  return mergeMarkdownAssets(...assets)
 }
 
 /** Bundle, inspect, and evaluate the local component graph exactly once for a rendered MDX page. */
